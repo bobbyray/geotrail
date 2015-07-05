@@ -1,3 +1,21 @@
+The main source code for this app is open source licensed under
+The MIT License (MIT).
+The open source Cordova / Appache platform is used to build this mobile app. Refer to
+the Cordova / Appache license.
+Plugins and modules used by the main code have individual open source licenses
+and are listed below. Refer to them individually to determine their kind of license.
+   jquery 1-11.3
+   Leaflet 0.7.3 for maps
+   L.TileLayer.Cordova for caching map tiles
+   cordova-plugin-dialogs 1.1.2-dev "Notification"
+   cordova-plugin-file 2.0.0 "File"
+   cordova-plugin-file-transfer 1.1.0 "File Transfer"
+   cordova-plugin-geolocation 1.0.0 "Geolocation"
+   cordova-plugin-vibration 1.2.1-dev "Vibration"
+   cordova-plugin-whitelist 1.0.0 "Whitelist"
+   org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"
+
+The license for the main source follows:
 The MIT License (MIT)
 
 Copyright (c) 2015 Robert R Schomburg
