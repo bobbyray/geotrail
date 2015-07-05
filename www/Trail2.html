@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>My Trail Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'  http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
+    <!-- Works, but don't think needed. Use to think mapbox site is accessed by script so script-src 'unsafe-inline' is needed.
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
+    -->
+
+    <script charset="utf-8" src="cordova.js"></script>
+
+    <link rel="stylesheet" href="leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="css/trail2.css"> 
+    
+    <!-- 20150617 moved to here from bottom of body section. Kind of doubt this is necessary. -->
+    <!-- Javascript for this page.-->
+    <!-- Open Streets Map
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    -->
+    <script src="leaflet-0.7.3/leaflet.js"></script>
+    <script src="js/leaflet-tilelayer-cordova.js"></script>
+    <script src="js/Helper2.js"></script>
+    <script src="js/Ajax2.js"></script>
+    <script src="js/GeoPathsApi2.js"></script>
+    <!-- Google hosted jquery
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    -->
+    <!-- local jquery -->
+    <script src="js/jquery-1.11.3.js"></script>
+    <script src="js/Model2.js"></script>
+    <script src="js/GeoPathMapView2.js"></script>
+    <script src="js/Trail2.js"></script>
+
+</head>
+<body>
+    <div id="divStatus"></div>
+    <div id="divOwnerId">
+        <label id="labelSignIn" for="txbxOwnerId">Sign-in Id</label>
+        <input id="txbxOwnerId" type="text" />
+        <input id="buSetOwnerId" type="button" value="Set" />
+    </div>
+    <div id="divMode">
+        <select id="selectMode">
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+        </select>
+        <input id="buSaveOffline" type="button" value="Save Offline" />
+        <select id="selectMenu">
+            <option value="menu">Menu</option>
+            <option value="settings">Settings</option>
+            <option value="help">Help</option>
+            <option value="about">About</option>
+            <option value="license">License</option>
+        </select>
+    </div>
+    <div id="divSettings">
+        Settings for My Trail on GeoPaths<br />
+        <label id="labelAllowGeoTracking">Allow Geo Tracking</label>
+        <select id="selectAllowGeoTracking">
+            <option value="yes" selected="selected">Yes</option>
+            <option value="no">No</option>
+        </select> <br />
+        <label id="labelGeoTrackingSecs" class="GeoTrackingOption" for="numberGeoTrackingSecs">Geo Tracking Interval (secs)</label>
+        <input id="numberGeoTrackingSecs" class="GeoTrackingOption" type="number" value="30" /> <br />
+        <label id="labelOffPathThresMeters" for="numberOffPathThresMeters">Off-Path Threshold (m)</label>
+        <input id="numberOffPathThresMeters" type="number" value="30" /> <br />
+        <label id="labelEnableGeoTracking" class="GeoTrackingOption" for="selectEnableGeoTracking">Initially Enable Geo Tracking</label>
+        <select id="selectEnableGeoTracking" class="GeoTrackingOption">
+            <option value="yes">Yes</option>
+            <option value="no" selected="selected">No</option>
+        </select><br />
+        <label id="labelOffPathAlert" class="GeoTrackingOption" for="selectOffPathAlert">Initially warn when Off-Path</label>
+        <select id="selectOffPathAlert" class="GeoTrackingOption">
+            <option value="yes" selected="selected">Yes</option>
+            <option value="no">No</option>
+        </select><br />
+        <label id="labelPhoneAlert" class="GeoTrackingOption" for="selectPhoneAlert">Phone Alert</label>
+        <select id="selectPhoneAlert" class="GeoTrackingOption">
+            <option value="yes" selected="selected">Yes</option>
+            <option value="no" selected="selected">No</option>
+        </select><br />
+        <label id="labelPhoneVibeSecs" class="GeoTrackingOption" for="numberPhoneVibeSecs">Phone Vibration in secs</label>
+        <input id="numberPhoneVibeSecs" class="GeoTrackingOption" min="0.5" max="8.0" value="1.0"/><br />
+        <label id="labelPhoneBeepCount" class="GeoTrackingOption" for="numberPhoneBeepCount">Phone beep count</label>
+        <input id="numberPhoneBeepCount" class="GeoTrackingOption" min="0" max="8" value="0" /><br />
+        <label id="labelPebbleAlert" class="GeoTrackingOption" for="selectPebbleAlert">Pebble Alert</label>
+        <select id="selectPebbleAlert" class="GeoTrackingOption">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select><br />
+        <label id="labelPebbleVibeSecs" class="GeoTrackingOption" for="numberPebbleVibeSecs">Pebble Vibration in secs</label>
+        <input id="numberPebbleVibeSecs" class="GeoTrackingOption" min="0.5" max="8.0" value="1.0" /><br />
+        <label id="labelPrevGeoLocThresMeters" for="dPrevGeoLocThres">Prev Geo Loc Thres (m)</label>
+        <input id="numberPrevGeoLocThresMeters" type="number" value="10" /><br />
+        <label id="labelClickForGeoLoc" for="selectClickForGeoLoc">Click for Geo Location (Debug)</label>
+        <select id="selectClickForGeoLoc">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select><br />
+        <button id="buSettingsDone">Done</button>
+        <button id="buSettingsCancel">Cancel</button>
+    </div>
+    <div id="divPathInfo">
+        <label class="PathInfo" for="selectGeoPath">Geo Paths:</label>
+        <select id="selectGeoPath">
+            <option value="0">Select Geo Path</option>
+        </select>
+    </div>
+    <div id="panel">
+        <input id="buGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
+        <input id="buGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
+        <input id="buMinMaxMap" type="button" title="Toggle Full Screen" data-minstate="true" value="Full Screen" />
+        <br />
+        <label id="labelGeoTrack" for="selectGeoTrack">Track</label>
+        <select id="selectGeoTrack">
+            <option value="on">On</option>
+            <option value="off" selected="selected">Off</option>
+        </select>
+        <label id="labelAlert" for="selectAlert">Alert</label>
+        <select id="selectAlert">
+            <option value="on">On</option>
+            <option value="off" selected="selected">Off</option>
+        </select>
+    </div>
+    <div id="map-canvas" /> <!-- Note: Do not put div for map inside a section. -->
+</body>
+</html>
