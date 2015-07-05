@@ -19,8 +19,8 @@ This app and its plugins and modules are open source code. Refer to License file
 Chrome must be installed on the phone device and on your pc.
 
 From Chrome on your pc:
-* chrome//inspect/devices
- * Port forwarding needs to be enable in Chrome on your pc. Cick on the _Port Forwarding_ button to do so and for help. 
+* chrome://inspect/#devices
+ * Port forwarding needs to be enabled in Chrome on your pc. Cick on the _Port Forwarding_ button to do so and for help. 
 * Click on WebView ws.wigo.geotrail to debug the app.
- * The familiar Chrome Debugger showing the HTML, CSS, and javacript for app appears in a separate Chrome window. 
+ * The familiar Chrome Debugger showing the HTML, CSS, and javacript for the app appears in a separate Chrome window. 
 
