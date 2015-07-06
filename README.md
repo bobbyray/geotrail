@@ -1,15 +1,20 @@
 # geotrail
 #####Mobile phone app for geo location around a defined trail.
-The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and tested only for an Android phone, v4.2.2. This app is in early stage of development and is only expected to be used by contributors.
+The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and tested only for an Android phone, v4.2.2. This app is in early stage of development and is only expected to be used by contributors. I installed Cordova, v5.0.0, on a Windows7 pc. A pc running Linux should work too.
 #####To try this app
 Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed first.
 #####
-1. Download this code to your personal computer (pc).
+1. Clone or download this code to your personal computer (pc).
+   * clone
+     * cd to a directory to hold this project.
+     * git clone https://github.com/bobbyray/geotrail.git
+     * Note: the subdirectory geotrail has the clone.
+   * download
+     * Download the zip file and unzip to a download directory.
 2. Attach an Android phone to your pc by a USB cable.
 3. Start a command line session on your pc.
-4. Make geotrail the current directory in your download folder.
-5. Build and load the app on your phone:
- * cordova run android (run this from the command line on your pc)
+4. Make geotrail the current directory in your clone or download folder to build and load the app on your phone:
+ * cordova run android
  * Note: The first time on your phone you must accept loading the app.
 
 #####
