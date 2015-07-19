@@ -193,6 +193,13 @@ module.exports = [
         "clobbers": [
             "wakeuptimer"
         ]
+    },
+    {
+        "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
+        "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
+        "clobbers": [
+            "Pebble"
+        ]
     }
 ];
 module.exports.metadata = 
@@ -204,7 +211,8 @@ module.exports.metadata =
     "cordova-plugin-geolocation": "1.0.0",
     "cordova-plugin-vibration": "1.2.1-dev",
     "cordova-plugin-dialogs": "1.1.2-dev",
-    "org.nypr.cordova.wakeupplugin": "0.1.0"
+    "org.nypr.cordova.wakeupplugin": "0.1.0",
+    "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6"
 }
 // BOTTOM OF METADATA
 });

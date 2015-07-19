@@ -48,10 +48,10 @@ function wigo_ws_GeoTrailSettings() {
     this.secsPhoneVibe = 0.0;
     // Integer for number of beeps on an alert. 0 indicates no beep.
     this.countPhoneBeep = 1;
-    // Boolean to indicate a Pebble watch alert (vibration) is given when off-paht.
+    // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
     this.bPebbleAlert = true;
-    // Float for number of seconds for Pebble watch to vibrate on an alert.
-    this.secsPebbleVibe = 1.0;
+    // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
+    this.countPebbleVibe = 1;
     // Float for distance in meters for threshold for minimum change in distance
     // for previous geo-location to be updated wrt to current geo-location.
     this.dPrevGeoLocThres = 10.0;
@@ -289,7 +289,7 @@ function wigo_ws_View() {
     var selectEnableGeoTracking = $('#selectEnableGeoTracking')[0];
     var numberPhoneVibeSecs = $('#numberPhoneVibeSecs')[0];
     var numberPhoneBeepCount = $('#numberPhoneBeepCount')[0];
-    var numberPebbleVibeSecs = $('#numberPebbleVibeSecs')[0];
+    var numberPebbleVibeCount = $('#numberPebbleVibeCount')[0];
 
     // Returns ref to div for the map-canvas element.
     // Note: The div element seems to change dynamically. 
@@ -405,6 +405,17 @@ function wigo_ws_View() {
             EnableSettingControlOptions(settings.bAllowGeoTracking);
             ShowSettingsDiv(true);
             SetMapPanelTop();
+        } else if (this.value === 'startpebble') {
+            if (pebbleMsg.IsConnected()) {
+                if (pebbleMsg.IsEnabled()) {
+                    pebbleMsg.StartApp();
+                } else {
+                    AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
+                }
+            } else {
+                AlertMsg("Pebble watch is not connected.");
+            }
+            this.selectedIndex = 0;
         } else if (this.value === 'about') {
             AlertMsg(AboutMsg())
             this.selectedIndex = 0;
@@ -450,6 +461,10 @@ function wigo_ws_View() {
     $(selectGeoTrack).bind('change', function (e) {
         // Save state of flag to track geo location.
         trackTimer.bOn = IsGeoTrackValueOn();    // Allow/disallow geo-tracking.
+        if (!trackTimer.bOn) {
+            // Send message to Pebble that tracking is off.
+            pebbleMsg.Send("Track Off", false); // false => no vibration.
+        }
         // Start or clear trackTimer.
         RunTrackTimer();
     });
@@ -491,6 +506,28 @@ function wigo_ws_View() {
         $(this).prop('data-minState', bMin.toString());
     });
 
+    /* //20150716 Trying to detect app ending does not work. These events do NOT fire
+    $(window).bind('unload', function (e) {
+        console.log('window unload');
+        // Inform Pebble watch that this app has ended.
+        var sMsg = "{0} unload.".format(document.title);
+        pebbleMsg.Send(sMsg, false)
+    });
+
+    window.addEventListener('beforeunload', function (event) {
+        console.log('window beforunload');
+        // Inform Pebble watch that this app has ended.
+        var sMsg = "{0} beforeunload.".format(document.title);
+        pebbleMsg.Send(sMsg, false)
+    });
+
+    window.addEventListener('error', function (event) {
+        console.log('window error');
+        // Inform Pebble watch that this app has ended.
+        var sMsg = "{0} error.".format(document.title);
+        pebbleMsg.Send(sMsg, false)
+    });
+    */
 
     // ** More private members
     var nMode = that.eMode.online; // Current mode.
@@ -499,7 +536,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.0.001  07/02/2015";
+        var sVersion = "1.1.001  07/18/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -557,13 +594,18 @@ Geo Tracking Interval (secs): number of seconds to check your geo-location when 
 Off-path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
 Initially Enable Geo Tracking Yes | No: Yes to start with Track On when app loads.\n\n\
 Initially warn when Off-Path Yes | No: Yes to start with Alert On when app loads.\n\n\
-Phone Alert Yes | No: detemines if alerts from you phone are given. The alerts can be \
-a vibration or a beep.\n\n\
+Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
 Phone beep count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
 Phone vibration in secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
+Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
+Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
+off trail. Count of 0 disables vibrations.\n\n\
 Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
 for change in location to be considered valid. (This prevents small variations in the geo-location of \
 the same point to appear to be a change in location.)\n\n\
+Menu > Start Pebble\n\
+Starts the Pebble app on the watch. The Pebble app should be started automatically so this is unlikely \
+to be needed.\n\n\
 Creating Trail Maps\n\
 Use the site http://www.hillmap.com to create a trail map. Use the Path tab to define your trail.\n\
 Use Tools > Download Gpx to save your path.\n\
@@ -596,7 +638,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                     trackTimer.ClearTimer();
                     var sError = 'Timer for automatic geo-tracking failed.<br/>';
                     ShowGeoTrackingOff(sError);
-                    navigator.notification.beep(4);
+                    if (alerter.bPhoneEnabled && alerter.bAlertsAllowed)
+                        navigator.notification.beep(4);
                 } else {
                     if (bInProgress)
                         return;
@@ -633,7 +676,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.value);
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.value);
         settings.bPebbleAlert = selectPebbleAlert.value === 'yes';
-        settings.secsPebbleVibe = parseFloat(numberPebbleVibeSecs.value);
+        settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
         settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
         return settings;
@@ -654,7 +697,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         numberPhoneVibeSecs.value = settings.secsPhoneVibe.toFixed(1);
         numberPhoneBeepCount.value = settings.countPhoneBeep.toFixed(0);
         selectPebbleAlert.value = settings.bPebbleAlert ? 'yes' : 'no';
-        numberPebbleVibeSecs.value = settings.secsPebbleVibe.toFixed(1);
+        numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
         numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
         selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
     }
@@ -700,18 +743,22 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
-        // Enable alerts.
+        // Enable phone alerts.
         alerter.bAlertsAllowed = settings.bAllowGeoTracking;
         if (settings.bAllowGeoTracking) {
             alerter.bPhoneEnabled = settings.bPhoneAlert;
-            alerter.bPebbleEnabled = settings.bPebbleAlert;
         } else {
             alerter.bPhoneEnabled = false;
-            alerter.bPebbleEnabled = false;
         }
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
-        alerter.msPebbleVibe = Math.round(settings.secsPebbleVibe * 1000);
+
+        // Enable using Pebble and allowing vibration.
+        pebbleMsg.Enable(settings.bPebbleAlert); // Enable using pebble.
+        pebbleMsg.countVibe = settings.countPebbleVibe;
+        // Start Pebble app if it is enabled.
+        if (settings.bPebbleAlert)
+            pebbleMsg.StartApp();
 
         trackTimer.dCloseToPathThres = settings.mOffPathThres;
         trackTimer.setIntervalSecs(settings.secsGeoTrackingInterval);
@@ -984,12 +1031,6 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         // Integer for number of phone beeps.
         this.countPhoneBeep = 0;
 
-        // Boolean to indicate a Pebble watch alert can be given. 
-        this.bPebbleEnabled = false;
-
-        // Float for number of milli-seconds for phone to vibrate on an alert.
-        this.msPebbleVibe = 1000;
-
         // Issues an alert to devices that are enabled.
         this.DoAlert = function() {
             if (this.bAlertsAllowed) {
@@ -1002,14 +1043,72 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                             navigator.notification.beep(this.countPhoneBeep);
                     }
                 }
-                if (this.bPebbleEnabled) {
-                    // Issue Pebble watch alert.
-                }
             }
         }
 
         // ** Private members
 
+    }
+
+    // Object to access Pebble message api.
+    function PebbleMessage() {
+        var that = this;
+
+        // Enables the adapter to send messages to Pebble.
+        // Arg:
+        //  bEnable: boolean. true to enable, false to disable.
+        this.Enable = function (bEnable) {
+            pebble.bEnabled = bEnable;
+        }
+
+        // Returns boolean indicating if adapter is enabled.
+        this.IsEnabled = function () {
+            return pebble.bEnabled;
+        }
+
+        // Returns boolean indicated if a Pebble watch is connected. 
+        this.IsConnected = function () {
+            var bConnected = pebble.IsConnected();
+            return bConnected;
+        };
+
+        // Number of vibrations given when vibration is issued.
+        this.countVibe = 0;
+
+        // Starts the Pebble app.
+        // Shows an alert on failure.
+        this.StartApp = function () {
+            pebble.StartApp(function (bOk) {
+                var sMsg = "Pebble app started: {0}".format(bOk ? "OK" : "FAILED");
+                console.log(sMsg);
+                if (bOk) {
+                    // Show message on pebble that MyTrail is started.
+                    that.Send(document.title, true);
+                } else {
+                    AlertMsg("Failed to start Pebble app.")
+                }
+            });
+        };
+
+        // Sends a message to Pebble.
+        // Args:
+        //  sText: string of text sent.
+        //  bVible: boolean indicating if Pebble should vibrate.
+        this.Send = function (sText, bVibe) {
+            var nVibe = bVibe ? this.countVibe : 0;
+            if (this.IsEnabled()) {
+                pebble.SendText(sText, nVibe, function (bAck) {
+                    // Just log to console, showing status on phone looses direction to trail.
+                    var sStatus = "Received {0} to Pebble message sent.".format(bAck ? 'ACK' : 'NACK');
+                    console.log(sStatus);
+                });
+            }
+        };
+
+
+        // May need to provide uuid for pebble app. Defaults to PebbleMsg app.
+        // May want to write special GeoTrail pebble app.
+        var pebble = new wigo_ws_PebbleAdapter();
     }
 
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
@@ -1028,27 +1127,41 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     function ShowGeoLocUpdateStatus(upd) {
         if (!upd.bToPath) {
             that.ClearStatus();
+            if (map.IsPathDefined()) {
+                pebbleMsg.Send("On Path", false) // false => no vibration.
+            }
         } else {
-            // Show distance and heading from off-path to on-path location.
+            // vars for messages.
+            var sBearingToPath = upd.bearingToPath.toFixed(0);
+            var sDtoPath = upd.dToPath.toFixed(0);
             var sCompassDir = map.BearingWordTo(upd.bearingToPath);
-            var s = "Head {0} ({1} degs wrt N) to go to path ({2}m).<br/>".format(sCompassDir, upd.bearingToPath.toFixed(0), upd.dToPath.toFixed(0));
+            var phi = upd.bearingToPath - upd.bearingRefLine;
+            var sTurn = 'right';
+            // Show distance and heading from off-path to on-path location.
+            var s = "Head {0} ({1}&deg; wrt N) to go to path ({2}m).<br/>".format(sCompassDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path.
-                var phi = upd.bearingToPath - upd.bearingRefLine;
-                var sTurn = 'right';
                 if (phi < 0)
                     phi += 360.0;
                 if (phi > 180.0) {
                     sTurn = 'left';
                     phi = 360.0 - phi;
                 }
-                s = "Suggest turning {0} degs to {1} to go to path.<br/>".format(phi.toFixed(0), sTurn);
+                s = "Suggest turning {0}&deg; to {1} to go to path.<br/>".format(phi.toFixed(0), sTurn);
                 sMsg += s;
             }
             that.ShowStatus(sMsg, false);
             // Issue alert to indicated off-path.
             alerter.DoAlert();
+
+            // Issue alert to Pebble watch.
+            sMsg = "Off {0} m\n".format(sDtoPath);
+            // sMsg += "Head {0} ({1}{2})\n".format(sCompassDir,sBearingToPath, sDegree);
+            // Decided not to show compass degrees, just direction: N, NE, etc.
+            sMsg += "Head {0}\n".format(sCompassDir);
+            sMsg += "? {0} {1}{2}".format(sTurn, phi.toFixed(0), sDegree);
+            pebbleMsg.Send(sMsg, true); // true => vibration.
         }
     }
 
@@ -1090,7 +1203,9 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     }
 
     // ** Constructor initialization.
+    var sDegree = String.fromCharCode(0xb0); // Degree symbol.
     var alerter = new Alerter(); // Object for issusing alert to phone or Pebble watch.
+    var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
     this.setModeUI(this.eMode.toNum(selectMode.value));

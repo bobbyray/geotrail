@@ -31,6 +31,10 @@
                         {
                             "xml": "<feature name=\"WakeupPlugin\"><param name=\"android-package\" value=\"org.nypr.cordova.wakeupplugin.WakeupPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -99,6 +103,9 @@
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
         "org.nypr.cordova.wakeupplugin": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "com.jetboystudio.pebble.PebblePGPlugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },

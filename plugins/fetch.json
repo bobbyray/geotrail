@@ -57,5 +57,14 @@
         },
         "is_top_level": true,
         "variables": {}
+    },
+    "com.jetboystudio.pebble.PebblePGPlugin": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/konsumer/phonegap-pebble.git",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {}
     }
 }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <title>Pebble Demo</title>
+        <style>
+            #indicator {
+                text-align:center;
+            }
+            #currentLetter {
+                font-size: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app">
+            <h1>Pebble Demo</h1>
+            <p><strong>connected?</strong> <span id="connected">?</span></p>
+            <p><strong>data-logging?</strong> <span id="data">?</span></p>
+            <p><strong>app-messages?</strong> <span id="messages">?</span></p>
+            <div id="indicator">
+                <h1 id="currentLetter">?</h1>
+                <small>last letter sent from Pebble <br> (click to send one to it.)</small>
+            </div>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript">
+            document.addEventListener('deviceready', function() {
+                var uuid = '39457783-362f-4343-8846-7fec4fc6268f';
+
+                var eConnected = document.getElementById('connected');
+                var eData = document.getElementById('data');
+                var eMessages = document.getElementById('messages');
+                var eLetter = document.getElementById('currentLetter');
+
+                // send next letter
+                var alphabet = ('ABCDEFGHIJKLMNOPQRSTUVWXYZ').split('');
+                var l = 0;
+                function sendLetter(){
+                    var letter = alphabet[l%26];
+                    console.log('sent ' + letter)
+                    Pebble.sendData(uuid, [ {type:'string', key:0, value:letter, length:1} ]);
+                    l++;
+                }
+                eLetter.addEventListener("click", sendLetter);
+
+
+                // listeners for Pebble connect, update info
+                document.addEventListener("Pebble.connect",function(e){
+                    Pebble.firmware(function(info){
+                        eConnected.innerHTML = info.tag;
+                    });
+                    Pebble.isDataLoggingSupported(function(supported){
+                        eData.innerHTML = (supported) ? 'yes' : 'no';
+                    });
+                    Pebble.areAppMessagesSupported(function(supported){
+                        eMessages.innerHTML = (supported) ? 'yes' : 'no';
+                    });
+                });
+
+                // listeners for Pebble disconnect
+                document.addEventListener("Pebble.disconnect",function(e){
+                    eConnected.innerHTML = 'no';
+                });
+
+                // listen for NACK messages from Pebble
+                document.addEventListener("Pebble.nack",function(e){
+                    console.log('NACK', e.detail);
+                });
+
+                // listen for ACK messages from Pebble
+                document.addEventListener("Pebble.ack",function(e){
+                    console.log('ACK', e.detail);
+                    sendLetter();
+                });
+
+                // listen for data from Pebble
+                document.addEventListener("Pebble.data",function(e){
+                    e.detail.data = JSON.parse(e.detail.data);
+                    console.log('DATA', e.detail);
+                    eLetter.innerHTML = e.detail.data[0].value;
+
+                    // seems to crash my watch
+                    // Pebble.sendAck(e.detail.transaction);
+                });
+                
+                // tell java to listen for these
+                Pebble.registerConnect();
+                Pebble.registerDisconnect();
+                Pebble.registerAck(uuid);
+                Pebble.registerNack(uuid);
+                Pebble.registerData(uuid);
+
+                // TODO: unregister on pause, register on resume to prevent memory leaks
+
+                // dispatch initial state of connection
+                Pebble.isConnected(function(connected){
+                    document.dispatchEvent(new CustomEvent('Pebble.' +  (connected ? 'connect' : 'disconnect') ));
+                });
+
+
+                
+            });
+        </script>
+    </body>
+</html>

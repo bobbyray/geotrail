@@ -263,10 +263,10 @@ function wigo_ws_Model() {
                     settings.bEnableGeoTracking = false;
                 if (!settings.secsPhoneVibe)
                     settings.secsPhoneVibe = 0.0;
-                if (!settings.secsPebbleVibe)
-                    settings.secsPebbleVibe = 1.0;
                 if (!settings.countPhoneBeep)
                     settings.countPhoneBeep = 1;
+                if (!settings.countPebbleVibe)
+                    settings.countPebbleVibe = 1;
             }
             return settings;
         };

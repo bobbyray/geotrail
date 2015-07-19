@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>My Trail Map</title>
+    <title>MyTrail</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'  http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-eval' http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
     <!-- Works, but don't think needed. Use to think mapbox site is accessed by script so script-src 'unsafe-inline' is needed.
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
     -->
@@ -30,6 +30,7 @@
     <script src="js/jquery-1.11.3.js"></script>
     <script src="js/Model2.js"></script>
     <script src="js/GeoPathMapView2.js"></script>
+    <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
     <script src="js/Trail2.js"></script>
 
 </head>
@@ -49,6 +50,7 @@
         <select id="selectMenu">
             <option value="menu">Menu</option>
             <option value="settings">Settings</option>
+            <option value="startpebble">Start Pebble</option>
             <option value="help">Help</option>
             <option value="about">About</option>
             <option value="license">License</option>
@@ -84,13 +86,13 @@
         <input id="numberPhoneVibeSecs" class="GeoTrackingOption" min="0.5" max="8.0" value="1.0"/><br />
         <label id="labelPhoneBeepCount" class="GeoTrackingOption" for="numberPhoneBeepCount">Phone beep count</label>
         <input id="numberPhoneBeepCount" class="GeoTrackingOption" min="0" max="8" value="0" /><br />
-        <label id="labelPebbleAlert" class="GeoTrackingOption" for="selectPebbleAlert">Pebble Alert</label>
+        <label id="labelPebbleAlert" class="GeoTrackingOption" for="selectPebbleAlert">Pebble Watch</label>
         <select id="selectPebbleAlert" class="GeoTrackingOption">
             <option value="yes">Yes</option>
             <option value="no">No</option>
         </select><br />
-        <label id="labelPebbleVibeSecs" class="GeoTrackingOption" for="numberPebbleVibeSecs">Pebble Vibration in secs</label>
-        <input id="numberPebbleVibeSecs" class="GeoTrackingOption" min="0.5" max="8.0" value="1.0" /><br />
+        <label id="labelPebbleVibeCount" class="GeoTrackingOption" for="numberPebbleVibeCount">Pebble Vibration count</label>
+        <input id="numberPebbleVibeCount" class="GeoTrackingOption" min="1" max="20" value="1.0" /><br />
         <label id="labelPrevGeoLocThresMeters" for="dPrevGeoLocThres">Prev Geo Loc Thres (m)</label>
         <input id="numberPrevGeoLocThresMeters" type="number" value="10" /><br />
         <label id="labelClickForGeoLoc" for="selectClickForGeoLoc">Click for Geo Location (Debug)</label>
