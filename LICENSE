@@ -7,7 +7,8 @@ and are listed below. Refer to them individually to determine their kind of lice
    jquery 1-11.3
    Leaflet 0.7.3 for maps
    L.TileLayer.Cordova for caching map tiles
-   cordova-plugin-dialogs 1.1.2-dev "Notification"
+   cordova-plugin-dialogs
+   com.jetboystudio.pebble.PebblePGPlugin
    cordova-plugin-file 2.0.0 "File"
    cordova-plugin-file-transfer 1.1.0 "File Transfer"
    cordova-plugin-geolocation 1.0.0 "Geolocation"
