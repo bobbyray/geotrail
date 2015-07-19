@@ -20,6 +20,9 @@ Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed
 #####
 This app and its plugins and modules are open source code. Refer to License file for more details.
 
+#####Pebble App (Optional)
+The [PebbleMsg app project](https://github.com/bobbyray/PebbleMsg) contains the code for the C program that runs in a Pebble watch. Import this project to the Cloud Pebble IDE to build and install on a Pebble watch.
+
 #####Debugging the app
 Chrome must be installed on the phone device and on your pc.
 
