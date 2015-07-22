@@ -171,6 +171,12 @@ label {
     clear: both;
     float: left;
 }
+#selectMapCache {
+    clear: none;
+    float: left;
+    margin-left: 15px;
+}
+
 #buSaveOffline, #selectMenu {
     clear: none;
     float: left;

@@ -296,6 +296,42 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         CacheLayer(onStatusUpdate);
     };
 
+    // Gets information about the size of the size holding files for the map tiles.
+    // Arg:
+    //  onObtained: asynchronous callback with signature:
+    //      nFiles: integer number of tile files.
+    //      nBytes: integer number of bytes of storage for the files.
+    this.CacheSize = function (onObtained) {
+        if (tileLayer) {
+            tileLayer.getDiskUsage(function (nFiles, nBytes) {
+                if (onObtained)
+                    onObtained(nFiles, nBytes);
+            });
+        } else {
+            if (onObtained)
+                onObtained(0, 0); // Not expected. no tileLay exists.
+        }
+    };
+    
+    // Clears (empties) the cache of map tiles. 
+    // Arg:
+    //  onCleared: aynchronous callback with signature:
+    //    nFilesDeleted: integer number of files deleted.
+    //    nFilesIfError: integer number of files deleted if there is an error. 0 for no error.
+    // Returns: synchronously nothing.
+    this.ClearCache = function (onCleared) {
+        if (tileLayer) {
+            tileLayer.emptyCache(function (nFilesDeleted, nFilesDeletedAtFailure) {
+                if (onCleared) {
+                    onCleared(nFilesDeleted, nFilesDeletedAtFailure);
+                }
+            });
+        } else {
+            if (onCleared)
+                onCleared(0, 0); 
+        }
+    }
+
     // Sets map for offline or online use.
     // Arg:
     //  bOffline: boolean indicates using map online.
@@ -684,12 +720,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //      sMsg: Status msg.
     //      bDone: Indicates done, no more callbacks.
     //      bError: Indicates an error.
+    //      bCancel: Indicates user canceled when asked to confirm download.
     // Returns:
     //  boolean, true indicates success. Return is immediate but download of tiles is
     //  asynchronous. onStatusUpdate(arg) is called (repeatedly) to update download progress 
     //  asynchronously.
     function CacheLayer(onStatusUpdate) {
-        var status = { sMsg: "", bDone: false, bError: false };
+        var status = { sMsg: "", bDone: false, bError: false, bCancel: false };
         if (!map || !tileLayer) {
             status.sMsg = "Map is not loaded yet.";
             status.bError = true;
@@ -710,7 +747,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);
         var message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
         var ok = confirm(message);
-        if (!ok) return false;
+        if (!ok) {
+            status.bDone = true;
+            status.bCancel = true;
+            status.sMsg = "User canceled.";
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return false;
+        }
 
         tileLayer.downloadXYZList(
             // 1st param: a list of XYZ objects indicating tiles to download

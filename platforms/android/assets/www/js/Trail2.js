@@ -104,7 +104,10 @@ function wigo_ws_View() {
     // Handler Signature:
     //  Args: none
     //  Returns: wigo_ws_GeoTrailSettings object for current setting. May be null.
-    this.onGetSettings = function () { null; };
+    this.onGetSettings = function () { };
+
+    // Map cache has been cleared.
+    this.onMapCacheCleared = function () { };
 
     // ** Public members
 
@@ -175,6 +178,15 @@ function wigo_ws_View() {
         divStatus.style.display = "block";
         divStatus.innerHTML = sStatus;
         SetMapPanelTop();
+    };
+
+    // Displays an Alert message box which user must dismiss.
+    // Arg:
+    //  sMsg: string for message displayed.
+    this.ShowAlert = function (sMsg) {
+        var reBreak = new RegExp('<br/>', 'g'); // Pattern to replace <br/>.
+        var s = sMsg.replace(reBreak, '\n');    // Replace <br/> with \n.
+        AlertMsg(s);
     };
 
     // Clears the status message.
@@ -260,6 +272,7 @@ function wigo_ws_View() {
     var divMode = $('#divMode')[0];
     var selectMode = $('#selectMode')[0];
     var buSaveOffline = $('#buSaveOffline')[0];
+    var selectMapCache = $('#selectMapCache')[0];
     var selectMenu = $('#selectMenu')[0];
 
     var divSettings = $('#divSettings')[0];
@@ -313,6 +326,7 @@ function wigo_ws_View() {
         // Inform controller of the mode change.
         that.onModeChanged(newMode);
         // For online mode, request loading the geo paths drop list for current user
+        ShowMapCacheSelect(false);
         ShowSaveOfflineButton(true);
         that.onGetPaths(nMode, that.getOwnerId());
     });
@@ -379,6 +393,7 @@ function wigo_ws_View() {
             that.ShowStatus(result.sMsg);
         } else {
             if (nMode === that.eMode.offline) {
+                ShowMapCacheSelect(true);
                 ShowSaveOfflineButton(false);
                 map.GoOffline(true);
                 // Clear path on map in case one exists because user needs to select a path
@@ -387,6 +402,7 @@ function wigo_ws_View() {
                 // For offline mode, request loading the geo paths drop list for current user
                 that.onGetPaths(nMode, that.getOwnerId());
             } else if (nMode === that.eMode.online) {
+                ShowMapCacheSelect(false);
                 ShowSaveOfflineButton(true);
                 map.GoOffline(false);
                 // Clear path on map in case one exists because user needs to select a path
@@ -396,6 +412,44 @@ function wigo_ws_View() {
                 that.onGetPaths(nMode, that.getOwnerId());
             }
         }
+    });
+
+    $(selectMapCache).bind('change', function (e) {
+        if (that.curMode() === that.eMode.offline) {
+            if (this.value === 'clear') {
+                // Confirm it is ok to clear the cache.
+                var sMsg =
+"Clearing the map cache deletes all the trail maps you have saved.\n\
+Are you sure you want to delete the maps?";
+                ConfirmYesNo(sMsg, function (bYes) {
+                    if (bYes) {
+                        that.ShowStatus("Clearing map cache ...", false); // false => not an error.
+                        map.ClearCache(function (nFilesDeleted, nFilesIfError) {
+                            var sResult;
+                            if (nFilesIfError > 0)
+                                sResult = "Error occurred, deleted {0} files.".format(nFilesIfError);
+                            else
+                                sResult = "Deleted {0} cache files.".format(nFilesDeleted);
+                            AlertMsg(sResult);
+                            that.ClearStatus();
+                            ClearOfflineGeoPathSelect();
+                            if (that.onMapCacheCleared)
+                                that.onMapCacheCleared();
+                        });
+                    }
+                });
+            } else if (this.value === 'size') {
+                // Display number of files and size of cache.
+                that.ShowStatus("Calculating map cache size ...", false); // false => not an error.
+                map.CacheSize(function (nFiles, nBytes) {
+                    var sMBytes = (nBytes / 1000).toFixed(2);
+                    var sMsg = "Map cache contains:\n{0} files\n{1} MB".format(nFiles, sMBytes);
+                    AlertMsg(sMsg);
+                    that.ClearStatus();
+                });
+            }
+        }
+        selectMapCache.selectedIndex = 0;
     });
 
     $(selectMenu).bind('change', function (e) {
@@ -428,7 +482,6 @@ function wigo_ws_View() {
         }
         that.ClearStatus();
     });
-
 
     $(selectAllowGeoTracking).bind('change', function(e) {
         var bTrack = this.value ===  'yes';
@@ -470,8 +523,8 @@ function wigo_ws_View() {
     });
 
     $(selectAlert).bind('change', function () {
-        // Allow/disallow alerts.
-        alerter.bAlertsAllowed = selectAlert.value === 'on';
+        // Enable/disable alerts.
+        alerter.bPhoneEnabled = selectAlert.value === 'on';
     });
 
     $(buGoToPath).bind('click', function (e) {
@@ -536,7 +589,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.0.001  07/02/2015";
+        var sVersion = "1.1.003  07/22/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -555,7 +608,8 @@ and are listed below. Refer to them individually to determine their kind of lice
    jquery 1-11.3\n\
    Leaflet 0.7.3 for maps\n\
    L.TileLayer.Cordova for caching map tiles\n\
-   cordova-plugin-dialogs 1.1.2-dev "Notification"\n\
+   cordova-plugin-dialogs\n\
+   com.jetboystudio.pebble.PebblePGPlugin\n\
    cordova-plugin-file 2.0.0 "File"\n\
    cordova-plugin-file-transfer 1.1.0 "File Transfer"\n\
    cordova-plugin-geolocation 1.0.0 "Geolocation"\n\
@@ -566,18 +620,23 @@ and are listed below. Refer to them individually to determine their kind of lice
         return sMsg;
     }
 
+    // Returns string for help message.
     function HelpMsg() {
         var sMsg = '\
 Enter a Sign-in id and press Set. Your sign-in id is remembered so \
 that you only need to set it once.\n\n\
 Online/Offline switches between accessing trails from the Internet of from locally saved maps.\n\n\
-Select Online\n\
-Online allows you to select Geo-paths that others have shared or ones \
-that are private to you.\
+Online lets you \
+select Geo-paths that others have shared or ones \
+that are private to you.\n\n\
+Save Offline\n\
 Touch the Save Offline button to save a path you are viewing so that you can \
 view it when you are offline.\n\n\
-Select Offline to use the paths you have saved offline. Select a Geo Path from the \
+Offline lets you select paths you have saved offline. Select a Geo Path from the \
 list you have saved.\n\n\
+Map Cache shows information about the cache of map tiles.\n\
+Select Size to see the number of files and the size in MB of all the files.\n\
+Select Clear to empty the cache of map files.\n\n\
 Using Controls at Top of Map\n\
 Ctr Trail brings the map to the center of the selected path.\n\n\
 MyLoc displays your current location on the map.\n\n\
@@ -627,6 +686,41 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 
     }
 
+    // Display confirmation dialog with Yes, No buttons.
+    // Arg:
+    //  onDone: asynchronous callback with signature:
+    //      bConfirm: boolean indicating Yes.
+    // Returns synchronous: false. Only onDone callback is meaningful.
+    function ConfirmYesNo(sMsg, onDone) {
+        if (navigator.notification) {
+            navigator.notification.confirm(sMsg, function (iButton) {
+                if (onDone) {
+                    var bYes = iButton === 1;
+                    onDone(bYes);
+                }
+            },
+            "Confirm", "Yes,No");
+        } else {
+            var bConfirm = window.confirm(sMsg);
+            if (onDone)
+                onDone(bConfirm);
+        }
+        return false;
+    }
+
+
+    // Removes all elements after the first element (index 0) from selectGeoPathSelect control,
+    // provide the current mode is offline. Also clears the path drawn on the map.
+    function ClearOfflineGeoPathSelect(select) {
+        if (that.curMode() === that.eMode.offline) {
+            var nCount = selectGeoPath.length;
+            for (var i = 1; i < nCount; i++) {
+                selectGeoPath.remove(1);
+            }
+            map.ClearPath();
+        }
+    }
+
     // Runs the trackTimer object.
     // If trackTimer.bOn is true, clears trackTimer; otherwise starts the periodic timer.
     // Remarks: Provides the callback function that is called after each timer period completes.
@@ -638,8 +732,9 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                     trackTimer.ClearTimer();
                     var sError = 'Timer for automatic geo-tracking failed.<br/>';
                     ShowGeoTrackingOff(sError);
-                    if (alerter.bPhoneEnabled && alerter.bAlertsAllowed)
-                        navigator.notification.beep(4);
+                    alerter.DoAlert();
+                    pebbleMsg.Send("Tracking timer failed", true);
+
                 } else {
                     if (bInProgress)
                         return;
@@ -720,8 +815,13 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         if (bAllow) {
             $(selectGeoTrack).show();
             $(labelGeoTrack).show();
-            $(selectAlert).show();
-            $(labelAlert).show();
+            if (settings.bPhoneAlert) {
+                $(selectAlert).show();
+                $(labelAlert).show();
+            } else {
+                $(selectAlert).hide();
+                $(labelAlert).hide();
+            }
             $(selectGeoTrack).val(bTracking ? 'on' : 'off');
             $(selectAlert).val(bOffPathAlert ? 'on' : 'off');
         } else {
@@ -744,9 +844,9 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Enable phone alerts.
-        alerter.bAlertsAllowed = settings.bAllowGeoTracking;
+        alerter.bAlertsAllowed = settings.bAllowGeoTracking && settings.bPhoneAlert;
         if (settings.bAllowGeoTracking) {
-            alerter.bPhoneEnabled = settings.bPhoneAlert;
+            alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
         } else {
             alerter.bPhoneEnabled = false;
         }
@@ -856,7 +956,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                 var nSeconds = Math.round(msInterval / 1000);
                 myTimerCallback = callback;
                 if (window.wakeuptimer) {
-                    window.wakeuptimer.snooze(SnoozeWakeUpSuccess,
+                    window.wakeuptimer.snooze(
+                        SnoozeWakeUpSuccess,
                         SnoozeWakeUpError,
                         {
                             alarms: [{
@@ -865,7 +966,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                                 extra: { id: myTimerId } // json containing app-specific information to be posted when alarm triggers
                             }]
                         }
-                     );
+                    );
                 }
             } else {
                 // Clear timer.
@@ -984,6 +1085,17 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             divOwnerId.style.display = 'block';
         else
             divOwnerId.style.display = 'none';
+    }
+
+    // Shows or hides selectMapCacke.
+    // Arg:
+    //  bShow: boolean indicating to show.
+    function ShowMapCacheSelect(bShow)
+    {
+        if (bShow)
+            selectMapCache.style.display = 'block';
+        else
+            selectMapCache.style.display = 'none';
     }
 
     // Shows or hides buSaveOffline button.
@@ -1209,6 +1321,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
     this.setModeUI(this.eMode.toNum(selectMode.value));
+    if (this.curMode() === this.eMode.online)
+        ShowMapCacheSelect(false); // Hide selectMapCache control when mode is online.
     MinimizeMap();
 }
 
@@ -1260,11 +1374,20 @@ function wigo_ws_Controller() {
             params.gpxPath = model.ParseGpxXml(gpx.xmlData);
         }
 
-        model.setOfflineParams(params);
         // Cache the map tiles.
         view.CacheMap(function (status) {
             // Show Status updates.
             view.ShowStatus(status.sMsg, status.bError);
+            if (status.bDone) {
+                if (!status.bCancel)
+                    view.ShowAlert(status.sMsg);
+                view.ClearStatus();
+                if (!status.bError && !status.bCancel) {
+                    // Save the offline params in localStorage for 
+                    // using trail offline from cache.
+                    model.setOfflineParams(params);
+                }
+            }
         });
     };
 
@@ -1286,7 +1409,12 @@ function wigo_ws_Controller() {
     view.onGetSettings = function () {
         var settings = model.getSettings();
         return settings;
-    }; 
+    };
+
+    // Clears offline parameters in local storage when map cache has been cleared.
+    view.onMapCacheCleared = function () {
+        model.clearOffLineParamsList();
+    };
 
     // ** More private members
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
@@ -1364,7 +1492,6 @@ function wigo_ws_Controller() {
     }
 
     view.Initialize();
-    
 }
 
 // Set global var for the controller and therefore the view and model.

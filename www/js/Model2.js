@@ -126,6 +126,12 @@ function wigo_ws_Model() {
         return arOfflineParams.getAll();
     }
 
+    // Clears the list of offline parameters and saves the empty list to localStorage.
+    this.clearOffLineParamsList = function () {
+        arOfflineParams.Clear();
+        arOfflineParams.SaveToLocalStorage();
+    }
+
     // Sets settings in localStorage.
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for the settings.
@@ -199,6 +205,14 @@ function wigo_ws_Model() {
             return arParams;
         }
         
+        // Removes all elementsw of this array.
+        this.Clear = function () {
+            var nCount = arParams.length;
+            for (var i = 0; i < nCount; i++) {
+                arParams.pop();
+            }
+        };
+
         // Returns number of elements in this array.
         this.Count = function () {
             return arParams.length;

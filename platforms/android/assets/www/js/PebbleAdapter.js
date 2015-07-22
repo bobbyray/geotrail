@@ -53,7 +53,6 @@ function wigo_ws_PebbleAdapter(uuid) {
 
     // boolean that indicates if Pebble is connected.
     this.IsConnected = function() {
-        ////20150718 return that.pebbleConnected;
         return pebbleConnected;
     };
 
