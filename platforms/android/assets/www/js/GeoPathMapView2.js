@@ -147,7 +147,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //       is a bit different and previous geo point in addition to current geo point 
     //       are used to draw the figures.
     // Arg:
-    //  location: Map LatLng object for current location off the geo path.
+    //  location: Map LatLng object for current geo-location.
     //  dOffPath: float for distance from location off-path to on-path for which 
     //      valid result is returned.
     // Returns {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float}:
@@ -161,11 +161,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //  bRefLine indicates bearingRefLine is valid.
     //  bearingRefLine is bearing (y-North cw) in degrees (0.0 to 360.0) for reference 
     //  line from previous off-path location to current off-path location.
+    //  loc: L.LatLng object for location.
     // Remarks:
     //  The difference between bearingToPath and bearingRefLine may be useful for suggesting
     //  degrees of correction to navigate back to the path (trail).
     this.SetGeoLocationUpdate = function (location, dOffPath) {
-        var result = { bToPath: false, bearingToPath: 0.0, dToPath: 0.0, bRefLine: false, bearingRefLine: 0.0 };
+        var result = { bToPath: false, bearingToPath: 0.0, dToPath: 0.0, bRefLine: false, bearingRefLine: 0.0, loc: location };
         if (!IsMapLoaded())
             return result; // Quit if map has not been loaded.
 

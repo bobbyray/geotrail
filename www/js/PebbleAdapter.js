@@ -164,6 +164,38 @@ function wigo_ws_PebbleAdapter(uuid) {
         return bSent;
     };
 
+    // ** Events fired by PebbleAdapter.
+    //    Owner of this object assigned to these functions to handle events.
+
+    // Enumeration of Pebble Button Ids.
+    this.eButtonId = { Back: 0, Up: 1, Select: 2, Down: 3,
+                             IsValid: function (n) {
+                                var bOk = n >= this.Back && n <= this.Down;
+                                return bOk;
+                             }
+                           };
+
+    // Enumeration of type of Pebble button clicks.
+    this.eClickType =   { Single: 1, Double: 2, Long: 3,
+                          IsValid: function (n) {
+                             var bOk = n >= this.Single && n <= this.Long;
+                             return bOk;
+                          }
+                        };
+    
+
+    // Fired when a message is received from Pebble watch for a button click on the watch.
+    // Arg: 
+    //  nButtonId: integer. id for the button clicked as defined by this.eButtonId.
+    //  nClickType: integer. Type of button click as defined by this.eClickType.
+    this.onClickReceived = function (nButtonId, nClickType) { };
+
+    // Fired when text is received.
+    // Arg:
+    //  sText: string. The texted received.
+    this.onTextReceived = function (sText) { };
+
+
     // ** Private members
     var bSendBusy = false;
 
@@ -224,12 +256,42 @@ function wigo_ws_PebbleAdapter(uuid) {
 
     // listen for data from Pebble
     document.addEventListener("Pebble.data", function (e) {
-        e.detail.data = JSON.parse(e.detail.data);
+        var data = JSON.parse(e.detail.data);
         console.log('DATA', e.detail);
 
-        // Do not know what this warning means?
-        // seems to crash my watch
-        // Pebble.sendAck(e.detail.transaction);
+        // Element 0 is cmd: 'text' or 'click' 
+        var cmd = data[0] && data[0].value ? data[0].value : null;
+        if (cmd === 'text') {
+            var sText = data[1] ? data[1].value : null;
+            if (sText)
+                that.onTextReceived(sText);
+            console.log("Text from Pebble: ", sText);
+        } else if (cmd === 'click') {
+            // Element 1 is button id, element 2 is click type.
+            var sLogMsg = "Pebble button click, ";
+            var nClickType = null;
+            var nButtonId = data[1] ? data[1].value : null;
+            if (nButtonId)
+                nClickType = data[2] ? data[2].value : null;
+            if (nButtonId && nClickType) {
+                if (that.eButtonId.IsValid(nButtonId) && that.eClickType.IsValid(nClickType)) {
+                    that.onClickReceived(nButtonId, nClickType);
+                } else {
+                    sLogMsg = 'Invalid ' + sLogMsg;
+                }
+            }
+            var sId_Type = ' id: {0}, type: {1}'.format(nButtonId, nClickType);
+            console.log(sLogMsg, sId_Type);
+        } else {
+            console.log("Unknown cmd received from Pebble: ", cmd);
+        }
+
+        // Ack Pebble message. If Ack is not given, pebble detects timeout error,
+        // which could be ignored. A comment by plugin author indicated sending
+        // Ack here to Pebble might cause a problem, but sending Ack works fine for me.
+        // In the Pebble code, the timeout error is detected as an indication that 
+        // this phone app is not running.
+        Pebble.sendAck(e.detail.transaction);
     });
 
     // tell java to listen for these

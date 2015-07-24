@@ -344,10 +344,7 @@ function wigo_ws_View() {
                 if (trackTimer.bOn) {
                     if (map.IsPathDefined()) {
                         // Tracking timer is on so show current geo location right away.
-                        that.ShowStatus("Getting Geo Location ...", false);
-                        TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult) {
-                            ShowGeoLocUpdateStatus(updateResult);
-                        });
+                        DoGeoLocation();
                     }
                 } else {
                     that.ShowStatus("Geo tracking off.", false); // false => not an error.
@@ -504,11 +501,7 @@ Are you sure you want to delete the maps?";
 
 
     $(buGeoLocate).bind('click', function (e) {
-        that.ShowStatus("Getting Geo Location ...", false);
-        TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult) {
-            ShowGeoLocUpdateStatus(updateResult);
-        });
-
+        DoGeoLocation();
     });
 
     $(selectGeoTrack).bind('change', function (e) {
@@ -587,9 +580,17 @@ Are you sure you want to delete the maps?";
 
     var dCloseToPathThreshold = 30; // Off-path locations < dCloseToPathThresdhold considered to be on-Path.
 
+    // Get current geo location, show on the map, and update status in phone and Pebble..
+    function DoGeoLocation() {
+        that.ShowStatus("Getting Geo Location ...", false);
+        TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult) {
+            ShowGeoLocUpdateStatus(updateResult);
+        });
+    }
+
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.003  07/22/2015";
+        var sVersion = "1.1.004  07/24/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -741,10 +742,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                     bInProgress = true;
                     if (result.bRepeating) {
                         if (map.IsPathDefined()) {
-                            that.ShowStatus("Getting Geo Location ...", false);
-                            TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult) {
-                                ShowGeoLocUpdateStatus(updateResult);
-                            });
+                            DoGeoLocation();
                         }
                     } else {
                         trackTimer.ClearTimer();
@@ -1217,10 +1215,36 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             }
         };
 
+        // ** Events fired for message received from Pebble.
+        //    Creator of this object sets member callback functions below to handle the event.
 
+        // Select button single click received from Pebble.
+        this.onSelect1Click = function () { };
+
+        // Text received from Pebble.
+        // Arg:
+        //  sText: string. The texted received.
+        this.onTextReceived = function (sText) { };
+    
+        // ** Private members
         // May need to provide uuid for pebble app. Defaults to PebbleMsg app.
         // May want to write special GeoTrail pebble app.
         var pebble = new wigo_ws_PebbleAdapter();
+
+        // Fire event for Pebble click received.
+        pebble.onClickReceived = function (nButtonId, nClickType) {
+            if (nButtonId === pebble.eButtonId.Select && 
+                nClickType === pebble.eClickType.Single) {
+                if (that.onSelect1Click)
+                    that.onSelect1Click();
+            }
+        };
+        
+        // Fire event for Pebble text received.
+        pebble.onTextReceived = function (sText) {
+            if (that.onTextReceived)
+                that.onTextReceived(sText);
+        };
     }
 
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
@@ -1241,6 +1265,12 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             that.ClearStatus();
             if (map.IsPathDefined()) {
                 pebbleMsg.Send("On Path", false) // false => no vibration.
+            } else {
+                // Show lat lng for the current location since there is no trail.
+                var sAt = "lat/lng({0},{1})".format(upd.loc.lat, upd.loc.lng);
+                that.ShowStatus(sAt, false); // false => no error.
+                sAt = "lat/lng\n{0}\n{1}".format(upd.loc.lat, upd.loc.lng);
+                pebbleMsg.Send(sAt, false); // false => no vibration.
             }
         } else {
             // vars for messages.
@@ -1318,6 +1348,16 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
     var alerter = new Alerter(); // Object for issusing alert to phone or Pebble watch.
     var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
+    // Handler for Select button single click received from Pebble.
+
+    pebbleMsg.onSelect1Click = function () {
+        DoGeoLocation();
+    };
+
+    // Handler for text message received from Pebble.
+    pebbleMsg.onTextReceived = function (sText) {
+        that.ShowStatus(sText, false); 
+    };
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
     this.setModeUI(this.eMode.toNum(selectMode.value));
