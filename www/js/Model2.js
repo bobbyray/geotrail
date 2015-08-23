@@ -1,5 +1,41 @@
 ﻿'use strict';
 // Object for the Model (data) used by html page.
+
+// Object for settings for My Geo Trail saved/loaded by model.
+function wigo_ws_GeoTrailSettings() {
+    // Boolean indicating geo location tracking is allowed.
+    this.bAllowGeoTracking = true;
+    // Float for period for updating geo tracking location in seconds.
+    this.secsGeoTrackingInterval = 30;
+    // Float for distance in meters for threshold beyond which nearest distance to path is 
+    // considered to be off-path.
+    this.mOffPathThres = 30;
+    // Boolean indication geo location tracking is enabled.
+    // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
+    //       and tracking is not enabled.
+    this.bEnableGeoTracking = false;
+    // Boolean to indicate alert is issued when off-path.
+    this.bOffPathAlert = true;
+    // Boolean to indicate a phone alert (vibration) is given when off-path. 
+    this.bPhoneAlert = true;
+    // Float for number of seconds for phone to vibrate on an alert.
+    this.secsPhoneVibe = 0.0;
+    // Integer for number of beeps on an alert. 0 indicates no beep.
+    this.countPhoneBeep = 1;
+    // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
+    this.bPebbleAlert = true;
+    // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
+    this.countPebbleVibe = 1;
+    // Float for distance in meters for threshold for minimum change in distance
+    // for previous geo-location to be updated wrt to current geo-location.
+    this.dPrevGeoLocThres = 10.0;
+    // Boolean to indicate a mouse click (touch) simulates getting the geo-location
+    // at the click point. For debug only.
+    this.bClickForGeoLoc = false;
+}
+
+
+// Object for the Model (data) used by html page.
 // Model should be sharable by all html pages for GeoPaths site.
 // However, Controller and View are different for each page.
 function wigo_ws_Model() {
@@ -14,7 +50,7 @@ function wigo_ws_Model() {
     //      bOk: boolean for success.
     //      sStatus: status string describing result.
     this.putGpx = function (gpx, onDone) {
-        var bOk = api.GpxPut(gpx, onDone);
+        var bOk = api.GpxPut(gpx, this.getAccessHandle(), onDone);
         return bOk;
     };
 
@@ -29,13 +65,59 @@ function wigo_ws_Model() {
     //      gpxList: array of Gpx objects found in database.
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxList = function (sOwnerId, nShare, onDone) {
-        var bOk = api.GpxGetList(sOwnerId, nShare, onDone);
+        var bOk = api.GpxGetList(sOwnerId, nShare, this.getAccessHandle(), onDone);
         return bOk;
     }
+
+    // Authenticates user with database server.
+    // Returns true for request to server started, 
+    //  false if another request is already in progress.
+    // Args:
+    //  accessToken: string for accessToken, which server uses to verify authentication.
+    //  userID: string for unique user id.
+    //  userName: string or user name.
+    //  onDone: callback on async completion, Signature:
+    //      json {status, accessHandle, msg}:
+    //          status: integer for status define by this.EAuthStatus().
+    //          accessHandle: string for data access handle (user identifier) from GeoPaths server.
+    //          msg: string describing the status.
+    //      
+    this.authenticate = function (accessToken, userID, userName, onDone) {
+        var authData = { 'accessToken': accessToken, 'userID': userID, 'userName': userName };
+        var bOk = api.Authenticate(authData, onDone);
+        return bOk;
+    };
+
+
+    // Logouts (revokes authentication) for owner at the database server.
+    // Args:
+    //  onDone: callback on asynchronous completion, Signature:
+    //      bOk: boolean indicating success.
+    //      sMsg: string describing the result.
+    // Returns boolean synchronously indicating successful post to database server.
+    this.logout = function (onDone) {
+        var logoutData = { 'accessHandle': this.getAccessHandle(), 'userID': this.getOwnerId() };
+        var bOk = api.Logout(logoutData, onDone);
+        return bOk;
+    };
+
+    // Returns true if there is an owner id and access handle.
+    this.IsOwnerAccessValid = function () {
+        var ah = this.getAccessHandle();
+        var id = this.getOwnerId();
+        var bOk = ah.length > 0 && id.length > 0;
+        return bOk;
+    };
 
     // Returns enumeration object for sharing mode of gpx data.
     // Returned obj: { public: 0, protected: 1, private: 2 }
     this.eShare = function () { return api.eShare(); };
+
+    // Returns enumeration object authentication status received from database server.
+    // See GeoPathsRESTful.eAuthStatus for enumeration.
+    this.eAuthStatus = function () {
+        return api.eAuthStatus();
+    }
 
     // Reads a text file.
     // Return true for reading stared, false for reading already in progress. 
@@ -82,7 +164,7 @@ function wigo_ws_Model() {
     };
 
 
-    // Returns OwnerId string from localStorage.
+    // Returns OwnerId (aka user ID) string from localStorage.
     // Returns empty string if OwnerId does not exist.
     this.getOwnerId = function () {
         var sOwnerId;
@@ -93,12 +175,48 @@ function wigo_ws_Model() {
         return sOwnerId;
     }
 
-    // Sets OwnerId in localStorage.
+    // Sets OwnerId (aka user ID) in localStorage.
     // Arg:
-    //  sOwnerId: string for the OnwerId.
+    //  sOwnerId: string for the OwnerId.
     this.setOwnerId = function (sOwnerId) {
         localStorage[sOwnerIdKey] = sOwnerId;
     }
+
+    // Returns owner name string from localStorage.
+    // Returns empty string if name does not exist.
+    this.getOwnerName = function () {
+        var sOwnerName;
+        if (localStorage[sOwnerNameKey])
+            sOwnerName = localStorage[sOwnerNameKey];
+        else
+            sOwnerName = "";
+        return sOwnerName;
+    };
+
+    // Sets owner name in localStorage.
+    // Arg:
+    //  sOwnerName is string for the owner name.
+    this.setOwnerName = function (sOwnerName) {
+        localStorage[sOwnerNameKey] = sOwnerName;
+    };
+
+    // Returns access handle string from localStorage.
+    // Returns empty string if access handle does not exist.
+    this.getAccessHandle = function () {
+        var sAccessHandle;
+        if (localStorage[sAccessHandleKey])
+            sAccessHandle = localStorage[sAccessHandleKey];
+        else
+            sAccessHandle = "";
+        return sAccessHandle;
+    };
+
+    // Returns access handle from localStorage.
+    // Arg:
+    //  sAccessHandle is string for the access handle.
+    this.setAccessHandle = function (sAccessHandle) {
+        localStorage[sAccessHandleKey] = sAccessHandle;
+    };
 
     // Sets offline params for a map in local storage.
     // Args:
@@ -147,6 +265,9 @@ function wigo_ws_Model() {
 
     // ** Private members
     var sOwnerIdKey = "GeoPathsOwnerId";
+    var sAccessHandleKey = "GeoPathsAccessHandleKey";
+    var sOwnerNameKey = "GeoPathsOwnerNameKey";
+
     var sOfflineParamsKey = 'GeoPathsOfflineParamsKey';
     var sGeoTrailSettingsKey = 'GeoTrailSettingsKey'; 
 

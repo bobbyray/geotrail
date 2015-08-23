@@ -66,5 +66,17 @@
         },
         "is_top_level": true,
         "variables": {}
+    },
+    "com.phonegap.plugins.facebookconnect": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/Wizcorp/phonegap-facebook-plugin",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {
+            "APP_ID": "694318660701967",
+            "APP_NAME": "WigoGeoTrail"
+        }
     }
 }

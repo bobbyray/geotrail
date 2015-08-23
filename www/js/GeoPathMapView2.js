@@ -666,6 +666,24 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             iTry++;
             try {
                 console.log("Creating L.TileLayer.Cordova.");
+                // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+                // May want to get mapbox account to get better map tiles.
+                // Can get elevation thru mapbox api which would be useful.
+                layer = L.tileLayerCordova('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    // these options are perfectly ordinary L.TileLayer options
+                    maxZoom: 18,
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+                    // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
+                    folder: 'WigoWsGeoTrail',
+                    name: 'Trail',
+                    debug: true
+                });
+
+                /* //20150822 Original URI template for mapbox tiles, which used to work but no longer.
+                              Requires mapbox access in order to get public access token.
+                              Developer license for 50K map views per month is free, which may be a good 
+                              option. Looks like there is api to get elevation, which might be useful.
                 layer = L.tileLayerCordova('https://{s}.tiles.mapbox.com/v3/examples.map-i875mjb7/{z}/{x}/{y}.png', {
                     // these options are perfectly ordinary L.TileLayer options
                     maxZoom: 18,
@@ -677,6 +695,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
                     name: 'Trail',
                     debug: true
                 });
+                */
+
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
                 bOk = true;
             } catch (e) {

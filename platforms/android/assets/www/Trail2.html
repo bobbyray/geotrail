@@ -3,10 +3,12 @@
 <head>
     <title>MyTrail</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-eval' http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
-    <!-- Works, but don't think needed. Use to think mapbox site is accessed by script so script-src 'unsafe-inline' is needed.
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' http://cdn.leafletjs.com; connect-src 'self' http://www.wigo.ws; img-src *; style-src 'self' http://cdn.leafletjs.com; frame-src 'self' gap:;">
-    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+          script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
+          connect-src 'self' http://localhost:54545 http://www.wigo.ws;
+          img-src *;
+          style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
+          frame-src 'self' gap:;">
 
     <script charset="utf-8" src="cordova.js"></script>
 
@@ -31,15 +33,20 @@
     <script src="js/Model2.js"></script>
     <script src="js/GeoPathMapView2.js"></script>
     <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
+    <script src="jsAuthCordova/FbAuthentication2.js"></script>
     <script src="js/Trail2.js"></script>
 
 </head>
 <body>
     <div id="divStatus"></div>
     <div id="divOwnerId">
-        <label id="labelSignIn" for="txbxOwnerId">Sign-in Id</label>
-        <input id="txbxOwnerId" type="text" />
-        <input id="buSetOwnerId" type="button" value="Set" />
+        <label id="labelSignIn" for="txbxOwnerName">Owner </label>
+        <input id="txbxOwnerName" type="text" disabled: disabled/>
+        <select id="selectSignIn">
+            <option value="set">Sign In</option>
+            <option value="facebook">Facebook</option>
+            <option value="logout">Logout</option>
+        </select>
     </div>
     <div id="divMode">
         <select id="selectMode">

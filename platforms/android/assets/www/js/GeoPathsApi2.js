@@ -2,41 +2,115 @@
 function wigo_ws_GeoPathsRESTfulApi() {
     // ** Public methods.
 
-    // Puts a Gpx objecgt to the server.
+    // Puts a Gpx object to the server.
     // Returns true immediately if async request is sent, false if request is in progress.
     // Args
     //  gpx: Gpx object to send to server.
+    //  ah: string for access handler for verification of owner.
     //  onDone: callback handler called when put completes. Signature:
     //      bOk: boolean for success.
     //      sStatus: string for status message. Describes error bOk false.
-    this.GpxPut = function (gpx, onDone) {
+    this.GpxPut = function (gpx, ah, onDone) {
         // Save async completion handler.
         if (typeof (onDone) === 'function')
             onGpxPut = onDone;
         else
             onGpxPut = function (bOk, sStatus) { };
 
-        var bOk = base.Post(eState.GpxPut, sGpxPutUri(), gpx);
+        var bOk = base.Post(eState.GpxPut, sGpxPutUri(ah), gpx);
         return bOk;
     };
 
-    
-    this.GpxGetList = function (sOwnerId, nShare, onDone) {
+    // Gets GpxGetList from server.
+    // Args
+    //  sOwnerId: string for owner id.
+    //  nShare: byte from eShare enumeration for type of sharing.
+    //  ah: string for access handler for verification of owner.
+    //  OnDone: Asynchronous completion handler. Signature:
+    //      bOk: successful or not.
+    //      gpxList [out]: ref to GpxList of Gpx objects received.
+    //      sStatus: status message.
+    //  Synchronous returns: boolean for get from server ok.
+    this.GpxGetList = function (sOwnerId, nShare, ah, onDone) {
         // Save async completion handler.
         if (typeof (onDone) === 'function')
             onGpxGetList = onDone;
         else
             onGpxGetList = function (bOk, gpxList, sStatus) { };
-        var bOk = base.Get(eState.GpxGetList, sGpxGetListUri(sOwnerId, nShare));
+        var bOk = base.Get(eState.GpxGetList, sGpxGetListUri(sOwnerId, nShare, ah));
+        return bOk;
     };
+
+    // Authenticates user with the server.
+    // Args 
+    //  authData, json {accessToken, userID, userName}
+    //      accessToken: string obtained from OAuth (Facebook) server for access token.
+    //      userID: string for user ID obtained from OAuth server.
+    //      userName: string for user name obtained from OAuth server.
+    //  onDone, callback handler for authentication completed. 
+    //  Handler Signature, json {status, accessHandle, msg}:
+    //      status: integer for status define by this.EAuthStatus.
+    //      accessHandle: string for access handle (user identifier) from GeoPaths server.
+    //      msg: string describing the status.
+    // Synchronous Return: boolean for successful post to server.
+    // Note: OnDone handler called for asynchronous completion. 
+    this.Authenticate = function (authData, onDone) {
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onAuthenticate = onDone;
+        else
+            onAuthenticate = function (status) { };
+        // Post ajax to geopaths server.
+        var bOk = base.Post(eState.Authenticate, sAuthenticateUri(), authData);
+    };
+
+    // Logs out user with the server (revokes authentication).
+    // Args:
+    //  userID: string for owner id.
+    //  accessHandle: string accessHandle saved when user authenticated.
+    //  onDone: callback handler for logout completed.
+    //  Handler signature:
+    //      boolean indicating success.
+    this.Logout = function (logoutData, onDone) {
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onLogout = onDone;
+        else
+            onLogout = function (bOk) { };
+        // Post ajax to geopaths server.
+        var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
+    }
 
     // Returns enumeration object for sharing state of a record.
     // Returned obj: { public: 0, protected: 1, private: 2 }
     this.eShare = function () { return eShare; };
 
+    // Returns enumeration object for user login status when authorization has completed.
+    this.eAuthStatus = function () { return eAuthStatus; };
+
     // ** Private members
     // Enumeration for api transfer state.
-    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2 };
+    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, };
+
+    // Enumeration for login status return by OAuth server.
+    // Note: same values as for FacebookAuthentication.eAuthResult (keep synced).
+    var eAuthStatus = {
+        Ok: 1,               // Authentication successfully verified.
+        Failed: 0,           // Authentication failed.
+        Canceled: -1,        // User canceled login (detected by client).
+        Error: -2,           // Error occurred trying to authenticate.
+        Expired: -3,         // Authorization expired.
+        Logout: -4,          // User logged out (detected by client).
+    }
+
+    // Object for result from Authenticate() api.
+    function AuthResult() {
+        this.status = eAuthStatus.Error; // Status for result as given by eAuthStatus.
+        this.accessHandle = ""; // Authentication access handle from server needed to access database.
+        this.userID = ""; // User id of authenticated user.
+        this.userName = ""; // User name of authenticated user.
+        this.msg = ""; // Message describing result.
+    }
 
     // Enumeration for sharing Gpx data.
     //  public: all people can access.
@@ -66,8 +140,11 @@ function wigo_ws_GeoPathsRESTfulApi() {
     };
 
     // Returns relative URI for the GpxPut api.
-    function sGpxPutUri() {
-        var s = "gpxput";
+    // Arg ah is access handle.
+    function sGpxPutUri(ah) {
+        if (!ah)
+            ah = "none";
+        var s = "gpxput?ah={0}".format(ah);
         return s;
     }
 
@@ -75,8 +152,23 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // Args:
     //  sOwnerId: string for sOwnerId of Gpx object.
     //  nShare: byte for eShare of Gpx object.
-    function sGpxGetListUri(sOwnerId, nShare) {
-        var s = "gpxgetlist/" + sOwnerId + "/" + eShare.toStr(nShare);
+    //  ah: string for access handle used for verification of owner.
+    function sGpxGetListUri(sOwnerId, nShare, ah) {
+        if (!ah)
+            ah = "none";
+        var s = "gpxgetlist/" + sOwnerId + "/" + eShare.toStr(nShare) + "?ah=" + ah;
+        return s;
+    }
+
+    // Returns relative URI for Authenticate api.
+    function sAuthenticateUri() {
+        var s = "authenticate";
+        return s;
+    }
+
+    // Returns relative URI for Logout api.
+    function sLogoutUri() {
+        var s = "logout";
         return s;
     }
 
@@ -100,12 +192,31 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  Returns nothing.
     var onGpxGetList = function (bOk, gpxList, sStatus) { };
 
+    // Authentication has completed.
+    // Handler signature:
+    //  status: ref to authentication status received.
+    var onAuthenticate = function (status) { };
+
+    // Logout has completed.
+    // Handler signature:
+    //  bOk: boolean indicated success.
+    var onLogout = function (bOk) { };
+
 
     var that = this; // Ref to this for private members.
 
     // Set object for core Ajax funcitons (kind of like a protected base class).
-    //LocalDebug var base = new wigo_ws_Ajax("Service.svc/");
-    var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/");
+    // Choose base service address for local debug or remote host.
+    //var base = new wigo_ws_Ajax("Service.svc/"); // Local debug (works)
+    //var base = new wigo_ws_Ajax("http://localhost:54545/Service.svc/"); // Local debug (works)
+    //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
+    var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host (Would like to try https)
+    //20150808!!!! I cannot get the ajax requests to work locally with the IIS Express Server.
+    //             IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
+    //             but the ajaxs requests for this api fail if https is used for the apis.
+    //             I think the problem is a configuration problem with IIS Express,
+    //             and that https for the ajax requests may work properly 
+    //             at the (GoDaddy) remote host. For now, not using https for these apis.
 
     // Handler in base class to handle completion of ajax request.
     base.onRequestServed = function (nState, bOk, req) {
@@ -134,6 +245,24 @@ function wigo_ws_GeoPathsRESTfulApi() {
                 }
                 onGpxGetList(bOk, gpxList, sStatus);
                 break;
+            case eState.Authenticate:
+                var authResult;
+                if (bOk) {
+                    if (req && req.readyState == 4 && req.status == 200) {
+                        authResult = JSON.parse(req.responseText);
+                    } else {
+                        authResult = new AuthResult();
+                        authResult.msg = "Invalid response received for Authenticate."
+                    }
+                } else {
+                    authResult = new AuthResult();
+                    authResult.msg = base.FormCompletionStatus(req);
+                }
+                onAuthenticate(authResult);
+                break;
+            case eState.Logout:
+                var sLogoutMsg = base.FormCompletionStatus(req);
+                onLogout(bOk, sLogoutMsg);
         }
     };
 }

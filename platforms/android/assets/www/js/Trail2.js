@@ -27,38 +27,6 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
     };
 };
 
-// Object for settings for My Geo Trail.
-function wigo_ws_GeoTrailSettings() {
-    // Boolean indicating geo location tracking is allowed.
-    this.bAllowGeoTracking = true;
-    // Float for period for updating geo tracking location in seconds.
-    this.secsGeoTrackingInterval = 30;
-    // Float for distance in meters for threshold beyond which nearest distance to path is 
-    // considered to be off-path.
-    this.mOffPathThres = 30;
-    // Boolean indication geo location tracking is enabled.
-    // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
-    //       and tracking is not enabled.
-    this.bEnableGeoTracking = false;
-    // Boolean to indicate alert is issued when off-path.
-    this.bOffPathAlert = true;
-    // Boolean to indicate a phone alert (vibration) is given when off-path. 
-    this.bPhoneAlert = true;
-    // Float for number of seconds for phone to vibrate on an alert.
-    this.secsPhoneVibe = 0.0;
-    // Integer for number of beeps on an alert. 0 indicates no beep.
-    this.countPhoneBeep = 1;
-    // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
-    this.bPebbleAlert = true;
-    // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
-    this.countPebbleVibe = 1;
-    // Float for distance in meters for threshold for minimum change in distance
-    // for previous geo-location to be updated wrt to current geo-location.
-    this.dPrevGeoLocThres = 10.0;
-    // Boolean to indicate a mouse click (touch) simulates getting the geo-location
-    // at the click point. For debug only.
-    this.bClickForGeoLoc = false;
-}
 
 // Object for View present by page.
 function wigo_ws_View() {
@@ -74,7 +42,6 @@ function wigo_ws_View() {
     // Handler Signature:
     //  nMode: byte value of this.eMode enumeration for the new mode.
     this.onModeChanged = function (nMode) { };
-
 
     // User selected a geo path from the list of paths.
     // Handler Signature:
@@ -109,6 +76,17 @@ function wigo_ws_View() {
     // Map cache has been cleared.
     this.onMapCacheCleared = function () { };
 
+    // Login authentication has completed.
+    // Handler Signature:
+    //  result: json {userName, userID, accessToken, nAuthResult}
+    //    userID: Facebook user id or empty string when authentication fails.
+    //    accessToken: access token string acquired from FaceBook, or empty string
+    //      when athentication fails or is cancelled.
+    //    nAuthResult: integer result of authentication, value of which is given 
+    //      by EAuthStatus in Service.cs.
+    this.onAuthenticationCompleted = function (result) { };
+
+
     // ** Public members
 
     // Initializes the view.
@@ -127,6 +105,10 @@ function wigo_ws_View() {
         });
     };
 
+    // Enumeration of Authentication status (login result)
+    this.eAuthStatus = function () {
+        return fb.EAuthResult;
+    };
 
     // Enumeration of mode for processing geo paths.
     this.eMode = {
@@ -155,14 +137,30 @@ function wigo_ws_View() {
 
     // Returns OwnerId string of signed-in user.
     this.getOwnerId = function () {
-        return txbxOwnerId.value;
+        return _ownerId;
     };
+    var _ownerId = "";
 
     // Sets OwnerId of signed-in user to string given by sOwnerId.
     this.setOwnerId = function (sOwnerId) {
-        txbxOwnerId.value = sOwnerId;
+        _ownerId = sOwnerId;
     };
 
+    // Returns Owner Name string of signed in user.
+    this.getOwnerName = function () {
+        return txbxOwnerName.value;
+    }
+
+    // Sets Owner Name string for signed in user.
+    this.setOwnerName = function (sOwnerName) {
+        txbxOwnerName.value = sOwnerName;
+    }
+
+    // Clears owner Id and owner Name for signed in user.
+    this.clearOwner = function () {
+        this.setOwnerId("");
+        this.setOwnerName("");
+    }
 
     // Displays a status message.
     // Arg:
@@ -203,11 +201,38 @@ function wigo_ws_View() {
         nMode = newMode;
         switch (nMode) {
             case this.eMode.online:
+                ShowMapCacheSelect(false);
+                ShowSaveOfflineButton(true);
+                map.GoOffline(false);
+                // Clear path on map in case one exists because user needs to select a path
+                // from the new list of paths.
+                map.ClearPath();
                 break;
             case this.eMode.offline:
+                ShowMapCacheSelect(true);
+                ShowSaveOfflineButton(false);
+                map.GoOffline(true);
+                // Clear path on map in case one exists because user needs to select a path
+                // from the new list of paths.
+                map.ClearPath();
                 break;
         }
     };
+
+    // Selects item in the selectMode drop list.
+    // Sets user interface for the new mode.
+    // Fires this.onModeChanged(..) event.
+    // Arg:
+    //  newMode: integer for new mode defined by this.eMode enumberation.
+    this.selectModeUI = function (newMode) {
+        selectMode.selectedIndex = newMode;
+        selectMode.value = this.eMode.toStr(newMode);
+
+        this.setModeUI(newMode)
+
+        if (this.onModeChanged)
+            this.onModeChanged(newMode);
+    }
 
     // Fill the list of paths that user can select.
     // Arg:
@@ -267,7 +292,7 @@ function wigo_ws_View() {
     var divStatus = $('#divStatus')[0];
     var divOwnerId = $('#divOwnerId')[0];
     var txbxOwnerId = $('#txbxOwnerId')[0];
-    var buSetOwnerId = $('#buSetOwnerId')[0];
+    var selectSignIn = $('#selectSignIn')[0];
 
     var divMode = $('#divMode')[0];
     var selectMode = $('#selectMode')[0];
@@ -315,21 +340,21 @@ function wigo_ws_View() {
     // ** Use jquery to attach event handler for controls.
     // Note: All the control event handlers clear status first thing.
 
-    $(buSetOwnerId).bind('click', function (e) {
+    $(selectSignIn).bind('change', function (e) {
         that.ClearStatus();
-        var sOwnerId = txbxOwnerId.value;
-        that.onOwnerId(sOwnerId);
-        // Initial to upload mode, same as when page is loaded.
-        var newMode = that.eMode.online;
-        selectMode.value = that.eMode.toStr(newMode);
-        that.setModeUI(newMode);
-        // Inform controller of the mode change.
-        that.onModeChanged(newMode);
-        // For online mode, request loading the geo paths drop list for current user
-        ShowMapCacheSelect(false);
-        ShowSaveOfflineButton(true);
-        that.onGetPaths(nMode, that.getOwnerId());
+        var val = this.selectedValue;
+        if (this.selectedIndex > 0) {
+            var option = this[this.selectedIndex];
+            if (option.value === 'facebook') {
+                fb.Authenticate();
+            } else if (option.value === 'logout') {
+                fb.LogOut();
+            }
+            this.selectedIndex = 0;
+        }
     });
+
+
 
     $(selectGeoPath).bind('change', function (e) {
         that.ClearStatus();
@@ -389,25 +414,8 @@ function wigo_ws_View() {
         if (!result.bOk)  {
             that.ShowStatus(result.sMsg);
         } else {
-            if (nMode === that.eMode.offline) {
-                ShowMapCacheSelect(true);
-                ShowSaveOfflineButton(false);
-                map.GoOffline(true);
-                // Clear path on map in case one exists because user needs to select a path
-                // from the new list of paths.
-                map.ClearPath();
-                // For offline mode, request loading the geo paths drop list for current user
-                that.onGetPaths(nMode, that.getOwnerId());
-            } else if (nMode === that.eMode.online) {
-                ShowMapCacheSelect(false);
-                ShowSaveOfflineButton(true);
-                map.GoOffline(false);
-                // Clear path on map in case one exists because user needs to select a path
-                // from the new list of paths.
-                map.ClearPath();
-                // For online mode, request loading the geo paths drop list for current user
-                that.onGetPaths(nMode, that.getOwnerId());
-            }
+            that.setModeUI(nMode);
+            that.onGetPaths(nMode, that.getOwnerId());
         }
     });
 
@@ -590,7 +598,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.004  07/24/2015";
+        var sVersion = "1.1.006  08/22/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -624,11 +632,12 @@ and are listed below. Refer to them individually to determine their kind of lice
     // Returns string for help message.
     function HelpMsg() {
         var sMsg = '\
-Enter a Sign-in id and press Set. Your sign-in id is remembered so \
-that you only need to set it once.\n\n\
+Select Sign In > Facebook to sign in. Your sign-in id is remembered so \
+you do not need to sign in again unless you log out.\n\
+You do not need to sign in, but you can only view public trails if not signed in.\n\n\
 Online/Offline switches between accessing trails from the Internet of from locally saved maps.\n\n\
 Online lets you \
-select Geo-paths that others have shared or ones \
+select Geo-paths that others have made public and ones \
 that are private to you.\n\n\
 Save Offline\n\
 Touch the Save Offline button to save a path you are viewing so that you can \
@@ -1344,6 +1353,13 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         SetMapPanelTop();
     }
 
+    // ** Private members for Facebook
+    // Callback after Facebook authentication has completed.
+    function cbFbAuthenticationCompleted(result) {
+        if (that.onAuthenticationCompleted)
+            that.onAuthenticationCompleted(result);
+    }
+
     // ** Constructor initialization.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
     var alerter = new Alerter(); // Object for issusing alert to phone or Pebble watch.
@@ -1361,9 +1377,11 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
     this.setModeUI(this.eMode.toNum(selectMode.value));
-    if (this.curMode() === this.eMode.online)
-        ShowMapCacheSelect(false); // Hide selectMapCache control when mode is online.
     MinimizeMap();
+
+    // Set Facebook login.
+    var fb = new wigo_ws_FaceBookAuthentication('694318660701967');
+    fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 }
 
 
@@ -1435,7 +1453,7 @@ function wigo_ws_Controller() {
     //  nMode: byte value of this.eMode enumeration.
     //  sPathOwnerId: string for path owner id for getting the paths from server.
     view.onGetPaths = function (nMode, sPathOwnerId) {
-        GetGeoPaths(nMode, sPathOwnerId, true); // true => bIncludePublic true.
+        GetGeoPaths(nMode, sPathOwnerId);
     };
 
     // Saves the settings to localStorage and as the current settings.
@@ -1456,6 +1474,72 @@ function wigo_ws_Controller() {
         model.clearOffLineParamsList();
     };
 
+    view.onAuthenticationCompleted = function (result) {
+        // result = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus}
+        var eStatus = view.eAuthStatus();
+        if (result.status === eStatus.Ok) {
+            // Show success, refine later.
+            view.ShowStatus("Successfully authenticated by OAuth.", false);
+            // Update database for authenticated owner.
+            model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
+                // Save user info to localStorage.
+                model.setOwnerId(result.userID);
+                model.setOwnerName(result.userName);
+                model.setAccessHandle(result.accessHandle);
+                view.setOwnerName(result.userName);
+                view.setOwnerId(result.userID);
+                if (result.status === model.eAuthStatus().Ok) {
+                    view.ShowStatus("User successfully logged in.", false);
+                    // Set ui to online mode.
+                    view.selectModeUI(view.eMode.online);
+                    // Cause geo paths to be displayed for user.
+                    view.onGetPaths(view.curMode(), view.getOwnerId());
+                } else {
+                    var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
+                    view.ShowStatus("")
+                }
+            });
+        } else if (result.status === eStatus.Logout) {
+            // Note: result not meaningful on logout completed because 
+            //       result.userID, result.accessToken have been set to empty.
+            // Successfully logged out of OAuth provider (Facebook).
+            view.ShowStatus("Successfully logged out by OAuth.", false);
+            var sOwnerId = model.getOwnerId();
+            var bOwnerIdValid = sOwnerId.length > 0;
+            if (bOwnerIdValid) {
+                model.logout(function (bOk, sMsg) {
+                    if (bOk) {
+                        view.ShowStatus("Successfully logged out.", false);
+                        // Initialize UI for same mode.
+                        var nMode = view.curMode();
+                        view.setModeUI(nMode);
+                        // Show geo path for no user logged in.
+                        view.onGetPaths(nMode, view.getOwnerId());
+                    } else {
+                        var sError = "Error logging out: {0}".format(sMsg);
+                        view.ShowStatus(sError);
+                    }
+                });
+            } else {
+                view.ShowStatus("No owner logged in.");
+            }
+
+            // Clear user info in localStorage.
+            model.setAccessHandle("");
+            model.setOwnerId("");
+            model.setOwnerName("");
+            // Clear textbox and id view for owner.
+            view.clearOwner();
+        } else if (result.status === eStatus.Canceled) {
+            view.ShowStatus("Login cancelled.", false);
+        } else {
+            // Show error.
+            var sError = "Authentication failed. " + result.sError;
+            view.ShowStatus(sError);
+        }
+    };
+
+
     // ** More private members
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
     var gpxOfflineArray = null; // Array of wigo_ws_GeoPathMap.OfflineParams objects obtained from model.
@@ -1464,50 +1548,86 @@ function wigo_ws_Controller() {
     // Args:
     //  nMode: view.eMode for current view mode.
     //  sPathOwnerId: string for owner id for the list.
-    //  bIncludePublic: boolean to indicate public records are included in the list.
-    //                  All records for the sPathOwnerId are in the list.
-    //                  bIncludePublic indicates if public records of other 
-    //                  owners are also included.
-    function GetGeoPaths(nMode, sPathOwnerId, bIncludePublic) {
-        var sOwnerId = sPathOwnerId;
-        if (nMode === view.eMode.online) {
-            // Get list of geo paths from the server.
-            // Get any share state for record owner.
+    function GetGeoPaths(nMode, sPathOwnerId) {
+        // Get list of geo paths from the server.
+        gpxArray = new Array(); // Clear existing gpxArray.
+        var arPath = new Array(); // List of path names to show in view.
+
+        // Local helper function to get all geo paths for owner.
+        // On error shows status in view.
+        // Args
+        //  onDone: asynchronous callback when done, Signature:
+        //      bOk: boolean indicating success.
+        function GetAllGeoPathsForOwner(onDone) {
+            // Get all geo paths for the owner.
             var nShare = model.eShare().any;
-            model.getGpxList(sOwnerId, nShare, function (bOk, gpxList, sStatus) {
-                var sErrorPrefix = "Failed to get list of trails from server. "
+            model.getGpxList(sPathOwnerId, nShare, function (bOk, gpxList, sStatus) {
                 if (bOk) {
-                    gpxArray = gpxList; // Save a ref to the list, which is an array.
-
-                    var arPath = new Array();
-                    for (var i = 0; i < gpxArray.length; i++) {
-                        arPath.push(gpxArray[i].sName);
+                    for (var i = 0; i < gpxList.length; i++) {
+                        arPath.push(gpxList[i].sName);
+                        gpxArray.push(gpxList[i]);
                     }
-
-                    if (bIncludePublic) {
-                        // Also include all public paths.
-                        nShare = model.eShare().public;
-                        model.getGpxList("any", nShare, function (bOk, gpxList, sStatus) {
-                            if (bOk) {
-                                for (var i = 0; i < gpxList.length; i++) {
-                                    if (gpxList[i].sOwnerId === sOwnerId)
-                                        continue; // Item with same owner id as sOwnerId is already in list.
-                                    gpxArray.push(gpxList[i]); // Add to array of Gpx objects that correspond to list of path names to be set in the view. 
-                                    arPath.push(gpxList[i].sName);
-                                }
-                                view.setPathList(arPath);
-                            } else {
-                                view.ShowStatus(sErrorPrefix + sStatus);
-                                view.clearPathList();
-                            }
-                        });
-                    } else
-                        view.setPathList(arPath);
                 } else {
-                    view.ShowStatus(sErrorPrefix + sStatus);
-                    view.clearPathList();
+                    view.ShowStatus(sStatus);
                 }
+                if (onDone)
+                    onDone(bOk);
             });
+        }
+
+        // Local helper function to get public geo paths.
+        // On error shows status in view.
+        // Args:
+        //  bExcludeOwner: boolean to exclude owner paths from the list.
+        //  onDone: asynchronous callback when done, Signature:
+        //      bOk: boolean indicating success.
+        function GetPublicGeoPaths(bExcludeOwner, onDone) {
+            // Also include all public paths.
+            var nShare = model.eShare().public;
+            model.getGpxList("any", nShare, function (bOk, gpxList, sStatus) {
+                if (bOk) {
+                    for (var i = 0; i < gpxList.length; i++) {
+                        if (bExcludeOwner) {
+                            if (gpxList[i].sOwnerId === sPathOwnerId)
+                                continue; // Item with same owner id as sOwnerId is already in list.
+                        }
+                        gpxArray.push(gpxList[i]); // Add to array of Gpx objects that correspond to list of path names to be set in the view. 
+                        arPath.push(gpxList[i].sName);
+                    }
+                } else {
+                    view.ShowStatus(sStatus);
+                }
+                if (onDone)
+                    onDone(bOk);
+            });
+        }
+
+        if (nMode === view.eMode.online) {
+
+            if (!sPathOwnerId) {
+                // Owner is not signed in. Get all public geo paths.
+                // false => do not exclude owner paths.
+                GetPublicGeoPaths(false, function (bOk, sStatus) {
+                    // Show path list obtained even if there is an error. (Likely empty on error).
+                    view.setPathList(arPath);
+                });
+
+            } else {
+                // Owner is signed in. Get all geo paths for owner
+                // plus all public geo paths.
+                GetAllGeoPathsForOwner(function (bOk, sStatus) {
+                    if (bOk) {
+                        // Get public geo paths excluding owner (true => exclude owner).
+                        GetPublicGeoPaths(true, function (bOk, status) {
+                            // Show path list obtained even if error has occured.
+                            view.setPathList(arPath);
+                        });
+                    } else {
+                        // Show paths obtained before error, likely empty list.
+                        view.setPathList(arPath);
+                    }
+                });
+            }
         } else if (nMode === view.eMode.offline) {
             // Get list of offline geo paths from local storage.
             gpxOfflineArray = model.getOfflineParamsList();
@@ -1525,12 +1645,9 @@ function wigo_ws_Controller() {
 
     // ** Constructor initialization
     var sOwnerId = model.getOwnerId();
-    view.setOwnerId(model.getOwnerId());
-    if (sOwnerId) {
-        // Get and show the list of geo paths for the signed-in owner.
-        GetGeoPaths(view.curMode(), sOwnerId, true); // true => IncludePublic.
-    }
-
+    view.setOwnerId(sOwnerId);
+    view.setOwnerName(model.getOwnerName());
+    GetGeoPaths(view.curMode(), sOwnerId);
     view.Initialize();
 }
 

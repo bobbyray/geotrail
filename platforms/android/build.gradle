@@ -248,6 +248,8 @@ dependencies {
     // SUB-PROJECT DEPENDENCIES START
     debugCompile project(path: ":CordovaLib", configuration: "debug")
     releaseCompile project(path: ":CordovaLib", configuration: "release")
+    debugCompile project(path: ":com.phonegap.plugins.facebookconnect:geotrail-FacebookLib", configuration: "debug")
+    releaseCompile project(path: ":com.phonegap.plugins.facebookconnect:geotrail-FacebookLib", configuration: "release")
     // SUB-PROJECT DEPENDENCIES END
 }
 

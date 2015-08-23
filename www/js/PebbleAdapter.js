@@ -294,18 +294,22 @@ function wigo_ws_PebbleAdapter(uuid) {
         Pebble.sendAck(e.detail.transaction);
     });
 
-    // tell java to listen for these
-    Pebble.registerConnect();
-    Pebble.registerDisconnect();
-    Pebble.registerAck(this.uuid);
-    Pebble.registerNack(this.uuid);
-    Pebble.registerData(this.uuid);
+    // tell java to listen for these:
+    // Note: For debugging without Pebble support, check for Pebble before calling Pebble function 
+    //       when constructing this object. constructor.
+    if (typeof(Pebble) !== "undefined") {
+        Pebble.registerConnect();
+        Pebble.registerDisconnect();
+        Pebble.registerAck(this.uuid);
+        Pebble.registerNack(this.uuid);
+        Pebble.registerData(this.uuid);
 
-    // Do not know what this TODO means?
-    // TODO: unregister on pause, register on resume to prevent memory leaks
+        // Do not know what this TODO means?
+        // TODO: unregister on pause, register on resume to prevent memory leaks
 
-    // dispatch initial state of connection
-    Pebble.isConnected(function (connected) {
-        document.dispatchEvent(new CustomEvent('Pebble.' + (connected ? 'connect' : 'disconnect')));
-    });
+        // dispatch initial state of connection
+        Pebble.isConnected(function (connected) {
+            document.dispatchEvent(new CustomEvent('Pebble.' + (connected ? 'connect' : 'disconnect')));
+        });
+    }
 }

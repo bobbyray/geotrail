@@ -200,6 +200,13 @@ module.exports = [
         "clobbers": [
             "Pebble"
         ]
+    },
+    {
+        "file": "plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js",
+        "id": "com.phonegap.plugins.facebookconnect.FacebookConnectPlugin",
+        "clobbers": [
+            "facebookConnectPlugin"
+        ]
     }
 ];
 module.exports.metadata = 
@@ -212,7 +219,8 @@ module.exports.metadata =
     "cordova-plugin-vibration": "1.2.1-dev",
     "cordova-plugin-dialogs": "1.1.2-dev",
     "org.nypr.cordova.wakeupplugin": "0.1.0",
-    "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6"
+    "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6",
+    "com.phonegap.plugins.facebookconnect": "0.11.0"
 }
 // BOTTOM OF METADATA
 });
