@@ -93,6 +93,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     // Error message that methods may set on an error.
     this.sError = "";
 
+    var curPathSegs = new PathSegs(); 
+
     var curPath = null; // Ref to current path drawn.
     // Draws geo path on the Google map object.
     // Args:
@@ -104,14 +106,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         // Clear any current path before drawing another path.
         this.ClearPath();
 
-        var pathCoords = new Array();
-        var gpt;
-        var mapCoord;
-        for (var i = 0; i < path.arGeoPt.length; i++) {
-            gpt = path.arGeoPt[i];
-            mapCoord = L.latLng(gpt.lat, gpt.lon);
-            pathCoords.push(mapCoord);
-        }
+        curPathSegs.Init(path);
+        var pathCoords = curPathSegs.getPathCoords();
+
         mapPath = L.polyline(pathCoords, { color: 'red', opacity: 1.0 });
         mapPath.addTo(map);
         // Set zoom so that trail fits.
@@ -126,21 +123,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         this.PanToPathCenter();
     };
 
-    // Sets geo location circle and arrow for shortest distance to geo path.
-    // Arg:
-    //  location: Map LatLng object for location off the geo path.
-    this.SetGeoLocationCircleAndArrow = function (location) {
-        if (!IsMapLoaded())
-            return; // Quit if map has not been loaded.
-        // Draw geo location circle (green circle) on the map.
-        SetGeoLocationCircle(location, 10);
-        if (geolocCircle) {
-            SetGeoLocToPathArrow(location);
-            var center = geolocCircle.getLatLng();
-            map.panTo(center);
-        }
-    };
-
     // Sets geo location update figures on map for shortest distance to geo path, 
     // but only if current location is off the geo path by a specified amount.
     // Note: Likely replaces this.SetGeoLocationCircleAndArrow(location). Drawing
@@ -152,7 +134,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //      valid result is returned.
     // Returns {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float}:
     //  bToPath indicates path from geo location off path to nearest location on the path is valid.
-    //      For bToPath false, dToPath and bearingToPath are invalid.
+    //      For bToPath false, dToPath, and bearingToPath are invalid.
     //      Distance from location off-path to on-path must be > arg dOffPath for 
     //      bToPath to be true.
     //  dToPath: distance in meters from off-path location to on-path location.
@@ -162,11 +144,18 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //  bearingRefLine is bearing (y-North cw) in degrees (0.0 to 360.0) for reference 
     //  line from previous off-path location to current off-path location.
     //  loc: L.LatLng object for location.
+    //  dFromStart: distance in meters from start to nearest point on the path.
+    //  dToEnd: distance in meters from nearest point on the path to the end.
     // Remarks:
     //  The difference between bearingToPath and bearingRefLine may be useful for suggesting
     //  degrees of correction to navigate back to the path (trail).
     this.SetGeoLocationUpdate = function (location, dOffPath) {
-        var result = { bToPath: false, bearingToPath: 0.0, dToPath: 0.0, bRefLine: false, bearingRefLine: 0.0, loc: location };
+        var result = {
+            bToPath: false, bearingToPath: 0.0, dToPath: 0.0,
+            bRefLine: false, bearingRefLine: 0.0, loc: location,
+            dFromStart: 0.0,
+            dToEnd: 0.0
+        };
         if (!IsMapLoaded())
             return result; // Quit if map has not been loaded.
 
@@ -184,7 +173,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var bCurGeoLocBeyondPrevGeoLoc = (location.distanceTo(prevGeoLoc) > this.dPrevGeoLocThres);
 
         var rCircle = 10; // Radius of circle in pixels
-        var atPath = FindNearestPointOnGeoPath(location);
+        var atPath = FindNearestPointOnGeoPath(location, dOffPath); 
+        result.dFromStart = atPath.dFromStart;
+        result.dToEnd = atPath.dToEnd;
         if (atPath.llAt && atPath.d > dOffPath) {
             // Draw geo location circle (green circle) on the map.
             var llPathGeoLoc = null;
@@ -198,8 +189,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
                 result.bToPath = true;
             }
             // Draw previous geolocation circle and reference line to current location.
-            if (!bCurGeoLocBeyondPrevGeoLoc)
-            {
+            if (!bCurGeoLocBeyondPrevGeoLoc) {
                 // Previous location is too close to current location.
                 result.bearingRefLine = SetPrevGeoLocRefLine(prevGeoLocCircle.getLatLng(), rCircle);
                 result.bRefLine = !bInitialUpdate;
@@ -216,7 +206,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             this.ClearGeoLocationUpdate();
             // Draw the current geo-location circle only.
             SetGeoLocationCircle(location, rCircle);
-            map.panTo(location); 
+            map.panTo(location);
         }
 
         // Save current location as previous location for next update, provided
@@ -226,6 +216,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
 
         return result;
     };
+
+
     
     // Clears geo location update figures from the map. The path remains.
     this.ClearGeoLocationUpdate = function () {
@@ -270,7 +262,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             map.removeLayer(mapPath);
             mapPath = null;
         }
-        curPath = null; 
+        curPath = null;
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
@@ -398,6 +390,155 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
 
     // ** More private members
 
+    // Object defining information about path segments.
+    // Arg:
+    //  path: ref to wigo_ws_GpxPath object.
+    function PathSegs(path) {
+        // Object for segment of a path.
+        function Seg(llStart, llEnd, len) {
+            this.len = len;           // length of segment in meters.
+            this.dFromStart = 0;      // distance of start of segment from beginning of path.
+            this.llStart = llStart; // ref to L.Latlng obj for start of segment.
+            this.llEnd = llEnd;   // ref to L.LatLng obj for end of segment.
+            this.i = 0; // Index in array of segments.
+        }
+
+        // Returns reference to array L.LatLng objs, the path coordinates.
+        this.getPathCoords = function () {
+            return pathCoords;
+        };
+
+        // Starts stepping thru segments of the path.
+        // Returns first segment of path and steps to next segment. 
+        // Returns null if path segments array is empty.
+        this.FirstSeg = function () {
+            // If iCurIx > 0, move index back to previous segment because neareast point
+            // may still be on the last segment used in the previous search.
+            // However, for iCurIx === 0, start search from index 0.
+            if (iCurIx > 0)
+                DecrementIx();
+            iOrgIx = iCurIx;
+            var seg = GetCurSeg();
+            AdvanceIx();
+            return seg;
+        };
+
+        // Returns current segment and steps to next segment 
+        this.NextSeg = function () {
+            var seg = GetCurSeg();
+            AdvanceIx();
+            return seg;
+        };
+
+        // Returns true stepping thru all segments of array has been completed.
+        this.IsCycleDone = function () {
+            var bDone = iCurIx === iOrgIx;
+            return bDone;
+        };
+
+        // Steps thru each segment in the array.
+        // Arg:
+        //  callback with this signature:
+        //    seg: Seg object for the segment of a step.
+        //    Returns: 
+        //      boolean: false to continue to next step, true to break the loop.
+        this.ForEachSeg = function (callback) {
+            var bBreak = false;
+            var seg = this.FirstSeg();
+            if (seg && callback)
+                bBreak = callback(seg);
+            while (!bBreak && !this.IsCycleDone()) {
+                seg = this.NextSeg();
+                if (callback)
+                    bBreak = callback(seg);
+            }
+        };
+
+        // Initializes this object for path.
+        // Arg:
+        //  path: ref to wigo_ws_GpxPath object.
+        this.Init = function (path) {
+            Init(path);
+        };
+
+        // Returns total distance in meters of all segments.
+        this.getTotalDistance = function () {
+            return dTotal;
+        };
+        var iOrgIx = 0; // Starting index for starting a cycle stepping thru segs arrays. 
+        var iCurIx = 0; // Current index for stepping thru segs array.
+        var dTotal = 0; // Total distance of all segments.
+        var pathCoords = new Array(); // Array of L.LatLng objs.
+        var segs = new Array();  // Array of Seg objs.
+
+        // Advances current index to segment array by 1 (increments).
+        function AdvanceIx() {
+            iCurIx++;
+            if (iCurIx >= segs.length)
+                iCurIx = 0;
+        }
+
+        // Decreases current index to segment array by 1 (decrements).
+        function DecrementIx() {
+            iCurIx--;
+            if (iCurIx < 0)
+                iCurIx = segs.length - 1;
+        }
+
+        // Returns ref to current segment. Returns null if segs array is empty.
+        function GetCurSeg() {
+            var seg;
+            if (segs.length > 0)
+                seg = segs[iCurIx];
+            else
+                seg = null;
+            return seg;
+        }
+
+
+        // Initializes pathCoords array and segs array.
+        // Arg: 
+        //  path: ref to wigo_ws_GpxPath object.
+        function Init(path) {
+            if (!path)
+                return; 
+            // Fill array of map coords for showing path on a map.
+            var gpt;
+            var mapCoord;
+            pathCoords.length = 0; // Ensure pathCoords is empty before filling.
+            for (var i = 0; i < path.arGeoPt.length; i++) {
+                gpt = path.arGeoPt[i];
+                mapCoord = L.latLng(gpt.lat, gpt.lon);
+                pathCoords.push(mapCoord);
+            }
+            // Fill array of segments for the path.
+            var seg;
+            iCurIx = 0;
+            iOrgIx = 0;
+            dTotal = 0;
+            segs.length = 0; // Ensure segs array is empty.
+            if (pathCoords.length === 1) {
+                // Only one point for the path. Unlikely but could happen.
+                seg = new Seg(pathCoords[0], pathCoords[0], 0);
+                segs.push(seg);
+            }
+            var llSeg0, llSeg1, dSeg;
+            for (var i = 0; i < pathCoords.length-1; i++) {
+                llSeg0 = pathCoords[i];
+                llSeg1 = pathCoords[i + 1];
+                dSeg = llSeg0.distanceTo(llSeg1);
+                seg = new Seg(llSeg0, llSeg1, dSeg);
+                seg.dFromStart = dTotal;
+                seg.i = i;
+                segs.push(seg);
+                dTotal += seg.len;
+            }
+        };
+
+
+        Init(path);
+    }
+
     // Returns true if map is loaded.
     // For false, sets this.sError to indicate map is not loaded.
     function IsMapLoaded() {
@@ -436,21 +577,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         if (curLocToPathArrow)
             map.removeLayer(curLocToPathArrow);
     }
-
-    // Sets (draws) arrow for a location to nearest point on geo path (the trail).
-    // Arg:
-    //  location: Map L.LatLng object for location on map.
-    // Returns {llAt: L.LatLng, d: float}:
-    //  llAt is lat/lng of nearest geo point found on the path. null if not found.
-    //  d is distance in meters to nearest point on the path.
-    function SetGeoLocToPathArrow(location) {
-        var found = FindNearestPointOnGeoPath(location);
-        if (found.llAt) {
-            DrawGeoLocToPathArrow(location, found.llAt);
-        }
-        return found;
-    }
-
 
     // Draws arrow for a location off geo path to point on geo path (the trail).
     // Arg:
@@ -564,41 +690,52 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     // Returns {llAt: L.LatLng, d: float}:
     //  llAt is lat/lng of nearest geo point found on the path. null if not found.
     //  d is distance in meters to nearest point on the path.
+    //  dFromStart is distance in meters over the path from start to llAt.
+    //  dToEnd is distance in meters over the path from llAt to the end. 
     // Arg: 
     //      llLoc: Map L.LatLng object for location for which search is done.
-    function FindNearestPointOnGeoPath(llLoc) {
+    function FindNearestPointOnGeoPath(llLoc, dOffPath) { 
         var minD = 0.0;
         var llFound = null;
-        if (curPath && curPath.arGeoPt) {
-            var result;
-            var llSeg0, llSeg1, gpt, gptNext;
-            for (var i = 0; i < curPath.arGeoPt.length; i++) {
-                gpt = curPath.arGeoPt[i];
-                llSeg0 = L.latLng(gpt.lat, gpt.lon);
-                if (curPath.arGeoPt.length == 1) {
-                    llFound = llSeg0;
-                } else if (i < curPath.arGeoPt.length - 1) {
-                    gptNext = curPath.arGeoPt[i + 1];
-                    llSeg1 = L.latLng(gptNext.lat, gptNext.lon);
-                    result = LocationToSegment(llLoc, llSeg0, llSeg1);
-                    if (llFound === null) {
-                        llFound = result.at;
-                        minD = result.d;
-                    } else if (result.d < minD) {
-                        llFound = result.at;
-                        minD = result.d;
-                    }
-                }
+        var dToAt = 0;      // Distance from to start to nearest point found.
+        curPathSegs.ForEachSeg(function (seg) {
+            var result = LocationToSegment(llLoc, seg.llStart, seg.llEnd);
+            var bFound = false;  
+            if (llFound === null) {
+                llFound = result.at;
+                minD = result.d;
+                bFound = true;  
+            } else if (result.d < minD) {
+                llFound = result.at;
+                minD = result.d;
+                bFound = true; 
             }
-        }
-        var found = { llAt: llFound, d: minD };
+            if (bFound) {
+                dToAt = seg.dFromStart;
+                if (result.dOnSeg > 0 && result.dOnSeg <= result.dSeg) {
+                    dToAt += result.dOnSeg; // llLoc projected onto segment.
+                } else if (result.dOnSeg > result.dSeg)
+                    dToAt += result.dSeg;   // llLoc projected beyond end of segment.
+            }
+            // Stop looping if llLoc is on the path.
+            var bBreak = result.d < dOffPath; 
+            return bBreak;
+        });
+        var dTotal = curPathSegs.getTotalDistance();
+        var found = { llAt: llFound, d: minD, dFromStart: dToAt, dToEnd: dTotal - dToAt };
         return found;
     }
+
+
 
     // Calculates distance from a location point to a line segment.
     // Returns literal object:
     //  d: floating point number for distance to path in meters.
-    // llAt: L.LatLng object for point on the segment.
+    //  llAt: L.LatLng object for point on the segment.
+    //  dSeg: floating point number for distance (length) of the segment in meters.
+    //  dOnSeg: floating point number for portion of path in meters that llAt
+    //          is of dSeg. If less than 0, llLoc projected to before start of path.
+    //          if greater than dSeg, llLoc projected beyond end of segment.
     // Args:
     //  llLoc: L.LatLng object for location.
     //  llSeg0: L.LatLng object for starting point of segment.
@@ -616,14 +753,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         phi = phi * L.LatLng.DEG_TO_RAD;  // Convert degrees to radians.
 
         // I think simple planar geometry approx for interpolation should be good enough.
-        var llAt = L.latLng(0,0);
+        var llAt = L.latLng(0, 0);
         var dOnSeg = dLoc * Math.cos(phi);
         if (dOnSeg < 0.0) {
             // Vector location projects before starting point of segment, so
             // truncate to starting point of the segment.
             llAt = llSeg0;
         } else if (dOnSeg > dSeg) {
-            // Vector to location point projects beyong segment, so truncate 
+            // Vector to location point projects beyond segment, so truncate 
             // to segment end point.
             llAt = llSeg1;
         } else {
@@ -637,7 +774,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
 
         // Calculate distance from location to path.
         var dToPath = llLoc.distanceTo(llAt);
-        var result = { d: dToPath, at: llAt };
+        var result = { d: dToPath, at: llAt, dSeg: dSeg, dOnSeg: dOnSeg};
         return result;
     }
 

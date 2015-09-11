@@ -588,7 +588,7 @@ Are you sure you want to delete the maps?";
 
     var dCloseToPathThreshold = 30; // Off-path locations < dCloseToPathThresdhold considered to be on-Path.
 
-    // Get current geo location, show on the map, and update status in phone and Pebble..
+    // Get current geo location, show on the map, and update status in phone and Pebble.
     function DoGeoLocation() {
         that.ShowStatus("Getting Geo Location ...", false);
         TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult) {
@@ -598,7 +598,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.006  08/22/2015";
+        var sVersion = "1.1.008  09/11/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -1216,6 +1216,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         this.Send = function (sText, bVibe) {
             var nVibe = bVibe ? this.countVibe : 0;
             if (this.IsEnabled()) {
+                sText = sText.replace(/\<br\/\>/g, "\n");
                 pebble.SendText(sText, nVibe, function (bAck) {
                     // Just log to console, showing status on phone looses direction to trail.
                     var sStatus = "Received {0} to Pebble message sent.".format(bAck ? 'ACK' : 'NACK');
@@ -1270,10 +1271,22 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     //    bearingRefLine is bearing (y-North cw) in degrees (0.0 to 360.0) for reference 
     //      line from previous off-path location to current off-path location.
     function ShowGeoLocUpdateStatus(upd) {
+        function PathDistancesMsg(upd) {
+            // Show distance from start and to end.
+            var s = "Fr Beg: {0}m<br/>To End: {1}m<br/>Total: {2}m<br/>".format(
+                        upd.dFromStart.toFixed(0),
+                        upd.dToEnd.toFixed(0),
+                        (upd.dFromStart + upd.dToEnd).toFixed(0));
+            return s;
+        }
+
         if (!upd.bToPath) {
             that.ClearStatus();
             if (map.IsPathDefined()) {
-                pebbleMsg.Send("On Path", false) // false => no vibration.
+                var sMsg = "On Path<br/>";
+                sMsg += PathDistancesMsg(upd);
+                that.ShowStatus(sMsg, false); // false => not an error.
+                pebbleMsg.Send(sMsg, false) // false => no vibration.
             } else {
                 // Show lat lng for the current location since there is no trail.
                 var sAt = "lat/lng({0},{1})".format(upd.loc.lat, upd.loc.lng);
@@ -1302,6 +1315,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                 s = "Suggest turning {0}&deg; to {1} to go to path.<br/>".format(phi.toFixed(0), sTurn);
                 sMsg += s;
             }
+            // Show distance from start and to end.
+            sMsg += PathDistancesMsg(upd);
             that.ShowStatus(sMsg, false);
             // Issue alert to indicated off-path.
             alerter.DoAlert();
@@ -1311,7 +1326,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             // sMsg += "Head {0} ({1}{2})\n".format(sCompassDir,sBearingToPath, sDegree);
             // Decided not to show compass degrees, just direction: N, NE, etc.
             sMsg += "Head {0}\n".format(sCompassDir);
-            sMsg += "? {0} {1}{2}".format(sTurn, phi.toFixed(0), sDegree);
+            sMsg += "? {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
+            sMsg += PathDistancesMsg(upd); 
             pebbleMsg.Send(sMsg, true); // true => vibration.
         }
     }
@@ -1365,7 +1381,6 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     var alerter = new Alerter(); // Object for issusing alert to phone or Pebble watch.
     var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
     // Handler for Select button single click received from Pebble.
-
     pebbleMsg.onSelect1Click = function () {
         DoGeoLocation();
     };
