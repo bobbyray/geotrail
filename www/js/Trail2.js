@@ -517,7 +517,7 @@ Are you sure you want to delete the maps?";
         trackTimer.bOn = IsGeoTrackValueOn();    // Allow/disallow geo-tracking.
         if (!trackTimer.bOn) {
             // Send message to Pebble that tracking is off.
-            pebbleMsg.Send("Track Off", false); // false => no vibration.
+            pebbleMsg.Send("Track Off", false, false); // no vibration, no timeout.
         }
         // Start or clear trackTimer.
         RunTrackTimer();
@@ -662,7 +662,7 @@ However, the MyLoc button will still get your geo-location.\n\n\
 Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
 Off-path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
 Initially Enable Geo Tracking Yes | No: Yes to start with Track On when app loads.\n\n\
-Initially warn when Off-Path Yes | No: Yes to start with Alert On when app loads.\n\n\
+Initially alert by phone when Off-Path Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
 Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
 Phone beep count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
 Phone vibration in secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
@@ -732,7 +732,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     }
 
     // Runs the trackTimer object.
-    // If trackTimer.bOn is true, clears trackTimer; otherwise starts the periodic timer.
+    // If trackTimer.bOn is false, clears trackTimer; otherwise starts the periodic timer.
     // Remarks: Provides the callback function that is called after each timer period completes.
     function RunTrackTimer() {
         if (trackTimer.bOn) {
@@ -743,8 +743,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                     var sError = 'Timer for automatic geo-tracking failed.<br/>';
                     ShowGeoTrackingOff(sError);
                     alerter.DoAlert();
-                    pebbleMsg.Send("Tracking timer failed", true);
-
+                    pebbleMsg.Send("Tracking timer failed", true, false); // vibrate, no timeout.
                 } else {
                     if (bInProgress)
                         return;
@@ -863,6 +862,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         // Enable using Pebble and allowing vibration.
         pebbleMsg.Enable(settings.bPebbleAlert); // Enable using pebble.
         pebbleMsg.countVibe = settings.countPebbleVibe;
+        pebbleMsg.SetTimeOut(settings.secsGeoTrackingInterval);
         // Start Pebble app if it is enabled.
         if (settings.bPebbleAlert)
             pebbleMsg.StartApp();
@@ -1135,10 +1135,10 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             divMode.style.display = 'none';
     }
 
-    // Object for issuing alerts: phone and pebble watch alerts.
+    // Object for issuing phone alerts.
     function Alerter() {
 
-        // Boolean to indicate alerts for any device are allowed.
+        // Boolean to indicate alerts for phone are allowed.
         this.bAlertsAllowed = false;
 
         // Boolean to indicate a phone alert can be given. 
@@ -1194,6 +1194,15 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         // Number of vibrations given when vibration is issued.
         this.countVibe = 0;
 
+        // Set time out in seconds when tracking. 
+        // When > 0, the Pebble should expect to receive text before this time out.
+        // Arg:
+        //  secsTrackingPeriod: number of seconds in tracking period. The time out
+        //  is set to slightly longer than secsTrackingPeriod.
+        this.SetTimeOut = function(secsTrackingPeriod) {
+            pebble.secsTimeOut = secsTrackingPeriod + 10.0;
+        }
+
         // Starts the Pebble app.
         // Shows an alert on failure.
         this.StartApp = function () {
@@ -1202,7 +1211,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                 console.log(sMsg);
                 if (bOk) {
                     // Show message on pebble that MyTrail is started.
-                    that.Send(document.title, true);
+                    that.Send(document.title, true, false); // vibrate, no timeout.
                 } else {
                     AlertMsg("Failed to start Pebble app.")
                 }
@@ -1212,12 +1221,14 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         // Sends a message to Pebble.
         // Args:
         //  sText: string of text sent.
-        //  bVible: boolean indicating if Pebble should vibrate.
-        this.Send = function (sText, bVibe) {
+        //  bVibe: boolean indicating if Pebble should vibrate.
+        //  bCheckTimeOut: boolean indicating if Pebble should check for a 
+        //                 timeout before next message is received.
+        this.Send = function (sText, bVibe, bCheckTimeOut) {
             var nVibe = bVibe ? this.countVibe : 0;
             if (this.IsEnabled()) {
                 sText = sText.replace(/\<br\/\>/g, "\n");
-                pebble.SendText(sText, nVibe, function (bAck) {
+                pebble.SendText(sText, nVibe, bCheckTimeOut, function (bAck) {
                     // Just log to console, showing status on phone looses direction to trail.
                     var sStatus = "Received {0} to Pebble message sent.".format(bAck ? 'ACK' : 'NACK');
                     console.log(sStatus);
@@ -1270,15 +1281,66 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     //    bRefLine indicates bearingRefLine is valid.
     //    bearingRefLine is bearing (y-North cw) in degrees (0.0 to 360.0) for reference 
     //      line from previous off-path location to current off-path location.
+    //    loc: L.LatLng object for location.
+    //    dFromStart: distance in meters from start to nearest point on the path.
+    //    dToEnd: distance in meters from nearest point on the path to the end.
     function ShowGeoLocUpdateStatus(upd) {
+
+        // Return msg for paths distances from start and to end for phone.
         function PathDistancesMsg(upd) {
-            // Show distance from start and to end.
-            var s = "Fr Beg: {0}m<br/>To End: {1}m<br/>Total: {2}m<br/>".format(
-                        upd.dFromStart.toFixed(0),
-                        upd.dToEnd.toFixed(0),
-                        (upd.dFromStart + upd.dToEnd).toFixed(0));
+            // Set count for number of elements in dFromStart or dToEnd arrays.
+            var count = upd.dFromStart.length;
+            if (upd.dToEnd.length < count)
+                count = upd.dToEnd.length;
+
+            var dTotal = 0;
+            var s = "";
+            var sMore;
+            for (var i = 0; i < count; i++) {
+                if (i === 0)
+                    dTotal += upd.dFromStart[i];
+                sMore = count > 1 && i < count - 1 ? "/" : "";
+                s += "Fr Beg: {0}m{1}<br/>".format(upd.dFromStart[i].toFixed(0), sMore);
+            }
+
+            for (i = 0; i < count; i++) {
+                if (i === 0)
+                    dTotal += upd.dToEnd[i];
+                sMore = count > 1 && i < count - 1 ? "/" : "";
+                s += "To End: {0}m{1}<br/>".format(upd.dToEnd[i].toFixed(0), sMore);
+            }
+            s += "Total: {0}m<br/>".format(dTotal.toFixed(0));
             return s;
         }
+
+        // Return msg for paths distances from start and to end for Pebble.
+        function PathDistancesPebbleMsg(upd) {
+            // Set count for number of elements in dFromStart or dToEnd arrays.
+            var count = upd.dFromStart.length;
+            if (upd.dToEnd.length < count)
+                count = upd.dToEnd.length;
+
+            var dTotal = 0;
+            var s = "";
+            var sMore;
+            for (var i = 0; i < count; i++) {
+                if (i === 0)
+                    dTotal += upd.dFromStart[i];
+                sMore = count > 1 && i < count - 1 ? "/" : "";
+                s += "<- {0}m{1}<br/>".format(upd.dFromStart[i].toFixed(0), sMore);
+            }
+
+            for (i = 0; i < count; i++) {
+                if (i === 0)
+                    dTotal += upd.dToEnd[i];
+                sMore = count > 1 && i < count - 1 ? "/" : "";
+                s += "-> {0}m{1}<br/>".format(upd.dToEnd[i].toFixed(0), sMore);
+            }
+            s += "Tot {0}m<br/>".format(dTotal.toFixed(0));
+            return s;
+        }
+
+
 
         if (!upd.bToPath) {
             that.ClearStatus();
@@ -1286,16 +1348,18 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
                 var sMsg = "On Path<br/>";
                 sMsg += PathDistancesMsg(upd);
                 that.ShowStatus(sMsg, false); // false => not an error.
-                pebbleMsg.Send(sMsg, false) // false => no vibration.
+                sMsg = "On Path<br/>";
+                sMsg += PathDistancesPebbleMsg(upd);
+                pebbleMsg.Send(sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking.
             } else {
                 // Show lat lng for the current location since there is no trail.
-                var sAt = "lat/lng({0},{1})".format(upd.loc.lat, upd.loc.lng);
+                var sAt = "lat/lng({0},{1})".format(upd.loc.lat.toFixed(8), upd.loc.lng.toFixed(8));
                 that.ShowStatus(sAt, false); // false => no error.
-                sAt = "lat/lng\n{0}\n{1}".format(upd.loc.lat, upd.loc.lng);
-                pebbleMsg.Send(sAt, false); // false => no vibration.
+                sAt = "lat/lng\n{0}\n{1}".format(upd.loc.lat.toFixed(8), upd.loc.lng.toFixed(8));
+                pebbleMsg.Send(sAt, false, false); // no vibration, no timeout.
             }
         } else {
-            // vars for messages.
+            // vars for off-path messages.
             var sBearingToPath = upd.bearingToPath.toFixed(0);
             var sDtoPath = upd.dToPath.toFixed(0);
             var sCompassDir = map.BearingWordTo(upd.bearingToPath);
@@ -1327,8 +1391,8 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             // Decided not to show compass degrees, just direction: N, NE, etc.
             sMsg += "Head {0}\n".format(sCompassDir);
             sMsg += "? {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
-            sMsg += PathDistancesMsg(upd); 
-            pebbleMsg.Send(sMsg, true); // true => vibration.
+            sMsg += PathDistancesPebbleMsg(upd); 
+            pebbleMsg.Send(sMsg, true, trackTimer.bOn); // vibration, timeout if tracking.
         }
     }
 
@@ -1378,7 +1442,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 
     // ** Constructor initialization.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
-    var alerter = new Alerter(); // Object for issusing alert to phone or Pebble watch.
+    var alerter = new Alerter(); // Object for issusing alert to phone.
     var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
     // Handler for Select button single click received from Pebble.
     pebbleMsg.onSelect1Click = function () {

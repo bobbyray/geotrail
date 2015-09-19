@@ -159,61 +159,66 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         if (!IsMapLoaded())
             return result; // Quit if map has not been loaded.
 
-        // Set flag for initial update, which is used to avoid miss leading off-path
-        // message when there is no previous geo location point.
-        var bInitialUpdate = prevGeoLoc === null || prevGeoLocCircle === null;
-
-        // Check if current location is sufficiently beyond previous location to 
-        // use reference line from previous location.
-        // Ensure prevGeoLoc and prevGeoLocCircle are initialized.
-        if (prevGeoLoc === null)
-            prevGeoLoc = location;
-        if (prevGeoLocCircle === null)
-            prevGeoLocCircle = L.circle(location, 1);
-        var bCurGeoLocBeyondPrevGeoLoc = (location.distanceTo(prevGeoLoc) > this.dPrevGeoLocThres);
-
         var rCircle = 10; // Radius of circle in pixels
-        var atPath = FindNearestPointOnGeoPath(location, dOffPath); 
-        result.dFromStart = atPath.dFromStart;
-        result.dToEnd = atPath.dToEnd;
-        if (atPath.llAt && atPath.d > dOffPath) {
-            // Draw geo location circle (green circle) on the map.
-            var llPathGeoLoc = null;
-            SetGeoLocationCircle(location, rCircle);
-            if (geolocCircle) {
-                // Draw line from current geo location to nearest point on trail.
-                DrawGeoLocToPathArrow(location, atPath.llAt);
-                // Get bearing for navigating back to path.
-                result.bearingToPath = location.bearingTo(atPath.llAt);
-                result.dToPath = atPath.d; // Distance from point off path to the path.
-                result.bToPath = true;
-            }
-            // Draw previous geolocation circle and reference line to current location.
-            if (!bCurGeoLocBeyondPrevGeoLoc) {
-                // Previous location is too close to current location.
-                result.bearingRefLine = SetPrevGeoLocRefLine(prevGeoLocCircle.getLatLng(), rCircle);
-                result.bRefLine = !bInitialUpdate;
-            } else {
-                result.bearingRefLine = SetPrevGeoLocRefLine(prevGeoLoc, rCircle);
-                result.bRefLine = !bInitialUpdate;
-            }
-
-            // Pan map to current geo location.
-            var center = geolocCircle.getLatLng();
-            map.panTo(center);
-        } else {
-            // Clear previous off path drawings.
-            this.ClearGeoLocationUpdate();
-            // Draw the current geo-location circle only.
+        if (!this.IsPathDefined()) {
+            // No path on the map. Just draw circle for location.
             SetGeoLocationCircle(location, rCircle);
             map.panTo(location);
+        } else {
+            // Set flag for initial update, which is used to avoid miss leading off-path
+            // message when there is no previous geo location point.
+            var bInitialUpdate = prevGeoLoc === null || prevGeoLocCircle === null;
+
+            // Check if current location is sufficiently beyond previous location to 
+            // use reference line from previous location.
+            // Ensure prevGeoLoc and prevGeoLocCircle are initialized.
+            if (prevGeoLoc === null)
+                prevGeoLoc = location;
+            if (prevGeoLocCircle === null)
+                prevGeoLocCircle = L.circle(location, 1);
+            var bCurGeoLocBeyondPrevGeoLoc = (location.distanceTo(prevGeoLoc) > this.dPrevGeoLocThres);
+
+            var atPath = FindNearestPointOnGeoPath(location, dOffPath);
+            result.dFromStart = atPath.dFromStart;
+            result.dToEnd = atPath.dToEnd;
+            if (atPath.llAt && atPath.d > dOffPath) {
+                // Draw geo location circle (green circle) on the map.
+                var llPathGeoLoc = null;
+                SetGeoLocationCircle(location, rCircle);
+                if (geolocCircle) {
+                    // Draw line from current geo location to nearest point on trail.
+                    DrawGeoLocToPathArrow(location, atPath.llAt);
+                    // Get bearing for navigating back to path.
+                    result.bearingToPath = location.bearingTo(atPath.llAt);
+                    result.dToPath = atPath.d; // Distance from point off path to the path.
+                    result.bToPath = true;
+                }
+                // Draw previous geolocation circle and reference line to current location.
+                if (!bCurGeoLocBeyondPrevGeoLoc) {
+                    // Previous location is too close to current location.
+                    result.bearingRefLine = SetPrevGeoLocRefLine(prevGeoLocCircle.getLatLng(), rCircle);
+                    result.bRefLine = !bInitialUpdate;
+                } else {
+                    result.bearingRefLine = SetPrevGeoLocRefLine(prevGeoLoc, rCircle);
+                    result.bRefLine = !bInitialUpdate;
+                }
+
+                // Pan map to current geo location.
+                var center = geolocCircle.getLatLng();
+                map.panTo(center);
+            } else {
+                // Clear previous off path drawings.
+                this.ClearGeoLocationUpdate();
+                // Draw the current geo-location circle only.
+                SetGeoLocationCircle(location, rCircle);
+                map.panTo(location);
+            }
+
+            // Save current location as previous location for next update, provided
+            // location has changed suffiently from previous location.
+            if (bCurGeoLocBeyondPrevGeoLoc)
+                prevGeoLoc = location;
         }
-
-        // Save current location as previous location for next update, provided
-        // location has changed suffiently from previous location.
-        if (bCurGeoLocBeyondPrevGeoLoc)
-            prevGeoLoc = location;
-
         return result;
     };
 
@@ -685,53 +690,260 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         */
     }
 
+
+    // Note: See SVN tags/20150915 for simpler pervious version that did not
+    //       try to account for overlapping segments in the path.
+
     // Searchs through all segments of curPath to find shortest distance
     // to the path from a location off the path.
-    // Returns {llAt: L.LatLng, d: float}:
+    // Returns {llAt: L.LatLng, d: float, dFromStart: float, dToEnd: float}:
     //  llAt is lat/lng of nearest geo point found on the path. null if not found.
     //  d is distance in meters to nearest point on the path.
-    //  dFromStart is distance in meters over the path from start to llAt.
-    //  dToEnd is distance in meters over the path from llAt to the end. 
+    //  dFromStart is array of distances in meters over the path from start to llAt.
+    //  dToEnd is array of distance in meters over the path from llAt to the end. 
+    //  Note: Typically dFromStart and dToEnd are arrays of length 1. However if
+    //        overlapping segments of path have the same llAt (location) on the path,
+    //        the arrays provide distances for each overlapping segment.
     // Arg: 
     //      llLoc: Map L.LatLng object for location for which search is done.
-    function FindNearestPointOnGeoPath(llLoc, dOffPath) { 
-        var minD = 0.0;
-        var llFound = null;
-        var dToAt = 0;      // Distance from to start to nearest point found.
+    function FindNearestPointOnGeoPath(llLoc, dOffPath) {
+        var updater = new NearestLocUpdater(dOffPath);
         curPathSegs.ForEachSeg(function (seg) {
-            var result = LocationToSegment(llLoc, seg.llStart, seg.llEnd);
-            var bFound = false;  
-            if (llFound === null) {
-                llFound = result.at;
-                minD = result.d;
-                bFound = true;  
-            } else if (result.d < minD) {
-                llFound = result.at;
-                minD = result.d;
-                bFound = true; 
-            }
-            if (bFound) {
-                dToAt = seg.dFromStart;
-                if (result.dOnSeg > 0 && result.dOnSeg <= result.dSeg) {
-                    dToAt += result.dOnSeg; // llLoc projected onto segment.
-                } else if (result.dOnSeg > result.dSeg)
-                    dToAt += result.dSeg;   // llLoc projected beyond end of segment.
-            }
-            // Stop looping if llLoc is on the path.
-            var bBreak = result.d < dOffPath; 
+            var bUpdated = updater.Update(llLoc, seg);
+            //BreakOnFirstOnPath var bBreak = bUpdated && updater.arOnPath.length > 0;
+            var bBreak = false; 
             return bBreak;
         });
+        updater.Sort();
+
+        var arNearLoc = new Array();
+        if (updater.arOnPath.length > 0) {
+            arNearLoc = updater.arOnPath;
+        } else if (updater.arOffPath.length > 0)
+            arNearLoc = updater.arOffPath;
         var dTotal = curPathSegs.getTotalDistance();
-        var found = { llAt: llFound, d: minD, dFromStart: dToAt, dToEnd: dTotal - dToAt };
+        var arDtoAt = new Array();
+        var arDtoEnd = new Array();
+        var minD = 0;
+        var llFound = null;
+        if (arNearLoc.length > 0) {
+            for (var i = 0; i < arNearLoc.length; i++) {
+                arDtoAt.push(arNearLoc[i].dFromStart);
+                arDtoEnd.push(dTotal - arNearLoc[i].dFromStart);
+            }
+            minD = arNearLoc[0].dToPath;
+            llFound = arNearLoc[0].llAtPath;
+        }
+        var found = { llAt: llFound, d: minD, dFromStart: arDtoAt, dToEnd: arDtoEnd };
         return found;
     }
 
 
 
+    // Helper object for finding nearest location to the path.
+    // Constructor arg:
+    //  dOffPath: float for threshold for distance from path for which
+    //      a location is considered off the path.
+    function NearestLocUpdater(dOffPath) {
+        // Object for location info for keeping track of nearest location to path.
+        function Loc(llAt, llAtPath) {
+            // ref to L.LatLng obj of geo location.
+            this.llAt = llAt;
+            // Distance llAt is from path.
+            this.dToPath = 0.0;
+            // Ref to L.LatLng obj for geo location on the path.
+            this.llAtPath = llAtPath;
+            // Distance for llAtPath from start of path.
+            this.dFromStart = 0.0;
+            
+            // Ref to segment of path. Added for debugging.
+            this.seg = null;
+            // Ref to result used to create current Loc object. Added for debugging.
+            this.result = null; 
+        }
+
+        // Updates nearest location to a path.
+        // Returns true if nearest location is updated; 
+        //   false if not updated because not a nearer location.
+        //   this.onPath or this.arOffPath is updated when true is returned.
+        // Argument:
+        //  llLoc: L.LatLng obj for location to check for nearest to path.
+        //  seg: Seg object for element of a path for updating nearest location 
+        this.Update = function (llLoc, seg) {
+            // Helper function to calculate distance from start of path for a segment.
+            // Returns distance in meters from start of the path.
+            // Args
+            //  result: Object for result from LocationToSegment(..).
+            function DistanceFromStart(result) {
+                var dToAt = seg.dFromStart;
+                if (result.dOnSeg > 0 && result.dOnSeg <= result.dSeg) {
+                    dToAt += result.dOnSeg; // llLoc projected onto segment.
+                } else if (result.dOnSeg > result.dSeg)
+                    dToAt += result.dSeg;   // llLoc projected beyond end of segment.
+                return dToAt;
+            }
+
+            // Helper that returns a new Loc object for the location to the path.
+            // Arg:
+            //  result: Object for result from LocationToSegment(..).
+            function NewLoc(result) {
+                var curLoc = new Loc(llLoc, result.at);
+                curLoc.dFromStart = DistanceFromStart(result);
+                curLoc.dToPath = result.d;
+                curLoc.seg = seg;         // For debug
+                curLoc.result = result;   // For debug
+                return curLoc;
+            }
+
+            // Helper to check that to L.LatLng objects have close to the same value.
+            // Returns true if llA and llB are close to the same.
+            // Args:
+            //  llA, ll: L.LatLng objects to compare.
+            function IsSameLatLng(llA, llB) {
+                var dDif = llA.distanceTo(llB);
+                var bSame = dDif > -thresD && dDif < thresD;
+                return bSame;
+            }
+
+            // Helper to compares two distances to see if they are the same within a threshold, threshD.
+            // Returns true if distances are close to the same.
+            // Args: dA, dB: float for distances to compare.
+            function IsSameDistance(dA, dB) {
+                var dDif = dA - dB;
+                var bSame = dDif > -thresD && dDif < thresD;
+                return bSame;
+            }
+
+            // Helper to determine if result from LocationToSegment(..) should be append to path array.
+            // Returns true for append.
+            // Args:
+            //   result: object from LocationToSegment(..).
+            //   arPath: Array of Loc objects. Either this.arOnPath or this.arOffPath.
+            // Note: If the segments overlap, the projected location onto the path should be
+            //       the same. The important difference is the distance from the starting
+            //       point of the path.
+            //       If the segments do not overlap, but the distance to the path is the same 
+            //       (unlikely, but possible), the projected location on the path 
+            //       should differ greatly. Only one arrow back to the path should be drawn. 
+            //       Therefore only append to arOn/OffPath if the projected location onto the path
+            //       is the same, and the distances from the beginning of the path are different.
+            //       Checking for both the same Lat/Lng on the path and not the same distance
+            //       from beginning of the path gives best result. Either check by itself
+            //       may not be sufficient.
+            function IsAppend(result, arPath) {
+                var bAppend = IsSameLatLng(result.at, arPath[0].llAtPath);
+                if (bAppend) {
+                    var dFromStart = DistanceFromStart(result);
+                    bAppend = !IsSameDistance(dFromStart, arPath[0].dFromStart);
+                }
+                return bAppend;
+            }
+
+            var result = LocationToSegment(llLoc, seg.llStart, seg.llEnd);
+            var bUpdated = false;
+            if (result.d < dOffPath) {
+                var bAppend = this.arOnPath.length === 0;
+                if (!bAppend) {
+                    // Append if llLoc projects to same point on overlapping segments.
+                    bAppend = IsAppend(result, this.arOnPath);
+
+                    if (!bAppend) {
+                        // Replace current locatio if nearer.
+                        if (result.d < this.arOnPath[0].dToPath) {
+                            var curNearestLoc = NewLoc(result);
+                            this.arOnPath[0] = curNearestLoc;
+                            bUpdated = true;
+                        }
+                    }
+                }
+                if (bAppend) {
+                    var curNearestLoc = NewLoc(result);
+                    this.arOnPath.push(curNearestLoc);
+                    bUpdated = true;
+                }
+                // Clear off path location list.
+                this.arOffPath.length = 0;
+            } else if (this.arOnPath.length === 0) {
+                // There is no on-path location, so check for nearest location off path.
+                if (minD === null || (result.d < minD - thresD)) {
+                    // llLoc is a new min distance from path.
+                    // Set current nearest location to path.
+                    minD = result.d;
+                    var curNearestLoc = NewLoc(result);
+                    // Reset length of nearest off path location list because nearer location was found.
+                    this.arOffPath.length = 0;
+                    this.arOffPath.push(curNearestLoc);
+                    bUpdated = true;
+                } else if (result.d > minD + thresD) {
+                    // llLoc is not a nearer distance from the path.
+                    bUpdated = false;
+                } else {
+                    // llLoc is same distance to path as some other location.
+                    // This happens when segments of the path overlap.
+                    // Check if result.at on the path is same as projected, current on path location.
+                    // Note: this.arOffPath.length should be > 0. However, check for safety.
+                    var bAppend = this.arOffPath.length === 0;
+                    if (!bAppend) {
+                        // Append if llLoc projects to same point on overlapping segments.
+                        bAppend = IsAppend(result, this.arOffPath);
+                    }
+
+                    if (bAppend) {
+                        var curNearestLoc = NewLoc(result);
+                        this.arOffPath.push(curNearestLoc);
+                        bUpdated = true;
+                    }
+                }
+            }
+            return bUpdated;
+        };
+
+        // Sorts the resulting this.arOnPath and this.arOffPath lists by 
+        // distance from the start of the path.
+        // Note: Typically the lists only have 0, 1, or 2 elements. 
+        this.Sort = function () {
+            // Helper to sort array of Loc objects by distance from start.
+            function sort(ar) {
+                if (ar.length > 1)
+                    ar.sort(function (a, b) {
+                        var i;
+                        if (a.dFromStart < b.dFromStart)
+                            i = -1;
+                        else if (a.dFromStart > b.dFromStart)
+                            i = +1;
+                        else
+                            i = 0;
+                        return i;
+                    });
+            }
+
+            sort(this.arOnPath);
+            sort(this.arOffPath);
+        };
+
+        // List of Loc objects that are on path.
+        // this.Update(loc, seg) fills this list.
+        // Typically only one element. However, if path segments
+        // overlap, there could be more than one element.
+        this.arOnPath = new Array();
+
+        // List Loc objects that are nearest to the path.
+        // this.Update(loc, seg) fills this list.
+        // Typically there is only one element. However, if path segments 
+        // overlap, there could be more than one element.
+        this.arOffPath = new Array();
+
+        var minD = null; // Keeps track of current min distance to trail.
+
+        var thresD = 2; // Threshold in meters for comparison of two distances to 
+
+    }
+    
+
     // Calculates distance from a location point to a line segment.
     // Returns literal object:
     //  d: floating point number for distance to path in meters.
-    //  llAt: L.LatLng object for point on the segment.
+    //  at: L.LatLng object for point on the segment.
     //  dSeg: floating point number for distance (length) of the segment in meters.
     //  dOnSeg: floating point number for portion of path in meters that llAt
     //          is of dSeg. If less than 0, llLoc projected to before start of path.

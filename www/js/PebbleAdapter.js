@@ -118,13 +118,20 @@ function wigo_ws_PebbleAdapter(uuid) {
         );
     }
 
+    // Positive integer for number of seconds for timeout when tracking is on.
+    // Used by this.SendText(..) when tracking.
+    // Note: 0 results in Pebble not using a time out.
+    this.secsTimeOut = 0;
 
-    // Sends text string and vibration count to Pebble.
+    // Sends text string, vibration count, and timeout to Pebble.
     // Args:
     //  text: string for the text message.
     //  nVibes: integer, 0 .. 20, that indicated the number of vibrations.
     //      If nVibes is not a valid arg, the number of vibes is 1.
     //      Specify 0 for no vibration.
+    //  bCheckTimeOut: boolean to indicate Pebble should expect next message
+    //                 within the time out period. false means Pebble should not
+    //                 check for a time out.
     //  cbResult: Optional. asynchronous callback function called upon receiving 
     //            a ACK or NACK from the Pebble app. Signature of callback:
     //              bAck: true for ACK received, false for NACK received.
@@ -141,7 +148,11 @@ function wigo_ws_PebbleAdapter(uuid) {
     //  Element for key 1 is the vibe count, type string for the value. 
     //      value is a string of 1 or 2 digits for an integer 
     //      limited to  0, 1, ... 20. (value needs to parsed to an unsigned integer).
-    this.SendText = function(text, nVibes, cbResult) {
+    //  Element for key 2 is time out in seconds before which next message should
+    //      be received. 
+    //      value is string for an interger >= 0.
+    //      For value == "0", there is no timeout.
+    this.SendText = function(text, nVibes, bCheckTimeOut, cbResult) {
         var bSent = false;
         if (this.bEnabled && !bSendBusy) {
             bSendBusy = true;
@@ -157,8 +168,11 @@ function wigo_ws_PebbleAdapter(uuid) {
                 if (nVibes >= 0 && nVibes <= 20)
                     vibes = nVibes.toFixed(0);
 
+            var timeout = bCheckTimeOut ? this.secsTimeOut.toFixed(0) : "0";
             Pebble.sendData(this.uuid, [{ type: 'string', key: 0, value: text, length: nLength },
-                                        { type: 'string', key: 1, value: vibes, length: vibes.length }]);
+                                        { type: 'string', key: 1, value: vibes, length: vibes.length }, 
+                                        { type: 'string', key: 2, value: timeout, length: timeout.length}]);
+
             bSent = true;
         } 
         return bSent;
