@@ -598,7 +598,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.008  09/11/2015";
+        var sVersion = "1.1.009  09/18/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -613,18 +613,19 @@ The MIT License (MIT)\n\n\
 The open source Cordova / Appache platform is used to build this mobile app. Refer to \
 the Cordova / Appache license.\n\
 Plugins and modules used by the main code have individual open source licenses \
-and are listed below. Refer to them individually to determine their kind of license.\n\
-   jquery 1-11.3\n\
-   Leaflet 0.7.3 for maps\n\
-   L.TileLayer.Cordova for caching map tiles\n\
-   cordova-plugin-dialogs\n\
-   com.jetboystudio.pebble.PebblePGPlugin\n\
-   cordova-plugin-file 2.0.0 "File"\n\
-   cordova-plugin-file-transfer 1.1.0 "File Transfer"\n\
-   cordova-plugin-geolocation 1.0.0 "Geolocation"\n\
-   cordova-plugin-vibration 1.2.1-dev "Vibration"\n\
-   cordova-plugin-whitelist 1.0.0 "Whitelist"\n\
-   org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\
+and are listed below. Refer to them individually to determine their kind of license.\n\n\
+jquery 1-11.3\n\n\
+Leaflet 0.7.3 for maps\n\n\
+L.TileLayer.Cordova for caching map tiles\n\n\
+cordova-plugin-dialogs\n\n\
+com.jetboystudio.pebble.PebblePGPlugin\n\n\
+cordova-plugin-file 2.0.0 "File"\n\n\
+cordova-plugin-file-transfer 1.1.0 "File Transfer"\n\n\
+cordova-plugin-geolocation 1.0.0 "Geolocation"\n\n\
+cordova-plugin-vibration 1.2.1-dev "Vibration"\n\n\
+cordova-plugin-whitelist 1.0.0 "Whitelist"\n\n\
+org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
+https://github.com/Wizcorp/phonegap-facebook-plugin/blob/master/LICENSE \n\n\
 ';
         return sMsg;
     }
@@ -653,22 +654,23 @@ MyLoc displays your current location on the map.\n\n\
 Full Screen / Reduce Screen switches between the map filling the screen and \
 the map being below the selection controls.\n\n\
 Track switches between geo-location tracking On or Off.\n\n\
-Alert, which is given if you are off the trail, switches between Alert On or Off.\n\n\
+Ph Alert, which is given if you are off the trail, switches between Ph Alert On or Off.\n\n\
 Menu Provides More Options\n\
-Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\
+Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\n\
 Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
-and Track and Alert are ignored. \
+and Track and Ph Alert are ignored. \
 However, the MyLoc button will still get your geo-location.\n\n\
 Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
 Off-path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
 Initially Enable Geo Tracking Yes | No: Yes to start with Track On when app loads.\n\n\
-Initially alert by phone when Off-Path Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
+Initially warn when Off-Path Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
 Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
-Phone beep count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
 Phone vibration in secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
+Phone beep count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
 Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
 Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
-off trail. Count of 0 disables vibrations.\n\n\
+off trail. Count of 0 disables vibrations. \
+Note that Ph Alert Off does not inhibit vibrations for being off-trail.\n\n\
 Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
 for change in location to be considered valid. (This prevents small variations in the geo-location of \
 the same point to appear to be a change in location.)\n\n\
@@ -1339,8 +1341,6 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             s += "Tot {0}m<br/>".format(dTotal.toFixed(0));
             return s;
         }
-
-
 
         if (!upd.bToPath) {
             that.ClearStatus();
