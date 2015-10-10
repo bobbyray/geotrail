@@ -237,13 +237,31 @@ function wigo_ws_View() {
     // Fill the list of paths that user can select.
     // Arg:
     //  arPath is an array of strings for geo path names.
-    this.setPathList = function (arPath) {
+    //  bSort is optional boolean to display sorted version of arPath.
+    //        Defaults to true if not given.
+    this.setPathList = function (arPath, bSort) {
+        if (typeof (bSort) !== 'boolean')
+            bSort = true;
+
+        // For arSelect to use as a sorted version of arPath.
+        var arSelect = new Array();
+        for (var i = 0; i < arPath.length; i++) {
+            arSelect.push({ s: arPath[i], i: i });
+        }
+        if (arSelect.length > 1 && bSort) {
+            // Do a case insensitive sort.
+            arSelect.sort(function (a, b) {
+                var n = a.s.toLowerCase().localeCompare(b.s.toLowerCase());
+                return n;
+            });
+        }
+
         InitPathList("Select a Geo Path");
         // Add the list of geo paths.
         var name, iStr;
-        for (var i = 0; i < arPath.length; i++) {
-            name = arPath[i];
-            iStr = i.toString();
+        for (var i = 0; i < arSelect.length; i++) {
+            name = arSelect[i].s;
+            iStr = arSelect[i].i.toString();
             var option = new Option(name, iStr);
             selectGeoPath.add(option);
         }
@@ -598,7 +616,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.009  09/18/2015";
+        var sVersion = "1.1.011  10/10/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -1574,8 +1592,12 @@ function wigo_ws_Controller() {
                     // Cause geo paths to be displayed for user.
                     view.onGetPaths(view.curMode(), view.getOwnerId());
                 } else {
-                    var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
-                    view.ShowStatus("")
+                    // var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
+                    // Note: result has info for debug.
+                    var sMsg = "Server-side authentication failed.<br/>" +
+                               "Please go to Facebook and Log Out<br/>" +
+                               "so that your old authentication is reset.";
+                    view.ShowStatus(sMsg);
                 }
             });
         } else if (result.status === eStatus.Logout) {

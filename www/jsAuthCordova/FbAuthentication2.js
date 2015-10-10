@@ -217,6 +217,7 @@ function wigo_ws_FaceBookAuthentication(yourAppId) {
             // version is optional. It refers to the version of API you may want to use.
         }
         */
+        // Note: The APP_ID is set when the phonegap-facebook-plugin is installed.
     }
 
 

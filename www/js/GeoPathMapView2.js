@@ -240,7 +240,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         if (!IsMapLoaded())
             return; // Quit if map has not been loaded.
         var ll = L.latLng(gpt.lat, gpt.lon);
-        map.panTo(ll);
+        // Note: {animate: false} option seems to fix problem of panning within same screen.
+        map.panTo(ll, { animate: false });   
     };
 
     // Pan to center of path on the map.
@@ -267,6 +268,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             map.removeLayer(mapPath);
             mapPath = null;
         }
+        zoomPathBounds = null; 
         curPath = null;
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
@@ -1112,6 +1114,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var lng = map.getCenter().lng;
         var zmin = map.getZoom();
         var zmax = CACHE_ZOOM_MAX;
+        if (zmax < zmin)  
+            zmax = zmin;  
         var bounds = map.getBounds();
         bounds.pad(padPercent);
         var tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);

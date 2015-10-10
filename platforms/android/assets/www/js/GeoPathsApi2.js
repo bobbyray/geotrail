@@ -21,6 +21,27 @@ function wigo_ws_GeoPathsRESTfulApi() {
         return bOk;
     };
 
+    // Deletes a Gpx data record at the server.
+    // Returns true immediately if async request is sent, false if request is in progress.
+    // Args
+    //  gpxId: {sOwnerId: string, nId: integer}
+    //      sOwnerId is owner id of record to delete.
+    //      nId is unique record id of record to delete.
+    //  ah: string for access handler for verification of owner.
+    //  onDone: callback handler called when delete completes. Signature:
+    //      bOk: boolean for success.
+    //      sStatus: string for status message. Describes error bOk false.
+    this.GpxDelete = function (gpxId, ah, onDone) { 
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onGpxDelete = onDone;
+        else
+            onGpxDelete = function (bOk, sStatus) { };
+
+        var bOk = base.Post(eState.GpxDelete, sGpxDeleteUri(ah), gpxId);
+        return bOk;
+    };
+
     // Gets GpxGetList from server.
     // Args
     //  sOwnerId: string for owner id.
@@ -88,9 +109,20 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // Returns enumeration object for user login status when authorization has completed.
     this.eAuthStatus = function () { return eAuthStatus; };
 
+    // Returns ref to enumeration object for sName duplication of Gpx object.
+    this.eDuplicate = function () { return eDuplicate; };
+
     // ** Private members
-    // Enumeration for api transfer state.
-    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, };
+    // Enumeration of for duplication of sName of Gpx object:
+    //   NotDup = 0: Not a duplicate. No record with gpx.sName in database. 
+    //   Match = 1: Matched record in database by gpx.sName and gpx.nId. 
+    //   Renamed = 2: Auto renamed to avoid duplication of name in database. 
+    //   Dup = 3: Auto renamed failed. gpx.sName would be a duplicate. No update done. 
+    //   Error = 4: Database access error. 
+    var eDuplicate = { NotDup: 0, Match: 1, Renamed: 2, Dup: 3, Error: 4 };
+
+    // Enumeration for api transfer state. 
+    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, GpxDelete: 5,};
 
     // Enumeration for login status return by OAuth server.
     // Note: same values as for FacebookAuthentication.eAuthResult (keep synced).
@@ -148,6 +180,16 @@ function wigo_ws_GeoPathsRESTfulApi() {
         return s;
     }
 
+    // Returns relative URI for the GpxDelete api.
+    // Arg
+    //  ah is string for access handle.
+    function sGpxDeleteUri(ah) {   
+        if (!ah)
+            ah = "none";
+        var s = "gpxdelete?ah={0}".format(ah);
+        return s;
+    }
+
     // Returns relative URI for GpxPutList api.
     // Args:
     //  sOwnerId: string for sOwnerId of Gpx object.
@@ -180,9 +222,22 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // GpxPut has completed.
     // Handler signature:
     //  bOk: successful or not.
-    //  sStatus: status message.
+    //  sStatus: string
+    //      For bOk false:  status code and error message (do not parse with JSON.parse(..).
+    //      For bOk true: string needs to be parsed with JSON.parse(..) to give object:
+    //          {eDup: int, sName: string, sMsg: string}
+    //              eDup values: See eDuplicate enuneration. 
+    //              sName: resulting name. May be same name or renamed.
+    //              sMsg: message describing eDup value.
     //  Returns nothing.
     var onGpxPut = function (bOk, sStatus) { };
+
+    // GpxDelete has completed.
+    // Handler signature:
+    //  bOk: successful or not.
+    //  sStatus: status message.
+    //  Returns nothing.
+    var onGpxDelete = function (bOk, status) { };  
 
     // GpxGetList has completed.
     // Handler signature:
@@ -223,16 +278,26 @@ function wigo_ws_GeoPathsRESTfulApi() {
         var sStatus = "";
         switch (nState) {
             case eState.GpxPut:
-                if (bOk)
-                    sStatus = "GpxPut succeeded."
-                else 
+                if (bOk) {
+                    sStatus = JSON.parse(req.responseText);
+                    // Note: This JSON.parse() returns a string.
+                    //       Parse the returned string to get object.
+                } else {
                     sStatus = base.FormCompletionStatus(req);
+                }
                 onGpxPut(bOk, sStatus);
+                break;
+            case eState.GpxDelete:  
+                if (bOk)
+                    sStatus = "GpxDelete succeeded."
+                else
+                    sStatus = base.FormCompletionStatus(req);
+                onGpxDelete(bOk, status);
                 break;
             case eState.GpxGetList:
                 var gpxList;
                 if (bOk) {
-                    if (req && req.readyState == 4 && req.status == 200) {
+                    if (req && req.readyState == 4 && req.status === 200) {
                         gpxList = JSON.parse(req.responseText);
                         sStatus = "GpxGetList succeeded.";
                     } else {
@@ -242,6 +307,9 @@ function wigo_ws_GeoPathsRESTfulApi() {
                 } else {
                     sStatus = base.FormCompletionStatus(req);
                     gpxList = new Array();
+                    if (req && req.readyState == 4 && req.status === 403) { 
+                        sStatus = "Authentication failed. Log out and Sign In again because authorization has probably expired.";
+                    }
                 }
                 onGpxGetList(bOk, gpxList, sStatus);
                 break;
@@ -309,6 +377,29 @@ function wigo_ws_GpxPath() {
     // Arg:
     //  xmlData: string of xml from a gpx file.
     this.Parse = function (xmlData) {
+        // Helper function to parse an xml element with lat, lon attributes
+        // and to fill the arGeoPt array.
+        function ParseLatLon(el) {
+            // Note: el is the xml element, $(el) is the jquery object for the element.
+            // Fill the array of track point from the xml document.
+            var geoPt = new wigo_ws_GeoPt();
+            geoPt.lat = parseFloat($(el).attr('lat'));
+            geoPt.lon = parseFloat($(el).attr('lon'));
+            if (geoPt.lat === NaN || geoPt.lon === NaN)
+                return false; // Break loop on error.
+            // Find SW and NE corner of rectangle enclosing the path.
+            if (geoPt.lat < gptSW.lat)
+                gptSW.lat = geoPt.lat;
+            if (geoPt.lat > gptNE.lat)
+                gptNE.lat = geoPt.lat;
+            if (geoPt.lon < gptSW.lon)
+                gptSW.lon = geoPt.lon;
+            if (geoPt.lon > gptNE.lon)
+                gptNE.lon = geoPt.lon;
+            // The geo pt to the array.                
+            arGeoPt.push(geoPt);
+        }
+
         this.ok = true;
         var xmlDoc;
         try {
@@ -331,28 +422,23 @@ function wigo_ws_GpxPath() {
         gptNE.lon = -181.0;  // Set to max lon below.
         var arGeoPt = new Array(); // Array of wigo_ws_GeoPt elements.
 
+        var jqRte = jqGpx.find('rte:first');
+        
         var jqTrk = jqGpx.find('trk:first');
         var jqTrkSeg = jqTrk.find('trkseg:first');
-        jqTrkSeg.find('trkpt').each(function (i) {
-            // Note: this is the xml element, $(this) is the jquery object for the element.
-            // Fill the array of track point from the xml document.
-            var geoPt = new wigo_ws_GeoPt();
-            geoPt.lat = parseFloat($(this).attr('lat'));
-            geoPt.lon = parseFloat($(this).attr('lon'));
-            if (geoPt.lat === NaN || geoPt.lon === NaN)
-                return false; // Break loop on error.
-            // Find SW and NE corner of rectangle enclosing the path.
-            if (geoPt.lat < gptSW.lat)
-                gptSW.lat = geoPt.lat;
-            if (geoPt.lat > gptNE.lat)
-                gptNE.lat = geoPt.lat;
-            if (geoPt.lon < gptSW.lon)
-                gptSW.lon = geoPt.lon;
-            if (geoPt.lon > gptNE.lon)
-                gptNE.lon = geoPt.lon;
-            // The geo pt to the array.                
-            arGeoPt.push(geoPt);
-        });
+        if (jqTrkSeg.length > 0) {
+            // Parse Track from xml data.
+            jqTrkSeg.find('trkpt').each(function (i) {
+                // this is xml element for trkpt.
+                ParseLatLon(this);
+            });
+        } else if (jqRte.length > 0) {
+            // Parse Route from xml data.
+            jqRte.find('rtept').each(function (i) {
+                // this is xml element for rtept.
+                ParseLatLon(this);
+            });
+        }
 
         this.arGeoPt = arGeoPt;
         this.gptSW = gptSW;

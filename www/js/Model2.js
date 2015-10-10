@@ -54,6 +54,21 @@ function wigo_ws_Model() {
         return bOk;
     };
 
+    // Deletes gpx data record from server.
+    // Returns true for data transfer started; false if another transfer is already in progress. 
+    // Uses aysnc callback onDone.
+    // Args:
+    //  gpxId: {sOwnerId, string, nId: integer}
+    //      sOwner: owner id of record to delete.
+    //      nId: unique record id of record to delete.
+    //  onDone: async callback on completion with this signature:
+    //      bOk: boolean for success.
+    //      sStatus: status string describing result.
+    this.deleteGpx = function (gpxId, onDone) {
+        var bOk = api.GpxDelete(gpxId, this.getAccessHandle(), onDone);
+        return bOk;
+    };
+
     // Gets list of gpx data objects from the server.
     // Returns true for data transfer started; false if another transfer is already started.
     // Uses async callback onDone.
@@ -118,6 +133,11 @@ function wigo_ws_Model() {
     this.eAuthStatus = function () {
         return api.eAuthStatus();
     }
+
+    // Returns ref to enumeration object for duplication of sName of Gpx object.
+    this.eDuplicate = function () {
+        return api.eDuplicate(); 
+    };
 
     // Reads a text file.
     // Return true for reading stared, false for reading already in progress. 
