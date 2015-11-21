@@ -1,0 +1,34 @@
+﻿'use strict';
+
+// Object for settings for My Geo Trail.
+function wigo_ws_GeoTrailSettings() {
+    // Boolean indicating geo location tracking is allowed.
+    this.bAllowGeoTracking = true;
+    // Float for period for updating geo tracking location in seconds.
+    this.secsGeoTrackingInterval = 30;
+    // Float for distance in meters for threshold beyond which nearest distance to path is 
+    // considered to be off-path.
+    this.mOffPathThres = 30;
+    // Boolean indication geo location tracking is enabled.
+    // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
+    //       and tracking is not enabled.
+    this.bEnableGeoTracking = false;
+    // Boolean to indicate alert is issued when off-path.
+    this.bOffPathAlert = true;
+    // Boolean to indicate a phone alert (vibration) is given when off-path. 
+    this.bPhoneAlert = true;
+    // Float for number of seconds for phone to vibrate on an alert.
+    this.secsPhoneVibe = 0.0;
+    // Integer for number of beeps on an alert. 0 indicates no beep.
+    this.countPhoneBeep = 1;
+    // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
+    this.bPebbleAlert = true;
+    // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
+    this.countPebbleVibe = 1;
+    // Float for distance in meters for threshold for minimum change in distance
+    // for previous geo-location to be updated wrt to current geo-location.
+    this.dPrevGeoLocThres = 10.0;
+    // Boolean to indicate a mouse click (touch) simulates getting the geo-location
+    // at the click point. For debug only.
+    this.bClickForGeoLoc = false;
+}

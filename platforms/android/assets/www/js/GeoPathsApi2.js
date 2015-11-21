@@ -343,6 +343,35 @@ function wigo_ws_GeoPt() {
     this.lon = 0.0;
 }
 
+// Object for finding corners of bounding
+// rectangle for array of wigo_ws_GeoPt elements.
+wigo_ws_GeoPt.Corners = function () {  
+    // Southwest corner of bounding rectangle.
+    this.gptSW = new wigo_ws_GeoPt();
+    this.gptSW.lat = 91.0;   // Set to min lat below. -90 <= lat <= 90 degrees.
+    this.gptSW.lon = 181.0;   // Set to min lon below. 180 <= lon <= 180 degrees.
+
+    // Northeast corner of bounding rectangle.
+    this.gptNE = new wigo_ws_GeoPt();
+    this.gptNE.lat = -91.0;   // Set to max lat below.
+    this.gptNE.lon = -181.0;  // Set to max lon below.
+
+    // Updates corners based on a GeoPt obj.
+    // Arg:
+    //  geoPt: wigo_ws_GeoPt object for updating the corners.
+    this.Update = function (geoPt) {
+        // Update SW and NE corner of rectangle enclosing the path.
+        if (geoPt.lat < this.gptSW.lat)
+            this.gptSW.lat = geoPt.lat;
+        if (geoPt.lat > this.gptNE.lat)
+            this.gptNE.lat = geoPt.lat;
+        if (geoPt.lon < this.gptSW.lon)
+            this.gptSW.lon = geoPt.lon;
+        if (geoPt.lon > this.gptNE.lon)
+            this.gptNE.lon = geoPt.lon;
+    };
+}
+
 // Object to exchange Gpx record with server.
 function wigo_ws_Gpx() {
     this.nId = 0;
@@ -358,7 +387,113 @@ function wigo_ws_Gpx() {
     this.xmlData = "";
 }
 
-// Object for Gpx Path.
+// Static function to fill a wigo_ws_Gpx object from an array of wigo_ws_GeoPt elements.
+// Sets the xmlData, gptBegin, gptEnd, gptSW, and gptNE properties of wigo_ws_Gpx object.
+// Args:
+//  gpx: ref to wigo_ws_Gpx object to fill. (It must already exist.)
+//  arGeoPt: array of GeoPt elements defining the path. These geo points are converted
+//           to a string of xml assigned to xmlData.
+wigo_ws_Gpx.FillGeoPts = function (gpx, arGeoPt) { 
+    // Generates an xml document object for an array of GeoPts.
+    // Returns {xml: xml DOM, gpt
+
+    // Helper function for forming xml doc from arGeoPt.
+    // Returns a new node for the xml structure.
+    // Args:
+    //  name: string for node name.
+    //  arAttr: Optional, Array of array[2]. May be null or undefined.
+    //    Array element: 
+    //      [0]: string for attribute name.
+    //      [1]: string for value of attribute.
+    //  child: Optional. Node for a child node or string for a child text node.
+    function NewNode(name, arAttr, child) {
+        var node = doc.createElement(name);
+        if (arAttr) {
+            var attrName, attrValue, attrEl;
+            for (var i = 0; i < arAttr.length; i++) {
+                attrEl = arAttr[i];
+                attrName = arAttr[i][0];
+                attrValue = arAttr[i][1];
+                node.setAttribute(attrName, attrValue);
+            }
+        }
+
+        if (child) {
+            if (typeof child == 'string') {
+                child = doc.createTextNode(child);
+            }
+            node.appendChild(child);
+        }
+
+        return node;
+    };
+
+    // Helper function for forming xml doc from arGeoPt.
+    // Appends a new rtept node (route pt node) to a parent rte node.
+    // Args:
+    //  rteNode: ref to parent rte node.
+    //  name: name of rtept node.
+    //  lat: number for latitude of route point.
+    //  lon: number longitude of route point.
+    function AppendRtePtNode(rteNode, ix, lat, lon) {
+        var attrLat = ['lat', lat.toString()];
+        var attrLon = ['lon', lon.toString()];
+        var arAttr = [attrLat, attrLon];
+        var nameNode = NewNode("name", null, ix.toString());
+        var node = NewNode("rtept", arAttr, nameNode);
+        rteNode.appendChild(node);
+    }
+
+    // Create empty xml DOM object whose root element is named xml.
+    //OkForChrome var doc = document.implementation.createDocument(null, "xml", null);
+    // For IE need to specify name space URI, which is ok for Chrome too.
+    var doc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "xml", null);
+    var xml = doc.documentElement; // Root element.
+    // Note: For IE if name space URI is not given, the xml.outerHTML is undefined
+    // although for Chrome xml.outerHTML is defined. xml.outerHTML is used to get
+    // the serialized string of xml.
+    xml.setAttribute("version", "1.0");
+
+    // Append gpx node to xml root.
+    var gpxNode = NewNode("gpx");
+    gpxNode.setAttribute("version", "1.0");
+    xml.appendChild(gpxNode);
+
+    // Append rte (route) node to gpx node.
+    var rteNameNode = NewNode("name", null, "hillmap"); // Child name node for rte node.
+    var rteNode = NewNode("rte", null, rteNameNode);
+    gpxNode.appendChild(rteNode);
+
+    // Set begin and end GeoPt in gpx.
+    if (arGeoPt.length > 0) {
+        gpx.gptBegin.lat = arGeoPt[0].lat;
+        gpx.gptBegin.lon = arGeoPt[0].lon;
+        var iEnd = arGeoPt.length - 1;
+        gpx.gptEnd.lat = arGeoPt[iEnd].lat;
+        gpx.gptEnd.lon = arGeoPt[iEnd].lon;
+    }
+
+    // Append rtept (route point) nodes to rte node, one for element of arGeoPt.
+    var corners = new wigo_ws_GeoPt.Corners();
+    for (var i = 0; i < arGeoPt.length; i++) {
+        gpt = arGeoPt[i];
+        corners.Update(gpt); // Update bounding rectangle for route.
+        AppendRtePtNode(rteNode, i, gpt.lat, gpt.lon);
+    }
+    // Set string for the xmlData in the gpx object.
+    gpx.xmlData = xml.outerHTML;
+
+    // Set corners of bounding rectangle of path in gpx object.
+    gpx.gptSW.lat = corners.gptSW.lat;
+    gpx.gptSW.lon = corners.gptSW.lon;
+    gpx.gptNE.lat = corners.gptNE.lat;
+    gpx.gptNE.lon = corners.gptNE.lon;
+
+    console.log(xml);
+}
+
+
+// Object for Gpx Path defined by array of wigo_ws_GeoPt elements.
 function wigo_ws_GpxPath() {
     this.ok = false; // Parse() successfully filled this object.
     // Beginning GeoPt of path.

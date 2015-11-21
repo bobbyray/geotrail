@@ -116,6 +116,9 @@ h1 {
 
 /* Above is the standard CSS for a cordova android app */
 /* Below are additions for Trail2.html app. */
+input[type="button"] {
+    -webkit-user-select: none
+}
 
 html {
     height: 100%  /* google map, #map-canvas, seems to need 100% */
@@ -125,13 +128,6 @@ label {
     clear: both;
     float: left;
     padding-top: 4px;
-    font-weight: 400;
-    font-size: larger;
-}
-#panel > label{
-    float: none;
-    padding-top: 4px;
-    padding-right: 4px;
     font-weight: 400;
     font-size: larger;
 }
@@ -158,6 +154,10 @@ label {
 {
     margin-right: 5px;
 }
+#selectSignIn {
+    clear: none;
+    float: right;
+}
 
 #divMode 
 {
@@ -171,17 +171,105 @@ label {
     clear: both;
     float: left;
 }
-#selectMapCache {
+
+#buSaveOffline, #selectMapCache, #selectMenu {
     clear: none;
     float: left;
     margin-left: 15px;
 }
 
-#buSaveOffline, #selectMenu {
+#divPathDescr, #divCursors {
+    clear: both;
+    float: left;
+}
+#divServerAction {
     clear: none;
     float: left;
-    margin-left: 15px;
 }
+#selectShare, #buUpload, #buDelete, #txbxPathName {
+    clear: none;
+    float: left;
+    margin-left: 5px;
+    margin-right: 10px;
+}
+
+
+/* Cursor*/
+#divCursorLeft {
+    clear: both;
+    float: left;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+}
+/* Cursor Center Column */
+#divCursorCenter, #divCursorRight {
+    clear: none;
+    float:left;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+}
+
+#divCursorLeft input[type='button'], 
+#divCursorCenter input[type='button'], 
+#divCursorRight input[type='button'] {
+    width: 30px;
+    height: 30px;
+    margin-left: 20px;
+    margin-top: 8px;
+}
+
+/* Cursor Left Column */
+#selectPtAction {
+    clear: both;
+    float: right;
+}
+#buCursorLeft {
+    clear: both;
+    float: left;
+}
+#buCursorDown {
+    clear: none;
+    float: left;
+}
+#buCursorUp {
+    clear: none;
+    float: right;
+}
+/* Cursor Right Column*/
+#buCursorRight {
+    clear: none;
+    float: left; 
+    margin-right: 10px; 
+}
+
+/* End cursors*/
+#buPtDo {
+    clear: none;
+    float: right;
+}
+
+/* Path Ix next / previous*/
+#divPathIx {
+    margin-left: 30%;
+    clear: both;
+}
+#divPathIx input[type='button'] {
+    margin-left: 20px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+#buPtDeleteDo {
+    float: left;
+}
+
+
+#divMode label {
+    clear: both;
+    float: left;
+}
+
 
 #divSettings {
     position: absolute;
@@ -212,6 +300,8 @@ label {
     float: left;
 }
 
+
+
 /* Div panel to overlay google map.*/
 #panel {
     clear: both; 
@@ -227,10 +317,27 @@ label {
     margin-top: 10px;
     margin-left: 5px;
     margin-right: 5px;
+    float: left;
+}
+#panel > label{
+    float: left;
+    padding-top: 10px;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-weight: 400;
+    font-size: larger;
 }
 #panel > select {
+    float: left;
     margin-top: 10px;
 }
+#buGoToPath {
+    clear: both;
+}
+#labelAlert {
+    clear: none;
+}
+
 
 .ErrorMsg
 {

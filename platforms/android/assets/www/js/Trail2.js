@@ -38,6 +38,11 @@ function wigo_ws_View() {
     //  sOwnerId: string for owner id.
     this.onOwnerId = function (sOwnerId) { };
 
+    // Returns ref to Edit Finite State Machine editing path path.
+    this.fsmEdit = function () {
+        return fsmEdit;
+    }
+
     // The view mode has changed.
     // Handler Signature:
     //  nMode: byte value of this.eMode enumeration for the new mode.
@@ -61,6 +66,27 @@ function wigo_ws_View() {
     //  nMode: byte value of this.eMode enumeration.
     //  sPathOwnerId: string for path owner id for getting the paths from server.
     this.onGetPaths = function (nMode, sPathOwnerId) { };
+
+    // Upload to server a path given by a list GeoPt elements.
+    // Handler Signature:
+    //  nMode: byte value of this.eMode enumeration.
+    //  path: {nId: int, sPathName: string, sOwnerId: string, sShare: int, arGeoPt: array}
+    //      nId: integer for path record id. 0 indicates new path.
+    //      sPathName: string for name of path.
+    //      sOwnerId: string for owner id of path.
+    //      sShare: string for share value, public or private. 
+    //              Note: Matches name of wigo_ws_GeoPathsRESTfulApi.eShare property.
+    //      arGeoPt:array of wigo_ws_GeoPt elements defining the path.
+    this.onUpload = function (nMode, path) { };
+
+    // Delete at server a path record by gpxId.
+    // Handler signature:
+    //  nMode: byte value of this.eMode enumeration.
+    //  gpxId: {sOwnerId: string, nId: integer} 
+    //      sOwnerId: owner (user) id of logged in user.
+    //      nId: unique id for gpx path record at server.
+    this.onDelete = function (nMode, gpxId) { };
+
 
     // Save the settings paramaters.
     // Handler Signature:
@@ -86,7 +112,6 @@ function wigo_ws_View() {
     //      by EAuthStatus in Service.cs.
     this.onAuthenticationCompleted = function (result) { };
 
-
     // ** Public members
 
     // Initializes the view.
@@ -111,8 +136,9 @@ function wigo_ws_View() {
     };
 
     // Enumeration of mode for processing geo paths.
+    // NOTE: the values must match the index of the option in selectGeoPath drop list in trail2.html.
     this.eMode = {
-        online: 0, offline: 1,
+        online_view: 0, online_edit: 1, online_define: 2, offline: 3,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -122,9 +148,11 @@ function wigo_ws_View() {
         toStr: function (nMode) { // Returns string for property name of nMode byte value.
             var sMode;
             switch (nMode) {
-                case this.online: sMode = 'online'; break;
+                case this.online: sMode = 'online_view'; break;
+                case this.online_edit: sMode = 'online_edit'; break;
+                case this.online_define: sMode = 'online_define'; break;
                 case this.offline: sMode = 'offline'; break;
-                default: sMode = 'online';
+                default: sMode = 'online_view';
             }
             return sMode;
         }
@@ -178,6 +206,19 @@ function wigo_ws_View() {
         SetMapPanelTop();
     };
 
+    // Appends a status message to current status message and
+    // shows the full message.
+    // Arg:
+    //  sStatus: string of html to display.
+    //  bError: boolean, optional. Indicates an error msg. Default to true.
+    this.AppendStatus = function (sStatus, bError) {
+        var sMsg = divStatus.innerHTML;
+        if (sMsg.length > 0)
+            sMsg += "<br/>";
+        sMsg += sStatus;
+        this.ShowStatus(sMsg, bError);
+    };
+
     // Displays an Alert message box which user must dismiss.
     // Arg:
     //  sMsg: string for message displayed.
@@ -199,40 +240,47 @@ function wigo_ws_View() {
     //  newMode: eMode enumeration value for the new mode.
     this.setModeUI = function (newMode) {
         nMode = newMode;
+        // Show SignIn control, which may have been hidden by Edit or Define mode.
+        ShowSignInCtrl(true); 
         switch (nMode) {
-            case this.eMode.online:
+            case this.eMode.online_view:
+                ShowPathInfoDiv(true); 
                 ShowMapCacheSelect(false);
                 ShowSaveOfflineButton(true);
+                ShowMenu(true); 
+                // Hide ctrls for editing path.
+                HidePathEditCtrls();
+                ShowMapPanelForMode(nMode);
+                SetMapPanelTop(); 
                 map.GoOffline(false);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
+                this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
+                ShowPathInfoDiv(true); 
                 ShowMapCacheSelect(true);
                 ShowSaveOfflineButton(false);
+                ShowMenu(true); 
+                // Hide ctrls for editing path.
+                HidePathEditCtrls();
+                ShowMapPanelForMode(nMode);
+                SetMapPanelTop(); 
                 map.GoOffline(true);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
+                this.onGetPaths(nMode, that.getOwnerId()); 
+                break;
+            case this.eMode.online_edit:
+                fsmEdit.Initialize(false); // false => not new, ie edit existing path.
+                break;
+            case this.eMode.online_define:
+                fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
         }
     };
-
-    // Selects item in the selectMode drop list.
-    // Sets user interface for the new mode.
-    // Fires this.onModeChanged(..) event.
-    // Arg:
-    //  newMode: integer for new mode defined by this.eMode enumberation.
-    this.selectModeUI = function (newMode) {
-        selectMode.selectedIndex = newMode;
-        selectMode.value = this.eMode.toStr(newMode);
-
-        this.setModeUI(newMode)
-
-        if (this.onModeChanged)
-            this.onModeChanged(newMode);
-    }
 
     // Fill the list of paths that user can select.
     // Arg:
@@ -271,6 +319,19 @@ function wigo_ws_View() {
     this.clearPathList = function () {
         // Call setPathList(..) with an empty list.
         this.setPathList([]);
+    };
+
+    // Returns selected Path Name from selectGeoPath drop list.
+    // Returns empty string for no selection.
+    this.getSelectedPathName = function () {
+        var sName = "";
+        var nCount = selectGeoPath.options.length;
+        var i = selectGeoPath.selectedIndex;
+        // Note: ignore option 0, which is prompt to select a path.
+        if (nCount > 0 && i > 0 && i < nCount) {
+            sName = selectGeoPath.options[i].innerText;
+        }
+        return sName;
     };
 
     // Shows geo path information.
@@ -333,6 +394,28 @@ function wigo_ws_View() {
     var divPathInfo = $('#divPathInfo')[0];
     var selectGeoPath = $('#selectGeoPath')[0];
 
+    var divPathDescr = $('#divPathDescr')[0];
+    var divCursors = $('#divCursors')[0];
+    var selectPtAction = $('#selectPtAction')[0];
+    var buPtDo = $('#buPtDo')[0];
+    var buCursorLeft = $('#buCursorLeft')[0];
+    var buCursorRight = $('#buCursorRight')[0];
+    var buCursorUp = $('#buCursorUp')[0];
+    var buCursorDown = $('#buCursorDown')[0];
+
+    var divPathIx = $('#divPathIx')[0];
+    var buPathIxPrev = $('#buPathIxPrev')[0];
+    var buPathIxNext = $('#buPathIxNext')[0];
+    var buPtDeleteDo = $('#buPtDeleteDo')[0];  
+
+    var txbxPathName = $('#txbxPathName')[0];
+    var labelPathName = $('#labelPathName')[0];
+    var selectShare = $('#selectShare')[0];
+    var labelShare = $('#labelShare')[0];
+    var buUpload = $('#buUpload')[0];
+    var buDelete = $('#buDelete')[0];
+    var buCancel = $('#buCancel')[0];
+
     var panel = $('#panel')[0];
     var buGeoLocate = $('#buGeoLocate')[0];
     var selectGeoTrack = $('#selectGeoTrack')[0];
@@ -359,20 +442,29 @@ function wigo_ws_View() {
     // Note: All the control event handlers clear status first thing.
 
     $(selectSignIn).bind('change', function (e) {
-        that.ClearStatus();
         var val = this.selectedValue;
         if (this.selectedIndex > 0) {
             var option = this[this.selectedIndex];
             if (option.value === 'facebook') {
+                that.ClearStatus();
                 fb.Authenticate();
             } else if (option.value === 'logout') {
-                fb.LogOut();
+                // Only allow Logout for View or Offline mode.
+                var nMode = that.curMode();
+                if (nMode === that.eMode.online_edit ) {
+                    that.AppendStatus("Complete editing the path, then logout.", false);
+                } else if (nMode === that.eMode.online_define) {
+                    that.AppendStatus("Complete defining a new path, then logout.", false);
+                } else {
+                    that.ClearStatus();
+                    fb.LogOut();
+                }
+            } else {
+                that.ClearStatus();
             }
             this.selectedIndex = 0;
         }
     });
-
-
 
     $(selectGeoPath).bind('change', function (e) {
         that.ClearStatus();
@@ -384,13 +476,17 @@ function wigo_ws_View() {
             } else {
                 // Path is selected
                 that.onPathSelected(that.curMode(), iList);
-                if (trackTimer.bOn) {
-                    if (map.IsPathDefined()) {
-                        // Tracking timer is on so show current geo location right away.
-                        DoGeoLocation();
+                // Update status for track timer unless editing.
+                if (that.curMode() === that.eMode.online_view ||
+                    that.curMode() === that.eMode.offline) {
+                    if (trackTimer.bOn) {
+                        if (map.IsPathDefined()) {
+                            // Tracking timer is on so show current geo location right away.
+                            DoGeoLocation();
+                        }
+                    } else {
+                        that.ShowStatus("Geo tracking off.", false); // false => not an error.
                     }
-                } else {
-                    that.ShowStatus("Geo tracking off.", false); // false => not an error.
                 }
             }
         }
@@ -401,7 +497,7 @@ function wigo_ws_View() {
 
         if (selectGeoPath.selectedIndex === 0) {
             that.ShowStatus("Select a Geo Path first before saving.")
-        } else if (nMode === that.eMode.online) {
+        } else if (nMode === that.eMode.online_view) {
             var oMap = map.getMap();
             var params = new wigo_ws_GeoPathMap.OfflineParams();
             params.nIx = parseInt(selectGeoPath.value);
@@ -421,19 +517,31 @@ function wigo_ws_View() {
     });
 
     $(selectMode).bind('change', function (e) {
-        that.ClearStatus();
-        // Set current mode to the new mode.
-        nMode = that.eMode.toNum(this.value);
-        // Inform controller of the mode change.
-        that.onModeChanged(nMode);
-        var bOffline = nMode === that.eMode.offline;
-        var result = map.GoOffline(bOffline);
-        result.bOk = true; //???? Helps for debug. May be ok to always avoid showing status msg.
-        if (!result.bOk)  {
-            that.ShowStatus(result.sMsg);
-        } else {
+       // this.value is value of selectMode control.
+       var nMode = that.eMode.toNum(this.value);
+
+        // Helper function to change mode.
+        function AcceptModeChange() {
+            that.ClearStatus();
+            // Inform controller of the mode change.
+            that.onModeChanged(nMode);
+            var bOffline = nMode === that.eMode.offline;
+            var result = map.GoOffline(bOffline);
             that.setModeUI(nMode);
-            that.onGetPaths(nMode, that.getOwnerId());
+        }
+
+        if (fsmEdit.IsPathChanged()) {
+            ConfirmYesNo("The geo path has been changed. OK to continue and loose any change?", function (bConfirm) {
+                if (bConfirm) {
+                    fsmEdit.ClearPathChange();
+                    AcceptModeChange();
+                } else {
+                    // Restore the current mode selected before the change.
+                    selectMode.selectedIndex = that.curMode();
+                }
+            });
+        } else {
+            AcceptModeChange();
         }
     });
 
@@ -541,6 +649,21 @@ Are you sure you want to delete the maps?";
         RunTrackTimer();
     });
 
+    // Selects droplist for Tracking on/off and runs the tract timer accordingly.
+    // Arg: 
+    //  bTracking: boolean to indicate tracking is on (true) or off (false).
+    function SelectAndRunTrackTimer(bTracking) {
+        SetGeoTrackValue(bTracking);
+        trackTimer.bOn = bTracking;    // Allow/disallow geo-tracking.
+        if (!trackTimer.bOn) {
+            // Send message to Pebble that tracking is off.
+            pebbleMsg.Send("Track Off", false, false); // no vibration, no timeout.
+        }
+        // Start or clear trackTimer.
+        RunTrackTimer();
+    }
+
+
     $(selectAlert).bind('change', function () {
         // Enable/disable alerts.
         alerter.bPhoneEnabled = selectAlert.value === 'on';
@@ -578,6 +701,83 @@ Are you sure you want to delete the maps?";
         $(this).prop('data-minState', bMin.toString());
     });
 
+    $(selectShare).bind('change', function () { 
+        var fsm = that.fsmEdit();
+        fsm.setPathChanged();
+        fsm.DoEditTransition(fsm.eventEdit.ChangedShare);
+    });
+
+    $(txbxPathName).bind('change', function (e) {
+        var fsm = that.fsmEdit();
+        // Ensure soft keyboard is removed after the change.
+        txbxPathName.blur();
+        fsm.setPathChanged();   
+        fsm.DoEditTransition(fsm.eventEdit.ChangedPathName);
+    });
+
+    $(buCursorLeft).bind('touchstart', function (e) {  
+        fsmEdit.CursorDown(fsmEdit.dirCursor.left);
+    });
+    $(buCursorLeft).bind('touchend', function (e) {     
+        fsmEdit.CursorUp(fsmEdit.dirCursor.left);
+    });
+
+    $(buCursorRight).bind('touchstart', function (e) {
+        fsmEdit.CursorDown(fsmEdit.dirCursor.right);
+    });
+    $(buCursorRight).bind('touchend', function (e) {
+        fsmEdit.CursorUp(fsmEdit.dirCursor.right);
+    });
+
+    $(buCursorUp).bind('touchstart', function (e) {
+        fsmEdit.CursorDown(fsmEdit.dirCursor.up);
+    });
+    $(buCursorUp).bind('touchend', function (e) {
+        fsmEdit.CursorUp(fsmEdit.dirCursor.up);
+    });
+
+    $(buCursorDown).bind('touchstart', function (e) {
+        fsmEdit.CursorDown(fsmEdit.dirCursor.down);
+    });
+    $(buCursorDown).bind('touchend', function (e) {
+        fsmEdit.CursorUp(fsmEdit.dirCursor.down);
+    });
+
+    $(buPtDo).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Do);
+    });
+
+    $(buPathIxNext).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxNext);
+    });
+
+    $(buPathIxPrev).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxPrev);
+    });
+
+    $(buPtDeleteDo).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.DeletePtDo);
+    });
+
+
+    $(buUpload).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
+    });
+
+    $(buDelete).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Delete);
+    });
+
+    $(buCancel).bind('click', function (e) {
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);
+    });
+
+    $(selectPtAction).bind('change', function (e) {
+        // Note: the selection value is the EditFSM event.
+        fsmEdit.DoEditTransition(Number(selectPtAction.value));
+    });
+
+
     /* //20150716 Trying to detect app ending does not work. These events do NOT fire
     $(window).bind('unload', function (e) {
         console.log('window unload');
@@ -601,8 +801,1076 @@ Are you sure you want to delete the maps?";
     });
     */
 
+    // **  State Machine for Editing Path, New or Existing
+
+    // Object for Server Action
+
+
+    // Object for FSM for editing path.
+    function EditFSM(view) {
+        var that = this; // Ref for private function to this object.
+        // view is local ref to view object.
+
+        this.gpxPath = null; // Ref to wigo_ws_GpxPath object for selected path.
+        this.nPathId = 0;    // Unique id for this.gpxPath.
+
+        // Events for Server Action FSM.
+        this.eventServerAction = {
+            Upload: 0,
+            Delete: 1,
+            Cancel: 2
+        };
+
+        // Events for Edit FSM.
+        this.eventEdit = {
+            Unknown: -1,
+            Touch: 0,
+            SelectPt: 1, AppendPt: 2, InsertPt: 3, MovePt: 4, DeletePt: 5, 
+            Do: 6, 
+            SelectedPath: 7, ChangedPathName: 8, SignedIn: 9,
+            Init: 10,
+            Cursor: 11,
+            Upload: 12,
+            Delete: 13,
+            Cancel: 14,
+            PathIxNext: 15,
+            PathIxPrev: 16,
+            DeletePtDo: 17,
+            ChangedShare: 18
+        };
+
+        this.Initialize = function(bNewArg) {
+            bNew = bNewArg;
+            // Ensure track timer is not selected and is not running.
+            SelectAndRunTrackTimer(false);
+            curEditState = stEditInit;
+            this.DoEditTransition(this.eventEdit.Init);
+        };
+
+        // Sets variable indicating path has been changed qne
+        this.setPathChanged = function () {
+            bPathChanged = true;
+        };
+
+        // Returns true if editing or defining a new path indicates the path 
+        // has been changed.
+        this.IsPathChanged = function () {
+            return bPathChanged;
+        };
+
+        // Clear path change. Call when a change to another view is confirmed
+        // by user even a path change has occurred without uploading the change. 
+        this.ClearPathChange = function () {
+            bPathChanged = false;
+            // Clear the drop list for selection a geo path.
+            view.setPathList([]);
+
+        };
+
+        // Transition for Edit FSM.
+        // Arg: 
+        //  event: event from this.eventEdit enumeration.
+        this.DoEditTransition = function (event) {
+            curEditState(event);
+        };
+
+        // Enumeration of cursor directions.
+        this.dirCursor = { left: 0, right: 1, up: 2, down: 3 };
+
+        // Cursor down occurred.
+        // Arg:
+        //  eDir: enumeration, a direction value in dirCursor.
+        this.CursorDown = function (eDir) {
+            curTouchPt.CursorDown(eDir);
+        };
+
+        // Cursor up occurred.
+        // Arg:
+        //  eDir: enumeration, a direction value in dirCursor.
+        this.CursorUp = function (eDir) {
+            curTouchPt.CursorUp(eDir);
+        };
+
+
+        // ** Private vars
+        var bNew = true; // New path or existing path.
+        
+        // Enumeration of pending edit action for a point in a path.
+        var EPtAction = {
+            Selecting: 0, Moving: 1, Inserting: 2, Appending: 3, Deleting: 4
+        };
+
+        var bPathChanged = false; // Path change not saved at served.
+        var curEditState = stEditInit; // Current state function for Edit FSM.
+        
+        var opts = new PtActionOptions(this, false);  // Options for path point action drop list.
+
+        var curPathName = ''; // Current path name.
+
+        // Object for data about a Touch point.
+        // Constructor Arg:
+        //  fsm is ref to EditFSM object.
+        function TouchPoint(fsm) {
+            // Boolean to indicate that touch point is valid.
+            // this.set() sets bValid to true. However, bValid can be set false
+            // to indicate no longer valid.
+            this.bValid = false;
+
+            // Sets this object for a touch point.
+            // Args:
+            //  lat: number for latitude.
+            //  lon: number for longitude.
+            //  x: integer for x pixel on screen.
+            //  y: integer for y pixel on screen.
+            this.set = function (lat, lon, x, y) {
+                if (!lat)
+                    return;
+                gpt.lat = lat;
+                gpt.lon = lon;
+                px.x = x;
+                px.y = y;
+                this.bValid = true;
+            }
+
+            // Returns ref to wigo_ws_GeoPt object for this object.
+            // Returns null if this object is invalid.
+            this.getGpt = function () {
+                if (this.bValid)
+                    return gpt;
+                else 
+                    return null;
+            };
+
+            // Returns new wigo_ws_GeoPt that is a copy geo pt for this object.
+            // Return null if this.bValid is false.
+            this.newGpt = function () {
+                var newGpt;
+                if (this.bValid && gpt) {
+                    newGpt = new wigo_ws_GeoPt();
+                    newGpt.lat = gpt.lat;
+                    newGpt.lon = gpt.lon;
+                } else {
+                    newGpt = null;
+                }
+                return newGpt;
+            }
+
+            // Cursor down occurred.
+            this.CursorDown = function (eDir) {
+                // Stop cursor down timer if it is running.
+                StopCursorDownTimer();
+                nCursorDownCt = 0;
+                dirCursorDown = eDir;
+                // view.ShowStatus("Cursor down ...", false); // for debug
+                // Start timer for latched cursor down.
+                handleCursorDownTimer = window.setInterval(CursorDownLatched, msCursorDownInterval);
+            };
+
+            // Cursor up occurred.
+            this.CursorUp = function (eDir) {
+                // Stop cursor down timer if it is running.
+                StopCursorDownTimer();
+                nCursorDownCt = 0;
+                var nPixels = 1;
+                // view.ShowStatus("Cursor up ...", false); // for debug
+                UpdateForCursorMovement(eDir, nPixels);
+                fsm.DoEditTransition(fsmEdit.eventEdit.Cursor);
+            };
+
+            // Lat / lon of touch point.
+            var gpt = new wigo_ws_GeoPt();
+
+            // Pixel x, y coordinate of point on screen.
+            var px = L.point(0, 0);
+
+            var dirCursorDown = fsm.dirCursor.left; // Cursor down direction.
+
+            // Update px coordinate and gpt lat/lon due to cursor movement.
+            // Args:
+            //  eDir: fsm.dirCursor enumeration value indicating direction of movement.
+            //  nPixels: integer for number of pixels on map to move.
+            function UpdateForCursorMovement(eDir, nPixels) {
+                switch (eDir) {
+                    case fsm.dirCursor.left:
+                        px.x -= nPixels;
+                        break;
+                    case fsm.dirCursor.right:
+                        px.x += nPixels;
+                        break;
+                    case fsm.dirCursor.down:
+                        px.y += nPixels;
+                        break;
+                    case fsm.dirCursor.up:
+                        px.y -= nPixels;
+                }
+                // Update lat/lon for new cursor location.
+                gpt = map.PixelToLatLon(px);
+            }
+
+            // Timer for cursor movement when cursor down is latched.
+            var handleCursorDownTimer = null;
+            var msCursorDownInterval = 500; // Was 1000 millisecs;
+            var nCursorDownCt = 0;
+            var nPxsPerCursorDownInterval = 2; // Was 1;
+            var nMaxPxsInCursorDownInterval = 10; // Was 5;
+            
+            function CursorDownLatched() {
+                nCursorDownCt++;
+                var nPixels = nCursorDownCt * nPxsPerCursorDownInterval;
+                if (nPixels > nMaxPxsInCursorDownInterval)
+                    nPixels = nMaxPxsInCursorDownInterval;
+                UpdateForCursorMovement(dirCursorDown, nPixels);
+                // Draw the change in the touch point.
+                map.DrawTouchPt(curTouchPt.getGpt());
+            }
+
+            // Stops (clears) the cursor down interval timer.
+            // If timer is not running, does nothing.
+            function StopCursorDownTimer() {
+                if (handleCursorDownTimer) {
+                    window.clearInterval(handleCursorDownTimer);
+                    handleCursorDownTimer = null;
+                }
+            }
+
+        }
+
+        // Current TouchPoint.
+        var curTouchPt = new TouchPoint(this);
+        // Boolean to indicate curTouchPut can be set by a mouse click (touch).
+        var bTouchAllowed= false;
+
+        // Object for data about selected point on the path.
+        function SelectPoint(fsm) {  
+            var that = this; 
+
+            // Sets index to path point.
+            // Args:
+            //  ix: integer for index in fsm.gpxPath for array of path points.
+            this.setPathIx = function (ix) {
+                var bValid = fsm.gpxPath && (ix >= 0 && ix < fsm.gpxPath.arGeoPt.length);
+                curPathIx = bValid ? ix : -1;
+            }
+
+            // Returns index to current path in the path.
+            this.getPathIx = function () {
+                return curPathIx;
+            };
+
+            // Returns ref to current wigo_ws_GeoPt object for this object.
+            // Returns null if current wigo_ws_GeoPt object is invalid.
+            this.getGpt = function () {
+                var bOk = fsm.gpxPath && (curPathIx >= 0 && curPathIx < fsm.gpxPath.arGeoPt.length);
+                var gpt = bOk ? fsm.gpxPath.arGeoPt[curPathIx] : null;
+                return gpt;
+            };
+
+            // Increment the curPathIx.
+            this.incrPathIx = function () {
+                if (fsm.gpxPath && curPathIx >= 0 && curPathIx < fsm.gpxPath.arGeoPt.length - 1)
+                    curPathIx += 1;
+            };
+
+            // Decrement the curPathIx.
+            this.decrPathIx = function () {
+                if (fsm.gpxPath && curPathIx > 0 && curPathIx < fsm.gpxPath.arGeoPt.length)
+                    curPathIx -= 1;
+            };
+
+            // Returns current new wigo_ws_GeoPt object that is a copy of geo pt.
+            // Returns null if current wigo_ws_GeoPt object is invalid.
+            this.newGpt = function () {
+                var gpt = this.getGpt();
+                var newGpt;
+                if (gpt) {
+                    newGpt = new wigo_ws_GeoPt()
+                    newGpt.lat = gpt.lat;
+                    newGpt.lon = gpt.lon;
+                } else {
+                    newGpt = null;
+                }
+                return newGpt;
+            };
+
+            // Current index to fsm.gpxPath. 
+            var curPathIx = -1;
+        }
+
+        // Current select point in the path.
+        var curSelectPt = new SelectPoint(this);
+
+        // ** State Functions for Editing
+
+        // Initialization state for Editing.
+        function stEditInit(event) {
+            var sMsg;
+            bTouchAllowed = false;
+            bPathChanged = false;
+            // Ensure select for path drop list is empty initially.
+            // Note: SignedIn event will load list of paths to select for editing.
+            view.setPathList([]);
+            ShowSignInCtrl(true);  ////20151120 added
+            switch (event) {
+                case that.eventEdit.Init:
+                    // Ensure path is empty initally. It is set later if selected for editing.
+                    that.gpxPath = new wigo_ws_GpxPath();
+                    that.nPathId = 0;
+                    // Initialize for Edit mode.
+                    curSelectPt.setPathIx(-1);  
+                    curTouchPt.bValid = false;
+                    map.onMapClick2 = OnMapClick2;
+                    map.ClearPath();  
+                    opts.Init(false);
+                    opts.Select = true;
+                    opts.Append = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Appending);
+                    if (bNew) {
+                        // Show Path Name textbox, but not Share select.
+                        ShowPathDescrCtrls(true);
+                        ShowPathNameCtrl(true);
+                        txbxPathName.value = "";   
+                        ShowShareCtrl(false);
+                        // Hide server action buttons.
+                        ShowPtActionCtrl(false);  
+                        ShowUploadButton(false);
+                        ShowDeleteButton(false);
+                        ShowCancelButton(false);
+                    } else {
+                        // Hide path description including textbox and server action buttons.
+                        ShowPathDescrCtrls(false);
+                    }
+                    // Hide buttons for online-view and offline.
+                    ShowMapCacheSelect(false);
+                    ShowSaveOfflineButton(false);
+                    ShowMenu(false);
+                    // Hide select path drop list.
+                    ShowPathInfoDiv(false);
+                    // Hide cursors.
+                    ShowPathCursors(false);
+                    ShowPathIxButtons(false); 
+                    ShowMapPanelForMode(view.curMode()); 
+                    // Check if  user is signed in.
+                    if (view.getOwnerId()) {
+                        // Fire signed in event for this same state.
+                        that.DoEditTransition(that.eventEdit.SignedIn);
+                    } else {
+                        sMsg = bNew ? "Sign In to define a new path." : "Sign In to edit a path."
+                        view.AppendStatus(sMsg, false); 
+                    }
+                    break;
+                case that.eventEdit.SignedIn:
+                    // Hide SignIn ctrl so that SignIn or Logout is not available.
+                    // (Do not allow user to SignIn again or Logout while editing.)
+                    ShowSignInCtrl(false);
+                    if (bNew) {
+                        view.AppendStatus("Enter a name for a new path.", false);
+                    } else {
+                        // Load path drop list for select of path to edit.
+                        ShowPathInfoDiv(true); // Show the select Path drop list.
+                        view.onGetPaths(view.curMode(), view.getOwnerId());
+                        view.AppendStatus("Select a path to edit.", false);
+                    }
+                    
+                    curEditState = stSelectPath;
+                    break;
+            }
+        }
+
+        // State for selecting path from drop list of geo paths.
+        function stSelectPath(editEvent) {
+            // State entry actions.
+            // Set UI states.
+            // Only show select path drop list for editing existing path.
+            ShowPathInfoDiv(!bNew); // Note: divPathInfo only has selectGeoPath and its label.
+            ShowPathDescrCtrls(true);
+            // Show Path Name text box.
+            ShowPathNameCtrl(true);
+            // Show sharing select ctrl for path (public, private).
+            ShowShareCtrl(true);
+            // Show  Server Action ctrls for Cancel button and PtAction select ctrl.
+            ShowUploadButton(false);
+            ShowDeleteButton(false);
+            ShowCancelButton(true);
+            ShowPtActionCtrl(true); 
+            // Hide cursors.
+            ShowPathCursors(false);
+            ShowPathIxButtons(false); 
+            // Enable touch to define a point for stEdit.
+            bTouchAllowed = true;
+            // Do output actions for next state and transition to next state.
+            switch (editEvent) {
+                case that.eventEdit.SelectedPath:
+                    curPathName = view.getSelectedPathName();
+                    // Set path name for editing.
+                    txbxPathName.value = curPathName;
+                    // Show path on map.
+                    view.ShowPathInfo(false, that.gpxPath); 
+                    // Disable selectGeoPath droplist (by hiding) selection of different path.
+                    ShowPathInfoDiv(false);
+                    // Set options and show message for appending.
+                    PrepareForEditing();
+                    // Show Delete button only for not new.
+                    ShowDeleteButton(!bNew);
+                    curEditState = stEdit;
+                    break;
+                case that.eventEdit.ChangedPathName:
+                    bPathChanged = true;   
+                    curPathName = txbxPathName.value;
+                    if (bNew) {
+                        PrepareForEditing();
+                        // Always hide Upload button (it is shown after a change has been made). 
+                        ShowUploadButton(false);
+                        curEditState = stEdit;
+                    } 
+                    break;
+            }
+        }
+
+        function stEdit(event) {
+            // State entry actions.
+            bTouchAllowed = true;
+            // Note: Do not change state for Upload button. Do event will show Upload button.
+            ShowCancelButton(true);
+            // Always start with appending point to path.
+            // Ensure Cursors are hidden. (Will be shown after a touch).
+            ShowPathCursors(false);
+            ShowPathIxButtons(false); 
+
+            // Do output actions for next state and transition to next state.
+            switch (event) {
+                case that.eventEdit.Touch:
+                    // Enable the Do button and select option for appending.
+                    opts.Do = true; // Enable Do button.
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Appending);
+                    ShowInstrForCursors();
+                    ShowPathCursors(true);
+                    ShowPathIxButtons(false); 
+                    ShowDeleteButton(false);
+                    ShowUploadButton(false);
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    curEditState = stAppendPt;
+                    break;
+                case that.eventEdit.ChangedPathName:
+                case that.eventEdit.ChangedShare:
+                    // Changed path name or share (public/private).
+                    // Ensure Upload button is shown and Delete button hidden.
+                    ShowUploadButton(true);
+                    ShowDeleteButton(false);
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.SelectPt: 
+                    // Hide path cursors. (Show again after point on path is selected.)
+                    PrepareForSelectingPt();
+                    curEditState = stSelectPt;
+                    break;
+                case that.eventEdit.Upload:
+                    // Form path upload data and send to server.
+                    DoUpload();
+                    // Note: curEditState becomes stUploadPending, unless path does not exist
+                    // in which case state remains the same.
+                    break;
+                case that.eventEdit.Delete:
+                    ConfirmYesNo("OK to delete selected path?", function (bConfirm) {
+                        if (bConfirm) {
+                            // Delete path at server.
+                            view.ShowStatus("Deleting GPX path at server.", false);
+                            curEditState = stDeletePending;
+                            var gpxId = { sOwnerId: view.getOwnerId(), nId: that.nPathId };
+                            view.onDelete(view.curMode(), gpxId);
+                        }
+                    });
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+
+        // Waiting for upload to be completed.
+        function stUploadPending(event) { 
+            switch(event) {
+                case that.eventEdit.Init:
+                    // Fire  init event to re-initialize.
+                    curEditState = stEditInit;
+                    that.DoEditTransition(that.eventEdit.Init);
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks("Quit waiting for acknowlegement from server of upload?");
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+
+        // Waiting for delete to be completed
+        function stDeletePending(event) {
+            switch (event) {
+                case that.eventEdit.Init:
+                    // Deletion was successful.
+                    // Fire  init event to re-initialize.
+                    // The initialization will reload the drop list for selection of a geo path.
+                    curEditState = stEditInit;
+                    that.DoEditTransition(that.eventEdit.Init);
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks("Quit waiting for acknowlegement from server of delete?");
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+
+        }
+        
+        function stAppendPt(event) {
+            // Do output actions for next state and transition to next state.
+            switch (event) {
+                case that.eventEdit.Touch:
+                    // Draw the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    // Stay in same state. (Touch point has been saved in map click handler.)
+                    break;
+                case that.eventEdit.Cursor:
+                    // Draw the change in the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    break;
+                case that.eventEdit.Do:
+                    // Append touch point as update by cursor movement to the path.
+                    var gpt = curTouchPt.newGpt();
+                    // Note: ignore if gpt is null. Not expected to happen.
+                    if (gpt) {
+                        bPathChanged = true;
+                        that.gpxPath.arGeoPt.push(gpt);
+                        // Clear touch point from map.
+                        // Draw the updated path on the map (touch point is cleared from map).
+                        view.ShowPathInfo(false, that.gpxPath);
+                        // Draw edit circle for last point on path.
+                        map.DrawEditPt(that.gpxPath.arGeoPt.length - 1);
+                        // Pan to the append point. This avoids problem of next touch being off.
+                        map.PanTo(gpt);
+                        PrepareForEditing();
+                        curEditState = stEdit;
+                    }
+                    break;
+                case that.eventEdit.SelectPt:
+                    PrepareForSelectingPt();
+                    curEditState = stSelectPt;
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+
+        function stSelectPt(event) {
+            switch (event) {
+                case that.eventEdit.Touch:
+                    if (IsPathEmpty()) {
+                        // Show message if path is empty.This can happen if all points are deleted.
+                        PrepareForEditing();
+                        curEditState = stEdit;
+                    } else {
+                        // Fill the droplist for selectPtAction with all options..
+                        opts.Init(true);
+                        opts.SetOptions();
+                        opts.SelectOption(EPtAction.Selecting);
+                        // Show the path cursors.
+                        ShowPathCursors(false);
+                        ShowPathIxButtons(true);
+                        view.ShowStatus("Use Prev/Next to move selected point along path. Select Move Pt, Insert Pt, or Delete Pt.", false);
+                        // Get the the touch point.
+                        var gpt = curTouchPt.getGpt();
+                        // map.DrawTouchPt(gpt); // Helps for debug, not needed.
+                        // Draw the edit point.
+                        var ix = map.FindEditIx(gpt)
+                        curSelectPt.setPathIx(ix);
+                        map.DrawEditPt(ix);
+                    }
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.PathIxNext:  
+                    // Select next point in path.
+                    // Draw the change in the select point.
+                    curSelectPt.incrPathIx();
+                    map.DrawEditPt(curSelectPt.getPathIx());
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.PathIxPrev:  
+                    // Select next point in path.
+                    // Draw the change in the select point.
+                    curSelectPt.decrPathIx();
+                    map.DrawEditPt(curSelectPt.getPathIx());
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.MovePt:
+                    // Hide path cursors. (Show again after a touch.)
+                    ShowPathCursors(false);
+                    ShowPathIxButtons(false);
+                    // Hide Upload button, which is shown when selecting a point on path.
+                    ShowUploadButton(false);
+                    // Set PtAction options to Move and Select only with Move selected.
+                    opts.Init(false);
+                    opts.Move = true;
+                    opts.Select = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Moving);
+                    view.ShowStatus("Touch where to move selected point.", false);
+                    curEditState = stMovePt;
+                    break;
+                case that.eventEdit.InsertPt:  
+                    // Hide path cursors. (Show again after a touch.)
+                    ShowPathCursors(false);
+                    ShowPathIxButtons(false);
+                    // Hide Upload button, which is shown when selecting a point on path.
+                    ShowUploadButton(false);
+                    // Set PtAction options to Move and Select only with Move selected.
+                    opts.Init(false);
+                    opts.Insert = true;
+                    opts.Select = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Inserting);
+                    view.ShowStatus("Touch where to insert touch point into the path.", false);
+                    curEditState = stInsertPt;
+                    break;
+                case that.eventEdit.DeletePt:  
+                    // Show previous, next buttons to index points on path.
+                    ShowPathCursors(false);
+                    ShowPathIxButtons(true);
+                    ShowPtDeleteDoButton(true);
+                    // Hide Upload button, which is shown when selecting a point on path.
+                    ShowUploadButton(false);
+                    // Set PtAction options to Move and Select only with Move selected.
+                    opts.Init(false);
+                    opts.Delete = true;
+                    opts.Select = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Deleting);
+                    view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along path.", false);
+                    curEditState = stDeletePt;
+                    break;
+                case that.eventEdit.AppendPt:
+                    PrepareForEditing();
+                    curEditState = stEdit;
+                    break;
+                case that.eventEdit.Upload:
+                    // Upload path data to server.
+                    DoUpload();
+                    // Goes to stUploadPending unless path does not exist.
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+
+        function stMovePt(event) {
+            switch (event) {
+                case that.eventEdit.Touch:
+                    // Draw the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    // Show path cursors.
+                    ShowPathCursors(true);
+                    // Show Do Pt Action Option.
+                    opts.Do = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Moving);
+                    // Show instructions for using cursors to nudge draw circle.
+                    ShowInstrForCursors();
+                    // Stay in same state. (Touch point has been saved in map click handler.)
+                    break;
+                case that.eventEdit.Cursor:
+                    // Draw the change in the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    break;
+                case that.eventEdit.Do:
+                    // Move path edit point to touch point location.
+                    var gpt = curTouchPt.getGpt();
+                    // Note: ignore if gpt is null. Not expected to happen.
+                    if (gpt) {
+                        bPathChanged = true;
+                        // Set edit pt to new location.
+                        var gptEdit = curSelectPt.getGpt();
+                        gptEdit.lat = gpt.lat;
+                        gptEdit.lon = gpt.lon;
+                        // Draw the updated path on the map (touch point is cleared from map).
+                        view.ShowPathInfo(false, that.gpxPath);  
+                        // Pan to the append point. This avoids problem of next touch being off.
+                        map.PanTo(gpt);
+                        PrepareForSelectingPt();
+                        curEditState = stSelectPt;
+                    }
+                    break;  
+                case that.eventEdit.SelectPt:
+                    // Show Pt Action options and message for select a point on the path.
+                    PrepareForSelectingPt();
+                    curEditState = stSelectPt;
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+        
+        function stInsertPt(event) {
+            switch (event) {
+                case that.eventEdit.Touch:
+                    // Draw the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    // Show path cursors.
+                    ShowPathCursors(true);
+                    // Show Do Pt Action Option.
+                    opts.Do = true;
+                    opts.SetOptions();
+                    opts.SelectOption(EPtAction.Inserting);
+                    // Show instructions for using cursors to nudge draw circle.
+                    ShowInstrForCursors();
+                    // Stay in same state. (Touch point has been saved in map click handler.)
+                    break;
+                case that.eventEdit.Cursor:
+                    // Draw the change in the touch point.
+                    map.DrawTouchPt(curTouchPt.getGpt());
+                    break;
+                case that.eventEdit.Do:
+                    // Insert touch point location before current path index.
+                    var gpt = curTouchPt.newGpt();
+                    var ixPath = curSelectPt.getPathIx();
+                    // Note: ignore if gpt is null. Not expected to happen.
+                    if (gpt && ixPath >= 0) {
+                        bPathChanged = true;
+                        // Insert touch point before selected point on the path.
+                        that.gpxPath.arGeoPt.splice(ixPath, 0, gpt);
+                        // Draw the updated path on the map (touch point is cleared from map).
+                        view.ShowPathInfo(false, that.gpxPath);  
+                        // Pan to the append point. This avoids problem of next touch being off.
+                        map.PanTo(gpt);
+                        PrepareForSelectingPt();
+                        curEditState = stSelectPt;
+                    }
+                    break;  
+                case that.eventEdit.SelectPt:
+                    // Show Pt Action options and message for select a point on the path.
+                    PrepareForSelectingPt();
+                    curEditState = stSelectPt;
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+        }
+
+        function stDeletePt(event) { 
+            switch (event) {
+                case that.eventEdit.PathIxNext:
+                    // Select next point in path.
+                    // Draw the change in the select point.
+                    curSelectPt.incrPathIx();
+                    map.DrawEditPt(curSelectPt.getPathIx());
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.PathIxPrev:
+                    // Select next point in path.
+                    // Draw the change in the select point.
+                    curSelectPt.decrPathIx();
+                    map.DrawEditPt(curSelectPt.getPathIx());
+                    // Stay in same state.
+                    break;
+                case that.eventEdit.DeletePtDo:
+                    bPathChanged = true;
+                    // Insert touch point location before current path index.
+                    var gpt = curTouchPt.newGpt();
+                    var ixPath = curSelectPt.getPathIx();
+                    // Note: ignore if gpt is null. Not expected to happen.
+                    if (gpt && ixPath >= 0) {
+                        bPathChanged = true;
+                        // Delete selected point on the path.
+                        that.gpxPath.arGeoPt.splice(ixPath, 1);
+                        // Draw the updated path on the map (touch point is cleared from map).
+                        view.ShowPathInfo(false, that.gpxPath);  
+                        // Pan to the append point. This avoids problem of next touch being off.
+                        map.PanTo(gpt);
+                        if (IsPathEmpty()) {
+                            // Last point in the path has been deleted. 
+                            PrepareForEditing()
+                            curEditState = stEdit;
+                        } else {
+                            // Typical case where there points left in the path.
+                            PrepareForSelectingPt();
+                            curEditState = stSelectPt;
+                        }
+
+                    }
+                    break; 
+                case that.eventEdit.SelectPt:
+                    // Show Pt Action options and message for select a point on the path.
+                    PrepareForSelectingPt();
+                    curEditState = stSelectPt;
+                    break;
+                case that.eventEdit.Cancel:
+                    CancelIfUserOks();
+                    // Goes to stEditInit if user oks.
+                    break;
+            }
+
+        }
+
+
+        // ** Helpers for Editing State Functions
+        // Object for filling the selectPtAction drop list.
+        // Constructor arg:
+        //  fsm: EditFSM object.
+        //  bSet: boolean to indicate initial state of all options in drop list.
+        function PtActionOptions(fsm, bSet) {
+            // Inclusion of options for drop list.
+            this.Select = false;
+            this.Append = false; 
+            this.Insert= false; 
+            this.Move = false;
+            this.Delete = false;
+            // Option for showing Do button.
+            this.Do = false;
+            
+            // Initialize all option members above to true or false.
+            // Arg: bSet is boolean to set option.
+            this.Init = function (bSet) {
+                this.Select = bSet;
+                this.Append = bSet;
+                this.Insert = bSet;
+                this.Move = bSet;
+                this.Delete = bSet;
+                // Option for showing Do button.
+                this.Do = bSet;
+            }
+
+            // Fills the selectPtAction drop list based on options selected for inclusion.
+            // Shows buPtDo based on option for Do.
+            this.SetOptions = function() {
+                // Empty the drop list.
+                var nCount = selectPtAction.length;
+                for (var i=0; i < nCount; i++) {
+                    selectPtAction.remove(0);
+                }
+                // Fill the drop list. 
+                // Note: Set value to string for EditFSM.event enumeration value.
+                //       SelectPt: 1, AppendPt: 2, InsertPt: 3, MovePt: 4, DeletePt: 5,
+                if (this.Select)
+                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Selecting), "Select Pt"));
+                if (this.Append)
+                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Appending), "Append Pt"));
+                if (this.Insert)
+                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Inserting), "Insert Pt"));
+                if (this.Move)
+                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Moving), "Move Pt"));
+                if (this.Delete)
+                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Deleting), "Delete Pt"));
+
+                ShowElement(buPtDo, this.Do);
+            }
+
+            // Selects a single option.
+            // Also sets fsm.curPtAction to selected option.
+            // Arg:
+            //  ePtAction: EPtAction enumeration number for option to select.
+            this.SelectOption = function (ePtAction) {
+                var opt;
+                var sValue = ToPtActionValue(ePtAction);
+                var nCount = selectPtAction.options.length;
+                // Note: loop thru all options so that only one will be selected.
+                for (var i = 0; i < nCount; i++) {
+                    opt = selectPtAction.options[i];
+                    if (opt.value === sValue) {
+                        opt.selected = true;
+                    } else {
+                        opt.selected = false;
+                    }
+                }
+            }
+
+            // Returns string value for an EPtAction enumeration number.
+            // The return value is a string for a fsm.eventEdit enumeration value
+            // is therefore a string for a number.
+            // Arg:
+            //  ePtAction: number of ePtAction enumeration.
+            function ToPtActionValue(ePtAction) {
+                var sValue = fsm.eventEdit.SelectPt.toString();
+                switch (ePtAction) {
+                    case EPtAction.Selecting:
+                        sValue = fsm.eventEdit.SelectPt.toString();
+                        break;
+                    case EPtAction.Appending:
+                        sValue = fsm.eventEdit.AppendPt.toString();
+                        break;
+                    case EPtAction.Moving:
+                        sValue = fsm.eventEdit.MovePt.toString();
+                        break;
+                    case EPtAction.Inserting:
+                        sValue = fsm.eventEdit.InsertPt.toString();
+                        break;
+                    case EPtAction.Deleting:
+                        sValue = fsm.eventEdit.DeletePt.toString();
+                        break;
+                }
+                return sValue;
+            }
+
+            function NewOption(sValue, sText) {
+                var opt = document.createElement("OPTION");
+                opt.value = sValue;
+                opt.text = sText;
+                return opt;
+            }
+            // Initialize properties.
+            this.Init(bSet);
+        }
+
+        // Returns new obj for path upload. See path arg for this.onUpload(..) handler
+        function NewUploadPathObj() {
+            var path = {
+                nId: 0,
+                sPathName: "",
+                sOwnerId: "",
+                sShare: "private",
+                arGeoPt: []
+            }
+            return path;
+        }
+
+        // Returns true if gpx path (that.gpxPath) is empty.
+        function IsPathEmpty() {
+            var bEmpty = true;
+            if (that.gpxPath && that.gpxPath.arGeoPt.length > 0)
+                bEmpty = false;
+            return bEmpty;
+        }
+
+        // Prepare for editing, which initially appends point to end of the path.
+        // Set PtAction options and show instructions.
+        function PrepareForEditing() {
+            // Show Upload if path has been changed.
+            ShowUploadButton(bPathChanged);  
+
+            // Ensure cursors and next/previous buttons are hidden.
+            ShowPathCursors(false);
+            ShowPathIxButtons(false);
+            // Enssure edit circle and draw circle are cleared.
+            map.DrawEditPt(-1);
+            // Hilite last point of path for appending.
+            if (that.gpxPath) { 
+                var ixPath = that.gpxPath.arGeoPt.length - 1;
+                if (ixPath >= 0) {
+                    map.DrawEditPt(ixPath);
+                }
+            }
+
+            var bPathEmpty = IsPathEmpty();
+            opts.Init(false);
+            opts.Append = true;
+            opts.Select = !bPathEmpty;
+            opts.SetOptions();
+            opts.SelectOption(EPtAction.Appending);
+            var sMsg = bPathEmpty ? "Touch to Append point to end of path" :
+                                     "Touch to Append point to end of path or choose Select Pt."
+            view.ShowStatus(sMsg, false);
+        }
+
+        function PrepareForSelectingPt() {
+            // Show Upload and hide Delete button.
+            ShowUploadButton(bPathChanged);
+            ShowDeleteButton(false);
+            // Hide cursor buttons. (Will be shown after a touch).
+            ShowPathCursors(false);
+            ShowPathIxButtons(false);
+            // Ensure edit and touch circle are cleared for path.
+            map.DrawEditPt(-1);
+            // Prepare for stSelectPt.
+            opts.Init(false);
+            opts.Select = true;
+            opts.Append = true;
+            opts.SetOptions();
+            opts.SelectOption(EPtAction.Selecting);
+            view.ShowStatus("Touch to choose point on path.", false);
+        }
+
+        // Shows instructions for moving a draw circle. 
+        function ShowInstrForCursors() {
+            view.ShowStatus("Use cursor keys to nudge point a bit. Use OK to confirm.", false); // false => not an error
+        }
+
+        // Handles click event on map. 
+        // If mode is online_edit or online_define:
+        //      Saves lat/lng and pixel coordinate of click.
+        //      Fires Touch event.
+        // Else ignores the click.
+        function OnMapClick2(e) {
+            // Ignore map click if mode is not for online_edit or online_define.
+            if (view.curMode() === view.eMode.online_edit || view.curMode() === view.eMode.online_define) {
+                if (bTouchAllowed) {
+                    curTouchPt.set(e.latlng.lat, e.latlng.lng, e.layerPoint.x, e.layerPoint.y);
+                    var event = that.eventEdit.Touch;
+                    that.DoEditTransition(event);
+                }
+            }
+        }
+        
+        // Cancels editing initializing to stEditInit.
+        // If user does not confirm cancel, remains in current state.
+        // If path data has not be changed, accepts cancel without asking user to confirm.
+        // Arg:
+        //  sMsg: Optional. String for message to display. Default message shown if not given.
+        function CancelIfUserOks(sMsg) {
+            // Helper function to accept confirmation by user for cancel.
+            function AcceptCancel() {
+                // Fire  init event to re-initialize.
+                // Clear so that only instructional message is gone for reinitialization.
+                view.ShowStatus("", false);
+                curEditState = stEditInit;
+                that.DoEditTransition(that.eventEdit.Init);
+            }
+
+            if (that.IsPathChanged()) {
+                if (!sMsg)
+                    sMsg = "OK to cancel editing and lose all changes?";
+                ConfirmYesNo(sMsg, function (bConfirm) {
+                    if (bConfirm) {
+                        AcceptCancel();
+                    }
+                });
+            } else {
+                // Accept cancel without asking user if there is no data change.
+                AcceptCancel();
+            }
+        }
+
+        // Uploads path data to server.
+        // Returns true if path can be uploaded and sets current state to stUploadPending.
+        // If paths can not be uploaded returns false and stays in same state.
+        function DoUpload() {
+            var bOk = false;
+            if (that.gpxPath) { // Ignore if gpxPath obj does not exists.
+                var path = NewUploadPathObj();
+                path.nId = that.nPathId;
+                path.sOwnerId = view.getOwnerId();
+                path.sPathName = txbxPathName.value;
+                path.sShare = selectShare.value;
+                path.arGeoPt = that.gpxPath.arGeoPt;
+                view.onUpload(view.curMode(), path);
+                view.ShowStatus("Uploading path to server.", false);
+                bOk = true;
+                curEditState = stUploadPending;
+            }
+            return bOk;
+        }
+
+    }
+
+
     // ** More private members
-    var nMode = that.eMode.online; // Current mode.
+    var fsmEdit = new EditFSM(this);
+
+    var nMode = that.eMode.online_view; // Current mode.
 
     var dCloseToPathThreshold = 30; // Off-path locations < dCloseToPathThresdhold considered to be on-Path.
 
@@ -616,7 +1884,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.011  10/10/2015";
+        var sVersion = "1.1.012  11/21/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -654,18 +1922,28 @@ https://github.com/Wizcorp/phonegap-facebook-plugin/blob/master/LICENSE \n\n\
 Select Sign In > Facebook to sign in. Your sign-in id is remembered so \
 you do not need to sign in again unless you log out.\n\
 You do not need to sign in, but you can only view public trails if not signed in.\n\n\
-Online/Offline switches between accessing trails from the Internet of from locally saved maps.\n\n\
-Online lets you \
-select Geo-paths that others have made public and ones \
-that are private to you.\n\n\
+View, Edit, Define, or Offline Mode\n\
+View lets you select a trail from ones saved online. Edit lets you edit a trail that \
+you have saved online. Define lets you create a new trail and save it online. \
+Offline lets you view trails when you are \
+not connected to the web. You need to select the trails to save to your phone when \
+you are online. \
+More details about these options are given below.\n\n\
+View Mode\n\
+View lets you \
+access Geo-paths from the web that others have made public and ones \
+that are private to you. \
+Select a path from the drop list to view.\n\n\
 Save Offline\n\
 Touch the Save Offline button to save a path you are viewing so that you can \
 view it when you are offline.\n\n\
+Offline Mode\n\
 Offline lets you select paths you have saved offline. Select a Geo Path from the \
 list you have saved.\n\n\
 Map Cache shows information about the cache of map tiles.\n\
 Select Size to see the number of files and the size in MB of all the files.\n\
-Select Clear to empty the cache of map files.\n\n\
+Select Clear to empty the cache of map files. Once the cache is cleared, \
+all the offline paths are deleted from the phone.\n\n\
 Using Controls at Top of Map\n\
 Ctr Trail brings the map to the center of the selected path.\n\n\
 MyLoc displays your current location on the map.\n\n\
@@ -695,13 +1973,53 @@ the same point to appear to be a change in location.)\n\n\
 Menu > Start Pebble\n\
 Starts the Pebble app on the watch. The Pebble app should be started automatically so this is unlikely \
 to be needed.\n\n\
-Creating Trail Maps\n\
-Use the site http://www.hillmap.com to create a trail map. Use the Path tab to define your trail.\n\
-Use Tools > Download Gpx to save your path.\n\
-Be sure to export the path as Track, \
-NOT Route, which is the default.\n\n\
+Define Mode\n\
+Define provides a way to create a trail and save it online. \
+You must be signed into Facebook to define a trail.\n\n\
+Instructions are shown at the top of the screen to guide you through the process, \
+which is outlined below.\n\n\
+Enter a path name for the trail.\n\n\
+Touch on the screen to define the first point on the path.\n\n\
+Soft Cursor Keys\n\
+Use the cursor keys \
+that appear to nudge the point left, right, up, or down to get the point exactly where \
+you want it. Holding down a cursor button causes the point to move faster on the screen. \
+Touch OK to confirm that the point is to be added. Repeat the process to define \
+all the points for your trail.\n\n\
+Upload Button\n\
+Touch the Upload button to upload (save online) the data for your trail.\n\n\
+Cancel Button\n\
+Touch the Cancel button if you decide not to create the trail.\n\n\
+Select Pt\n\
+You can edit an existing point in the trail by selecting Select Pt instead of Append Pt. \
+Touch on the trail near the point you want to edit.\n\n\
+Prev, Next Buttons\n\
+If the correct point is not highlighted on the trail, use \
+the Prev and Next buttons to move to the previous or next point on the trail.\n\n\
+Move Pt, Insert Pt, Delete Pt\n\
+Then select Move Pt, Insert Pt, or Delete Pt instead of Select Pt to \
+move, insert, or delete the selected (highlighted) pointed.\n\n\
+Move Pt\n\
+When moving a point, touch where the point should go and nudge it with the cursors. \
+Touch OK to confirm that the point is where you want it.\n\n\
+Insert Pt\n\
+When inserting a point, touch where the inserted point should be and use the cursors to nudge it.\
+Touch OK to confirm the location is correct. The point is inserted in the \
+path before the selected point.\n\n\
+Delete Pt\n\
+When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons \
+to move to a different point on the path if the correct point is not selected (highlighted).\n\n\
+Edit Mode\n\
+Edit provides a way to edit a trail you have saved online. \
+The precedure is the same as for defining a new path, except that you select a path to edit first. \
+You must be signed in to edit a path, and you can only edit paths that you have defined.\n\n\
+Creating Trail Maps at Hillmap\n\
+An alternative to creating a trail on your phone is to \
+use the site http://www.hillmap.com to create a trail from a laptop or desktop computer. \
+Use the Path tab to define your trail.\n\
+Use Tools > Download Gpx to save your path.\n\n\
 Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have \
-downloaded from hillmap.com so that you can access the path (aka trail) online from this app.\
+downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.\
 ';
         return sMsg;
     }
@@ -1114,6 +2432,12 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             divOwnerId.style.display = 'none';
     }
 
+    // Show selectSignIn control.
+    // Arg: bShow is boolean to show or hide.
+    function ShowSignInCtrl(bShow) {
+        ShowElement(selectSignIn, bShow);
+    }
+
     // Shows or hides selectMapCacke.
     // Arg:
     //  bShow: boolean indicating to show.
@@ -1135,7 +2459,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             buSaveOffline.style.display = 'none';
     }
 
-    // Shows or hides divPathInfo.
+    // Shows or hides divPathInfo, which has textbox for Path Name.
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowPathInfoDiv(bShow) {
@@ -1143,6 +2467,80 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
             divPathInfo.style.display = 'block';
         else
             divPathInfo.style.display = 'none';
+    }
+
+    function ShowElement(el, bShow) {
+        var sShow = bShow ? 'block' : 'none';
+        el.style.display = sShow;
+    }
+
+    // Shows or hides the selectMenu droplist.
+    function ShowMenu(bShow) {
+        ShowElement(selectMenu, bShow);
+    }
+
+    // Shows or hides divPathDescr, which contains controls for
+    // path name, sharing, and server action.
+    function ShowPathDescrCtrls(bShow) {
+        ShowElement(divPathDescr, bShow);
+    }
+
+    // Shows or hides textbox for Path Name and its label.
+    function ShowPathNameCtrl(bShow) {
+        ShowElement(labelPathName, bShow);
+        ShowElement(txbxPathName, bShow);
+    }
+
+    // Shows or hides Share select ctrl and its label.
+    function ShowShareCtrl(bShow) {
+        ShowElement(labelShare, bShow);
+        ShowElement(selectShare, bShow);
+    }
+
+    // Shows or hides select point action ctrl.
+    function ShowPtActionCtrl(bShow) {
+        ShowElement(selectPtAction, bShow);
+    }
+
+    // Show or hide Delete button.
+    function ShowDeleteButton(bShow) {
+        ShowElement(buDelete, bShow);
+    }
+
+    // Show or hide Upload button.
+    function ShowUploadButton(bShow) {
+        ShowElement(buUpload, bShow);
+    }
+
+    // Show or hide Cancel button.
+    function ShowCancelButton(bShow) {
+        ShowElement(buCancel, bShow);
+    }
+
+    // Show or hide cursor controls for editing path.
+    function ShowPathCursors(bShow) {
+        ShowElement(divCursors, bShow);
+    }
+
+    // Show or hide prev/next buttons for moving to selected path ix point.
+    // Note: Always hides buPtDeleteDo.
+    function ShowPathIxButtons(bShow) {
+        ShowElement(divPathIx, bShow);
+        ShowElement(buPtDeleteDo, false);
+    }
+
+    // Show or hide Do button for deleting a point.
+    // Note: buPtDeleteDo is containd in divPathIx so divPathIx must visible to see 
+    //       buPtDeleteDo.
+    function ShowPtDeleteDoButton(bShow) {
+        ShowElement(buPtDeleteDo, bShow);
+    }
+
+    // Hide controls for editing path.
+    function HidePathEditCtrls() {
+        ShowPathDescrCtrls(false);
+        ShowPathCursors(false);
+        ShowPathIxButtons(false);
     }
 
     // Shows or hides sectEditMode.
@@ -1417,9 +2815,36 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     // ** Private members for Open Source map
     var map = new wigo_ws_GeoPathMap(false); // false => do not show map ctrls (zoom, map-type).
     map.onMapClick = function (llAt) {
-        var updateResult = map.SetGeoLocationUpdate(llAt, dCloseToPathThreshold);
-        ShowGeoLocUpdateStatus(updateResult);
+        // Show map click as a geo location point only for Edit or Offline mode. Also,
+        // Showing a map click is only for debug and is ignored by wigo_ws_GeoPathMap
+        // object unless Settings indicates a click for geo location on.
+        var nMode = that.curMode();
+        if (nMode === that.eMode.online_view || 
+            nMode === that.eMode.offline) {
+            var updateResult = map.SetGeoLocationUpdate(llAt, dCloseToPathThreshold);
+            ShowGeoLocUpdateStatus(updateResult);
+        }
     };
+
+    // Shows panel of controls over the map based on mode.
+    // For mode of online_edit or online_define, only shows
+    // the Fullscreen/Reduce button.
+    // For mode 
+    // Arg:
+    //  nMode is value given by eMode enumeration.
+    //      For online_edit or online_define, only shows Fullscreen/Reduce button.
+    //      For online_view or offline, shows all the buttons.
+    function ShowMapPanelForMode(nMode) {
+        var bShow = true;
+        switch (nMode) {
+            case that.eMode.online_edit:
+            case that.eMode.online_define:
+                bShow = false;
+                break;
+        }
+        // Show or hide the panel rather just showing/hiding certain ctrls on panel.
+        ShowElement(panel, bShow);
+    }
 
     // Sets panel of controls for map at top of the map.
     function SetMapPanelTop() {
@@ -1427,11 +2852,11 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         panel.style.top = top + 'px';
     }
 
+    // Returns true if divSettings container is hidden.
     function IsSettingsHidden() {
         var bHidden = divSettings.style.display === 'none' || divSettings.style.dispaly === '';
         return bHidden;
     }
-
 
     // Display map below divPath info rather than at the top of the screen.
     // Also positions panel to be over the top of the map.
@@ -1503,12 +2928,12 @@ function wigo_ws_Controller() {
 
     // Show the geo path info (map) for the selected path.
     view.onPathSelected = function (nMode, iPathList) {
-        if (nMode === view.eMode.online) {
+        if (nMode === view.eMode.online_view) {
             if (gpxArray && iPathList >= 0 && iPathList < gpxArray.length) {
                 var gpx = gpxArray[iPathList];
                 // Show the geo path info.
                 var path = model.ParseGpxXml(gpx.xmlData); // Parse the xml to get path data.
-                view.ShowPathInfo(true, path); // true => show path info instead of hide.
+                view.ShowPathInfo(true, path); // true => show droplist for selecting a path instead of hide. Path is always drawn.
             }
         } else if (nMode === view.eMode.offline) {
             // Show the geo path info for an offline map. 
@@ -1516,6 +2941,22 @@ function wigo_ws_Controller() {
                 var oParams = gpxOfflineArray[iPathList];
                 view.ShowOfflinePathInfo(true, oParams);
             }
+        } else if (nMode === view.eMode.online_edit) {
+            // Fire path selected event for editing.
+            var fsm = view.fsmEdit();
+            fsm.gpxPath = null;
+            fsm.nPathId = 0;
+            if (gpxArray && iPathList >= 0 && iPathList < gpxArray.length) {
+                var gpx = gpxArray[iPathList];
+                // Set the gpx data for the selected path.
+                fsm.nPathId = gpx.nId;  
+                fsm.gpxPath = model.ParseGpxXml(gpx.xmlData); // Parse the xml to get path data.
+            }
+            fsm.DoEditTransition(fsm.eventEdit.SelectedPath);
+        } else if (nMode === view.eMode.online_define) {
+            // Fire path selected event for editing.
+            var fsm = view.fsmEdit();
+            fsm.DoEditTransition(fsm.eventEdit.SelectedPath);
         }
     }
 
@@ -1553,6 +2994,84 @@ function wigo_ws_Controller() {
         GetGeoPaths(nMode, sPathOwnerId);
     };
 
+    // Upload a path to the server.
+    //  nMode: byte value of this.eMode enumeration.
+    //  path: path data object which contains array of GeoPt elements and other members.
+    //        In view obj, see this.onUpload description for this handler.
+    view.onUpload = function (nMode, path) { 
+        if (model.IsOwnerAccessValid()) {
+            var gpx = new wigo_ws_Gpx();
+            gpx.nId = path.nId;
+            gpx.sOwnerId = path.sOwnerId;
+            gpx.eShare = model.eShare().toNum(path.sShare);
+            gpx.sName = path.sPathName;
+
+            // Set gpx.xmlData, gpx.gptBegin, gpx.gptEnd, gpx.gptSW, gpx.gptNE 
+            // based on the array of GeoPt elements in path.
+            wigo_ws_Gpx.FillGeoPts(gpx, path.arGeoPt);
+
+            // gpx.tModified is dont care because server sets tModified when storing record to database.
+            // Put Gpx object to server via the model.
+            var bOk = model.putGpx(gpx,
+                // Async callback upon storing record at server.
+                function (bOk, sStatus) {
+                    if (bOk) {
+                        var oStatus = JSON.parse(sStatus);
+                        var eDuplicate = model.eDuplicate();
+                        if (oStatus.eDup === eDuplicate.Renamed) {
+                            // Show message about renaming path.
+                            view.ShowStatus(oStatus.sMsg, true); // true shows message hightlighted.
+                        } else if (oStatus.eDup === eDuplicate.Match) {
+                            // gpx obj has same name as its record in database so there is no name change.
+                            // No need to reload the list of paths.
+                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                        } else if (oStatus.eDup === eDuplicate.NotDup) {
+                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                        } else {
+                            view.ShowStatus("Error occurred uploading GPX path.");
+                        }
+                    } else {
+                        // Show error message.
+                        view.ShowStatus(sStatus, !bOk)
+                    }
+                    // Fire event to initialize edit fsm reload path list.
+                    var fsm = view.fsmEdit();
+                    fsm.DoEditTransition(fsm.eventEdit.Init);
+                });
+            if (!bOk) {
+                var sError = "Cannot upload GPX path to server because another transfer is already in progress."
+                view.ShowStatus(sError, !bOk);
+            }
+        }
+    };
+
+    // Delete a geo path record at the server.
+    //  nMode: byte value of this.eMode enumeration.
+    //  gpxId: {sOwnerId: string, nId: integer} 
+    //      sOwnerId: owner (user) id of logged in user.
+    //      nId: unique id for gpx path record at server.
+    view.onDelete = function (nMode, gpxId) {
+        var fsm = view.fsmEdit();
+        if (model.IsOwnerAccessValid()) {
+            var bOk = model.deleteGpx(gpxId,
+                // Async callback upon storing record at server.
+                function (bOk, sStatus) {
+                    var sMsg = bOk ? "Successfully deleted GPX path at server." : sStatus;
+                    view.ShowStatus(sMsg, !bOk);
+                    fsm.DoEditTransition(fsm.eventEdit.Init);
+
+                });
+            if (!bOk) {
+                var sError = "Cannot delete GPX path at server because another transfer is already in progress."
+                view.ShowStatus(sError, !bOk);
+                fsm.DoEditTransition(fsm.eventEdit.Init);
+            }
+        } else {
+            ShowStatus("Owner must be signed in to delete GPX path at server.");
+            fsm.DoEditTransition(fsm.eventEdit.Init);
+        }
+    };
+
     // Saves the settings to localStorage and as the current settings.
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object to save to localStorage.
@@ -1587,10 +3106,16 @@ function wigo_ws_Controller() {
                 view.setOwnerId(result.userID);
                 if (result.status === model.eAuthStatus().Ok) {
                     view.ShowStatus("User successfully logged in.", false);
-                    // Set ui to online mode.
-                    view.selectModeUI(view.eMode.online);
-                    // Cause geo paths to be displayed for user.
-                    view.onGetPaths(view.curMode(), view.getOwnerId());
+                    var nMode = view.curMode();
+                    if (nMode === view.eMode.online_view) {
+                        // Cause geo paths to be displayed for user.
+                        view.onGetPaths(view.curMode(), view.getOwnerId());
+                    } else if (nMode === view.eMode.online_edit ||
+                               nMode === view.eMode.online_define) {
+                        // Fire SignedIn event.
+                        var fsm = view.fsmEdit();
+                        fsm.DoEditTransition(fsm.eventEdit.SignedIn);
+                    }
                 } else {
                     // var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
                     // Note: result has info for debug.
@@ -1610,12 +3135,18 @@ function wigo_ws_Controller() {
             if (bOwnerIdValid) {
                 model.logout(function (bOk, sMsg) {
                     if (bOk) {
-                        view.ShowStatus("Successfully logged out.", false);
-                        // Initialize UI for same mode.
                         var nMode = view.curMode();
-                        view.setModeUI(nMode);
-                        // Show geo path for no user logged in.
-                        view.onGetPaths(nMode, view.getOwnerId());
+                        if (nMode === view.eMode.online_view ||
+                            nMode === view.eMode.offline) {
+                            view.ShowStatus("Successfully logged out.", false);
+                            // Show geo path for no user logged in.
+                            view.onGetPaths(nMode, view.getOwnerId());
+                        } else {
+                            // Edit or Define mode.
+                            // Note: Logout should not be possible for Define or Edit mode.
+                            view.ShowStatus("Successfully logged out.", false);
+                        }
+
                     } else {
                         var sError = "Error logging out: {0}".format(sMsg);
                         view.ShowStatus(sError);
@@ -1703,7 +3234,7 @@ function wigo_ws_Controller() {
             });
         }
 
-        if (nMode === view.eMode.online) {
+        if (nMode === view.eMode.online_view) {
 
             if (!sPathOwnerId) {
                 // Owner is not signed in. Get all public geo paths.
@@ -1729,6 +3260,17 @@ function wigo_ws_Controller() {
                     }
                 });
             }
+        } else if (nMode === view.eMode.online_edit) {
+            // Get all paths for owner.
+            GetAllGeoPathsForOwner(function (bOk, sStatus) {
+                if (bOk) {
+                    // Show path list obtained even if error has occured.
+                    view.setPathList(arPath);
+                } else {
+                    // Show paths obtained before error, likely empty list.
+                    view.setPathList(arPath);
+                }
+            });
         } else if (nMode === view.eMode.offline) {
             // Get list of offline geo paths from local storage.
             gpxOfflineArray = model.getOfflineParamsList();

@@ -60,6 +60,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
     var zoomPathBounds = null; // Zoom value to fit trail to bounds of view.
 
+    // Colors to use for drawing. 
+    // Default values are set initially.
+    // The values may be changed.
+    // A color value is a string for for a color. 
+    // The rbg hex notation of '#rrggbb' can be used (rr for red, gg for green, bb for blue).
+    this.color = {
+        path: 'red',
+        locCircle: '#00ff00',  // Current geo location.
+        toPath: '#0000ff',     // Line back to path.
+        prevLocCircle: '#00ffff',  // Previous location circle
+        refLine: '#000000',        // Ref line from current location to previous location.
+        touchCircle: 'orange',     // Touch point when editing path.
+        editCircle: 'yellow'       // Edit point on path.
+    }
+
     // Initialize to use Open Streets Map once browser has initialized.
     // Arg:
     //  callback: callback function called upon completion of loading map. 
@@ -106,16 +121,31 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         // Clear any current path before drawing another path.
         this.ClearPath();
 
+        // Quit if path is not defined.  
+        if (!path) {
+            curPath = null;
+            return;
+        }
+
         curPathSegs.Init(path);
         var pathCoords = curPathSegs.getPathCoords();
 
-        mapPath = L.polyline(pathCoords, { color: 'red', opacity: 1.0 });
+        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 1.0 });
         mapPath.addTo(map);
-        // Set zoom so that trail fits.
-        var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
-        var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
-        var bounds = L.latLngBounds(sw, ne);
-        map.fitBounds(bounds);
+        // Set zoom so that trail fits if there is valid boundary.
+        if (IsBoundaryValid(path)) { 
+            var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
+            var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
+            var bounds = L.latLngBounds(sw, ne);
+            map.fitBounds(bounds);
+        } else {
+            // Set zoom around last point of path.
+            if (pathCoords.length > 0) {
+                var zoom = map.getZoom();
+                var iLast = pathCoords.length - 1;
+                map.setZoomAround(pathCoords[iLast], zoom); 
+            }
+        }
         // Save zoom value to restore by this.PanToPathCenter().
         zoomPathBounds = map.getZoom();
 
@@ -222,8 +252,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         return result;
     };
 
-
-    
     // Clears geo location update figures from the map. The path remains.
     this.ClearGeoLocationUpdate = function () {
         if (!IsMapLoaded())
@@ -231,6 +259,70 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
+        ClearTouchCircle();  
+    };
+
+    // Draws a circle for touch point.
+    // Arg:
+    //  gpt: wigo_ws_GeoPt obj to draw.
+    this.DrawTouchPt = function (gpt) {
+        if (!gpt)
+            return; 
+        var ll = L.latLng(gpt.lat, gpt.lon);
+        SetTouchCircle(ll, 10);
+    }
+
+    // Draws a circle on path to indicate a path point is being edited.
+    // Arg:
+    //  ixPath: integer for index in curPath.arGeoPt array for point being edited.
+    //          For ixPath < 0, clears edit circle and touch circle.
+    this.DrawEditPt = function (ixPath) {
+        if (curPath && ixPath >= 0 && ixPath < curPath.arGeoPt.length) {
+            var gpt = curPath.arGeoPt[ixPath];
+            var ll = L.latLng(gpt.lat, gpt.lon);
+            SetEditCircle(ll, 10);
+        } else {
+            ClearEditCircle();
+            ClearTouchCircle();
+        }
+    };
+
+    // Returns index in current path array of geo pts that is 
+    // nearest to a lat, lon pt. 
+    // Returns -1 if current path does not exist or is empty.
+    // Arg:
+    //  gpt: wigo_ws_GeoPt object for the lat, lon pt being checked.
+    this.FindEditIx = function (gpt) {
+        var llAt = L.latLng(gpt.lat, gpt.lon);
+        var dToPathMin = 41000000; // Initialize to greater than circumference of earth in meters.
+        var d = 0;
+        var gptFound = null;
+        var gptPath;
+        var llPathPt = L.latLng(0,0);
+        var iFound = -1;
+        for (var i = 0; curPath && i < curPath.arGeoPt.length; i++) {
+            gptPath = curPath.arGeoPt[i];
+            llPathPt.lat = gptPath.lat;
+            llPathPt.lng = gptPath.lon;
+            d = llPathPt.distanceTo(llAt);
+            if (d < dToPathMin) {
+                dToPathMin = d;
+                iFound = i;
+            }
+        }
+        return iFound;
+    };
+
+    // Returns lat/lon for a pixel coordinate on the map layer.
+    // Returned object is wigo_ws_GeoPt object.
+    // Arg:
+    //  pt: L.Point object for pixel coordinates.
+    this.PixelToLatLon = function (pt) {
+        var ll = map.layerPointToLatLng(pt);
+        var gpt = new wigo_ws_GeoPt();
+        gpt.lat = ll.lat;
+        gpt.lon = ll.lng;
+        return gpt;
     };
 
     // Pan to point on the map.
@@ -273,6 +365,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
+        ClearTouchCircle(); 
+        ClearEditCircle();  
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -379,7 +473,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     this.dPrevGeoLocThres = 10.0;
 
     // For debug, a mouse click (touch) on the map can simulate a geo-location.
-    // Boolean to indicate mouse clicks are ignored.
+    // Boolean to indicate mouse clicks are ignored so that this.onMapClick(llAt) 
+    // is not called.  this.onMapClick2(e) is always called regardless of state of
+    // this.bIgnoreMapClick.
     this.bIgnoreMapClick = true;
 
     // ** Events fired by map for container (view) to handle.
@@ -388,11 +484,25 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     //  llAt: Google LatLng object for the click.
     this.onMapClick = function (llAt) { };
 
-    // Event handler for click on map.
+    // Second version of map click handler.
+    // Signature of handler:
+    //  e: event data for Leaflet onMapClick.
+    //      e.latlng: Leaflet LatLng object.
+    //      e.layerPoint: Leaflet Point object (x, y) for map layer pixel coordinate.
+    //      e.containerPoint: Leaflet Point object (x, y) for map container pixel coordinate.
+    //      e.originalEvent: DOMMouseEvent object for original mouse event.
+    // Note: Addition of this.onMapClick2(e) is backward compatible with earlier code that only
+    // had onMapClick(llAt) available.
+    this.onMapClick2 = function (e) { };
+
+    // Event handler for LeafLet click on map.
     function onMapClick(e) {
         // Note: Only fires event for debug. Normally ignores a click.
         if (that.onMapClick && !that.bIgnoreMapClick)
             that.onMapClick(e.latlng);
+
+        // Always do callback for enhance map click. (Callback defaults to a no op.)
+        that.onMapClick2(e);
     }
 
     // ** More private members
@@ -567,7 +677,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
     function SetGeoLocationCircle(latlng, r) {
         ClearGeoLocationCircle();
         var circleOptions = {
-            color: '#00FF00',
+            color: that.color.locCircle, 
             opacity: 1.0,
             fill: true,
             fillOpacity: 1.0,
@@ -598,7 +708,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
 
         var mapCoords = [location, llAt];
         var options = {
-            color: '#0000FF',
+            color: that.color.toPath, 
             lineCap: 'butt',  /* in place of an arrow */
             weight: 5,
             opacity: 1.0
@@ -635,7 +745,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             return 0.0;
         // Draw circle for previous geo-location.
         var circleOptions = {
-            color: '#00FFFF',
+            color: that.color.prevLocCircle, 
             opacity: 1.0,
             fill: true,
             fillOpacity: 1.0,
@@ -649,7 +759,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var dest = ExtendLine(prevLocation, llTo, 30); // Extend end point of reference line by 30 meters.
         var mapCoords = [prevLocation, dest.at];
         var options = {
-            color: '#000000',
+            color: that.color.refLine, 
             weight: 2,
             opacity: 1.0
         }
@@ -692,6 +802,68 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         */
     }
 
+    var touchCircle = null; // L.Circle obj for point touched on map.
+    // Clears from map the touch point circle.
+    function ClearTouchCircle() {
+        // Remove existing geolocation circle, if there is one, from the map.
+        if (touchCircle)
+            map.removeLayer(touchCircle);
+    }
+
+    // Set (draws) circle on map centered at touch point.
+    // Arguments:
+    //  latlng is L.LatLng object for center of circle.
+    //  r is radius in meters of circle.
+    function SetTouchCircle(latlng, r) {
+        ClearTouchCircle();
+        var circleOptions = {
+            color: that.color.touchCircle, 
+            opacity: 1.0,
+            fill: true,
+            fillOpacity: 1.0,
+            weight: 5
+        };
+        touchCircle = L.circle(latlng, r, circleOptions);
+        touchCircle.addTo(map);
+    }
+
+    var editCircle = null; // L.Circle obj for point on path being edited.
+    // Clears from map the touch point circle.
+    function ClearEditCircle() {
+        // Remove existing geolocation circle, if there is one, from the map.
+        if (editCircle)
+            map.removeLayer(editCircle);
+    }
+
+    // Set (draws) circle on map centered at edit point on the path.
+    // Arguments:
+    //  latlng is L.LatLng object for center of circle.
+    //  r is radius in meters of circle.
+    function SetEditCircle(latlng, r) {
+        ClearTouchCircle();
+        ClearEditCircle();
+        var circleOptions = {
+            color: that.color.editCircle,
+            opacity: 1.0,
+            fill: true,
+            fillOpacity: 1.0,
+            weight: 5
+        };
+        editCircle = L.circle(latlng, r, circleOptions);
+        editCircle.addTo(map);
+    }
+
+    // Returns true if corners are set to define a boundary.
+    // Arg:
+    //  path: wigo_ws_GpxPath containing path to check for valid boundary.
+    function IsBoundaryValid(path) {
+        var bValid;
+        if (path.gptSW.lat === path.gptNE.lat || path.gptSW.lon === path.gptNE.lon)
+            bValid = false;
+        else
+            bValid = true;
+        return bValid;
+    };
 
     // Note: See SVN tags/20150915 for simpler pervious version that did not
     //       try to account for overlapping segments in the path.
@@ -739,8 +911,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var found = { llAt: llFound, d: minD, dFromStart: arDtoAt, dToEnd: arDtoEnd };
         return found;
     }
-
-
 
     // Helper object for finding nearest location to the path.
     // Constructor arg:
@@ -940,7 +1110,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var thresD = 2; // Threshold in meters for comparison of two distances to 
 
     }
-    
 
     // Calculates distance from a location point to a line segment.
     // Returns literal object:
