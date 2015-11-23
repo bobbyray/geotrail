@@ -190,6 +190,26 @@ function wigo_ws_View() {
         this.setOwnerName("");
     }
 
+    // Selects option for selectShare drop list.
+    // Arg: 
+    //  sShare: string for the value of option.
+    //          Value is property name of wigo_ws_GeoPathsRESTfulApi eShare enumeration.
+    this.setShareOption = function (sShare) {
+        var bFound = false;
+        var opt;
+        for (var i = 0; i < selectShare.options.length; i++) {
+            opt = selectShare.options[i];
+            if (sShare === opt.value) {
+                opt.selected = true;
+                bFound = true;
+                break;
+            }
+        }
+        if (!bFound) {
+            selectShare.selectedIndex = 0;
+        }
+    };
+
     // Displays a status message.
     // Arg:
     //  sStatus: string of html to display.
@@ -1884,7 +1904,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.012  11/21/2015";
+        var sVersion = "1.1.013  11/22/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -2948,6 +2968,10 @@ function wigo_ws_Controller() {
             fsm.nPathId = 0;
             if (gpxArray && iPathList >= 0 && iPathList < gpxArray.length) {
                 var gpx = gpxArray[iPathList];
+                // Select options for the selectShare drop list.
+                var eShare = model.eShare();
+                var sShare = eShare.toStr(gpx.eShare);
+                view.setShareOption(sShare);
                 // Set the gpx data for the selected path.
                 fsm.nPathId = gpx.nId;  
                 fsm.gpxPath = model.ParseGpxXml(gpx.xmlData); // Parse the xml to get path data.
