@@ -49,7 +49,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  ah: string for access handler for verification of owner.
     //  OnDone: Asynchronous completion handler. Signature:
     //      bOk: successful or not.
-    //      gpxList [out]: ref to GpxList of Gpx objects received.
+    //      gpxList [out]: ref to array of wigo_ws_Gpx objects received.
     //      sStatus: status message.
     //  Synchronous returns: boolean for get from server ok.
     this.GpxGetList = function (sOwnerId, nShare, ah, onDone) {
@@ -59,6 +59,28 @@ function wigo_ws_GeoPathsRESTfulApi() {
         else
             onGpxGetList = function (bOk, gpxList, sStatus) { };
         var bOk = base.Get(eState.GpxGetList, sGpxGetListUri(sOwnerId, nShare, ah));
+        return bOk;
+    };
+
+    // Gets GpxGetList from server for paths within a geo rectangle.
+    // Args
+    //  sOwnerId: string for owner id.
+    //  nShare: byte from eShare enumeration for type of sharing.
+    //  gptSW: wigo_ws_GeoPt object for SouthWest corner of rectangle.
+    //  gptNE: wigo_ws_GeoPt object for NorthEast corner of rectangle.
+    //  ah: string for access handler for verification of owner.
+    //  OnDone: Asynchronous completion handler. Signature:
+    //      bOk: successful or not.
+    //      gpxList [out]: ref to array of wigo_ws_Gpx objects received.
+    //      sStatus: status message.
+    //  Synchronous returns: boolean for get from server ok.
+    this.GpxGetListByLatLon = function (sOwnerId, nShare, gptSW, gptNE, ah, onDone) {
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onGpxGetListByLatLon = onDone;
+        else
+            onGpxGetListByLatLon = function (bOk, gpxList, sStatus) { };
+        var bOk = base.Get(eState.GpxGetListByLatLon, sGpxGetListByLatLonUri(sOwnerId, nShare, gptSW, gptNE, ah));
         return bOk;
     };
 
@@ -122,7 +144,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
     var eDuplicate = { NotDup: 0, Match: 1, Renamed: 2, Dup: 3, Error: 4 };
 
     // Enumeration for api transfer state. 
-    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, GpxDelete: 5,};
+    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, GpxDelete: 5, GpxGetListByLatLon: 6};
 
     // Enumeration for login status return by OAuth server.
     // Note: same values as for FacebookAuthentication.eAuthResult (keep synced).
@@ -192,13 +214,32 @@ function wigo_ws_GeoPathsRESTfulApi() {
 
     // Returns relative URI for GpxPutList api.
     // Args:
-    //  sOwnerId: string for sOwnerId of Gpx object.
+    //  sOwnerId: string for sOwnerId of wigo_ws_Gpx object.
     //  nShare: byte for eShare of Gpx object.
     //  ah: string for access handle used for verification of owner.
     function sGpxGetListUri(sOwnerId, nShare, ah) {
         if (!ah)
             ah = "none";
         var s = "gpxgetlist/" + sOwnerId + "/" + eShare.toStr(nShare) + "?ah=" + ah;
+        return s;
+    }
+
+    // Returns relative URI for GpxPutListByLatLon api.
+    // Args:
+    //  sOwnerId: string for sOwnerId of Gpx object.
+    //  nShare: byte for eShare of wigo_ws_Gpx object.
+    //  gptSW: wigo_ws_GeoPt object for SouthWest corner.
+    //  gptNE: wigo_ws_GeoPt object for NorthEast corner.
+    //  ah: string for access handle used for verification of owner.
+    function sGpxGetListByLatLonUri(sOwnerId, nShare, gptSW, gptNE, ah) {
+        if (!ah)
+            ah = "none";
+        // var s = "gpxgetlist/" + sOwnerId + "/" + eShare.toStr(nShare) + "?ah=" + ah;
+        var s = "gpxgetlistbylatlon/{0}/{1}?latSW={2}&lonSW={3}&latNE={4}&lonNE={5}&ah={6}".format(
+                 sOwnerId, eShare.toStr(nShare),
+                 gptSW.lat.toString(), gptSW.lon.toString(),
+                 gptNE.lat.toString(), gptNE.lon.toString(),
+                 ah);
         return s;
     }
 
@@ -247,6 +288,14 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  Returns nothing.
     var onGpxGetList = function (bOk, gpxList, sStatus) { };
 
+    // GpxGetListByLatLon has completed.
+    // Handler signature:
+    //  bOk: successful or not.
+    //  gpxList [out]: ref to GpxList of Gpx objects received.
+    //  sStatus: status message.
+    //  Returns nothing.
+    var onGpxGetListByLatLon = function (bOk, gpxList, sStatus) { };
+
     // Authentication has completed.
     // Handler signature:
     //  status: ref to authentication status received.
@@ -264,6 +313,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // Choose base service address for local debug or remote host.
     //var base = new wigo_ws_Ajax("Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("http://localhost:54545/Service.svc/"); // Local debug (works)
+    // var base = new wigo_ws_Ajax("http://localhost:63651/Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
     var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host (Would like to try https)
     //20150808!!!! I cannot get the ajax requests to work locally with the IIS Express Server.
@@ -312,6 +362,25 @@ function wigo_ws_GeoPathsRESTfulApi() {
                     }
                 }
                 onGpxGetList(bOk, gpxList, sStatus);
+                break;
+            case eState.GpxGetListByLatLon:
+                var gpxList;
+                if (bOk) {
+                    if (req && req.readyState == 4 && req.status === 200) {
+                        gpxList = JSON.parse(req.responseText);
+                        sStatus = "GpxGetListByLatLon succeeded.";
+                    } else {
+                        gpxList = new Array();
+                        sStatus = "Invalid response received for GpxGetListByLatLon."
+                    }
+                } else {
+                    sStatus = base.FormCompletionStatus(req);
+                    gpxList = new Array();
+                    if (req && req.readyState == 4 && req.status === 403) {
+                        sStatus = "Authentication failed. Log out and Sign In again because authorization has probably expired.";
+                    }
+                }
+                onGpxGetListByLatLon(bOk, gpxList, sStatus);
                 break;
             case eState.Authenticate:
                 var authResult;

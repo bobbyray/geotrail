@@ -28,10 +28,24 @@ function wigo_ws_GeoTrailSettings() {
     this.countPebbleVibe = 1;
     // Float for distance in meters for threshold for minimum change in distance
     // for previous geo-location to be updated wrt to current geo-location.
-    this.dPrevGeoLocThres = 10.0;
+    this.dPrevGeoLocThres = 40.0;
     // Boolean to indicate a mouse click (touch) simulates getting the geo-location
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
+
+    // ** 20151204 Settings added for home area rectangle.
+    // Southwest corner of home area rectangle.
+    this.gptHomeAreaSW = new wigo_ws_GeoPt();
+    // NorthEastCorner of home areo rectangle.
+    this.gptHomeAreaNE = new wigo_ws_GeoPt();
+    // Initialize home area to Mount Hood National Forest.
+    // This is the home area used if user has not saved one,
+    // and is the ome area when app is initially installed.
+    this.gptHomeAreaSW.lat = 45.02889163330814;
+    this.gptHomeAreaSW.lon = -122.00729370117188;
+    this.gptHomeAreaNE.lat = 45.622682153628226;
+    this.gptHomeAreaNE.lon = -121.51290893554688;
+    // ** 
 }
 
 
@@ -77,10 +91,27 @@ function wigo_ws_Model() {
     //  nShare: byte for enumeration of sharing mode for Gpx data object.
     //  onDone: async callback on completion with this signature:
     //      bOk: boolean indicating success.
-    //      gpxList: array of Gpx objects found in database.
+    //      gpxList: array of wigo_ws_Gpx objects found in database.
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxList = function (sOwnerId, nShare, onDone) {
         var bOk = api.GpxGetList(sOwnerId, nShare, this.getAccessHandle(), onDone);
+        return bOk;
+    }
+
+    // Gets list of gpx data objects from the server for paths within a geo rectangle.
+    // Returns true for data transfer started; false if another transfer is already started.
+    // Uses async callback onDone.
+    // Args:
+    //  sOwnerId: string for owner id of Gpx data objecct.
+    //  nShare: byte for enumeration of sharing mode for Gpx data object.
+    //  gptSW: wigo_ws_GeoPt object for SouthWest corner of rectangle.
+    //  gptNE: wigo_ws_GeoPt object for NorthEast corner of rectangle.
+    //  onDone: async callback on completion with this signature:
+    //      bOk: boolean indicating success.
+    //      gpxList: array of wigo_ws_Gpx objects found in database.
+    //      sStatus: string indicating result. (For bOk false, an error msg.)
+    this.getGpxListByLatLon = function (sOwnerId, nShare, gptSW, gptNE, onDone) {
+        var bOk = api.GpxGetListByLatLon(sOwnerId, nShare, gptSW, gptNE, this.getAccessHandle(), onDone);
         return bOk;
     }
 
@@ -422,6 +453,17 @@ function wigo_ws_Model() {
                     settings.countPhoneBeep = 1;
                 if (!settings.countPebbleVibe)
                     settings.countPebbleVibe = 1;
+                // ** 20151294 Members added for home area rectangle.
+                if (!settings.gptHomeAreaSW || !settings.gptHomeAreaNE) {
+                    // Default to area around Oregon.
+                    settings.gptHomeAreaSW = new wigo_ws_GeoPt();
+                    settings.gptHomeAreaSW.lat = 38.03078569382296;
+                    settings.gptHomeAreaSW.lon = -123.8818359375;
+                    settings.gptHomeAreaNE = new wigo_ws_GeoPt();
+                    settings.gptHomeAreaNE.lat = 47.88688085106898;
+                    settings.gptHomeAreaNE.lon = -115.97167968750001;
+                }
+                // **
             }
             return settings;
         };

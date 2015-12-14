@@ -67,6 +67,27 @@ function wigo_ws_View() {
     //  sPathOwnerId: string for path owner id for getting the paths from server.
     this.onGetPaths = function (nMode, sPathOwnerId) { };
 
+
+    // Enumeration for values of selectFind control.
+    this.eFindIx = {find: 0, home_area: 1, on_screen: 2, all_public: 3, all_mine: 4, my_public: 5, my_private: 6,
+        toNum: function (sValue) { // Returns sValue, which is string property name, as a number.
+            var ix = this[sValue];
+            if (ix === undefined)
+                ix = 0;
+            return ix;
+        }
+    };
+
+    // Find list of geo paths to show in a list. 
+    // Similar to this.onGetPaths(..) above, except used to find by lat/lon rectangle as well
+    // as be user id.
+    // Handler Signature
+    //  sOwnerId: string for path owner id.
+    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
+    //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
+    this.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) { };
+
     // Upload to server a path given by a list GeoPt elements.
     // Handler Signature:
     //  nMode: byte value of this.eMode enumeration.
@@ -123,8 +144,12 @@ function wigo_ws_View() {
             SetMapPanelTop();
             var settings = that.onGetSettings();
             SetSettingsParams(settings);
+            // Set view find paramters for search for geo paths to the home area.
+            viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
+            that.setModeUI(that.curMode());  
+            map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
         }
-
+        map.GoOffline(false);
         map.InitializeMap(function (bOk, sMsg) {
             CompleteInitialization(bOk, sMsg);
         });
@@ -210,6 +235,20 @@ function wigo_ws_View() {
         }
     };
 
+    // Returns reference to home area rectangle.
+    // Returned object ref:
+    //  gptSW: wigo_ws_GeoPt object for SW corner .
+    //  gptNE: wigo_ws_GeoPt object for NE corner.
+    this.getHomeArea = function () {
+        return homeArea;
+    };
+
+    // Returns reference to viewFindParams.
+    // Note: viewFindParams are by controller to get paths for the view.
+    this.getViewFindParams = function () {
+        return viewFindParams;
+    };
+
     // Displays a status message.
     // Arg:
     //  sStatus: string of html to display.
@@ -267,12 +306,12 @@ function wigo_ws_View() {
                 ShowPathInfoDiv(true); 
                 ShowMapCacheSelect(false);
                 ShowSaveOfflineButton(true);
-                ShowMenu(true); 
+                ShowMenu(true);
+                ShowFind(true);
                 // Hide ctrls for editing path.
                 HidePathEditCtrls();
                 ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
-                map.GoOffline(false);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
@@ -282,12 +321,12 @@ function wigo_ws_View() {
                 ShowPathInfoDiv(true); 
                 ShowMapCacheSelect(true);
                 ShowSaveOfflineButton(false);
-                ShowMenu(true); 
+                ShowMenu(true);
+                ShowFind(false);
                 // Hide ctrls for editing path.
                 HidePathEditCtrls();
                 ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
-                map.GoOffline(true);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
@@ -397,6 +436,7 @@ function wigo_ws_View() {
     var selectMode = $('#selectMode')[0];
     var buSaveOffline = $('#buSaveOffline')[0];
     var selectMapCache = $('#selectMapCache')[0];
+    var selectFind = $('#selectFind')[0];
     var selectMenu = $('#selectMenu')[0];
 
     var divSettings = $('#divSettings')[0];
@@ -408,6 +448,11 @@ function wigo_ws_View() {
     var selectPebbleAlert = $('#selectPebbleAlert')[0];
     var selectClickForGeoLoc = $('#selectClickForGeoLoc')[0];
     var numberPrevGeoLocThresMeters = $('#numberPrevGeoLocThresMeters')[0];
+    var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
+    var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
+    var numberHomeAreaNELat = $('#numberHomeAreaNELat')[0];
+    var numberHomeAreaNELon = $('#numberHomeAreaNELon')[0];
+    var buSetHomeArea = $('#buSetHomeArea')[0];
     var buSettingsDone = $('#buSettingsDone')[0];
     var buSettingsCancel = $('#buSettingsCancel')[0];
 
@@ -537,8 +582,8 @@ function wigo_ws_View() {
     });
 
     $(selectMode).bind('change', function (e) {
-       // this.value is value of selectMode control.
-       var nMode = that.eMode.toNum(this.value);
+        // this.value is value of selectMode control.
+        var nMode = that.eMode.toNum(this.value);
 
         // Helper function to change mode.
         function AcceptModeChange() {
@@ -603,11 +648,62 @@ Are you sure you want to delete the maps?";
         selectMapCache.selectedIndex = 0;
     });
 
+    $(selectFind).bind('change', function (e) {
+        // The Find droplist is only valid in view mode.
+        if (that.curMode() !== that.eMode.online_view)
+            return; // Note: should not happen because selectFind should only be visible in view mode.
+
+        // Save parameters for view for finding paths.
+        var nFindIx = that.eFindIx.toNum(this.value);
+        var sOwnerId = that.getOwnerId();
+        var bClearPath = true;
+        if (nFindIx === that.eFindIx.home_area) {
+            viewFindParams.setRect(nFindIx, homeArea.gptSW, homeArea.gptNE);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, homeArea.gptSW, homeArea.gptNE);
+        } else if (nFindIx === that.eFindIx.on_screen) {
+            var oMap = map.getMap(); // Get underlying Leaflet map object.
+            var bounds = oMap.getBounds();
+            var ptSW = bounds.getSouthWest();
+            var ptNE = bounds.getNorthEast();
+            var gptSW = new wigo_ws_GeoPt();
+            gptSW.lat = ptSW.lat;
+            gptSW.lon = ptSW.lng;
+            var gptNE = new wigo_ws_GeoPt();
+            gptNE.lat = ptNE.lat;
+            gptNE.lon = ptNE.lng;
+            viewFindParams.setRect(nFindIx, gptSW, gptNE);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+        } else if (nFindIx === that.eFindIx.all_public) {
+            viewFindParams.init(nFindIx);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+        } else if (nFindIx === that.eFindIx.all_mine ||
+                   nFindIx === that.eFindIx.my_public  ||
+                   nFindIx === that.eFindIx.my_private) {
+            if (!sOwnerId) {
+                that.ShowStatus("You must be signed in to find your paths.", true);
+                bClearPath = false;
+            } else {
+                viewFindParams.init(nFindIx);
+                if (that.onFindPaths)
+                    that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+            }
+        } else {
+            bClearPath = false;
+        }
+
+        this.selectedIndex = 0;
+        // Clear the drawn map path because the selectGeoPath drop has been reloaded.
+        if (bClearPath)
+            map.ClearPath();
+    });
+
     $(selectMenu).bind('change', function (e) {
         if (this.value === 'settings') {
             var settings = that.onGetSettings();
             SetSettingsValues(settings);
-            EnableSettingControlOptions(settings.bAllowGeoTracking);
             ShowSettingsDiv(true);
             SetMapPanelTop();
         } else if (this.value === 'startpebble') {
@@ -630,22 +726,37 @@ Are you sure you want to delete the maps?";
         } else if (this.value === 'help') {
             AlertMsg(HelpMsg());
             this.selectedIndex = 0;
+        } else if (this.value === 'back_to_trail') {
+            AlertMsg(BackToTrailHelp());
+            this.selectedIndex = 0;
+        } else if (this.value === 'terms_of_use') {
+            AlertMsg(TermsOfUseMsg());
+            this.selectedIndex = 0;
         }
         that.ClearStatus();
     });
 
     $(selectAllowGeoTracking).bind('change', function(e) {
-        var bTrack = this.value ===  'yes';
-        EnableSettingControlOptions(bTrack);
+        // No longer disabling some settings ctrls for allow geo tracking off.
+    });
+
+    $(buSetHomeArea).bind('click', function (e) {
+        var corners = map.GetBounds();
+        numberHomeAreaSWLat.value = corners.gptSW.lat;
+        numberHomeAreaSWLon.value = corners.gptSW.lon;
+        numberHomeAreaNELat.value = corners.gptNE.lat;
+        numberHomeAreaNELon.value = corners.gptNE.lon;
     });
 
     $(buSettingsDone).bind('click', function (e) {
-        ShowSettingsDiv(false);
-        that.ClearStatus();
-        var settings = GetSettingsValues();
-        SetSettingsParams(settings);
-        selectMenu[0].selected = true;
-        that.onSaveSettings(settings);
+        if (CheckSettingsValues()) { 
+            ShowSettingsDiv(false);
+            that.ClearStatus();
+            var settings = GetSettingsValues();
+            SetSettingsParams(settings);
+            selectMenu[0].selected = true;
+            that.onSaveSettings(settings);
+        }
     });
     $(buSettingsCancel).bind('click', function (e) {
         ShowSettingsDiv(false);
@@ -659,6 +770,7 @@ Are you sure you want to delete the maps?";
     });
 
     $(selectGeoTrack).bind('change', function (e) {
+        that.ClearStatus(); 
         // Save state of flag to track geo location.
         trackTimer.bOn = IsGeoTrackValueOn();    // Allow/disallow geo-tracking.
         if (!trackTimer.bOn) {
@@ -879,7 +991,7 @@ Are you sure you want to delete the maps?";
         };
 
         // Clear path change. Call when a change to another view is confirmed
-        // by user even a path change has occurred without uploading the change. 
+        // by user even though a path change has occurred without uploading the change. 
         this.ClearPathChange = function () {
             bPathChanged = false;
             // Clear the drop list for selection a geo path.
@@ -1072,7 +1184,7 @@ Are you sure you want to delete the maps?";
                 curPathIx = bValid ? ix : -1;
             }
 
-            // Returns index to current path in the path.
+            // Returns index to current point in the path.
             this.getPathIx = function () {
                 return curPathIx;
             };
@@ -1129,7 +1241,7 @@ Are you sure you want to delete the maps?";
             // Ensure select for path drop list is empty initially.
             // Note: SignedIn event will load list of paths to select for editing.
             view.setPathList([]);
-            ShowSignInCtrl(true);  ////20151120 added
+            ShowSignInCtrl(true);  
             switch (event) {
                 case that.eventEdit.Init:
                     // Ensure path is empty initally. It is set later if selected for editing.
@@ -1164,6 +1276,7 @@ Are you sure you want to delete the maps?";
                     ShowMapCacheSelect(false);
                     ShowSaveOfflineButton(false);
                     ShowMenu(false);
+                    ShowFind(false);
                     // Hide select path drop list.
                     ShowPathInfoDiv(false);
                     // Hide cursors.
@@ -1189,7 +1302,7 @@ Are you sure you want to delete the maps?";
                         // Load path drop list for select of path to edit.
                         ShowPathInfoDiv(true); // Show the select Path drop list.
                         view.onGetPaths(view.curMode(), view.getOwnerId());
-                        view.AppendStatus("Select a path to edit.", false);
+                        // Note: view.onGetPaths(..) will show a message to select path after droplist is loaded.
                     }
                     
                     curEditState = stSelectPath;
@@ -1269,7 +1382,7 @@ Are you sure you want to delete the maps?";
                     ShowPathIxButtons(false); 
                     ShowDeleteButton(false);
                     ShowUploadButton(false);
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    map.DrawAppendSegment(curTouchPt.getGpt());
                     curEditState = stAppendPt;
                     break;
                 case that.eventEdit.ChangedPathName:
@@ -1347,12 +1460,12 @@ Are you sure you want to delete the maps?";
             switch (event) {
                 case that.eventEdit.Touch:
                     // Draw the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    map.DrawAppendSegment(curTouchPt.getGpt());
                     // Stay in same state. (Touch point has been saved in map click handler.)
                     break;
                 case that.eventEdit.Cursor:
                     // Draw the change in the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    map.DrawAppendSegment(curTouchPt.getGpt());
                     break;
                 case that.eventEdit.Do:
                     // Append touch point as update by cursor movement to the path.
@@ -1425,17 +1538,24 @@ Are you sure you want to delete the maps?";
                     break;
                 case that.eventEdit.MovePt:
                     // Hide path cursors. (Show again after a touch.)
-                    ShowPathCursors(false);
+                    // Show path cursors because selected point on path
+                    // is set to curTouchPt below and is ready to be nudged by the cursors.
+                    ShowPathCursors(true);
                     ShowPathIxButtons(false);
                     // Hide Upload button, which is shown when selecting a point on path.
                     ShowUploadButton(false);
                     // Set PtAction options to Move and Select only with Move selected.
                     opts.Init(false);
                     opts.Move = true;
+                    opts.Do = true; 
                     opts.Select = true;
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Moving);
-                    view.ShowStatus("Touch where to move selected point.", false);
+                    // Set current touch point to selected point on path.
+                    var gptSelected = curSelectPt.getGpt();
+                    var pixel = map.LatLonToPixel(gptSelected);
+                    curTouchPt.set(gptSelected.lat, gptSelected.lon, pixel.x, pixel.y);
+                    view.ShowStatus("Nudge selected point or touch where to move it.", false);
                     curEditState = stMovePt;
                     break;
                 case that.eventEdit.InsertPt:  
@@ -1467,6 +1587,7 @@ Are you sure you want to delete the maps?";
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Deleting);
                     view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along path.", false);
+                    map.DrawDeleteSegment(curSelectPt.getPathIx());    
                     curEditState = stDeletePt;
                     break;
                 case that.eventEdit.AppendPt:
@@ -1489,7 +1610,7 @@ Are you sure you want to delete the maps?";
             switch (event) {
                 case that.eventEdit.Touch:
                     // Draw the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    map.DrawMoveSegment(curTouchPt.getGpt(), curSelectPt.getPathIx());
                     // Show path cursors.
                     ShowPathCursors(true);
                     // Show Do Pt Action Option.
@@ -1501,8 +1622,8 @@ Are you sure you want to delete the maps?";
                     // Stay in same state. (Touch point has been saved in map click handler.)
                     break;
                 case that.eventEdit.Cursor:
-                    // Draw the change in the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    // Draw the change in the touch point nudged by the cursor.
+                    map.DrawMoveSegment(curTouchPt.getGpt(), curSelectPt.getPathIx());
                     break;
                 case that.eventEdit.Do:
                     // Move path edit point to touch point location.
@@ -1538,7 +1659,7 @@ Are you sure you want to delete the maps?";
             switch (event) {
                 case that.eventEdit.Touch:
                     // Draw the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    map.DrawInsertSegment(curTouchPt.getGpt(), curSelectPt.getPathIx());
                     // Show path cursors.
                     ShowPathCursors(true);
                     // Show Do Pt Action Option.
@@ -1550,8 +1671,8 @@ Are you sure you want to delete the maps?";
                     // Stay in same state. (Touch point has been saved in map click handler.)
                     break;
                 case that.eventEdit.Cursor:
-                    // Draw the change in the touch point.
-                    map.DrawTouchPt(curTouchPt.getGpt());
+                    // Draw the change in the touch point nudged by cursor.
+                    map.DrawInsertSegment(curTouchPt.getGpt(), curSelectPt.getPathIx());
                     break;
                 case that.eventEdit.Do:
                     // Insert touch point location before current path index.
@@ -1588,14 +1709,14 @@ Are you sure you want to delete the maps?";
                     // Select next point in path.
                     // Draw the change in the select point.
                     curSelectPt.incrPathIx();
-                    map.DrawEditPt(curSelectPt.getPathIx());
+                    map.DrawDeleteSegment(curSelectPt.getPathIx());    
                     // Stay in same state.
                     break;
                 case that.eventEdit.PathIxPrev:
                     // Select next point in path.
                     // Draw the change in the select point.
                     curSelectPt.decrPathIx();
-                    map.DrawEditPt(curSelectPt.getPathIx());
+                    map.DrawDeleteSegment(curSelectPt.getPathIx());    
                     // Stay in same state.
                     break;
                 case that.eventEdit.DeletePtDo:
@@ -1791,8 +1912,8 @@ Are you sure you want to delete the maps?";
             opts.Select = !bPathEmpty;
             opts.SetOptions();
             opts.SelectOption(EPtAction.Appending);
-            var sMsg = bPathEmpty ? "Touch to Append point to end of path" :
-                                     "Touch to Append point to end of path or choose Select Pt."
+            var sMsg = bPathEmpty ? "Touch to start a new path." :
+                                    "Touch to Append point to end of path or choose Select Pt."
             view.ShowStatus(sMsg, false);
         }
 
@@ -1805,6 +1926,8 @@ Are you sure you want to delete the maps?";
             ShowPathIxButtons(false);
             // Ensure edit and touch circle are cleared for path.
             map.DrawEditPt(-1);
+            // Ensure overlay for editing (moving or inserting) are cleared from path.
+            map.ClearEditSegment();
             // Prepare for stSelectPt.
             opts.Init(false);
             opts.Select = true;
@@ -1891,8 +2014,59 @@ Are you sure you want to delete the maps?";
     var fsmEdit = new EditFSM(this);
 
     var nMode = that.eMode.online_view; // Current mode.
+    
+    // Initial home are to rectangle area around Oregon.
+    var homeArea = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
+    homeArea.gptSW.lat = 38.03078569382296;
+    homeArea.gptSW.lon = -123.8818359375;
+    homeArea.gptNE.lat = 47.88688085106898;
+    homeArea.gptNE.lon = -115.97167968750001;
 
-    var dCloseToPathThreshold = 30; // Off-path locations < dCloseToPathThresdhold considered to be on-Path.
+    // Search parameters for finding geo paths for view.
+    // Properties:
+    //  nFindIx: enumeration given by this.eFindIx for kind for of search.
+    //  gptSW: wigo_ws_GeoPt object for SouthWest corner of retanctangle for search. 
+    //         (Some kinds of search do not use the rectangle.)
+    //  gptSW: wigo_ws_GeoPt object for NorthEast corner of retanctangle for search. 
+    //         (Some kinds of search do not use the rectangle.)
+    // Methods:
+    //  init(nFindIx)
+    //      Initials this object for nFindIx.
+    //      Rectangle is set to invalid corners.
+    //  setRect(nFindIx, gptSW, gptNE)
+    //      Initializes this object for nFindIx.
+    //      Rectangle is set to corners given by gptSW and gptNE.
+    //  getCenter()
+    //      Returns center of rectangle given by corners.
+    //      If corners are invalid, returns null.
+    //      (For some kinds of search, the rectangle is not used, ie is invalid.)
+    var viewFindParams = {
+        nFindIx: this.eFindIx.home_area, gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt(),
+        setRect: function (nFindIx, gptSW, gptNE) {
+            this.nFindIx = nFindIx;
+            this.gptSW.lat = gptSW.lat;
+            this.gptSW.lon = gptSW.lon;
+            this.gptNE.lat = gptNE.lat;
+            this.gptNE.lon = gptNE.lon;
+        },
+        getCenter: function () {
+            var gptCenter = null;
+            if (this.gptSW.lat > -90.5) {
+                gptCenter = new wigo_ws_GeoPt();
+                gptCenter.lat = (this.gptSW.lat + this.gptNE.lat) / 2;
+                gptCenter.lon = (this.gptSW.lon + this.gptNE.lon) / 2;
+            }
+            return gptCenter;
+        },
+        init: function (nFindIx) {
+            this.nFindIx = nFindIx;
+            this.gptSW.lat = -91.0;   // Set to invalid lat.
+            this.gptSW.lon = -181.0;  // Set to invalid lon.
+            this.gptNE.lat = -91.0;   // Set to invalid lat.
+            this.gptNE.lon = -181.0;  // Set to invalid lon.
+        }
+    };
+    viewFindParams.setRect(this.eFindIx.home_area, homeArea.gptSW, homeArea.gptNE);
 
     // Get current geo location, show on the map, and update status in phone and Pebble.
     function DoGeoLocation() {
@@ -1904,7 +2078,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.013  11/22/2015";
+        var sVersion = "1.1.014  12/13/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -1948,7 +2122,7 @@ you have saved online. Define lets you create a new trail and save it online. \
 Offline lets you view trails when you are \
 not connected to the web. You need to select the trails to save to your phone when \
 you are online. \
-More details about these options are given below.\n\n\
+More details about these modes are given below.\n\n\
 View Mode\n\
 View lets you \
 access Geo-paths from the web that others have made public and ones \
@@ -1956,33 +2130,38 @@ that are private to you. \
 Select a path from the drop list to view.\n\n\
 Save Offline\n\
 Touch the Save Offline button to save a path you are viewing so that you can \
-view it when you are offline.\n\n\
-Offline Mode\n\
-Offline lets you select paths you have saved offline. Select a Geo Path from the \
-list you have saved.\n\n\
-Map Cache shows information about the cache of map tiles.\n\
-Select Size to see the number of files and the size in MB of all the files.\n\
-Select Clear to empty the cache of map files. Once the cache is cleared, \
-all the offline paths are deleted from the phone.\n\n\
-Using Controls at Top of Map\n\
-Ctr Trail brings the map to the center of the selected path.\n\n\
-MyLoc displays your current location on the map.\n\n\
-Full Screen / Reduce Screen switches between the map filling the screen and \
-the map being below the selection controls.\n\n\
-Track switches between geo-location tracking On or Off.\n\n\
-Ph Alert, which is given if you are off the trail, switches between Ph Alert On or Off.\n\n\
+view it when you are offline. (See Offline Mode below.)\n\n\
+Find\n\
+Select an option from the Find drop list to search for paths to view. \n\
+The Select a Path drop list is filled with the paths found:\n\n\
+Find > Home Area\n\
+Searches for paths that are in your Home Area, which is a geo-rectangle \
+defined in Menu > Settings. \
+All public paths and your private paths are included.\n\n\
+Find > On Screen\n\
+Searches for paths that are in the area displayed on the screen. \
+First, pan, zoom, and pinch to select the area you see on the screen.\n\n\
+Find > All Paths\n\
+Searches for all your public and private paths.\n\n\
+Find > All Mine\n\
+Searchs for all your paths, both public and private. \
+You must be logged in to search for your paths.\n\n\
+Find > My Public\n\
+Searches for all of your public paths, paths that anyone can see.\n\n\
+Find > My Private\n\
+Searches for your private paths, paths that only you can see.\n\n\
 Menu Provides More Options\n\
 Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\n\
 Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
 and Track and Ph Alert are ignored. \
 However, the MyLoc button will still get your geo-location.\n\n\
+Geo Tracking Initially On Yes | No: Yes to start with Track On when app loads.\n\n\
 Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
-Off-path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
-Initially Enable Geo Tracking Yes | No: Yes to start with Track On when app loads.\n\n\
-Initially warn when Off-Path Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
-Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
-Phone vibration in secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
-Phone beep count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
+Off-Path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
+Allow Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
+Phone Alert Initially On Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
+Phone Vibration in Secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
+Phone Beep Count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
 Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
 Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
 off trail. Count of 0 disables vibrations. \
@@ -1990,9 +2169,32 @@ Note that Ph Alert Off does not inhibit vibrations for being off-trail.\n\n\
 Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
 for change in location to be considered valid. (This prevents small variations in the geo-location of \
 the same point to appear to be a change in location.)\n\n\
+Touch Map for Geo Location Testing Yes | No:\n\
+Touching a point on the map simulates getting the geo location for the point on the map. \
+This is just for testing.\n\n\
+Set Home Area to Screen:\n\
+Touch the Set button to set your home area to be that shown on the screen. \
+First, pan, zoom, and pinch to display the area you want on the screen. \n\
+The paths in the Home Area are found when the app starts. \
+Also, the Home Area can be chosen in View mode, from the Find drop list.\n\n\
 Menu > Start Pebble\n\
-Starts the Pebble app on the watch. The Pebble app should be started automatically so this is unlikely \
-to be needed.\n\n\
+Starts the Pebble app on the watch. The Pebble app should be started automatically so it is unlikely \
+you need to do this.\n\n\
+Using Controls at Top of Map\n\
+Ctr Trail brings the map to the center of the selected path.\n\n\
+MyLoc displays your current location on the map.\n\n\
+Full Screen / Reduce Screen switches between the map filling the screen and \
+the map being below the selection controls.\n\n\
+Track switches between geo-location tracking On or Off.\n\
+Note: Track On will run down your battery more quickly.\n\n\
+Ph Alert, which is given if you are off the trail, switches between Ph Alert On or Off.\n\n\
+Offline Mode\n\
+Offline lets you select paths you have saved offline. Select a Geo Path from the \
+list you have saved.\n\n\
+Map Cache shows information about the cache of map tiles.\n\
+Select Size to see the number of files and the size in MB of all the files.\n\
+Select Clear to empty the cache of map files. Once the cache is cleared, \
+all the offline paths are deleted from the phone.\n\n\
 Define Mode\n\
 Define provides a way to create a trail and save it online. \
 You must be signed into Facebook to define a trail.\n\n\
@@ -2040,6 +2242,56 @@ Use the Path tab to define your trail.\n\
 Use Tools > Download Gpx to save your path.\n\n\
 Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have \
 downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.\
+';
+        return sMsg;
+    }
+
+    // Returns string for message describing what back to trail instructions mean.
+    function BackToTrailHelp() {
+        var sMsg = '\
+The instructions for returning to the trail give the heading \
+to return to the nearest point on the trail from your \
+current location.\n\n\
+There is also a suggestion for how you should turn to return to the trail. \
+THIS IS ONLY A SUGGESTION AND IS NOT NECESSARILY ACCURATE. \
+The inaccuracy is due to the simple calculation used to determine the turning angle: \
+the angle between the heading back to the trail and the heading from your previously \
+saved location to your current loction. \
+The heading back to the trail is accurate, but the heading from your previous location \
+may be inaccurate because you may not be travelling in a straight line.\n\n\
+To get an accurate turning suggestion:\n\
+*  Touch MyLoc button to get your location.\n\
+*  Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards). \
+The Prev Geo Loc Thres is given in Settings.\n\
+* Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
+Of course, if you know accurate compass directions, follow the heading back to the trail. \
+The turning suggestion is an aid if you do not know accurate compass directions.';
+        return sMsg;
+    }
+
+    function TermsOfUseMsg() {
+        var sMsg = '\
+TERMS OF USE\n\n\
+IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.\n\n\
+This app is released free of charge in the hope that it will be useful. \
+However, it is provided without any warranty of any kind; without even the implied warranty of \
+usefulness, accuracy, reliability, availability, or free of software defects.\n\n\
+DATA AND PRIVACY\n\
+Server Data\n\
+For trails that you define, data is stored on a server. The data has latitude and longitude for points \
+defining the trail. Your Facebook public identification (not your name) is associated with your trails. \
+The data is not encrypted. Minual protection for the database is provided through access controlled by a password. \
+Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority. \n\n\
+Data on Your Phone\n\
+Data is saved on your phone for defining trails and caching map sections when you are offline. \
+This data is not encrypted. It can be deleted by you from your phone by managing the application on your phone.\n\n\
+Making Your Trails Public or Private\n\
+When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone \
+using this app. If the trail is marked Private, the trail is only visible by you when using the app.\
+However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.\n\n\
+A FURTHER CAUTION\n\
+Hiking depends on your own self reliance and good judgment. Realize that trails you find \
+may not be appropriate for your ablities and that the trails could have inaccuracies.\
 ';
         return sMsg;
     }
@@ -2123,6 +2375,100 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         }
     }
 
+    // Checks that the control values for settings are valid.
+    // Shows dialog for an invalid setting and sets focus to the control.
+    // Returns true for all settings valid.
+    function CheckSettingsValues() {
+        // Helper to checking select droplist.
+        function IsSelectCtrlOk(ctrl) {
+            var bOk = ctrl.selectedIndex >= 0;
+            var sMsg = "Selection is invalid. Select a valid option from drop list.";
+            ShowOrClearError(bOk, ctrl, sMsg);
+            return bOk;
+        }
+        // Helper for checking latitude of home area.
+        function IsLatCtrlOk(ctrl) {
+            var bOk = IsLatOk(ctrl.value);
+            var sMsg = "Latitude is invalid. Touch Set button to select map area on screen for Home Area."
+            ShowOrClearError(bOk, buSetHomeArea, sMsg);
+            return bOk;
+        }
+        // Helper for checking longitude of home area.
+        function IsLonCtrlOk(ctrl) {
+            var bOk = IsLonOk(ctrl.value);
+            var sMsg = "Longitude is invalid. Touch Set button to select map area on screen for Home Area."
+            ShowOrClearError(bOk, buSetHomeArea, sMsg);
+            return bOk;
+        }
+        // Helper for clearing or shown background for a control.
+        function ShowOrClearError(bOk, ctrl, sMsg) {
+            // Remove class name indicating ErrorMsg.
+            var sClass = ctrl.getAttribute('class');
+            if (sClass) { // Note: class is null if it does not exist for the ctrl.
+                sClass = sClass.replace(/ErrorMsg/g,"").trim();
+                ctrl.setAttribute('class', sClass);
+            } else {
+                sClass = "";
+            }
+            if (!bOk) {
+                sClass += ' ErrorMsg';
+                ctrl.setAttribute('class', sClass);
+                ctrl.focus();
+                AlertMsg(sMsg);
+            }
+        }
+        // Helper for checking lattitude.
+        function IsLatOk(lat) {
+            var bOk = lat >= -91.9 && lat <= 90.1;
+            return bOk;
+        }
+        // Helper for checking longitude.
+        function IsLonOk(lon) {
+            var bOk = lon >= -181.9 && lon < 180.1;
+            return bOk;
+        }
+
+        // Check each ctrl for validity one by one.
+        if (!IsSelectCtrlOk(selectAllowGeoTracking))
+            return false;
+
+        if (!IsSelectCtrlOk(numberOffPathThresMeters))
+            return false;
+
+        if (!IsSelectCtrlOk(numberGeoTrackingSecs))
+            return false;
+
+        if (!IsSelectCtrlOk(selectEnableGeoTracking))
+            return false;
+        if (!IsSelectCtrlOk(selectOffPathAlert))
+            return false;
+        if (!IsSelectCtrlOk(selectPhoneAlert))
+            return false;
+        if (!IsSelectCtrlOk(numberPhoneVibeSecs))
+            return false;
+        if (!IsSelectCtrlOk(numberPhoneBeepCount))
+            return false;
+        if (!IsSelectCtrlOk(selectPebbleAlert))
+            return false;
+        if (!IsSelectCtrlOk(numberPebbleVibeCount))
+            return false;
+        if (!IsSelectCtrlOk(numberPrevGeoLocThresMeters))
+            return false;
+        if (!IsSelectCtrlOk(selectClickForGeoLoc))
+            return false;
+
+        if (!IsLatCtrlOk(numberHomeAreaSWLat))
+            return false;
+        if (!IsLonCtrlOk(numberHomeAreaSWLon))
+            return false;
+        if (!IsLatCtrlOk(numberHomeAreaNELat))
+            return false;
+        if (!IsLonCtrlOk(numberHomeAreaNELon))
+            return false;
+
+        return true;
+    }
+
     // Returns settings object wigo_ws_GeoTrailSettings from values in controls.
     function GetSettingsValues() {
         var settings = new wigo_ws_GeoTrailSettings();
@@ -2138,6 +2484,10 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
         settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
+        settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
+        settings.gptHomeAreaSW.lon = numberHomeAreaSWLon.value;
+        settings.gptHomeAreaNE.lat = numberHomeAreaNELat.value;
+        settings.gptHomeAreaNE.lon = numberHomeAreaNELon.value;
         return settings;
     }
 
@@ -2159,14 +2509,11 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
         numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
         selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
+        numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
+        numberHomeAreaSWLon.value = settings.gptHomeAreaSW.lon;
+        numberHomeAreaNELat.value = settings.gptHomeAreaNE.lat;
+        numberHomeAreaNELon.value = settings.gptHomeAreaNE.lon;
     }
-
-    // Enables/disables controls for setting options.
-    // Arg:
-    //  bEnable: boolean. true to enable, false to disable the controls.
-    function EnableSettingControlOptions(bEnable) {
-        $('.GeoTrackingOption').prop('disabled', !bEnable); 
-    };
 
     // Enables/disables, shows/hides, and sets values for the Track and Alert select controls
     // on the map panel. 
@@ -2216,6 +2563,12 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         }
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
+
+        // Set home area parameters.
+        homeArea.gptSW.lat = settings.gptHomeAreaSW.lat; 
+        homeArea.gptSW.lon = settings.gptHomeAreaSW.lon;
+        homeArea.gptNE.lat = settings.gptHomeAreaNE.lat; 
+        homeArea.gptNE.lon = settings.gptHomeAreaNE.lon;
 
         // Enable using Pebble and allowing vibration.
         pebbleMsg.Enable(settings.bPebbleAlert); // Enable using pebble.
@@ -2497,6 +2850,11 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     // Shows or hides the selectMenu droplist.
     function ShowMenu(bShow) {
         ShowElement(selectMenu, bShow);
+    }
+
+    // Shows or hides the selectFind droplist.
+    function ShowFind(bShow) {
+        ShowElement(selectFind, bShow);
     }
 
     // Shows or hides divPathDescr, which contains controls for
@@ -2841,7 +3199,7 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view || 
             nMode === that.eMode.offline) {
-            var updateResult = map.SetGeoLocationUpdate(llAt, dCloseToPathThreshold);
+            var updateResult = map.SetGeoLocationUpdate(llAt, trackTimer.dCloseToPathThres);
             ShowGeoLocUpdateStatus(updateResult);
         }
     };
@@ -2918,7 +3276,6 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
     };
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
-    this.setModeUI(this.eMode.toNum(selectMode.value));
     MinimizeMap();
 
     // Set Facebook login.
@@ -3016,6 +3373,18 @@ function wigo_ws_Controller() {
     //  sPathOwnerId: string for path owner id for getting the paths from server.
     view.onGetPaths = function (nMode, sPathOwnerId) {
         GetGeoPaths(nMode, sPathOwnerId);
+    };
+
+    // Find list of geo paths to show in a list. 
+    // Similar to this.onGetPaths(..) above, except used to find by lat/lon rectangle as well
+    // as be user id.
+    // Handler Signature
+    //  sOwnerId: string for path owner id.
+    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
+    //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
+    view.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) {
+        FindGeoPaths(sOwnerId, nFindIx, gptSW, gptNE);
     };
 
     // Upload a path to the server.
@@ -3209,92 +3578,17 @@ function wigo_ws_Controller() {
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
-        // Local helper function to get all geo paths for owner.
-        // On error shows status in view.
-        // Args
-        //  onDone: asynchronous callback when done, Signature:
-        //      bOk: boolean indicating success.
-        function GetAllGeoPathsForOwner(onDone) {
-            // Get all geo paths for the owner.
-            var nShare = model.eShare().any;
-            model.getGpxList(sPathOwnerId, nShare, function (bOk, gpxList, sStatus) {
-                if (bOk) {
-                    for (var i = 0; i < gpxList.length; i++) {
-                        arPath.push(gpxList[i].sName);
-                        gpxArray.push(gpxList[i]);
-                    }
-                } else {
-                    view.ShowStatus(sStatus);
-                }
-                if (onDone)
-                    onDone(bOk);
-            });
-        }
-
-        // Local helper function to get public geo paths.
-        // On error shows status in view.
-        // Args:
-        //  bExcludeOwner: boolean to exclude owner paths from the list.
-        //  onDone: asynchronous callback when done, Signature:
-        //      bOk: boolean indicating success.
-        function GetPublicGeoPaths(bExcludeOwner, onDone) {
-            // Also include all public paths.
-            var nShare = model.eShare().public;
-            model.getGpxList("any", nShare, function (bOk, gpxList, sStatus) {
-                if (bOk) {
-                    for (var i = 0; i < gpxList.length; i++) {
-                        if (bExcludeOwner) {
-                            if (gpxList[i].sOwnerId === sPathOwnerId)
-                                continue; // Item with same owner id as sOwnerId is already in list.
-                        }
-                        gpxArray.push(gpxList[i]); // Add to array of Gpx objects that correspond to list of path names to be set in the view. 
-                        arPath.push(gpxList[i].sName);
-                    }
-                } else {
-                    view.ShowStatus(sStatus);
-                }
-                if (onDone)
-                    onDone(bOk);
-            });
-        }
-
         if (nMode === view.eMode.online_view) {
-
-            if (!sPathOwnerId) {
-                // Owner is not signed in. Get all public geo paths.
-                // false => do not exclude owner paths.
-                GetPublicGeoPaths(false, function (bOk, sStatus) {
-                    // Show path list obtained even if there is an error. (Likely empty on error).
-                    view.setPathList(arPath);
-                });
-
-            } else {
-                // Owner is signed in. Get all geo paths for owner
-                // plus all public geo paths.
-                GetAllGeoPathsForOwner(function (bOk, sStatus) {
-                    if (bOk) {
-                        // Get public geo paths excluding owner (true => exclude owner).
-                        GetPublicGeoPaths(true, function (bOk, status) {
-                            // Show path list obtained even if error has occured.
-                            view.setPathList(arPath);
-                        });
-                    } else {
-                        // Show paths obtained before error, likely empty list.
-                        view.setPathList(arPath);
-                    }
-                });
-            }
+            // Use FindGeoPaths(..), which finds paths within a geo rectangle as well 
+            // as by user id.
+            var viewFindParams = view.getViewFindParams();
+            FindGeoPaths(sPathOwnerId, viewFindParams.nFindIx, viewFindParams.gptSW, viewFindParams.gptNE);
         } else if (nMode === view.eMode.online_edit) {
-            // Get all paths for owner.
-            GetAllGeoPathsForOwner(function (bOk, sStatus) {
-                if (bOk) {
-                    // Show path list obtained even if error has occured.
-                    view.setPathList(arPath);
-                } else {
-                    // Show paths obtained before error, likely empty list.
-                    view.setPathList(arPath);
-                }
-            });
+            // Use FindGeoPaths(..), which finds paths within a geo rectangle as well 
+            // as by user id.
+            var bQuiet = true; // Do not show status msg on success.
+            var homeArea = view.getHomeArea();
+            FindGeoPaths(sPathOwnerId, view.eFindIx.all_mine, null, null, bQuiet);
         } else if (nMode === view.eMode.offline) {
             // Get list of offline geo paths from local storage.
             gpxOfflineArray = model.getOfflineParamsList();
@@ -3309,12 +3603,137 @@ function wigo_ws_Controller() {
         }
     }
 
+    // Find list of geo paths from the model and show the list in the view.
+    // An optional rectangle for the geo area including the paths may be given. 
+    // Similar to GetGeoPaths(..) above, except used to find by lat/lon rectangle as well
+    // as be user id.
+    // Args
+    //  sOwnerId: string for path owner id.
+    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
+    //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
+    //  bQuiet: boolean, optional. true indicates no interum status msg is shown on success. If there
+    //          is an error, a status msg is shown regardless. However a final status message is shown.
+    //          For true, the final message is appended to current messages displayed. For false, 
+    //          the final message replaces previous displayed message(s).
+    //          Defaults to false (show interum status msg and replaces messages displayed for final message).
+    function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE, bQuiet) {
+        if (typeof (bQuiet) !== 'boolean')
+            bQuiet = false;
+
+        gpxArray = new Array(); // Clear existing gpxArray.
+        var arPath = new Array(); // List of path names to show in view.
+
+        // Local helper to call after getting geo list is completed.
+        // Appends to path list and shows status message.
+        function AppendToPathList (bOk, gpxList, sStatus) {
+            if (bOk) {
+                for (var i = 0; i < gpxList.length; i++) {
+                    arPath.push(gpxList[i].sName);
+                    gpxArray.push(gpxList[i]);
+                }
+            }
+            if (!bOk || !bQuiet)
+                view.ShowStatus(sStatus, !bOk);
+        }
+
+        // Local helper that returns a status message for ok.
+        function StatusOkMsg(nCount) {
+            var sMsg;
+            if (nCount <= 0) {
+                sMsg = "No paths found."
+            } else {
+                var sFound = nCount === 1 ? "Found 1 path" : "Found {0} paths".format(nCount);
+                var sMsg = "{0}. Select path from droplist.".format(sFound);
+            }
+            return sMsg;
+        }
+
+        // Local helper to set path list in the view.
+        function SetPathList(bOk) {
+            // Set path list in the view.
+            view.setPathList(arPath, true);
+            // Show number of paths found.
+            if (bOk) {
+                if (!bQuiet)
+                    view.ShowStatus(StatusOkMsg(arPath.length), false);
+                else 
+                    view.AppendStatus(StatusOkMsg(arPath.length), false); 
+            }
+        }
+
+        var eShare = model.eShare();
+        switch (nFindIx) {
+            case view.eFindIx.home_area:
+            case view.eFindIx.on_screen:
+                if (gptSW && gptNE) {
+                    // Get all public paths found on screen.
+                    model.getGpxListByLatLon("any", eShare.public, gptSW, gptNE, function (bOk, gpxList, sStatus) {
+                        AppendToPathList(bOk, gpxList, sStatus);
+                        if (bOk && sPathOwnerId) {
+                            // Append all private paths for path owner found on screen.
+                            model.getGpxListByLatLon(sPathOwnerId, eShare.private, gptSW, gptNE, function (bOk, gpxList, sStatus) {
+                                AppendToPathList(bOk, gpxList, sStatus);
+                                SetPathList(bOk);
+                            });
+                        } else {
+                            SetPathList(bOk);
+                        }
+                    });
+                }
+                break;
+            case view.eFindIx.all_public:
+                // Get all public paths for any path owner.
+                model.getGpxList("any", eShare.public, function (bOk, gpxList, sStatus) {
+                    AppendToPathList(bOk, gpxList, sStatus);
+                    if (bOk && sPathOwnerId) {
+                        // Append all private paths for path owner.
+                        model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
+                            AppendToPathList(bOk, gpxList, sStatus);
+                            SetPathList(bOk);
+                        });
+                    } else {
+                        SetPathList(bOk);
+                    }
+                });
+
+                break;
+            case view.eFindIx.all_mine:
+                // Get all public paths for path owner.
+                model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
+                    AppendToPathList(bOk, gpxList, sStatus);
+                    if (bOk && sPathOwnerId) {
+                        // Append all private paths for path owner.
+                        model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
+                            AppendToPathList(bOk, gpxList, sStatus);
+                            SetPathList(bOk);
+                        });
+                    } else {
+                        SetPathList(bOk);
+                    }
+                });
+                break;
+            case view.eFindIx.my_public:
+                // Get all public paths for path owner.
+                model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
+                    AppendToPathList(bOk, gpxList, sStatus);
+                    SetPathList(bOk);
+                });
+                break;
+            case view.eFindIx.my_private:
+                // Get all private paths for path owner.
+                model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
+                    AppendToPathList(bOk, gpxList, sStatus);
+                    SetPathList(bOk);
+                });
+                break;
+        }
+    }
 
     // ** Constructor initialization
     var sOwnerId = model.getOwnerId();
     view.setOwnerId(sOwnerId);
     view.setOwnerName(model.getOwnerName());
-    GetGeoPaths(view.curMode(), sOwnerId);
     view.Initialize();
 }
 

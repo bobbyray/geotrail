@@ -172,10 +172,11 @@ label {
     float: left;
 }
 
-#buSaveOffline, #selectMapCache, #selectMenu {
+#buSaveOffline, #selectMapCache, #selectFind, #selectMenu {
     clear: none;
     float: left;
-    margin-left: 15px;
+    margin-left: 10px;
+    width: 20%;
 }
 
 #divPathDescr, #divCursors {
@@ -280,10 +281,15 @@ label {
     padding: 5px;
     border: 1px solid #999;
     z-index: 2;
+    font-size: 130%;
 }
 
 #divSettings input {
     width: 5em;
+}
+
+#divSettings label {
+    padding-top: 0px;
 }
 
 #divPathInfo 
@@ -338,6 +344,10 @@ label {
     clear: none;
 }
 
+/* Settings controls. Probably no special style.*/
+.GeoTrackingOption {
+
+}
 
 .ErrorMsg
 {

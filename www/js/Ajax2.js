@@ -29,6 +29,7 @@ function wigo_ws_Ajax(sBaseUri) {
             return false;
         bRequestInProgress = true;
         var sUri = sBaseUri + sRelURI;
+        sUri = encodeURI(sUri);
         req.open("GET", sUri, true);
         nState = nStateArg;
         req.send();

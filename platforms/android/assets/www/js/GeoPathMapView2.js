@@ -48,13 +48,19 @@ L.LatLng.prototype.bearingWordTo = function(other) {
 // Object for showing geo path map.
 // Object can be shared by view objects of pages, 
 // for example GeoPaths.html and Trail.html.
-// Constructor Arg:
-//  bShowMapCtrls: boolean. Indicates if zoom and map-type controls are shown
+// Constructor Args:
+//  bShowMapCtrls: Optional, boolean. Indicates if zoom and map-type controls are shown
 //                 on google map. Defaults to false;
 //                 Note: Ignored for now because zoom control always remains on
 //                       top causing problem for Settings diaglog.
-function wigo_ws_GeoPathMap(bShowMapCtrls) {
+//  bTileCaching: Optional, boolean to indicate tile caching is provided. Defaults to true.
+//                Note: Set to true for Cordova phone app. Set to false for a web page.
+function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var that = this;
+    if (typeof (bShowMapCtrls) !== 'boolean')
+        bShowMapCtrls = false;
+    if (typeof(bTileCaching) !== 'boolean')
+        bTileCaching = true;
     var map = null;     // Underlying map object.
     var mapPath = null; // Map overlay for current path.
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
@@ -72,7 +78,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         prevLocCircle: '#00ffff',  // Previous location circle
         refLine: '#000000',        // Ref line from current location to previous location.
         touchCircle: 'orange',     // Touch point when editing path.
-        editCircle: 'yellow'       // Edit point on path.
+        editCircle: 'yellow',      // Edit point on path.
+        editSegment: 'magenta',    // Edit line segment for path.
+        eraseSegment: 'white'      // Erase line segment when editing a point in the path.
     }
 
     // Initialize to use Open Streets Map once browser has initialized.
@@ -87,7 +95,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         var latlngMtHood = new L.LatLng(45.3736111111111, -121.695833333333);
         // Note: {zoomControl: false} is used for map options because the zoomControl
         //       always stays on top, which a problem when Setting dialog is opened.
-        map = L.map('map-canvas', { zoomControl: false }).setView(latlngMtHood, 13);
+        map = L.map('map-canvas', { zoomControl: bShowMapCtrls }).setView(latlngMtHood, 13);
 
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
@@ -110,7 +118,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
 
     var curPathSegs = new PathSegs(); 
 
-    var curPath = null; // Ref to current path drawn.
+    var curPath = null; // Ref to current path drawn, a wigo_ws_GpxPath object.
     // Draws geo path on the Google map object.
     // Args:
     //  path: wigo_ws_GpxPath object for the path.
@@ -313,6 +321,49 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         return iFound;
     };
 
+    // Draws edit overlay segment for appending a point to end of current path.
+    // Arg:
+    //  gptTo: wigo_ws_GeoPt object for point being appended.
+    this.DrawAppendSegment = function (gptTo) {
+        SetAppendSegment(gptTo);
+    };
+
+    // Draws edit overlay segment for moving a point in the current path. 
+    // Args:
+    //  gptTo: wigo_ws_GeoPt object for location to which point is being moved.
+    //  ix: index in current path for point being moved.
+    this.DrawMoveSegment = function (gptTo, ix) {
+        var bMove = true;
+        SetEraseSegment(ix, bMove);
+        SetEditSegment(gptTo, ix, bMove);
+    };
+
+    // Draws edit overlay segment for inserting a point in the current path.
+    // Args:
+    //  gptTo: wigo_ws_GeoPt object for location at which point is being inserted.
+    //  ix: index in current path before which insertion is being done.
+    this.DrawInsertSegment = function (gptTo, ix) {
+        var bMove = false;
+        SetEraseSegment(ix, bMove); 
+        SetEditSegment(gptTo, ix, bMove);
+    };
+
+    // Draws edit overlay segment for deleting a point in the current path.
+    //  Arg:
+    //  ix: index in current path for the point being deleted.
+    this.DrawDeleteSegment = function (ix) {
+        // Erase is same as for moving a point in the path.
+        var bMove = true;
+        SetEraseSegment(ix, bMove);
+        SetDeleteSegment(ix);
+    };
+
+    // Clears from the map the path segments for moving or inserting.
+    this.ClearEditSegment = function () {
+        ClearEditSegment();
+        ClearEraseSegment();
+    };
+
     // Returns lat/lon for a pixel coordinate on the map layer.
     // Returned object is wigo_ws_GeoPt object.
     // Arg:
@@ -323,6 +374,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         gpt.lat = ll.lat;
         gpt.lon = ll.lng;
         return gpt;
+    };
+
+    // Returns L.Point object (.x, .y) for a lat/lon geo point.
+    // Args:
+    //  gpt: wigo_ws_GeoPt object for lat/lon to be converted to 
+    ///      pixel x,y position on map layer.
+    this.LatLonToPixel = function (gpt) {
+        var ll = L.latLng(gpt.lat, gpt.lon);
+        var pixel = map.latLngToLayerPoint(ll);
+        return pixel;
     };
 
     // Pan to point on the map.
@@ -362,11 +423,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         }
         zoomPathBounds = null; 
         curPath = null;
+        curPathSegs.Clear(); 
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
         ClearTouchCircle(); 
-        ClearEditCircle();  
+        ClearEditCircle();
+        ClearEditSegment();  
+        ClearEraseSegment(); 
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -447,6 +511,38 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         return result;
     };
 
+    // Returns corners for bounding rectangle on screen.
+    // Returns: {gptSW: wigo_ws_GeoPt obj for SouthWest corner, gptNE: wigo_ws_GeoPt obj for NorthEast corner}.
+    this.GetBounds = function () {
+        var bounds = map.getBounds();
+        var sw = bounds.getSouthWest();
+        var ne = bounds.getNorthEast();
+        var corners = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
+        corners.gptSW.lat = sw.lat;
+        corners.gptSW.lon = sw.lng;
+        corners.gptNE.lat = ne.lat;
+        corners.gptNE.lon = ne.lng;
+        return corners;
+    }
+
+    // Sets map to fit bounds.
+    // Args:
+    //  gptSW: wigo_ws_GeoPt object for SouthWest corner of boundary rectangle.
+    //  gptNE: wigo_ws_GeoPt object for NorthEast corner of boundary rectangle.
+    this.FitBounds = function (gptSW, gptNE) {
+        var bValid;
+        if (gptSW.lat === gptNE.lat || gptSW.lon === gptNE.lon)
+            bValid = false;
+        else
+            bValid = true;
+        if (bValid) {
+            var sw = L.latLng(gptSW.lat, gptSW.lon);
+            var ne = L.latLng(gptNE.lat, gptNE.lon);
+            var bounds = L.latLngBounds(sw, ne);
+            map.fitBounds(bounds);
+        }
+    };
+
     // Returns a reference to underlaying Google map object.
     this.getMap = function () { return map; };
 
@@ -515,7 +611,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         function Seg(llStart, llEnd, len) {
             this.len = len;           // length of segment in meters.
             this.dFromStart = 0;      // distance of start of segment from beginning of path.
-            this.llStart = llStart; // ref to L.Latlng obj for start of segment.
+            this.llStart = llStart; // ref to L.LatLng obj for start of segment.
             this.llEnd = llEnd;   // ref to L.LatLng obj for end of segment.
             this.i = 0; // Index in array of segments.
         }
@@ -545,6 +641,32 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
             var seg = GetCurSeg();
             AdvanceIx();
             return seg;
+        };
+
+        // Returns ref to ith path segment, a Seg object.
+        // Returns null if i is out of range.
+        this.GetSegRef = function (i) {
+            var seg = null;
+            if (i >= 0 && i < segs.length)
+                seg = segs[i];
+            return seg;
+        };
+
+
+        // Returns ref to L.LatLng object for ith point in the path.
+        this.GetLatLngRef = function (i) {
+            var ll = null;
+            if (i >= 0 && i < pathCoords.length) {
+                ll = pathCoords[i];
+            }
+            return ll;
+        }
+
+
+        // Returns number of points in path.
+        // Note: Number of segments is one less than number of points in path.
+        this.getCount = function () {
+            return pathCoords.length;
         };
 
         // Returns true stepping thru all segments of array has been completed.
@@ -577,6 +699,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         this.Init = function (path) {
             Init(path);
         };
+
+        // Clears this object for no path.
+        this.Clear = function () {
+            iOrgIx = 0;
+            iCurIx = 0;
+            dTotal = 0;
+            segs.length = 0;
+            pathCoords.length = 0;
+        }
 
         // Returns total distance in meters of all segments.
         this.getTotalDistance = function () {
@@ -826,6 +957,183 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         touchCircle = L.circle(latlng, r, circleOptions);
         touchCircle.addTo(map);
     }
+
+
+    var editSegment = null; // L.PolyLine object for edit segment overlay.
+
+    // Clears the edit line segment overlay.
+    function ClearEditSegment() {
+        if (editSegment) {
+            map.removeLayer(editSegment);
+            editSegment = null;
+        }
+    }
+
+    // Sets the edit line segment to indicate where an edited point
+    // would be in the path.
+    // Args:
+    //  gptTo: wigo_ws_GeoPt obj for new location of the edited point.
+    //  ix: index in curPath of the point being edited.
+    //  bMove: boolean. true indicates point is being moved. false indicates point is being inserted.
+    function SetEditSegment(gptTo, ix, bMove) {
+        ClearTouchCircle(); 
+        ClearEditSegment();
+        var ll0 = null; // ref to L.LatLng obj for point before gptTo, first point in the edit segment.
+        var ll1 = L.latLng(gptTo.lat, gptTo.lon); // L.LatLng obj for middle point edit segment.
+        var ll2 = null; // ref to L.LatLng obj for last point in the edit segment.
+        
+        if (ix < 0 || ix >= curPathSegs.getCount()) 
+                return; // Not expected to happen. ix is out of range.
+        if (!gptTo)
+            return; // Not expected to happen. Edit point is invalid.
+
+        // Get ref to ll0, first point in edit segment.
+        ll0 = curPathSegs.GetLatLngRef(ix - 1);
+
+        // Note: ll1, the midde point in the edit segment, is gptTo.
+        // Get ref to ll2, last point in the edit segment.
+        if (bMove) {
+            ll2 = curPathSegs.GetLatLngRef(ix + 1);
+        } else {
+            // Inserting point.
+            ll2 = curPathSegs.GetLatLngRef(ix);
+        }
+
+        var segCoords = [];
+        if (ll2)
+            segCoords.push(ll2);
+        if (ll1)
+            segCoords.push(ll1);
+
+        if (ll0)
+            segCoords.push(ll0);
+
+        if (segCoords.length > 0) {
+            editSegment = L.polyline(segCoords, { color: that.color.editSegment, opacity: 1.0 });
+            editSegment.addTo(map);
+            that.DrawTouchPt(gptTo);
+        }
+    }
+
+    var eraseSegment = null; // L.PolyLine object for erase segment of editing overlay.
+
+    // Clears the eraseSegment overlay.
+    function ClearEraseSegment() {
+        if (eraseSegment) {
+            map.removeLayer(eraseSegment);
+            eraseSegment = null;
+        }
+    }
+
+    // Sets the edit line segment to indicate where a point is to be appended to the path.
+    // Arg:
+    //  gptTo: wigo_ws_GeoPt object of point to be appended.
+    function SetAppendSegment(gptTo) {
+        ClearTouchCircle();
+        ClearEditSegment();
+        var ll0 = null; // ref to L.LatLng obj for point before gptTo, first point in the edit segment.
+        var ll1 = L.latLng(gptTo.lat, gptTo.lon); // L.LatLng obj for middle point edit segment.
+
+        var ix = curPathSegs.getCount() - 1;
+
+        if (ix < 0) {
+            // Path is empty. Draw gptTo as the touch point.
+            that.DrawTouchPt(gptTo);
+        } else { 
+            // Get ref to ll0, first point in edit segment.
+            ll0 = curPathSegs.GetLatLngRef(ix); // Last point in the path.
+
+            var segCoords = [];
+            if (ll1)
+                segCoords.push(ll1);
+
+            if (ll0)
+                segCoords.push(ll0);
+
+            if (segCoords.length > 0) {
+                editSegment = L.polyline(segCoords, { color: that.color.editSegment, opacity: 1.0 });
+                editSegment.addTo(map);
+                that.DrawTouchPt(gptTo);
+            }
+
+        }
+
+
+    }
+
+    // Sets the edit line segment to indicate where a point is to be deleted in the path.
+    // Note: the edit line segment is draw between the previous point and the next point
+    //       in the path wrt the point being deleted.
+    // Args:
+    //  ix: index in curPath of the point being deleted.
+    function SetDeleteSegment(ix) {
+        ClearTouchCircle();
+        ClearEditSegment();
+
+        if (ix < 0 || ix >= curPathSegs.getCount())
+            return; // Not expected to happen. ix is out of range.
+
+        var ll0 = curPathSegs.GetLatLngRef(ix - 1);
+        var ll1 = curPathSegs.GetLatLngRef(ix + 1);
+
+        var segCoords = [];
+        if (ll1)
+            segCoords.push(ll1);
+
+        if (ll0)
+            segCoords.push(ll0);
+
+        if (segCoords.length > 1) {
+            editSegment = L.polyline(segCoords, { color: that.color.editSegment, opacity: 1.0 });
+            editSegment.addTo(map);
+        }
+
+        that.DrawEditPt(ix); 
+    }
+
+    // Sets the erase line segment to indicate where an edited point
+    // is erased in the path.
+    // Args:
+    //  ix: index in curPath of the point being edited.
+    //  bMove: boolean. true indicates point is being moved. false indicates point is being inserted.
+    function SetEraseSegment(ix, bMove) {
+        ClearEraseSegment();
+
+        if (ix < 0 || ix >= curPathSegs.getCount())
+            return; // Not expected to happen. ix is out of range.
+
+        var ll0 = null; // ref to L.LatLng obj before edit pt in path, first point in the erase segment.
+        var ll1 = curPathSegs.GetLatLngRef(ix); // L.LatLng obj for edit pt in path, middle point the erase segment.
+        var ll2 = null; // ref to L.LatLng obj for last point in the erase segment.
+
+        if (!ll1)
+            return; // Not expected to happen. ix is invalid for the path.
+
+        // Get ref to ll0, first point in edit segment.
+        ll0 = curPathSegs.GetLatLngRef(ix - 1);
+
+        // Note: ll1, the midde point in the edit segment, is gptTo.
+        // Get ref to ll2, last point in the edit segment.
+        if (bMove) {
+            // Moving an existing point.
+            ll2 = curPathSegs.GetLatLngRef(ix + 1);
+        }
+
+        var segCoords = [];
+        if (ll2)
+            segCoords.push(ll2);
+        if (ll1)
+            segCoords.push(ll1);
+
+        if (ll0)
+            segCoords.push(ll0);
+
+        if (segCoords.length > 0) {
+            eraseSegment = L.polyline(segCoords, { color: that.color.eraseSegment, opacity: 1.0 });
+            eraseSegment.addTo(map);
+        }
+    }
+
 
     var editCircle = null; // L.Circle obj for point on path being edited.
     // Clears from map the touch point circle.
@@ -1185,37 +1493,46 @@ function wigo_ws_GeoPathMap(bShowMapCtrls) {
         function CreateTileLayer() {
             iTry++;
             try {
-                console.log("Creating L.TileLayer.Cordova.");
-                // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
-                // May want to get mapbox account to get better map tiles.
-                // Can get elevation thru mapbox api which would be useful.
-                layer = L.tileLayerCordova('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                    // these options are perfectly ordinary L.TileLayer options
-                    maxZoom: 18,
-                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-                                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-                    // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
-                    folder: 'WigoWsGeoTrail',
-                    name: 'Trail',
-                    debug: true
-                });
+                console.log("Creating L.TileLayer");
+                
+                if (bTileCaching) {
+                    // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+                    // May want to get mapbox account to get better map tiles.
+                    // Can get elevation thru mapbox api which would be useful.
+                    layer = L.tileLayerCordova('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        // these options are perfectly ordinary L.TileLayer options
+                        maxZoom: 18,
+                        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                                        '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+                        // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
+                        folder: 'WigoWsGeoTrail',
+                        name: 'Trail',
+                        debug: true
+                    });
 
-                /* //20150822 Original URI template for mapbox tiles, which used to work but no longer.
-                              Requires mapbox access in order to get public access token.
-                              Developer license for 50K map views per month is free, which may be a good 
-                              option. Looks like there is api to get elevation, which might be useful.
-                layer = L.tileLayerCordova('https://{s}.tiles.mapbox.com/v3/examples.map-i875mjb7/{z}/{x}/{y}.png', {
-                    // these options are perfectly ordinary L.TileLayer options
-                    maxZoom: 18,
-                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-                                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-                                    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-                    // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
-                    folder: 'WigoWsGeoTrail',
-                    name: 'Trail',
-                    debug: true
-                });
-                */
+                    /* //20150822 Original URI template for mapbox tiles, which used to work but no longer.
+                                  Requires mapbox access in order to get public access token.
+                                  Developer license for 50K map views per month is free, which may be a good 
+                                  option. Looks like there is api to get elevation, which might be useful.
+                    layer = L.tileLayerCordova('https://{s}.tiles.mapbox.com/v3/examples.map-i875mjb7/{z}/{x}/{y}.png', {
+                        // these options are perfectly ordinary L.TileLayer options
+                        maxZoom: 18,
+                        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                                        '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                                        'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                        // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
+                        folder: 'WigoWsGeoTrail',
+                        name: 'Trail',
+                        debug: true
+                    });
+                    */
+
+                } else {
+                    // Create regular OpenStreetMap tile layer without title caching.
+                    layer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                    });
+                }
 
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
                 bOk = true;

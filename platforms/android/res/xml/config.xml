@@ -34,7 +34,7 @@
     <access origin="https://*.fbcdn.net" />
     <access origin="https://*.akamaihd.net" />
     <allow-intent href="market:*" />
-    <name>MyTrail</name>
+    <name>GeoTrail</name>
     <description>
         A Cordova application for viewing trail map online or offline.
     </description>
