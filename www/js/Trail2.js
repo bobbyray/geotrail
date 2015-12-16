@@ -1055,6 +1055,10 @@ Are you sure you want to delete the maps?";
             //  x: integer for x pixel on screen.
             //  y: integer for y pixel on screen.
             this.set = function (lat, lon, x, y) {
+                // Ensure cursor down timer is stopped.
+                // Occasionally timer keeps running after touch up event.
+                // Do not know why, but this at least stops the timer when user touches again.
+                StopCursorDownTimer();
                 if (!lat)
                     return;
                 gpt.lat = lat;
@@ -2078,7 +2082,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.014  12/13/2015";
+        var sVersion = "1.1.014  12/14/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);

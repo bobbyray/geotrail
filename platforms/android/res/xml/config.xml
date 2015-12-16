@@ -49,4 +49,5 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
+    <icon platform="android" src="res/android/geotrail512x512.png" />
 </widget>
