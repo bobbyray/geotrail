@@ -6,7 +6,7 @@ function wigo_ws_GeoTrailSettings() {
     // Boolean indicating geo location tracking is allowed.
     this.bAllowGeoTracking = true;
     // Float for period for updating geo tracking location in seconds.
-    this.secsGeoTrackingInterval = 30;
+    this.secsGeoTrackingInterval = 3 * 60; // Initially default was 30;
     // Float for distance in meters for threshold beyond which nearest distance to path is 
     // considered to be off-path.
     this.mOffPathThres = 30;

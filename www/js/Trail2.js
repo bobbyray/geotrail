@@ -732,6 +732,9 @@ Are you sure you want to delete the maps?";
         } else if (this.value === 'terms_of_use') {
             AlertMsg(TermsOfUseMsg());
             this.selectedIndex = 0;
+        } else if (this.value === 'battery_drain') {
+            AlertMsg(BatteryDrainVsTrackingHelp());
+            this.selectedIndex = 0;
         }
         that.ClearStatus();
     });
@@ -2082,7 +2085,7 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.014  12/14/2015";
+        var sVersion = "1.1.015  12/18/2015";
         var sCopyright = "2015";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -2224,7 +2227,7 @@ If the correct point is not highlighted on the trail, use \
 the Prev and Next buttons to move to the previous or next point on the trail.\n\n\
 Move Pt, Insert Pt, Delete Pt\n\
 Then select Move Pt, Insert Pt, or Delete Pt instead of Select Pt to \
-move, insert, or delete the selected (highlighted) pointed.\n\n\
+move, insert, or delete the selected (highlighted) point.\n\n\
 Move Pt\n\
 When moving a point, touch where the point should go and nudge it with the cursors. \
 Touch OK to confirm that the point is where you want it.\n\n\
@@ -2270,6 +2273,27 @@ The Prev Geo Loc Thres is given in Settings.\n\
 * Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
 Of course, if you know accurate compass directions, follow the heading back to the trail. \
 The turning suggestion is an aid if you do not know accurate compass directions.';
+        return sMsg;
+    }
+
+    // Returns string for message describing how tracking interval affects battery usage.
+    function BatteryDrainVsTrackingHelp() {
+        var sMsg = '\
+When automatic tracking is on, the battery in the phone is drained more quickly.\
+The shorter the time interval for automatic tracking, the quicker the battery drains.\n\n\
+Menu > Settings > Geo Tracking sets the time interval. So make the time interval longer \
+to reduce the drain on the battery. \
+When automatic tracking is off, the drain on the battery is mininal.\n\n\
+Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking, \
+which minimizes the battery drain. You can still check your geo location manually by touching \
+the MyLoc button on the top of the map. \
+Also, if using a Pebble watch, the Select (middle) button does the same thing.\n\n\
+The Track control on the top of the map lets you toggle automatic tracking On or Off.\n\n\
+When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery. \
+However, if the app is in the background with automatic tracking on, the app is draining the battery.\n\n\
+Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled \
+is still occurring, which is draining the battery.\
+';
         return sMsg;
     }
 
