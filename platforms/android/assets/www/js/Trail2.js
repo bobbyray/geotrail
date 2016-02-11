@@ -2085,8 +2085,8 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.015  12/18/2015";
-        var sCopyright = "2015";
+        var sVersion = "1.1.016  02/09/2016";
+        var sCopyright = "2015, 2016";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
         return sMsg;

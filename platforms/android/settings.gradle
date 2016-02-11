@@ -1,4 +1,5 @@
 // GENERATED FILE - DO NOT EDIT
 include ":"
 include ":CordovaLib"
-include ":com.phonegap.plugins.facebookconnect:geotrail-FacebookLib"
+include ":com.phonegap.plugins.facebookconnect:FacebookLib"
+project(":com.phonegap.plugins.facebookconnect:FacebookLib").projectDir = new File("com.phonegap.plugins.facebookconnect/geotrail-FacebookLib")

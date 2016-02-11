@@ -23,4 +23,3 @@
     android:focusable="false"
     android:clickable="false"
     android:button="@drawable/com_facebook_button_check" />
-<!-- From: file:/C:/Users/Robert/Documents/CordovaProjects/geotrail/platforms/android/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/res/layout/com_facebook_picker_checkbox.xml -->
