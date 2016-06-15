@@ -30,6 +30,8 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
+    var sVersion = "1.1.019  06/13/2016"; // Constant string for App version.
+
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -120,6 +122,17 @@ function wigo_ws_View() {
     //  Returns: wigo_ws_GeoTrailSettings object for current setting. May be null.
     this.onGetSettings = function () { };
 
+    // Save current version.
+    // Handler Signature:
+    //  version: wigo_ws_GeoTrailVersion object for the version.
+    this.onSaveVersion = function(version) { };
+
+    // Get the current version.
+    // Handler signature:
+    //  Args: None
+    //  Returns: wigo_ws_Version obj for current version. May be null.
+    this.onGetVersion = function() { };
+
     // Map cache has been cleared.
     this.onMapCacheCleared = function () { };
 
@@ -139,6 +152,7 @@ function wigo_ws_View() {
     // Remarks:
     //  Call once after event handlers have been set.
     this.Initialize = function () {
+        // Helper to complete initialization after map has been initialized.
         function CompleteInitialization(bOk, sMsg) {
             that.ShowStatus(sMsg, !bOk)
             SetMapPanelTop();
@@ -148,11 +162,59 @@ function wigo_ws_View() {
             viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
             that.setModeUI(that.curMode());  
             map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
+
+            if (!map.isOfflineDataEnabled()) {
+                var sMsg = "Offline Maps cannot be used.\n" +
+                           "Check that permissions for this app in the device settings allow storage to be used.\n";
+                alert(sMsg);
+            }
         }
-        map.GoOffline(false);
-        map.InitializeMap(function (bOk, sMsg) {
-            CompleteInitialization(bOk, sMsg);
-        });
+        
+        // Helper to check if version of app has changed.
+        // Returns true if app version has changed.
+        // Arg: 
+        //  version: ws_wigo_GeoTrailVersion object for current version.
+        function IsNewVersion(version) {
+            var bNew = version.sVersion !== sVersion;
+            return bNew;
+        }
+
+        // Helper to do initialization. Completes asynchronously.
+        function DoInitialization() {
+            map.GoOffline(false);
+            map.InitializeMap(function (bOk, sMsg) {
+                CompleteInitialization(bOk, sMsg);
+            });
+        }
+
+        // alert("Waiting to continue for debug."); 
+        var version = that.onGetVersion();
+        if (!version)
+            version = new wigo_ws_GeoTrailVersion();
+        if (IsNewVersion(version)) {
+            // Save new version as current version.
+            version.sVersion = sVersion;
+            // Require to accept terms of use for a new version.
+            version.bTermsOfUseAccepted = false;
+            that.onSaveVersion(version);
+        }
+
+        if (version.bTermsOfUseAccepted) {
+            DoInitialization();
+        } else {
+            ConfirmYesNo(TermsOfUseMsg(), function(bConfirm) {
+                if (bConfirm) {
+                    version.bTermsOfUseAccepted = true;
+                    that.onSaveVersion(version);
+                    DoInitialization();
+                } else {
+                    var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
+                    sMsg += "Uninstall GeoTrail or end the app, start it again and accept the Terms of Use.<br/>";
+                    that.ShowStatus(sMsg);
+                    that.setModeUI(that.eMode.tou_not_accepted);
+                }
+            },'Terms of Use', 'Accept,Reject');
+        }
     };
 
     // Enumeration of Authentication status (login result)
@@ -163,7 +225,7 @@ function wigo_ws_View() {
     // Enumeration of mode for processing geo paths.
     // NOTE: the values must match the index of the option in selectGeoPath drop list in trail2.html.
     this.eMode = {
-        online_view: 0, online_edit: 1, online_define: 2, offline: 3,
+        online_view: 0, online_edit: 1, online_define: 2, offline: 3, tou_not_accepted: 4,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -177,6 +239,7 @@ function wigo_ws_View() {
                 case this.online_edit: sMode = 'online_edit'; break;
                 case this.online_define: sMode = 'online_define'; break;
                 case this.offline: sMode = 'offline'; break;
+                case this.tou_not_accepted: sMode = 'tou_not_accepted'; break;
                 default: sMode = 'online_view';
             }
             return sMode;
@@ -338,6 +401,12 @@ function wigo_ws_View() {
             case this.eMode.online_define:
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
+            case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
+                ShowOwnerIdDiv(false);
+                ShowModeDiv(false);
+                
+                ShowMapPanelForMode(nMode);
+                break;
         }
     };
 
@@ -447,6 +516,7 @@ function wigo_ws_View() {
     var selectPhoneAlert = $('#selectPhoneAlert')[0];
     var selectPebbleAlert = $('#selectPebbleAlert')[0];
     var selectClickForGeoLoc = $('#selectClickForGeoLoc')[0];
+    var selectCompassHeadingVisible = $('#selectCompassHeadingVisible')[0];
     var numberPrevGeoLocThresMeters = $('#numberPrevGeoLocThresMeters')[0];
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
@@ -912,6 +982,12 @@ Are you sure you want to delete the maps?";
         fsmEdit.DoEditTransition(Number(selectPtAction.value));
     });
 
+    //20160507 Added only to debug problem with filesytem for TileLayer for map.
+    /* Normally commented out
+    $('#buInitView').bind('click', function (e) {
+        that.Initialize();
+    });
+    */
 
     /* //20150716 Trying to detect app ending does not work. These events do NOT fire
     $(window).bind('unload', function (e) {
@@ -1344,14 +1420,17 @@ Are you sure you want to delete the maps?";
                     curPathName = view.getSelectedPathName();
                     // Set path name for editing.
                     txbxPathName.value = curPathName;
-                    // Show path on map.
-                    view.ShowPathInfo(false, that.gpxPath); 
                     // Disable selectGeoPath droplist (by hiding) selection of different path.
                     ShowPathInfoDiv(false);
                     // Set options and show message for appending.
                     PrepareForEditing();
                     // Show Delete button only for not new.
                     ShowDeleteButton(!bNew);
+                    // Show path on map.
+                    view.ShowPathInfo(false, that.gpxPath); 
+                    if (!bNew) {   // May help first touch point to correct, not sure.
+                        map.PanToPathCenter(); 
+                    }
                     curEditState = stEdit;
                     break;
                 case that.eventEdit.ChangedPathName:
@@ -1920,7 +1999,7 @@ Are you sure you want to delete the maps?";
             opts.SetOptions();
             opts.SelectOption(EPtAction.Appending);
             var sMsg = bPathEmpty ? "Touch to start a new path." :
-                                    "Touch to Append point to end of path or choose Select Pt."
+                                    "Touch to append point to end of path or change Append Pt to Select Pt."
             view.ShowStatus(sMsg, false);
         }
 
@@ -2000,20 +2079,25 @@ Are you sure you want to delete the maps?";
         function DoUpload() {
             var bOk = false;
             if (that.gpxPath) { // Ignore if gpxPath obj does not exists.
-                var path = NewUploadPathObj();
-                path.nId = that.nPathId;
-                path.sOwnerId = view.getOwnerId();
-                path.sPathName = txbxPathName.value;
-                path.sShare = selectShare.value;
-                path.arGeoPt = that.gpxPath.arGeoPt;
-                view.onUpload(view.curMode(), path);
-                view.ShowStatus("Uploading path to server.", false);
-                bOk = true;
-                curEditState = stUploadPending;
+                if (that.gpxPath.arGeoPt.length > 1) {
+                    var path = NewUploadPathObj();
+                    path.nId = that.nPathId;
+                    path.sOwnerId = view.getOwnerId();
+                    path.sPathName = txbxPathName.value;
+                    path.sShare = selectShare.value;
+                    path.arGeoPt = that.gpxPath.arGeoPt;
+                    view.onUpload(view.curMode(), path);
+                    view.ShowStatus("Uploading path to server.", false);
+                    bOk = true;
+                    curEditState = stUploadPending;
+
+                } else {
+                    var sMsg = "Cannot upload the geo path because it must have more than one point.";
+                    AlertMsg(sMsg);
+                }
             }
             return bOk;
         }
-
     }
 
 
@@ -2085,7 +2169,6 @@ Are you sure you want to delete the maps?";
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sVersion = "1.1.016  02/09/2016";
         var sCopyright = "2015, 2016";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
@@ -2104,15 +2187,17 @@ and are listed below. Refer to them individually to determine their kind of lice
 jquery 1-11.3\n\n\
 Leaflet 0.7.3 for maps\n\n\
 L.TileLayer.Cordova for caching map tiles\n\n\
-cordova-plugin-dialogs\n\n\
-com.jetboystudio.pebble.PebblePGPlugin\n\n\
-cordova-plugin-file 2.0.0 "File"\n\n\
-cordova-plugin-file-transfer 1.1.0 "File Transfer"\n\n\
-cordova-plugin-geolocation 1.0.0 "Geolocation"\n\n\
-cordova-plugin-vibration 1.2.1-dev "Vibration"\n\n\
-cordova-plugin-whitelist 1.0.0 "Whitelist"\n\n\
+com.jetboystudio.pebble.PebblePGPlugin 0.2.6 "Pebble"\n\n\
+com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"\n\n\
+cordova-plugin-compat 1.0.0 "Compat"\n\n\
+cordova-plugin-device-orientation 1.0.3 "Device Orientation"\n\n\
+cordova-plugin-dialogs 1.2.1 "Notification"\n\n\
+cordova-plugin-file 4.2.0 "File"\n\n\
+cordova-plugin-file-transfer 1.5.1 "File Transfer"\n\n\
+cordova-plugin-geolocation 2.2.0 "Geolocation"\n\n\
+cordova-plugin-vibration 2.2.1-dev "Vibration"\n\n\
+cordova-plugin-whitelist 1.2.2 "Whitelist"\n\n\
 org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
-https://github.com/Wizcorp/phonegap-facebook-plugin/blob/master/LICENSE \n\n\
 ';
         return sMsg;
     }
@@ -2159,27 +2244,29 @@ Find > My Private\n\
 Searches for your private paths, paths that only you can see.\n\n\
 Menu Provides More Options\n\
 Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\n\
-Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
+* Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
 and Track and Ph Alert are ignored. \
 However, the MyLoc button will still get your geo-location.\n\n\
-Geo Tracking Initially On Yes | No: Yes to start with Track On when app loads.\n\n\
-Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
-Off-Path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
-Allow Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
-Phone Alert Initially On Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
-Phone Vibration in Secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
-Phone Beep Count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
-Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
-Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
+* Geo Tracking Initially On Yes | No: Yes to start with Track On when app loads.\n\n\
+* Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
+* Off-Path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
+* Allow Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
+* Phone Alert Initially On Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
+* Phone Vibration in Secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
+* Phone Beep Count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
+* Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
+* Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
 off trail. Count of 0 disables vibrations. \
 Note that Ph Alert Off does not inhibit vibrations for being off-trail.\n\n\
-Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
+* Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
 for change in location to be considered valid. (This prevents small variations in the geo-location of \
 the same point to appear to be a change in location.)\n\n\
-Touch Map for Geo Location Testing Yes | No:\n\
+* Show Compass Heading on Map? Yes | No:\n\
+An arrow for the compass heading from your current location may be shown on the map.\n\n\
+* Touch Map for Geo Location Testing? Yes | No:\n\
 Touching a point on the map simulates getting the geo location for the point on the map. \
 This is just for testing.\n\n\
-Set Home Area to Screen:\n\
+* Set Home Area to Screen:\n\
 Touch the Set button to set your home area to be that shown on the screen. \
 First, pan, zoom, and pinch to display the area you want on the screen. \n\
 The paths in the Home Area are found when the app starts. \
@@ -2259,20 +2346,30 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 The instructions for returning to the trail give the heading \
 to return to the nearest point on the trail from your \
 current location.\n\n\
-There is also a suggestion for how you should turn to return to the trail. \
-THIS IS ONLY A SUGGESTION AND IS NOT NECESSARILY ACCURATE. \
-The inaccuracy is due to the simple calculation used to determine the turning angle: \
-the angle between the heading back to the trail and the heading from your previously \
-saved location to your current loction. \
-The heading back to the trail is accurate, but the heading from your previous location \
-may be inaccurate because you may not be travelling in a straight line.\n\n\
-To get an accurate turning suggestion:\n\
-*  Touch MyLoc button to get your location.\n\
-*  Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards). \
+There are also suggestions on how to turn from your current traveling direction \
+to return back to the trail. While the heading back to the trail is accurate, \
+suggestions for turning may not be. Since a turning suggestion may be \
+inaccurate, it is prefixed with a "?" mark.\n\
+THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:\n\
+    * One kind of suggestion is based on the heading from your previous locaton. \
+You may not have traveled in a straight line from your previous location.\n\
+    * The second kind of suggestion is based on the compass heading that your phone \
+may be able to provide. The compass heading is the direction your phone indicates \
+you are traveling and is most accurate when you are holding \
+your phone level with its top pointing in the direction you are traveling. \
+The compass may need to be calibrated to show accurately.\n\n\
+To calibrate your compass, rotate it three times or so around each axis:\n\
+    Hold the phone vertically facing you.\n\
+    1) Tilt top of phone down and then back up toward you.\n\
+    2) Rotate top of phone phone left and right keeping the face of phone towards you.\n\
+    3) Rotate face of phone away and back toward you, keeping the phone vertical.\n\n\
+To get an accurate turning suggestion from your previous location:\n\
+    1) Touch MyLoc button to get your location.\n\
+    2) Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards). \
 The Prev Geo Loc Thres is given in Settings.\n\
-* Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
-Of course, if you know accurate compass directions, follow the heading back to the trail. \
-The turning suggestion is an aid if you do not know accurate compass directions.';
+    3) Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
+Of course, if you know accurate compass directions yourself, follow the heading back to the trail. \
+The turning suggestions are only an aid if you do not know accurate compass directions.';
         return sMsg;
     }
 
@@ -2304,6 +2401,16 @@ IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.\n\n\
 This app is released free of charge in the hope that it will be useful. \
 However, it is provided without any warranty of any kind; without even the implied warranty of \
 usefulness, accuracy, reliability, availability, or free of software defects.\n\n\
+ADVICE FOR TURNING TO RETURN TO TRAIL MAYBE WRONG\n\
+The heading back to the trail should be accurate, but the suggestions for turning back to the trail \
+may not be. \
+A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and \
+is only a SUGGESTION TO BE VERIFIED BY YOU. The suggestions for turning my be wrong for various reasons:\n\
+    * The heading from your previous geo-location is a straight line, and you may not have traveled in a straight line.\n\
+    * The compass may need to be calibrated.\n\
+    * The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling) \
+is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.\n\
+    * The geolocation provided by your phone has tolerances for its accuracy.\n\n\
 DATA AND PRIVACY\n\
 Server Data\n\
 For trails that you define, data is stored on a server. The data has latitude and longitude for points \
@@ -2312,7 +2419,7 @@ The data is not encrypted. Minual protection for the database is provided throug
 Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority. \n\n\
 Data on Your Phone\n\
 Data is saved on your phone for defining trails and caching map sections when you are offline. \
-This data is not encrypted. It can be deleted by you from your phone by managing the application on your phone.\n\n\
+It can be deleted by you from your phone by managing the application on your phone.\n\n\
 Making Your Trails Public or Private\n\
 When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone \
 using this app. If the trail is marked Private, the trail is only visible by you when using the app.\
@@ -2338,8 +2445,15 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  onDone: asynchronous callback with signature:
     //      bConfirm: boolean indicating Yes.
+    //  sTitle: string, optional. Title for the dialog. Defauts to Confirm.
+    //  sAnswer: string, optional. Caption for the two buttons delimited by a comma.  
+    //           Defaults to 'Yes,No'.
     // Returns synchronous: false. Only onDone callback is meaningful.
-    function ConfirmYesNo(sMsg, onDone) {
+    function ConfirmYesNo(sMsg, onDone, sTitle, sAnswer) {
+        if (!sTitle)
+            sTitle = 'Confirm';
+        if (!sAnswer)
+            sAnswer = 'Yes,No';
         if (navigator.notification) {
             navigator.notification.confirm(sMsg, function (iButton) {
                 if (onDone) {
@@ -2347,7 +2461,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
                     onDone(bYes);
                 }
             },
-            "Confirm", "Yes,No");
+            sTitle, sAnswer);
         } else {
             var bConfirm = window.confirm(sMsg);
             if (onDone)
@@ -2511,6 +2625,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         settings.bPebbleAlert = selectPebbleAlert.value === 'yes';
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
+        settings.bCompassHeadingVisible = selectCompassHeadingVisible.value === 'yes'; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
         settings.gptHomeAreaSW.lon = numberHomeAreaSWLon.value;
@@ -2536,6 +2651,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         selectPebbleAlert.value = settings.bPebbleAlert ? 'yes' : 'no';
         numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
         numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
+        selectCompassHeadingVisible.value = settings.bCompassHeadingVisible ? 'yes' : 'no'; 
         selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
         numberHomeAreaSWLon.value = settings.gptHomeAreaSW.lon;
@@ -2592,6 +2708,9 @@ may not be appropriate for your ablities and that the trails could have inaccura
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
 
+        // Set boolean for showing compass heading on the map.
+        map.SetCompassHeadingVisibleState(settings.bCompassHeadingVisible); // 20160609 added. 
+
         // Set home area parameters.
         homeArea.gptSW.lat = settings.gptHomeAreaSW.lat; 
         homeArea.gptSW.lon = settings.gptHomeAreaSW.lon;
@@ -2618,7 +2737,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
     //  bShow: boolean to indicate to show.
     function ShowSettingsDiv(bShow) {
         var sShowSettings = bShow ? 'block' : 'none';
-        var sShowMap = bShow ? 'none' : '';
+        var sShowMap = bShow ? 'none' : 'block'; 
        
         panel.style.display = sShowMap;
         divSettings.style.display = sShowSettings;
@@ -2782,7 +2901,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
     //      show the location figures.)
     // Arg: 
     //  callbackUpd: Callback function called asynchronously after geolocation has been updated.
-    //      Arg: {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float}:
+    //      Arg: {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float, 
+    //            bCompass: boolean, bearingCompass: float, compassError: CompassError or null}:
     //          The arg object returned by method property SetGeoLocationUpdate(..) of wigo_ws_GeoPathMap object.
     //          See description of SetGeoLocationUpdate(..) method for more details.    
     function TrackGeoLocation(dCloseToPath, callbackUpd) {
@@ -2796,13 +2916,14 @@ may not be appropriate for your ablities and that the trails could have inaccura
             //          .coords.longitude is longitude in degrees 
             //      position has other members too. See spec on web for navigator.geolocation.getCurrentPosition.
             var location = L.latLng(position.coords.latitude, position.coords.longitude);
-            var updResult = map.SetGeoLocationUpdate(location, dCloseToPath); 
-            if (callbackUpd)
-                callbackUpd(updResult);
+            map.SetGeoLocationUpdate(location, dCloseToPath, function(updResult){
+                if (callbackUpd)
+                    callbackUpd(updResult);
+            }); 
         },
         function (positionError) {
             // Error occurred trying to get location.
-            var sMsg = "Geolocation Failed! Check your browser options to enable Geolocation.\n" + positionError.message;
+            var sMsg = "Geolocation Failed!\nCheck your device settings for this app to enable Geolocation.\n" + positionError.message;
             that.ShowStatus(sMsg);
         },
         geoLocationOptions);
@@ -3094,22 +3215,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
 
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
     // Arg:
-    //  upd is {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: float, bearingRefLine: float}:
-    //    bToPath indicates path from geo location off path to nearest location on the path is valid.
-    //      For bToPath false, dToPath and bearingToPath are invalid.
-    //      Distance from location off-path to on-path must be > arg dOffPath for 
-    //      bToPath to be true.
-    //    dToPath: distance in meters from off-path location to on-path location.
-    //    bearingToPath is bearing (y-North cw) in degrees (0.0 to 360.0) for location to 
-    //      nearest point on the path.
-    //    bRefLine indicates bearingRefLine is valid.
-    //    bearingRefLine is bearing (y-North cw) in degrees (0.0 to 360.0) for reference 
-    //      line from previous off-path location to current off-path location.
-    //    loc: L.LatLng object for location.
-    //    dFromStart: distance in meters from start to nearest point on the path.
-    //    dToEnd: distance in meters from nearest point on the path to the end.
+    //  upd is {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: float, bearingRefLine: float,
+    //          bCompass: bool, bearingCompass: float, compassError: CompassError or null}:
+    //    See SetGeoLocationUpdate(..) member of wigo_ws_GeoPathMap for details about upd, which is returned
+    //    by the method. 
     function ShowGeoLocUpdateStatus(upd) {
-
         // Return msg for paths distances from start and to end for phone.
         function PathDistancesMsg(upd) {
             // Set count for number of elements in dFromStart or dToEnd arrays.
@@ -3164,8 +3274,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
             return s;
         }
 
+        that.ClearStatus();
         if (!upd.bToPath) {
-            that.ClearStatus();
             if (map.IsPathDefined()) {
                 var sMsg = "On Path<br/>";
                 sMsg += PathDistancesMsg(upd);
@@ -3175,30 +3285,50 @@ may not be appropriate for your ablities and that the trails could have inaccura
                 pebbleMsg.Send(sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking.
             } else {
                 // Show lat lng for the current location since there is no trail.
-                var sAt = "lat/lng({0},{1})".format(upd.loc.lat.toFixed(8), upd.loc.lng.toFixed(8));
+                var sAt = "lat/lng({0},{1})<br/>".format(upd.loc.lat.toFixed(6), upd.loc.lng.toFixed(6));
+                if (upd.bCompass) {
+                    sAt +=  "Compass Heading: {0}&deg;<br/>".format(upd.bearingCompass.toFixed(0));
+                }
                 that.ShowStatus(sAt, false); // false => no error.
-                sAt = "lat/lng\n{0}\n{1}".format(upd.loc.lat.toFixed(8), upd.loc.lng.toFixed(8));
+                sAt = "lat/lng\n{0}\n{1}\n".format(upd.loc.lat.toFixed(6), upd.loc.lng.toFixed(6));
+                if (upd.bCompass) {
+                    sAt += "Cmps Hdg: {0}{1}\n".format(upd.bearingCompass.toFixed(0), sDegree);
+                }
                 pebbleMsg.Send(sAt, false, false); // no vibration, no timeout.
             }
         } else {
             // vars for off-path messages.
             var sBearingToPath = upd.bearingToPath.toFixed(0);
             var sDtoPath = upd.dToPath.toFixed(0);
-            var sCompassDir = map.BearingWordTo(upd.bearingToPath);
+            var sToPathDir = map.BearingWordTo(upd.bearingToPath);
             var phi = upd.bearingToPath - upd.bearingRefLine;
+            var phiCompass = upd.bearingToPath -  upd.bearingCompass;
             var sTurn = 'right';
+            var sTurnCompass = 'right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Head {0} ({1}&deg; wrt N) to go to path ({2}m).<br/>".format(sCompassDir, sBearingToPath, sDtoPath);
+            var s = "Head {0} ({1}&deg; wrt N) to go to path ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
-                // Calculate angle to turn to return to path.
+                // Calculate angle to turn to return to path based on previous heading.
                 if (phi < 0)
                     phi += 360.0;
                 if (phi > 180.0) {
                     sTurn = 'left';
                     phi = 360.0 - phi;
                 }
-                s = "Suggest turning {0}&deg; to {1} to go to path.<br/>".format(phi.toFixed(0), sTurn);
+                s = "?Turn {1} {0}&deg; from PrevLoc Hdg {2}&deg;.<br/>".format(phi.toFixed(0), sTurn, upd.bearingRefLine.toFixed(0));
+                sMsg += s;
+            }
+            // Show angle to turn based on compass bearing.
+            if (upd.bCompass) {
+                // Calculate angle to turn to return to path based on previous heading.
+                if (phiCompass < 0)
+                    phiCompass += 360.0;
+                if (phiCompass > 180.0) {
+                    sTurnCompass = 'left';
+                    phiCompass = 360.0 - phiCompass;
+                }
+                s = "?Turn {1} {0}&deg; from Compass Hdg {2}&deg;.<br/>".format(phiCompass.toFixed(0), sTurnCompass, upd.bearingCompass.toFixed(0));
                 sMsg += s;
             }
             // Show distance from start and to end.
@@ -3211,8 +3341,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
             sMsg = "Off {0} m\n".format(sDtoPath);
             // sMsg += "Head {0} ({1}{2})\n".format(sCompassDir,sBearingToPath, sDegree);
             // Decided not to show compass degrees, just direction: N, NE, etc.
-            sMsg += "Head {0}\n".format(sCompassDir);
-            sMsg += "? {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
+            sMsg += "Head {0}\n".format(sToPathDir);
+            // Show angle to turn. Use compass if available.
+            if (upd.bCompass) {
+                sMsg += "?C {0} {1}{2}\n".format(sTurnCompass, phiCompass.toFixed(0), sDegree);
+            }
+            sMsg += "?P {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
             sMsg += PathDistancesPebbleMsg(upd); 
             pebbleMsg.Send(sMsg, true, trackTimer.bOn); // vibration, timeout if tracking.
         }
@@ -3227,8 +3361,9 @@ may not be appropriate for your ablities and that the trails could have inaccura
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view || 
             nMode === that.eMode.offline) {
-            var updateResult = map.SetGeoLocationUpdate(llAt, trackTimer.dCloseToPathThres);
-            ShowGeoLocUpdateStatus(updateResult);
+            map.SetGeoLocationUpdate(llAt, trackTimer.dCloseToPathThres, function(updateResult){
+                ShowGeoLocUpdateStatus(updateResult);
+            });
         }
     };
 
@@ -3245,6 +3380,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         switch (nMode) {
             case that.eMode.online_edit:
             case that.eMode.online_define:
+            case that.eMode.tou_not_accepted: 
                 bShow = false;
                 break;
         }
@@ -3506,6 +3642,18 @@ function wigo_ws_Controller() {
         return settings;
     };
 
+    // Saves app version to localStorage.
+    // Arg:
+    //  version: wigo_ws.GeoTrailVersion object to save to localStorage.
+    view.onSaveVersion = function(version) {
+         model.setVersion(version);
+    };
+
+    // Returns current app version, a wigo_ws_GeoTrailVersion object.
+    view.onGetVersion = function() {
+        return model.getVersion();
+    };
+
     // Clears offline parameters in local storage when map cache has been cleared.
     view.onMapCacheCleared = function () {
         model.clearOffLineParamsList();
@@ -3762,6 +3910,7 @@ function wigo_ws_Controller() {
     var sOwnerId = model.getOwnerId();
     view.setOwnerId(sOwnerId);
     view.setOwnerName(model.getOwnerName());
+    // Comment out next stmt only if debugging map initialization, in case handler for buInitView does initialization.
     view.Initialize();
 }
 

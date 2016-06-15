@@ -1,25 +1,25 @@
-<!---
- license: Licensed to the Apache Software Foundation (ASF) under one
-         or more contributor license agreements.  See the NOTICE file
-         distributed with this work for additional information
-         regarding copyright ownership.  The ASF licenses this file
-         to you under the Apache License, Version 2.0 (the
-         "License"); you may not use this file except in compliance
-         with the License.  You may obtain a copy of the License at
-
-           http://www.apache.org/licenses/LICENSE-2.0
-
-         Unless required by applicable law or agreed to in writing,
-         software distributed under the License is distributed on an
-         "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-         KIND, either express or implied.  See the License for the
-         specific language governing permissions and limitations
-         under the License.
+<!--
+# license: Licensed to the Apache Software Foundation (ASF) under one
+#         or more contributor license agreements.  See the NOTICE file
+#         distributed with this work for additional information
+#         regarding copyright ownership.  The ASF licenses this file
+#         to you under the Apache License, Version 2.0 (the
+#         "License"); you may not use this file except in compliance
+#         with the License.  You may obtain a copy of the License at
+#
+#           http://www.apache.org/licenses/LICENSE-2.0
+#
+#         Unless required by applicable law or agreed to in writing,
+#         software distributed under the License is distributed on an
+#         "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#         KIND, either express or implied.  See the License for the
+#         specific language governing permissions and limitations
+#         under the License.
 -->
 
-# cordova-plugin-geolocation
+[![Build Status](https://travis-ci.org/apache/cordova-plugin-geolocation.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-geolocation)
 
-[![Build Status](https://travis-ci.org/apache/cordova-plugin-geolocation.svg)](https://travis-ci.org/apache/cordova-plugin-geolocation)
+# cordova-plugin-geolocation
 
 This plugin provides information about the device's location, such as
 latitude and longitude. Common sources of location information include
@@ -45,7 +45,7 @@ accesses geolocation data (if the device operating system doesn't do
 so already).  That notice should provide the same information noted
 above, as well as obtaining the user's permission (e.g., by presenting
 choices for __OK__ and __No Thanks__).  For more information, please
-see the Privacy Guide.
+see the [Privacy Guide](http://cordova.apache.org/docs/en/latest/guide/appdev/privacy/index.html).
 
 This plugin defines a global `navigator.geolocation` object (for platforms
 where it is otherwise missing).
@@ -60,7 +60,17 @@ are not available until after the `deviceready` event.
 
 ## Installation
 
+This requires cordova 5.0+ ( current stable 1.0.0 )
+
     cordova plugin add cordova-plugin-geolocation
+
+Older versions of cordova can still install via the deprecated id ( stale 0.3.12 )
+
+    cordova plugin add org.apache.cordova.geolocation
+
+It is also possible to install via repo url directly ( unstable )
+
+    cordova plugin add https://github.com/apache/cordova-plugin-geolocation.git
 
 ## Supported Platforms
 
@@ -71,7 +81,6 @@ are not available until after the `deviceready` event.
 - iOS
 - Tizen
 - Windows Phone 7 and 8
-- Windows 8
 - Windows
 
 ## Methods
@@ -131,6 +140,11 @@ error, the `geolocationError` callback is passed a
     }
 
     navigator.geolocation.getCurrentPosition(onSuccess, onError);
+
+### Android Quirks
+
+If Geolocation service is turned off the `onError` callback is invoked after `timeout` interval (if specified).
+If `timeout` parameter is not specified then no callback is called.
 
 ## navigator.geolocation.watchPosition
 
@@ -198,7 +212,8 @@ Optional parameters to customize the retrieval of the geolocation
 
 ### Android Quirks
 
-Android 2.x emulators do not return a geolocation result unless the `enableHighAccuracy` option is set to `true`.
+If Geolocation service is turned off the `onError` callback is invoked after `timeout` interval (if specified).
+If `timeout` parameter is not specified then no callback is called.
 
 ## navigator.geolocation.clearWatch
 
@@ -230,7 +245,7 @@ Contains `Position` coordinates and timestamp, created by the geolocation API.
 
 - __coords__: A set of geographic coordinates. _(Coordinates)_
 
-- __timestamp__: Creation timestamp for `coords`. _(Date)_
+- __timestamp__: Creation timestamp for `coords`. _(DOMTimeStamp)_
 
 ## Coordinates
 

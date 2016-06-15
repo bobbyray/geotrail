@@ -47,6 +47,10 @@
             <option value="facebook">Facebook</option>
             <option value="logout">Logout</option>
         </select>
+        <br/>
+        <!-- buInitView is commented out except if debugging map view initialization.
+        <button id="buInitView" value="InitView">Init View</button>
+        -->
     </div>
     <div id="divMode">
         <select id="selectMode">
@@ -250,8 +254,15 @@
                 <option value="60">60 meters (66 yards)</option>
             </select>
         </div>
+        <div> 
+            <label id="labelCompassHeadingVisible" for="selectCompassHeadingVisible">Show Compass Heading on Map?</label>
+            <select id="selectCompassHeadingVisible">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>>
+        </div>
         <div>
-            <label id="labelClickForGeoLoc"  for="selectClickForGeoLoc">Touch Map for Geo Loc Testing</label>
+            <label id="labelClickForGeoLoc"  for="selectClickForGeoLoc">Touch Map for Geo Loc Testing?</label>
             <select id="selectClickForGeoLoc" >
                 <option value="yes">Yes</option>
                 <option value="no">No</option>

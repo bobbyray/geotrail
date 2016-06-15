@@ -32,7 +32,8 @@ function wigo_ws_GeoTrailSettings() {
     // Boolean to indicate a mouse click (touch) simulates getting the geo-location
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
-
+    // Boolean to indicate compass heading arrow is drawn on map.
+    this.bCompassHeadingVisible = true; // 20160609 added.
     // ** 20151204 Settings added for home area rectangle.
     // Southwest corner of home area rectangle.
     this.gptHomeAreaSW = new wigo_ws_GeoPt();
@@ -48,6 +49,14 @@ function wigo_ws_GeoTrailSettings() {
     // ** 
 }
 
+// Object for version for My Geo Trail saved/loaded by model.
+function wigo_ws_GeoTrailVersion() { // 20160610 added.
+    // String for app version id saved in settings.
+    // Note: Used to detect when app version has changed.
+    this.sVersion = ""; 
+    // Boolean to indicated Terms of Use has been accepted.
+    this.bTermsOfUseAccepted = false; 
+}
 
 // Object for the Model (data) used by html page.
 // Model should be sharable by all html pages for GeoPaths site.
@@ -314,6 +323,16 @@ function wigo_ws_Model() {
     }
 
 
+    // Sets version in localStorage.
+    this.setVersion = function(version) {
+        geoTrailVersion.SaveToLocalStorage(version);
+    };
+
+    // Returns current version, a wigo_ws_GeoTrailVersion object.
+    this.getVersion = function() {
+        return geoTrailVersion.getVersion();
+    }
+
     // ** Private members
     var sOwnerIdKey = "GeoPathsOwnerId";
     var sAccessHandleKey = "GeoPathsAccessHandleKey";
@@ -321,6 +340,7 @@ function wigo_ws_Model() {
 
     var sOfflineParamsKey = 'GeoPathsOfflineParamsKey';
     var sGeoTrailSettingsKey = 'GeoTrailSettingsKey'; 
+    var sGeoTrailVersionKey = 'GeoTrailVersionKey'; 
 
     var api = new wigo_ws_GeoPathsRESTfulApi(); // Api for data exchange with server.
 
@@ -421,10 +441,10 @@ function wigo_ws_Model() {
     // Object for the My Trail Settings.
     function GeoTrailSettings() {
         // Returns the current settings, a wigo_ws_GeoTrailSettings object.
-        // Note: The current settings are the save as those in localStorage.
-        //       However, for efficiency localStorage is only accessed 
+        // Note: The current settings are the same as those in localStorage.
+        //       However, for efficiency localStorage is only loaded 
         //       during construction and this.SaveToLocalStorage(settings)
-        //       updates the local settings var.
+        //       updates the local settings var and saves to localStorage.
         this.getSettings = function () {
             return settings;
         };
@@ -463,6 +483,8 @@ function wigo_ws_Model() {
                     settings.gptHomeAreaNE.lat = 47.88688085106898;
                     settings.gptHomeAreaNE.lon = -115.97167968750001;
                 }
+                if (typeof(settings.bCompassHeadingVisible) === 'undefined') // 20160609 added.
+                    settings.bCompassHeadingVisible = true; 
                 // **
             }
             return settings;
@@ -470,8 +492,44 @@ function wigo_ws_Model() {
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
     }
+
+    
+    // Object for GeoTrail Version saved in localStorage.
+    function GeoTrailVersion() {
+        // Returns the current version, a wigo_ws_GeoTrailVersion object.
+        // Note: The current version is the same as in localStorage.
+        //       However, for efficiency localStorage is only loaded 
+        //       during construction and this.SaveToLocalStorage(version)
+        //       updates the local version var and saves to localStorage.
+        this.getVersion = function () {
+            return version;
+        };
+        
+        // Loads this object from local storage. 
+        this.LoadFromLocalStorage = function() {
+            if (localStorage && localStorage[sGeoTrailVersionKey]) {
+                version = JSON.parse(localStorage[sGeoTrailVersionKey]);
+            }
+            return version;
+        }
+
+        // Saves version for GeoTrail to local storage.
+        // Arg
+        //  oVersion: wigo_ws_GeoTrailVersion object for the version.
+        this.SaveToLocalStorage = function (oVersion) {
+            version = oVersion; // Save to local var.
+            if (localStorage)
+                localStorage[sGeoTrailVersionKey] = JSON.stringify(oVersion);
+        };
+        var version = new wigo_ws_GeoTrailVersion();
+
+    }
     
     // Settings for My Geo Trail.
     var geoTrailSettings = new GeoTrailSettings();
     geoTrailSettings.LoadFromLocalStorage();
+
+    // Version for GeoTrail app in localStorage.
+    var geoTrailVersion = new GeoTrailVersion();
+    geoTrailVersion.LoadFromLocalStorage();
 }

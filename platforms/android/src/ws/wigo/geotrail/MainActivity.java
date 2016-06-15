@@ -19,15 +19,23 @@
 
 package ws.wigo.geotrail;
 
+import android.annotation.TargetApi;
 import android.os.Bundle;
 import org.apache.cordova.*;
 
+@TargetApi(19)
 public class MainActivity extends CordovaActivity
 {
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        //20160507 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
+        if (android.os.Build.VERSION.SDK_INT >= 18) // KITKAT is 19
+        {
+            android.webkit.WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         // Set by <content src="index.html" /> in config.xml
         loadUrl(launchUrl);
     }

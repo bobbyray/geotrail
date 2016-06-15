@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="ws.wigo.geotrail" version="1.1.016" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="ws.wigo.geotrail" version="1.1.019" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>GeoTrail</name>
     <description>
         A Cordova application for viewing trail map online or offline.
@@ -8,7 +8,6 @@
         WIGO Dev Team
     </author>
     <content src="Trail2.html" />
-    <plugin name="cordova-plugin-whitelist" version="1" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
@@ -16,7 +15,7 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
-    <icon src="res/android/geotrail512x512.png" platform="android"/>
+    <icon platform="android" src="res/android/geotrail512x512.png" />
     <platform name="android">
         <allow-intent href="market:*" />
     </platform>
@@ -24,4 +23,6 @@
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
+    <plugin name="cordova-plugin-file" spec="~2.0.0" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
 </widget>

@@ -1,19 +1,19 @@
 [
     {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_normal.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_normal.9.png"
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_background.9.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_background.9.png"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_logo.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_logo.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_pressed.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_pressed.png"
     },
     {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_logo.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_logo.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_bottomnub.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_bottomnub.png"
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_pressed.9.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_pressed.9.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_inverse_icon.png",
@@ -22,14 +22,6 @@
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_xout.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_xout.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_icon_selected.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_icon_selected.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_bottomnub.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_bottomnub.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_grey_focused.9.png",
@@ -48,16 +40,12 @@
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_topnub.png"
     },
     {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_background.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_background.9.png"
-    },
-    {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_bottomnub.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_bottomnub.png"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_background.9.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_background.9.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_close.png",
@@ -68,90 +56,6 @@
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_grey_pressed.9.png"
     },
     {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_picker_magnifier.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_picker_magnifier.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_xout.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_xout.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_topnub.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_topnub.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_inverse_icon.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_inverse_icon.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_bottomnub.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_bottomnub.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_xout.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_xout.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_icon.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_icon.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_pressed.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_pressed.9.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_focused.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_focused.9.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background_selected.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background_selected.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_grey_focused.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_grey_focused.9.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_black_background.9.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_black_background.9.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_logo.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_logo.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_close.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_close.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_pressed.9.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_pressed.9.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_topnub.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_topnub.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_grey_normal.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_grey_normal.9.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background_selected.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background_selected.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_pressed.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_pressed.png"
-    },
-    {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_background.9.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_background.9.png"
-    },
-    {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_icon_selected.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_icon_selected.png"
     },
@@ -160,20 +64,16 @@
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_grey_normal.9.png"
     },
     {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background.png"
+    },
+    {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_blue_focused.9.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_blue_focused.9.png"
     },
     {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_background.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_background.9.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_grey_pressed.9.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_grey_pressed.9.png"
-    },
-    {
-        "merged": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_icon.png",
-        "source": "C:\\Users\\Robert\\Documents\\CordovaProjects\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_icon.png"
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_bottomnub.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_bottomnub.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_xout.png",
@@ -182,5 +82,13 @@
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_tooltip_blue_topnub.png",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_tooltip_blue_topnub.png"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_icon.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_icon.png"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\com_facebook_button_like_background_selected.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable-hdpi\\com_facebook_button_like_background_selected.png"
     }
 ]

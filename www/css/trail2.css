@@ -182,6 +182,7 @@ label {
 #divPathDescr, #divCursors {
     clear: both;
     float: left;
+    display: none; /* show when needed */
 }
 #divServerAction {
     clear: none;
@@ -255,6 +256,7 @@ label {
 #divPathIx {
     margin-left: 30%;
     clear: both;
+    display: none; /* show when needed. */
 }
 #divPathIx input[type='button'] {
     margin-left: 20px;
@@ -284,12 +286,25 @@ label {
     font-size: 130%;
 }
 
+#divSettings > div {
+    margin-bottom: 0.07in;
+}
+
 #divSettings input {
     width: 5em;
 }
 
 #divSettings label {
     padding-top: 0px;
+}
+
+#buSettingsDone {
+    margin-left: 15%;
+    min-width: 5em;
+}
+
+#buSettingsCancel {
+    margin-left: 2em;
 }
 
 #divPathInfo 
@@ -317,6 +332,7 @@ label {
     background-color: #fff;
     padding: 5px;
     border: 1px solid #999;
+    display: none; /* show when needed. */
 }
  
 #panel > input {

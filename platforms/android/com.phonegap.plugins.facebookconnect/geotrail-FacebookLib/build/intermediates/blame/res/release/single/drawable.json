@@ -12,12 +12,12 @@
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_close.png"
     },
     {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_picker_list_pressed.9.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_picker_list_pressed.9.png"
-    },
-    {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_top_button.xml",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_top_button.xml"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_picker_list_pressed.9.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_picker_list_pressed.9.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_button_blue_pressed.9.png",
@@ -44,20 +44,20 @@
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_button_like_pressed.png"
     },
     {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_picker_list_longpressed.9.png",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_picker_list_longpressed.9.png"
-    },
-    {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_loginbutton_silver.xml",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_loginbutton_silver.xml"
     },
     {
-        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_button_like.xml",
-        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_button_like.xml"
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_picker_list_longpressed.9.png",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_picker_list_longpressed.9.png"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_button_like_selected.xml",
         "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_button_like_selected.xml"
+    },
+    {
+        "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_button_like.xml",
+        "source": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\res\\drawable\\com_facebook_button_like.xml"
     },
     {
         "merged": "C:\\ac\\geotrail\\platforms\\android\\com.phonegap.plugins.facebookconnect\\geotrail-FacebookLib\\build\\intermediates\\res\\merged\\release\\drawable\\com_facebook_logo.png",

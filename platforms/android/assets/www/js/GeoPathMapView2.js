@@ -65,11 +65,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var mapPath = null; // Map overlay for current path.
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
     var zoomPathBounds = null; // Zoom value to fit trail to bounds of view.
-
+    
     // Colors to use for drawing. 
     // Default values are set initially.
     // The values may be changed.
-    // A color value is a string for for a color. 
+    // A color value is a string for a color. 
     // The rbg hex notation of '#rrggbb' can be used (rr for red, gg for green, bb for blue).
     this.color = {
         path: 'red',
@@ -80,8 +80,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         touchCircle: 'orange',     // Touch point when editing path.
         editCircle: 'yellow',      // Edit point on path.
         editSegment: 'magenta',    // Edit line segment for path.
-        eraseSegment: 'white'      // Erase line segment when editing a point in the path.
-    }
+        eraseSegment: 'white',     // Erase line segment when editing a point in the path.
+        compassHeadingArrow: 'yellow' // Compass heading arrow from current location circle.
+    };
 
     // Initialize to use Open Streets Map once browser has initialized.
     // Arg:
@@ -106,12 +107,29 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             map.on('click', onMapClick);
             // Callback to indicate the result.
             var bOk = tileLayer !== null;
-            if (callback) {
+            if (callback)
                 callback(bOk, sError);
-            }
         });
     };
+    var bOfflineDataEnabled = false;
 
+
+    var bCompassHeadingVisible = true;
+    // Set visibility state for compass arrow that is drawn from current location circle.
+    // Arg:
+    //  bVisible: boolean. true to make compass arrow visible on the map.
+    // Remarks: The compass arrow indicates the direction the phone is pointing when
+    // the current geo location is updated. Typically the top of phone is used 
+    // as the ppinter for the compass direction.
+    this.SetCompassHeadingVisibleState = function(bVisible) {
+        bCompassHeadingVisible = bVisible;
+    };
+
+    // Returns true if the device has enabled data storage.
+    // Note: The device settings for an app may need to give permission to used data storage.
+    this.isOfflineDataEnabled = function() {
+        return bOfflineDataEnabled;
+    };
 
     // Error message that methods may set on an error.
     this.sError = "";
@@ -170,7 +188,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //  location: Map LatLng object for current geo-location.
     //  dOffPath: float for distance from location off-path to on-path for which 
     //      valid result is returned.
-    // Returns {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float}:
+    //  callbackCompassBearing: optional. Callback after compass bearing is obtained. 
+    //      If callback is not defined, returns synchronously with object described for Returns below,
+    //      and bCompass is false in returned object.
+    //      Signature of callback when givenj:
+    //          upd: same object described for Returns. In this case, upd.bCompass should be valid if 
+    //               compass device is working.
+    //       
+    // Returns {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: boolean, bearingRefLine: float,
+    //          bCompass: bool, bearingCompass: float, compassError: CompassError or null}:
     //  bToPath indicates path from geo location off path to nearest location on the path is valid.
     //      For bToPath false, dToPath, and bearingToPath are invalid.
     //      Distance from location off-path to on-path must be > arg dOffPath for 
@@ -184,24 +210,63 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //  loc: L.LatLng object for location.
     //  dFromStart: distance in meters from start to nearest point on the path.
     //  dToEnd: distance in meters from nearest point on the path to the end.
+    //  bCompass: boolean, indicates that compass bearing is valid.
+    //      Note: compass beearing is only requested when callbackCompassBearing is given.
+    //            bCompass is false if callback is not given or if there is an error
+    //            trying to get the compass bearing (heading). bCompass is true only if the
+    //            the compass bearing is successfully obtained.
+    //  bearingCompass: number, compass bearing from magnetic North in degress (0.0 to 360.0 cw).
+    //  compassError: CompassError object if there is an error getting the compass bearing.
+    //                null, it there was no error or if compass bearing was not requested.
+    //                compassError.code can be one of these constant values:
+    //                    CompassError.COMPASS_INTERNAL_ERR
+    //                    CompassError.COMPASS_NOT_SUPPORTED
     // Remarks:
     //  The difference between bearingToPath and bearingRefLine may be useful for suggesting
     //  degrees of correction to navigate back to the path (trail).
-    this.SetGeoLocationUpdate = function (location, dOffPath) {
+    this.SetGeoLocationUpdate = function (location, dOffPath, callbackCompassBearing) {
         var result = {
             bToPath: false, bearingToPath: 0.0, dToPath: 0.0,
             bRefLine: false, bearingRefLine: 0.0, loc: location,
             dFromStart: 0.0,
-            dToEnd: 0.0
+            dToEnd: 0.0,
+            bCompass: false, bearingCompass: 0.0, compassError: null
         };
         if (!IsMapLoaded())
             return result; // Quit if map has not been loaded.
+
+        
+        // Helper to get compass bearing asynchronously and do callback providing result obj 
+        // once compass bearing  is obtained.
+        // If arg callbackCompassBearing is not defined, returns without changing result obj.
+        function DoCompassBearingIfRequested() {
+            if (typeof(callbackCompassBearing) === 'function') {
+                // Get compass bearing (heading) asynchronously and do callback 
+                // with the result in the async handler.
+                navigator.compass.getCurrentHeading( function(heading) { // success
+                    result.bCompass = true;
+                    result.bearingCompass = heading.magneticHeading;
+                    SetCompassHeadingArrow(heading.magneticHeading);
+                    callbackCompassBearing(result);
+                }, 
+                function(error){ // Error
+                    result.bCompass = false;
+                    result.bearingCompass = 0.0;
+                    result.compassError = error;
+                    callbackCompassBearing(result);
+                });
+            }
+        }
+
 
         var rCircle = 10; // Radius of circle in pixels
         if (!this.IsPathDefined()) {
             // No path on the map. Just draw circle for location.
             SetGeoLocationCircle(location, rCircle);
             map.panTo(location);
+            // Get compass bearing asynchrously and do callback with result,
+            // but only if compass bearing is requested.
+            DoCompassBearingIfRequested(); 
         } else {
             // Set flag for initial update, which is used to avoid miss leading off-path
             // message when there is no previous geo location point.
@@ -256,6 +321,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // location has changed suffiently from previous location.
             if (bCurGeoLocBeyondPrevGeoLoc)
                 prevGeoLoc = location;
+            
+            // Get compass bearing asynchrously and do callback with result,
+            // but only if compass bearing is requested.
+            DoCompassBearingIfRequested(); 
         }
         return result;
     };
@@ -268,6 +337,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
         ClearTouchCircle();  
+        ClearCompassHeadingArrow(); 
     };
 
     // Draws a circle for touch point.
@@ -431,6 +501,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEditCircle();
         ClearEditSegment();  
         ClearEraseSegment(); 
+        ClearCompassHeadingArrow();
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -798,7 +869,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     function ClearGeoLocationCircle() {
         // Remove existing geolocation circle, if there is one, from the map.
         if (geolocCircle)
-            map.removeLayer(geolocCircle);    }
+            map.removeLayer(geolocCircle);    
+    }
 
     var geolocCircle = null;
     // Set (draws) circle on map centered at geo location.
@@ -829,7 +901,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Draws arrow for a location off geo path to point on geo path (the trail).
     // Arg:
     //  location: Map L.LatLng object for location on map.
-    //  llAt: point on the geo path.
+    //  llAt: L.LatLng obj for location on the geo path.
     // Remarks:
     // Actually draws facsimile of an arrow using a line with a rounded end.
     // The line is between any two points, but the purpose is likely to draw the 
@@ -898,6 +970,86 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         prevGeoLocRefLine.addTo(map);
         return dest.bearing;
     }
+    
+    
+    var compassHeadingArrow = null; // L.Polygon obj for compass heading arrow.
+    
+    // Clears from map the compass heading arrow.
+    function ClearCompassHeadingArrow() {
+        if (compassHeadingArrow)
+            map.removeLayer(compassHeadingArrow);
+        
+    }
+    // Sets (draws) compass heading arrow for current location.
+    // Arg:
+    //  degHeading: float for heading angle in degrees, cw wrt North.
+    // Remarks: If this.SetCompassArrowVisible(false) has been called,
+    // then the compass arrow is only cleered but not drawn.
+    // This function always clears the compass arrow from the map.
+    function SetCompassHeadingArrow(degHeading) {
+        ClearCompassHeadingArrow();
+        if (!bCompassHeadingVisible)
+            return;
+        
+        // Helper to calculate latlng for tip of arrow from current geo location.
+        // Arg: 
+        //  llArrowBase: LatLng obj for base of the arrow.
+        //  degPhi: number for heading in degrees.
+        //  pelsR: number, radius of tip measured from base in pixels.
+        // Return LatLng obj for calculated tip. Returns null if the 
+        // geolocCircle object does not exist.
+        // Note: Length in pixels of base of arrow to its tip is given by the 
+        //       constant pelsCompassHeadingArrowLength.
+        function CalcArrowTip(llArrowBase, degPhi, pelsR) {
+            // Get map screen point for base of arrow at current geo location circle.
+            var ptArrowBase =  map.latLngToLayerPoint(llArrowBase);
+            // Calculate point in pixels on the map for tip from degHeading.
+            // Note: angle for rt triangle for x, y is 90 degree - degHeading.
+            //       So use sin() to calc x, and cos() to calc y. 
+            // Note: degTheata = 90.0 - degPhi, angle for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - degPhi) * L.LatLng.DEG_TO_RAD;
+            var x = pelsR * Math.cos(theta);
+            var y = - pelsR * Math.sin(theta);
+            var ptTip = L.point(x, y);
+            var ptArrowTip = ptTip.add(ptArrowBase);
+            var llArrowTip = map.layerPointToLatLng(ptArrowTip);
+            return llArrowTip;
+        }
+        
+        
+        // Calcuates are returns array of LatLng objs for points in a polygon for the arrow.
+        function CalcArrowPolygon() {
+            if (! geolocCircle) 
+                return null;
+            var pelsCompassHeadingArrowLength = 50; // Constant for length of compass heading arrow in pixels.
+            var degTipOffset = 10.0; // Number of degrees to offset side of tip.
+            var arLatLng = [];
+            var llArrowBase = geolocCircle.getLatLng(); // Arrow base.
+            arLatLng.push(llArrowBase);
+            var pelsSideLen = 0.7 * pelsCompassHeadingArrowLength;
+            var llTip  = CalcArrowTip(llArrowBase, degHeading - degTipOffset, pelsSideLen); // Left side of tip.
+            arLatLng.push(llTip);
+            llTip = CalcArrowTip(llArrowBase, degHeading, pelsCompassHeadingArrowLength); // Tip.
+            arLatLng.push(llTip);
+            llTip = CalcArrowTip(llArrowBase, degHeading + degTipOffset, pelsSideLen); // Right side of tip.
+            arLatLng.push(llTip);
+            return arLatLng;
+        }
+        
+        
+        var arrowOptions = {
+            color: that.color.compassHeadingArrow,
+            fill: true,
+            fillOpacity: 1.0
+        }
+        var arLatLng = CalcArrowPolygon();
+        if (arLatLng) {
+            compassHeadingArrow = L.polygon(arLatLng, arrowOptions);
+            compassHeadingArrow.addTo(map);
+        }
+    }
+    
 
     // Determines heading of line and extends line by a given delta.
     // Args:
@@ -1484,14 +1636,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var layer = null;
         var sMsg = "";
         var bOk = false;
-        var msRetryWait = 500; // Milliseconds to wait before retrying.
-        var nTries = 3;
+        var msRetryWait = 100; // Milliseconds to wait before retrying.
+        var nTries = 30;
         var iTry = 0;
         var timerId = null;
 
         // Local helper function to NewTileLayer(callback).
         function CreateTileLayer() {
-            iTry++;
             try {
                 console.log("Creating L.TileLayer");
                 
@@ -1535,7 +1686,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
 
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
-                bOk = true;
+                bOk = layer != null && layer != undefined;
             } catch (e) {
                 sMsg = e;
                 bOk = false;
@@ -1543,22 +1694,84 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
         }
 
-        // First try to create tile layer.
+        // Local helper function to test writing to device storage.
+        // Does callback(layer, sMsg) upon completion.
+        // bOfflineDataEnabled is set to indicate if write test passed.
+        function TestFileWrite() {
+            var testFileEntry; // FileEntry obj save when creating wigo_test.txt.
+            // Local helper to end after write test fails.
+            function WriteTestFailed(error) {
+                    // Note: Write test failed, but layer is ok.
+                    if (error && error.code)
+                        console.log("Storage Write Test Failed: " + error.code)
+                    if (callback)
+                        callback(layer, sMsg);
+            }
+
+            // Local helper to write the wigo_test.txt file.
+            function GotFileWriter(writer) {
+                // Set event handlers for writer object.
+                writer.onwrite = function(evt) {
+                    // Write test succeeded.
+                    bOfflineDataEnabled = true;
+                    if (testFileEntry) {
+                        // Remove the test file for tidiness.
+                        testFileEntry.remove(
+                        function(entry) { // Callback called on success.
+                            console.log("Successfully removed test tile.");
+                        },
+                        function(error){ // Callback called on error.
+                            console.log("Error removing test tile: " + error.code);
+                        });
+                    }
+                    // Note: Ignore if remove file fails. Do callback(layer, sMsg) immediately regardless.
+                    if (callback)
+                        callback(layer, sMsg);
+                };
+                writer.onerror = function(evt) {
+                    WriteTestFailed(writer.error);
+                };
+                // Write text to the file.
+                writer.write("temp file to delete.");
+            }
+
+            // Ensure initialed to test failed. Set to true later on success.
+            bOfflineDataEnabled = false;
+
+            // Start the write test by creating file to write.
+            layer.dirhandle.getFile("wigo_test.txt", {create: true, exclusive: false},
+            // Callback called on success for creating wigo_test.txt.
+            function(fileEntry){
+                // Create objec to write the file that has been successfully created.
+                testFileEntry = fileEntry; // Save to use later to remove file.
+                fileEntry.createWriter(GotFileWriter, WriteTestFailed);
+            },
+            // Callback called on error creating wigo_test.txt.
+            WriteTestFailed);
+        }
+
+        // First try to create tile layer. Also wait until dirhandle is initialed for filesystem.
+        // Will retry on failure.
+        bOfflineDataEnabled = false; // Set to true later if filesystem allows data storage usage.
         CreateTileLayer();
-        if (bOk) {
-            // Suceeded on first try.
-            if (callback)
-                callback(layer, sMsg);
+        if (bOk && layer.dirhandle ) {
+            TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
         } else {
-            // Failed on first try. Use interval timer to retry more times.
+            // Note: Need to retry because either layer was not created or layer.dirhandle was not created yet.
             timerId = window.setInterval(function () {
                 if (iTry < nTries) {
-                    bOk = CreateTileLayer();
+                    iTry++;
                     if (bOk) {
                         // Successfully created tile layer.
-                        window.clearInterval(timerId); // Stop interval timer.
-                        if (callback)
-                            callback(layer, sMsg);
+                        // Now wait for filesystem to complete initialization.
+                        if (layer.dirhandle) {
+                            window.clearInterval(timerId); // Stop timer.
+                            // Test writing to file.
+                            TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
+                        } // Note: else is keep waiting another timer interval
+                    } else {
+                        // Try to create tile layer again.
+                        CreateTileLayer();
                     }
                 } else {
                     // Failed after nTries, so quit trying.
@@ -1566,7 +1779,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     if (callback)
                         callback(layer, sMsg);
                 }
-            }, msRetryWait);
+            },
+            msRetryWait);
         }
     }
 
@@ -1594,6 +1808,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return false; // Quit if map does not exist yet.
         }
 
+        var message;
+        if (!tileLayer.dirhandle) {
+            message = "Writing to device storage is not allowed.\n" +
+                      "Enable permissions to use storage in device settings for you app.";
+            alert(message);
+            status.bDone = true;
+            status.bError = true;
+            status.sMsg = "Permissions to write to device storage is not enabled.";
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return false;
+        }
+
         var padPercent = 20.0; // Percentage on each side of current map view to 
                                // extend boundaries for caching tiles.
         var lat = map.getCenter().lat;
@@ -1605,7 +1832,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bounds = map.getBounds();
         bounds.pad(padPercent);
         var tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);
-        var message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
+        message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
         var ok = confirm(message);
         if (!ok) {
             status.bDone = true;

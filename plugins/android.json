@@ -10,23 +10,23 @@
                     "/*": [
                         {
                             "xml": "<feature name=\"Whitelist\"><param name=\"android-package\" value=\"org.apache.cordova.whitelist.WhitelistPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
-                            "count": 1
+                            "count": 2
                         },
                         {
                             "xml": "<feature name=\"File\"><param name=\"android-package\" value=\"org.apache.cordova.file.FileUtils\" /><param name=\"onload\" value=\"true\" /></feature>",
-                            "count": 1
+                            "count": 2
                         },
                         {
                             "xml": "<feature name=\"FileTransfer\"><param name=\"android-package\" value=\"org.apache.cordova.filetransfer.FileTransfer\" /></feature>",
-                            "count": 1
+                            "count": 2
                         },
                         {
                             "xml": "<feature name=\"Vibration\"><param name=\"android-package\" value=\"org.apache.cordova.vibration.Vibration\" /></feature>",
-                            "count": 1
+                            "count": 2
                         },
                         {
                             "xml": "<feature name=\"Notification\"><param name=\"android-package\" value=\"org.apache.cordova.dialogs.Notification\" /></feature>",
-                            "count": 1
+                            "count": 2
                         },
                         {
                             "xml": "<feature name=\"WakeupPlugin\"><param name=\"android-package\" value=\"org.nypr.cordova.wakeupplugin.WakeupPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
@@ -59,6 +59,14 @@
                         {
                             "xml": "<access origin=\"https://*.akamaihd.net\" />",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Geolocation\"><param name=\"android-package\" value=\"org.apache.cordova.geolocation.Geolocation\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Compass\"><param name=\"android-package\" value=\"org.apache.cordova.deviceorientation.CompassListener\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -68,15 +76,15 @@
                     "/*": [
                         {
                             "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
-                            "count": 2
+                            "count": 4
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
-                            "count": 1
+                            "count": 3
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
-                            "count": 1
+                            "count": 3
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />",
@@ -90,7 +98,7 @@
                     "/manifest": [
                         {
                             "xml": "<uses-permission android:name=\"android.permission.VIBRATE\" />",
-                            "count": 1
+                            "count": 2
                         }
                     ],
                     "/manifest/application": [
@@ -132,24 +140,6 @@
         }
     },
     "installed_plugins": {
-        "cordova-plugin-whitelist": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
-        "cordova-plugin-file": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
-        "cordova-plugin-file-transfer": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
-        "cordova-plugin-geolocation": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
-        "cordova-plugin-vibration": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
-        "cordova-plugin-dialogs": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
         "org.nypr.cordova.wakeupplugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
@@ -160,7 +150,32 @@
             "APP_ID": "694318660701967",
             "APP_NAME": "WigoGeoTrail",
             "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-file-transfer": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-geolocation": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-dialogs": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-vibration": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-device-orientation": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },
-    "dependent_plugins": {}
+    "dependent_plugins": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        }
+    }
 }
