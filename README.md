@@ -20,11 +20,11 @@ Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed
  * Note: The first time on your phone you must accept loading the app.
 5. Optionally install Android Studio. See [Android Studio for Developers](https://developer.android.com/studio).
  * Java Development Kit must be installed first before the Android Studio is installed. I used [Java SE 8 Development Kit for Windows](http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html).
- * Import geotrail/platforms/android into Android Studio.
+ * Import geotrail/platforms/android into Android Studio.  (Open Android Studio and close any project that may be open first.)
 6. You can build and run from the cordova command line or from Android Studio.
  * Be sure to make changes to source files in geotrail/www.
- * Do "cordova run android" to build and run the changes from the command line.
- * Do NOT make changes to files in geotrail\platforms\android\assets\www because "cordova run android" always replaces that folder with files from geotrail\www.
+ * Execute "cordova run android" to build and run the changes from the command line.
+ * Do NOT make changes to files in geotrail/platforms/android/assets/www because "cordova run android" always replaces that folder with files from geotrail/www.
  * The advantage of using Android Studio is that you can write and debug java code for plugins.
  * The Chrome remote debugger as described below is still used to debug the HTML and javascript; you cannot debug that code from Android Studio.
 
