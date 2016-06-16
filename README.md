@@ -6,14 +6,16 @@ Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed
 #####
 1. Clone or download this code to your personal computer (pc).
    * clone
+     * Open a command line session.
      * cd to a directory to hold this project.
      * git clone https://github.com/bobbyray/geotrail.git
      * Note: the subdirectory geotrail has the clone.
    * download
-     * Download the zip file and unzip to a download directory.
+     * Download the zip file and unzip to a directory.
+  * Note: For Windows long paths can be a problem. Therefore the target directory needs a very short path, for example c:\a. In this example, c:\a\geotrail is the cordova project directory.
 2. Attach an Android phone to your pc by a USB cable.
-3. Start a command line session on your pc.
-4. Make geotrail the current directory in your clone or download folder to build and load the app on your phone:
+3. Start a command line session on your pc if need be.
+4. Make geotrail the current directory to build and load the app on your phone:
  * cordova run android
  * Note: The first time on your phone you must accept loading the app.
 5. Optionally install Android Studio. See [Android Studio for Developers](https://developer.android.com/studio).
