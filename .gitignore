@@ -1,2 +1,3 @@
 # Non-project-specific build files:
 /*.log
+*.delete
