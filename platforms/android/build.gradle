@@ -34,8 +34,8 @@ buildscript {
         classpath 'com.android.tools.build:gradle:2.1.0'
     }
 
-    // 20160613 added line below.
-    System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
+    // 20160613 added line below to work around cordova requiring v2.10 when v2.2.1 is current version. Later fixed.
+    // System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
    }
 
 // Allow plugins to declare Maven dependencies via build-extras.gradle.
