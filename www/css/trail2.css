@@ -37,7 +37,7 @@ body {
     );
     background-attachment:fixed;
     font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
-    font-size:12px;
+    font-size: 0.9em;  /* ////20160817 was 12px */
     height:100%;
     margin:0px;
     padding:0px;
@@ -167,12 +167,8 @@ label {
     margin-left: 5px;
     margin-bottom: 0px;
 }
-#selectMode {
-    clear: both;
-    float: left;
-}
 
-#buSaveOffline, #selectMapCache, #selectFind, #selectMenu {
+#buSaveOffline, #selectMapCache, #selectFind { /* ////2016080 removed #selectMenu */
     clear: none;
     float: left;
     margin-left: 10px;
@@ -195,6 +191,11 @@ label {
     margin-right: 10px;
 }
 
+#onlineOfflineEditBackIcon {
+    height: auto;
+    width: 10%;
+    margin-left: 0.5em;
+}
 
 /* Cursor*/
 #divCursorLeft {
@@ -332,7 +333,7 @@ label {
     background-color: #fff;
     padding: 5px;
     border: 1px solid #999;
-    display: none; /* show when needed. */
+    /* ////20160816 display: none; */ /* show when needed using class wigo_ws_Show*/
 }
  
 #panel > input {
@@ -365,6 +366,7 @@ label {
 
 }
 
+/* ////20160805
 .ErrorMsg
 {
     background-color: lightpink;
@@ -376,4 +378,178 @@ label {
     background-color: azure;
     font-size: 1.4em;
 }
+*/
 
+#modeBar {
+    clear: both;
+    float: left;
+    font-size: 1.3em; /* ////20160805 added */
+    width: 100%;
+    height: 2.0em; /* ////20160815 was 30px /* Need to set in pixels because %age does given known height for Cordova Control.*/   
+    margin-bottom: 0.5em;
+
+}
+ 
+#mainMenu {
+    float: left;
+    width: 12%;
+    height: 100%;
+}
+
+/* ////20160811
+#onlineModeTab, #offlineModeTab {
+    cursor: pointer;
+    float: left;
+    width: 20%;
+    height: 100%;
+}
+#editModeTab {
+    float: left;
+    width: 25%;
+    height: 100%;
+}
+*/
+
+#mainMenu .wigo_ws_DropDownIcon {
+    /* ////20160809 use values from .wigo_ws_DropDownIcon except left.
+    cursor: pointer;
+    position: absolute;
+    left: 0px;
+    width: auto;
+    height: 100%;
+    */
+    left: 0px;
+}
+
+#mainMenu .wigo_ws_DropDownList {
+    /* ////20160805 use values from .wigo_ws_DropDownList
+    position: absolute;
+    top: 100%;
+    left: 0px;
+    */
+    width: 17em;
+}
+
+/* ////$$$$ move here */
+#selectMode {
+    float: left;
+    width: 45%;
+    height: 100%;
+}
+#selectMode .wigo_ws_DropDownIcon {
+    /* ////20160815 width: 20%;
+    height: auto; 
+    */
+    left: inherit;
+    right: 0px;
+}
+#selectMode .wigo_ws_DropDownValue {
+    top: 0px;
+    width: 80%;
+    margin-left: 2%;
+}
+
+/* ////20160815 not used
+#modeBar2 {
+    height: 30px;
+    width: 100%;
+    clear: both;
+    float: left;    
+    font-size: 1.3em;
+}
+*/
+
+#onlineOfflineEditBar {
+    clear: both;
+    float: left;
+    height: 5.0em;
+    width: 100%;
+}
+
+#divTrailInfo {
+    width: 15%;
+    height: 50%;
+    clear: both;  /* ////20160816 added */
+    float: left;  /* ////20160816 added */
+    margin-right: 0.5em;
+}
+#divTrailInfo .wigo_ws_DropDownLabel {
+    /* ////20160817 width: 78%; */
+    left: 0px;
+    width: inherit;
+    text-align: left;
+}
+#divTrailInfo .wigo_ws_DropDownIcon {
+    left: inherit;
+    width: 70%;
+    height: 50%;
+    top: 50%;
+    right: 20%;
+}
+#divTrailInfo .wigo_ws_DropDownValue {
+    top: 100%;
+    height: 1.3em;
+    font-size: 1.3em;
+    width: 20em;
+}
+#divTrailInfo .wigo_ws_DropDownList {
+    width: 20em;
+}
+
+#onlineOfflineEditAction {
+    height: 50%;
+    width: 70%;
+    float: left; /* ////20160816 added */
+}
+/* ////20160816 not used
+#onlineOffLineEditSpacer {
+    height: 50%;
+    width: 100%;
+}
+*/
+#onlineAction {
+    height: 100%;
+    width: 100%
+}
+#onlineMyLoc {
+    float: left;
+}
+#onlineSaveOffline {
+    float: left
+}
+#onlineSelectFind {
+    height: 100%;
+    width: 25%; 
+    float: left;
+}
+#onlineSelectFind .wigo_ws_DropDownIcon {
+    left: inherit;
+    right: 0px;
+}
+#onlineSelectFind .wigo_ws_DropDownLabel {
+    left: 0px;
+    width: 60%;
+}
+#onlineMapMenu {
+    height: 100%;
+    width: 10%;
+    float: left;
+    margin-left: 0.5em;
+}
+#onlineMapMenu .wigo_ws_DropDownLabel {
+    width: initial;
+    right: 0px;
+}
+#onlineMapMenu .wigo_ws_DropDownIcon {
+    left: initial;
+    right: 0px;
+    bottom: 0px;
+    height: 60%;
+}
+#onlineMapMenu .wigo_ws_DropDownList {
+    left: initial;
+    right: 0px; 
+}
+#onlineMapMenu .wigo_ws_DropDownListItem {
+    width: 12em;    
+}

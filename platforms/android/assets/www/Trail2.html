@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="leaflet-0.7.3/leaflet.css" />
     <link rel="stylesheet" href="css/trail2.css"> 
+    <link rel="stylesheet" href="css/ws.wigo.cordovacontrols.css"> 
     
     <!-- 20150617 moved to here from bottom of body section. Kind of doubt this is necessary. -->
     <!-- Javascript for this page.-->
@@ -34,12 +35,15 @@
     <script src="js/GeoPathMapView2.js"></script>
     <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
     <script src="jsAuthCordova/FbAuthentication2.js"></script>
+    <script src="js/ws.wigo.cordovacontrols.js"></script>
     <script src="js/Trail2.js"></script>
 
 </head>
 <body>
+    <!-- ////20160805 delete 
     <div id="divStatus"></div>
-    <div id="divOwnerId">
+    -->
+    <div id="divOwnerId" class="wigo_ws_Bar">
         <label id="labelSignIn" for="txbxOwnerName">User </label>
         <input id="txbxOwnerName" type="text" disabled: disabled/>
         <select id="selectSignIn">
@@ -52,6 +56,115 @@
         <button id="buInitView" value="InitView">Init View</button>
         -->
     </div>
+    <div id="divMode">    
+        <div id="modeBar" class="wigo_ws_Bar">
+            <div id="mainMenu"></div> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
+            <!-- //// not using tabs for modes. 
+            <div id="onlineModeTab">Online</div>
+            <div id="offlineModeTab">Offline</div>
+            <div id="editModeTab"></div>
+            -->
+            <div id="selectMode">
+                <!-- Container for id="" selectMode wigo_ws DropDownControl. -->
+            </div>
+
+        </div>
+
+        <div id="onlineOfflineEditBar" class="wigo_ws_Bar wigo_ws_NoShow">
+            <div id="divTrailInfo">
+                <!-- Container for id="selectGeoTrailDropDown" selectGeoTrail wigo_ws DropDownControl. -->
+                <!-- ////20160809 
+                <label class="PathInfo" for="selectGeoPath">Geo Paths:</label>
+                <select id="selectGeoTrail">
+                    <option value="0">Select Geo Path</option>
+                </select>
+                -->
+            </div>
+            <div id="onlineOfflineEditAction">
+                <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, offlineAction, or editAction exclusively -->
+                    <input id="onlineMyLoc" type="button" value="MyLoc"/>
+                    <input id="onlineSaveOffline" type="button" value="Save Offline" />
+                    <!-- ////20160817 <input id="onlineSelectFind" type="button" value="Find"/> -->
+                    <div id="onlineSelectFind">
+                        <!-- Container for dropdown list control with id="onlineSelectFindDropDown" for Find trails -->
+                    </div>
+                    <div id="onlineMapMenu"> 
+                        <!-- Container for droplist control for map options, id="onlineMapDropDown" -->
+                    </div>
+                </div>
+                <div id="offlineAction" class="wigo_ws_NoShow"> 
+                    <!-- ////20160813 Container for id="" selectMapCache wigo_ws DropDownControl. -->
+                    <!-- //// old select control example
+                    <select id="selectMapCache">
+                        <option value="cache">Map Cache</option>
+                        <option value="size">Size</option>
+                        <option value="clear">Clear</option>
+                    </select>
+                    -->
+                    <input id="offlineMyLoc" type="button" value="MyLoc"/>
+                    <div id="selectMapCache">
+                        <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
+                    </div>
+                    <div id="offlineMapMenu"> 
+                        <!-- Container for droplist control for map options -->
+                    </div>
+                </div>
+                <div id="editAction" class="wigo_ws_NoShow">
+                    <input id="editUpload" type="button" value="Upload"/>
+                    <input id="editDelete" type="button" value="Delete"/>
+                    <input id="editCancel" type="button" value="Cancel"/>
+                </div>
+                <!-- ////20160816 not needed
+                <div id='onlineOffLineEditSpacer'>
+                </div>
+                -->
+            </div>
+            <img id="onlineOfflineEditBackIcon" src="img/ws.wigo.backicon.png" alt="Back"/> <!-- online, offline, edit all have backIcon.-->
+        </div>
+
+        <div id="defineBar" class="wigo_ws_Bar wigo_ws_NoShow">
+            <div id="divDefineTrailInfo">
+                <label id="labelPathName" for="txbxPathName">Trail Name</label>
+                <input id="txbxPathName" type="text"/>  
+            </div>
+            <div id="defineAction">
+                    <input id="defineUpload" type="button" value="Upload"/>
+                    <input id="defineCancel" type="button" value="Cancel"/>
+            </div>
+        </div>
+
+        <div id="editDefineBar2" class="wigo_ws_NoShow">
+            <div id="editDefineShare"> 
+                <!-- Container for dropdown list for Share options -->
+            </div>
+            <div id="editDefinePtAction">
+                <!-- Container for dropdown list for PtAction -->
+            </div>
+        </div>
+
+        <div id="editDefineCursorsBar" class="wigo_ws_NoShow">
+            <div id="divCursors">    <!-- Select divCurCursors or divPathIx exclusively -->
+                <div id="divCursorLeft">
+                    <input id="buCursorLeft" type="button" value="<"/>
+                </div>
+                <div id="divCursorCenter">
+                    <input id="buCursorDown" type="button" value="V" />
+                    <input id="buCursorUp" type="button" value="A" />
+                </div>
+                <div id="divCursorRight">
+                    <input id="buCursorRight" type="button" value=">" />
+                    <input id="buPtDo" type="button" value="OK" />
+                </div>
+            </div>
+            <div id="divPathIx">
+                <input id="buPathIxPrev" type="button" value="Prev" />
+                <input id="buPathIxNext" type="button" value="Next" />
+                <input id="buPtDeleteDo" type="button" value="OK" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ////20160814 
     <div id="divMode">
         <select id="selectMode">
             <option value="online_view">View Mode</option>
@@ -85,14 +198,12 @@
             <option value="about">About</option>
             <option value="license">License</option>
         </select>
-
         <div id="divPathInfo">
             <label class="PathInfo" for="selectGeoPath">Geo Paths:</label>
             <select id="selectGeoPath">
                 <option value="0">Select Geo Path</option>
             </select>
         </div>
-
         <div id="divPathDescr">
             <label id="labelPathName" for="txbxPathName">Path Name</label>
             <input id="txbxPathName" type="text"/>  
@@ -130,6 +241,7 @@
             <input id="buPtDeleteDo" type="button" value="OK" />
         </div>
     </div>
+    -->
     <div id="divSettings">
         <h2>Settings for GeoTrail</h2> 
         <div>
@@ -283,7 +395,7 @@
         <button id="buSettingsDone">Done</button>
         <button id="buSettingsCancel">Cancel</button>
     </div>
-    <div id="panel">
+    <div id="panel" class="wigo_ws_NoShow">
         <input id="buGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
         <input id="buGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
         <input id="buMinMaxMap" type="button" title="Toggle Full Screen" data-minstate="true" value="Full Screen" />
