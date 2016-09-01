@@ -191,7 +191,7 @@ function Wigo_Ws_CordovaControls() {
         //  Hides the dropdown list after filling it.
         //  Use this.drop(bDrop) to show or hide the dropdown list.
         this.fill = function (values) {
-            alert("Filling droplist");
+            ////20160830 alert("Filling droplist"); // For debug only
             if (!values)
                 throw new Error('DropDownControl.FillList(values) requires values to be array of [string, integer] elements.');
             /* 
@@ -317,6 +317,19 @@ function Wigo_Ws_CordovaControls() {
                 SetValueAndText(value, GetValue(listEl), GetText(listEl));
             }
         };
+
+        // Sets value div to droplist item for a given data-value attrib.
+        // Arg:
+        //  dataValue: string. data-value attribute for matched droplist item.
+        // Remarks:
+        // If dataValue is not a match, does nothing. 
+        this.setSelected = function(dataValue) {
+             var listEl = FindListEl(dataValue);
+             if (listEl) {
+                SetValueAndText(value, GetValue(listEl), GetText(listEl));
+             }
+        }
+
 
         // Returns string for selected value. 
         // Returns empty string if there is no value div.

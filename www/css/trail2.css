@@ -433,7 +433,7 @@ label {
 /* ////$$$$ move here */
 #selectMode {
     float: left;
-    width: 45%;
+    width: 50%;
     height: 100%;
 }
 #selectMode .wigo_ws_DropDownIcon {

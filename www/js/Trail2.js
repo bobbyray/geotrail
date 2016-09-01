@@ -40,10 +40,12 @@ function wigo_ws_View() {
     //  sOwnerId: string for owner id.
     this.onOwnerId = function (sOwnerId) { };
 
+    /* ////20160831 move below
     // Returns ref to Edit Finite State Machine editing path path.
     this.fsmEdit = function () {
         return fsmEdit;
     }
+    */
 
     // The view mode has changed.
     // Handler Signature:
@@ -85,7 +87,7 @@ function wigo_ws_View() {
     // as be user id.
     // Handler Signature
     //  sOwnerId: string for path owner id.
-    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  nFindIx: number, this.eFindIx enumeration for kind of find to do.
     //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
     this.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) { };
@@ -380,6 +382,19 @@ function wigo_ws_View() {
     // Arg:
     //  newMode: eMode enumeration value for the new mode.
     this.setModeUI = function (newMode) {
+        // Helper to hide all bars.
+        function HideAllBars() {
+                ShowElement(defineBar, false);
+                ShowElement(editDefineBar2, false);
+                ShowElement(editDefineCursorsBar, false);
+                ShowElement(onlineOfflineEditBar, false);
+                ShowElement(onlineAction, false);
+                ShowElement(offlineAction, false);
+                ShowElement(editAction, false);
+                ShowElement(modeBar, false);
+                ShowOwnerIdDiv(false); 
+        }
+
         nMode = newMode;
         // Show SignIn control, which may have been hidden by Edit or Define mode.
         ShowSignInCtrl(true); 
@@ -394,6 +409,7 @@ function wigo_ws_View() {
                 // Hide ctrls for editing path.
                 HidePathEditCtrls();
                 */
+                /* ////20160830 refactor
                 ShowElement(defineBar, false);
                 ShowElement(editDefineBar2, false);
                 ShowElement(editDefineCursorsBar, false);
@@ -402,7 +418,11 @@ function wigo_ws_View() {
                 ShowElement(modeBar, false);
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
-
+                */
+                HideAllBars();
+                ShowElement(onlineOfflineEditBar, true);
+                ShowElement(onlineAction, true);
+                
                 ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
                 // Clear path on map in case one exists because user needs to select a path
@@ -420,13 +440,15 @@ function wigo_ws_View() {
                 // Hide ctrls for editing path.
                 HidePathEditCtrls();
                 */
-                ShowElement(defineBar, false);
-                ShowElement(editDefineBar2, false);
-                ShowElement(editDefineCursorsBar, false);
-                ShowElement(offlineAction, true);
-                ShowElement(editAction, false);
-                ShowElement(onlineAction, false);
+                ////20160831 ShowElement(defineBar, false);
+                ////20160831 ShowElement(editDefineBar2, false);
+                ////20160831 ShowElement(editDefineCursorsBar, false);
+                ////20160831 ShowElement(offlineAction, true);
+                ////20160831 ShowElement(editAction, false);
+                ////20160831 ShowElement(onlineAction, false);
+                HideAllBars();
                 ShowElement(onlineOfflineEditBar, true);
+                ShowElement(offlineAction, true);
 
                 ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
@@ -442,6 +464,7 @@ function wigo_ws_View() {
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
+                /* ////2060830 refactor
                 ShowElement(defineBar, false);
                 ShowElement(editDefineBar2, false);
                 ShowElement(editDefineCursorsBar, false);
@@ -451,11 +474,14 @@ function wigo_ws_View() {
                 ShowElement(editAction, false);
                 ShowElement(onlineAction, false);
                 ShowElement(onlineOfflineEditBar, false);
+                */
+                HideAllBars();
+                ShowOwnerIdDiv(true);
                 ShowElement(modeBar, true);
+                selectMode.setSelected(this.eMode.toStr(nMode));
                 
                 ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
-                
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
                 ShowOwnerIdDiv(false);
@@ -464,6 +490,11 @@ function wigo_ws_View() {
                 ShowMapPanelForMode(nMode);
                 break;
         }
+    };
+
+    // Returns ref to Edit Finite State Machine editing path path.
+    this.fsmEdit = function () {
+        return fsmEdit;
     };
 
     // Fill the list of paths that user can select.
@@ -569,7 +600,9 @@ function wigo_ws_View() {
     // ** Private members for html elements
     var that = this;
     ////20160806 var divStatus = $('#divStatus')[0];
-    var divOwnerId = $('#divOwnerId')[0];
+    ////20160831 var divOwnerId = $('#divOwnerId')[0];
+    var divOwnerId = document.getElementById('divOwnerId'); 
+
     var txbxOwnerId = $('#txbxOwnerId')[0];
     var selectSignIn = $('#selectSignIn')[0];
 
@@ -1147,6 +1180,16 @@ Are you sure you want to delete the maps?";
         pebbleMsg.Send(sMsg, false)
     });
     */
+
+    /* ////20160831 not used yet.
+    // Returns true if Owner is signed in.
+    ////20160830 added function.
+    function IsOwnerSignedIn() { 
+        var bSignedIn =  _ownerId && _ownerId.length > 0;
+        return bSignedIn;
+    }
+    */
+
 
     // **  State Machine for Editing Path, New or Existing
 
@@ -3099,10 +3142,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowOwnerIdDiv(bShow) {
-        if (bShow)
-            divOwnerId.style.display = 'block';
-        else
-            divOwnerId.style.display = 'none';
+        ////20160831 if (bShow)
+        ////20160831     divOwnerId.style.display = 'block';
+        ////20160831 else
+        ////20160831     divOwnerId.style.display = 'none';
+        ShowElement(divOwnerId, bShow); ////20160831 refactore fix
     }
 
     // Show selectSignIn control.
@@ -3671,10 +3715,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
 
     parentEl = document.getElementById('selectMode');
     var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
-    var selectModeValues = [['online_view',   'Online'],                 // 0 Ix needs to match eMode property value.
-                            ['offline',       'Offline'],                // 1
-                            ['online_edit',   'Edit a Trail'],           // 2      
-                            ['online_define', 'Define a Trail'],         // 3       
+    var selectModeValues = [['select_mode', 'Select Map View'],
+                            ['online_view',   'Online'],        
+                            ['offline',       'Offline'],       
+                            ['online_edit',   'Edit a Trail'],        
+                            ['online_define', 'Define a Trail']       
                            ]; 
 
     /* ////20160813 not used
@@ -3791,27 +3836,29 @@ may not be appropriate for your ablities and that the trails could have inaccura
     selectGeoTrail.onListElClicked = function(dataValue) { 
         var listIx = parseInt(dataValue)
         that.ClearStatus();
+        // Always hide sign-in bar when path is selected to conserver screen space.
+        ShowOwnerIdDiv(false);              ////20160831 added
         ////20160818 if (listIx >= 0) {
-            ////20160808 var iList = parseInt(this.value);
-            if (listIx < 0) {  ////20160818 was 1 
-                // No path selected.
-                map.ClearPath();
-            } else {
-                // Path is selected
-                that.onPathSelected(that.curMode(), listIx);
-                // Update status for track timer unless editing.
-                if (that.curMode() === that.eMode.online_view ||
-                    that.curMode() === that.eMode.offline) {
-                    if (trackTimer.bOn) {
-                        if (map.IsPathDefined()) {
-                            // Tracking timer is on so show current geo location right away.
-                            DoGeoLocation();
-                        }
-                    } else {
-                        that.ShowStatus("Geo tracking off.", false); // false => not an error.
+        ////20160808 var iList = parseInt(this.value);
+        if (listIx < 0) {  ////20160818 was 1 
+            // No path selected.
+            map.ClearPath();
+        } else {
+            // Path is selected
+            that.onPathSelected(that.curMode(), listIx);
+            // Update status for track timer unless editing.
+            if (that.curMode() === that.eMode.online_view ||
+                that.curMode() === that.eMode.offline) {
+                if (trackTimer.bOn) {
+                    if (map.IsPathDefined()) {
+                        // Tracking timer is on so show current geo location right away.
+                        DoGeoLocation();
                     }
+                } else {
+                    that.ShowStatus("Geo tracking off.", false); // false => not an error.
                 }
             }
+        }
         ////20160818 }
     };
 
@@ -3871,6 +3918,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
                    nFindIx === that.eFindIx.my_private) {
             if (!sOwnerId) {
                 that.ShowStatus("You must be signed in to find your paths.", true);
+                ShowOwnerIdDiv(true); // Shopw sign-in bar ////20160831 added. 
                 bClearPath = false;
             } else {
                 viewFindParams.init(nFindIx);
