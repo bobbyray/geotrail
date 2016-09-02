@@ -331,10 +331,10 @@ function Wigo_Ws_CordovaControls() {
         }
 
 
-        // Returns string for selected value. 
+        // Returns string for selected data-value. 
         // Returns empty string if there is no value div.
         // Remarks:
-        // The return value is the value attribute of the value div,
+        // The return value is the data-value attribute of the value div,
         // not the text (or innerHTML) of the div.
         this.getSelectedValue = function() {
             var sValue = "";
@@ -406,7 +406,7 @@ function Wigo_Ws_CordovaControls() {
 
         
         // Indiates that the droplist is shown when user clicks on the value.
-        this.bDropOnValueClicked = false;
+        this.bDropOnValueClicked = true;  ////20160901 was false.
 
         var label = null;
         if (typeof labelStr === 'string') {
@@ -518,8 +518,8 @@ function Wigo_Ws_CordovaControls() {
         function ValueClicked(event) {
             if (that.bDropOnValueClicked) {
                 that.drop(true);
-                // Prevent bubble to body so that body does not close droplist.
-                event.stopPropagation();
+                ////20160901 // Prevent bubble to body so that body does not close droplist.
+                ////20160901NotNeededNow event.stopPropagation();
             }
         }
 
@@ -541,7 +541,9 @@ function Wigo_Ws_CordovaControls() {
         // Closes the dropdown list that may be shown by any other droplist 
         // except for the dropdown icon that was clicked.
         function OnOutsideDropDownClicked(event) {
-            var bMyDropDownIcon = dropDownIcon.img === event.srcElement;
+            ////20160901CheckValueAlso var bMyDropDownIcon = dropDownIcon.img === event.srcElement;
+            var bMyDropDownIcon = dropDownIcon.img === event.srcElement ||
+                                  value === event.srcElement;
             if (!bMyDropDownIcon)
                 that.drop(false); // Ensure dropdown list of other dropdown is closed.
         }

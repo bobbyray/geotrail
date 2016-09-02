@@ -82,15 +82,19 @@
             </div>
             <div id="onlineOfflineEditAction">
                 <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, offlineAction, or editAction exclusively -->
+                    <!-- ////2060901 moved to mapBar 
                     <input id="onlineMyLoc" type="button" value="MyLoc"/>
+                    -->
                     <input id="onlineSaveOffline" type="button" value="Save Offline" />
                     <!-- ////20160817 <input id="onlineSelectFind" type="button" value="Find"/> -->
                     <div id="onlineSelectFind">
                         <!-- Container for dropdown list control with id="onlineSelectFindDropDown" for Find trails -->
                     </div>
+                    <!-- ////20160901 use mapBar instead
                     <div id="onlineMapMenu"> 
-                        <!-- Container for droplist control for map options, id="onlineMapDropDown" -->
+                        -- Container for droplist control for map options, id="onlineMapDropDown" --
                     </div>
+                    -->
                 </div>
                 <div id="offlineAction" class="wigo_ws_NoShow"> 
                     <!-- ////20160813 Container for id="" selectMapCache wigo_ws DropDownControl. -->
@@ -101,13 +105,17 @@
                         <option value="clear">Clear</option>
                     </select>
                     -->
+                    <!-- moved to mapBar 
                     <input id="offlineMyLoc" type="button" value="MyLoc"/>
+                    -->
                     <div id="selectMapCache">
                         <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
                     </div>
+                    <!-- use mapBar instead
                     <div id="offlineMapMenu"> 
-                        <!-- Container for droplist control for map options -->
+                        -- Container for droplist control for map options 
                     </div>
+                    -->
                 </div>
                 <div id="editAction" class="wigo_ws_NoShow">
                     <input id="editUpload" type="button" value="Upload"/>
@@ -162,6 +170,14 @@
                 <input id="buPtDeleteDo" type="button" value="OK" />
             </div>
         </div>
+    </div>
+    <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <div id="mapBarBtns">
+            <input id="mapGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
+            <input id="mapGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
+        </div>
+        <div id="mapPhAlertToggle"></div> <!-- Container for Cordova OnOffControl -->
+        <div id="mapTrackToggle"></div> <!-- Container for Cordova OnOffControl -->
     </div>
 
     <!-- ////20160814 

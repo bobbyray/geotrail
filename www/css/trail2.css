@@ -168,11 +168,22 @@ label {
     margin-bottom: 0px;
 }
 
-#buSaveOffline, #selectMapCache, #selectFind { /* ////2016080 removed #selectMenu */
+/* ////2016080 #buSaveOffline, #selectMapCache, #selectFind {  removed #selectMenu */
+#buSaveOffline {
     clear: none;
     float: left;
     margin-left: 10px;
     width: 20%;
+}
+
+#selectMapCache {
+    width: 28%;
+    height: 100%;
+    float: left;
+}
+#selectMapCache .wigo_ws_DropDownIcon {
+    left: initial;
+    right: 0px;
 }
 
 #divPathDescr, #divCursors {
@@ -389,7 +400,7 @@ label {
     margin-bottom: 0.5em;
 
 }
- 
+
 #mainMenu {
     float: left;
     width: 12%;
@@ -507,7 +518,7 @@ label {
     width: 100%;
 }
 */
-#onlineAction {
+#onlineAction, #offlineAction {
     height: 100%;
     width: 100%
 }
@@ -519,7 +530,7 @@ label {
 }
 #onlineSelectFind {
     height: 100%;
-    width: 25%; 
+    width: 50%; 
     float: left;
 }
 #onlineSelectFind .wigo_ws_DropDownIcon {
@@ -528,8 +539,9 @@ label {
 }
 #onlineSelectFind .wigo_ws_DropDownLabel {
     left: 0px;
-    width: 60%;
+    width: 75%;
 }
+/* ////20160901 use mapMar instead
 #onlineMapMenu {
     height: 100%;
     width: 10%;
@@ -553,3 +565,25 @@ label {
 #onlineMapMenu .wigo_ws_DropDownListItem {
     width: 12em;    
 }
+*/
+
+#mapBar {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 2.0em;
+    z-index: 1;
+}
+#mapBarBtns {
+    height: 100%;
+    width: auto;
+    float: left;
+}
+#mapTrackToggle, #mapPhAlertToggle {
+    height: 100%;
+    border: 1px solid black;
+    width: 31%;
+    float: right;
+}
+ 

@@ -392,6 +392,7 @@ function wigo_ws_View() {
                 ShowElement(offlineAction, false);
                 ShowElement(editAction, false);
                 ShowElement(modeBar, false);
+                ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false); 
         }
 
@@ -422,8 +423,9 @@ function wigo_ws_View() {
                 HideAllBars();
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
+                ShowElement(mapBar, true);
                 
-                ShowMapPanelForMode(nMode);
+                ////20160902NotUsed ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
@@ -449,8 +451,9 @@ function wigo_ws_View() {
                 HideAllBars();
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(offlineAction, true);
+                ShowElement(mapBar, true);
 
-                ShowMapPanelForMode(nMode);
+                ////20160902NotUsed ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
@@ -480,14 +483,14 @@ function wigo_ws_View() {
                 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 
-                ShowMapPanelForMode(nMode);
+                ////20160902NotUsed ShowMapPanelForMode(nMode);
                 SetMapPanelTop(); 
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
                 ShowOwnerIdDiv(false);
                 ShowModeDiv(false);
                 
-                ShowMapPanelForMode(nMode);
+                ////20160902NotUsed ShowMapPanelForMode(nMode);
                 break;
         }
     };
@@ -665,6 +668,22 @@ function wigo_ws_View() {
     var divCursors = document.getElementById('divCursors');
     var divPathIx = document.getElementById('divPathIx');
 
+    var mapBar = document.getElementById('mapBar');
+    var mapGoToPath = document.getElementById('mapGoToPath');
+    mapGoToPath.addEventListener('click', function(event ) {
+        ////20160901 added
+        that.ClearStatus();
+        var bOk = map.PanToPathCenter();
+        if (!bOk) {
+            that.ShowStatus("No Geo Path currently defined to pan-to.");
+        }
+    }, false);
+    var mapGeoLocate = document.getElementById('mapGeoLocate');
+    mapGeoLocate.addEventListener('click', function() {
+        ////20160901 added 
+        DoGeoLocation();
+    }, false)
+
     
 
     var panel = $('#panel')[0];
@@ -779,8 +798,10 @@ function wigo_ws_View() {
         that.ClearStatus();
 
         ////20160808 if (selectGeoPath.selectedIndex === 0) {
-        var selectedDataIx =selectGeoTrail.getSelectedIndex(); 
-        if ( selectedDataIx < 1) {
+        ////20160902 var selectedDataIx =selectGeoTrail.getSelectedIndex(); 
+        var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+        var selectedDataIx = parseInt(sSelectedDataIx); 
+        if ( selectedDataIx < 0) {    ////20160902 data-value index, was < 1 but 0 is valid.
             that.ShowStatus("Select a Geo Trail first before saving.")
         } else if (nMode === that.eMode.online_view) {
             var oMap = map.getMap();
@@ -1001,6 +1022,7 @@ Are you sure you want to delete the maps?";
         DoGeoLocation();
     });
 
+    /* ////20160901 use mapBar instead
     var onlineMyLoc = document.getElementById('onlineMyLoc');
     onlineMyLoc.addEventListener('click', MyLocClicked, false);
     var offlineMyLoc = document.getElementById('offlineMyLoc');
@@ -1010,6 +1032,7 @@ Are you sure you want to delete the maps?";
     function MyLocClicked(event) {  ////20160814 added
         DoGeoLocation();
     }
+    */
 
     $(selectGeoTrack).bind('change', function (e) {
         that.ClearStatus(); 
@@ -1544,7 +1567,7 @@ Are you sure you want to delete the maps?";
                     // Hide cursors.
                     ShowPathCursors(false);
                     ShowPathIxButtons(false); 
-                    ShowMapPanelForMode(view.curMode()); 
+                    ////20160902NotUsed ShowMapPanelForMode(view.curMode()); 
                     // Check if  user is signed in.
                     if (view.getOwnerId()) {
                         // Fire signed in event for this same state.
@@ -2879,7 +2902,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Sets parameters in other member vars/objects based on settings.
     function SetSettingsParams(settings) {
         EnableMapPanelGeoTrackingOptions(settings);
-        EnableMapDropDownGeoTrackingOptions(onlineMapDropDown,settings); 
+        ////20160901 EnableMapDropDownGeoTrackingOptions(onlineMapDropDown,settings); 
+        EnableMapBarGeoTrackingOptions(settings); ////20160901 added
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
@@ -3285,10 +3309,13 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowModeDiv(bShow) {
+        /* ////20160902 do in standard way.
         if (bShow)
             divMode.style.display = 'block';
         else
             divMode.style.display = 'none';
+        */
+        ShowElement(divMode, bShow); 
     }
 
     // Object for issuing phone alerts.
@@ -3578,6 +3605,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
     };
 
+    /* ////20160902 no longer used
     // Shows panel of controls over the map based on mode.
     // For mode of online_edit or online_define, only shows
     // the Fullscreen/Reduce button.
@@ -3598,6 +3626,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         // Show or hide the panel rather just showing/hiding certain ctrls on panel.
         ShowElement(panel, bShow);
     }
+    */
 
     // Sets panel of controls for map at top of the map.
     function SetMapPanelTop() {
@@ -3615,6 +3644,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Also positions panel to be over the top of the map.
     function MinimizeMap() {
         ShowOwnerIdDiv(true);
+        ////20160902Undo ShowOwnerIdDiv(false);  ////20160902 was true.
         ShowModeDiv(true);
         ShowPathInfoDiv(true);
         SetMapPanelTop();
@@ -3832,14 +3862,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Initialize online bar.
     // Select GeoTrail control
     parentEl = document.getElementById('divTrailInfo');
-    var selectGeoTrail = new ctrls.DropDownControl(parentEl, "selectGeoTrailDropDown", "Trail:", "Select a Geo Trail", "img/ws.wigo.menuicon.png");
+    var selectGeoTrail = new ctrls.DropDownControl(parentEl, "selectGeoTrailDropDown", "Trails", "Select a Geo Trail", "img/ws.wigo.menuicon.png");
     selectGeoTrail.onListElClicked = function(dataValue) { 
         var listIx = parseInt(dataValue)
         that.ClearStatus();
         // Always hide sign-in bar when path is selected to conserver screen space.
         ShowOwnerIdDiv(false);              ////20160831 added
-        ////20160818 if (listIx >= 0) {
-        ////20160808 var iList = parseInt(this.value);
         if (listIx < 0) {  ////20160818 was 1 
             // No path selected.
             map.ClearPath();
@@ -3849,6 +3877,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
             // Update status for track timer unless editing.
             if (that.curMode() === that.eMode.online_view ||
                 that.curMode() === that.eMode.offline) {
+                ////20160902 MinimizeMap(); ////20160902 added.
+                onlineOfflineEditBar.scrollIntoView(); ////20160902 added
                 if (trackTimer.bOn) {
                     if (map.IsPathDefined()) {
                         // Tracking timer is on so show current geo location right away.
@@ -3859,21 +3889,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
                 }
             }
         }
-        ////20160818 }
     };
 
 
     parentEl = document.getElementById('onlineSelectFind');
     var onlineSelectFind = new ctrls.DropDownControl(parentEl, "onlineSelectFindDropDown", "Find Trails", null, "img/ws.wigo.dropdownicon.png"); 
-    /* //// example
-            <option value="find">Find</option>
-            <option value="home_area">Home Area</option>
-            <option value="on_screen">On Screen</option>
-            <option value="all_public">All Paths</option>
-            <option value="all_mine">All Mine</option>
-            <option value="my_public">My Public</option>
-            <option value="my_private">My Private</option>
-    */
     onlineSelectFind.fill([ ['find', 'Find'],
                             ['home_area', 'Home Area'],
                             ['on_screen', 'On Screen'],
@@ -3929,33 +3949,14 @@ may not be appropriate for your ablities and that the trails could have inaccura
             bClearPath = false;
         }
 
-        ////20160817 this.selectedIndex = 0;
         // Clear the drawn map path because the selectGeoPath drop has been reloaded.
         if (bClearPath)
             map.ClearPath();
     }
     
-
+    /* ////20160901 use mapBar instead
     parentEl = document.getElementById("onlineMapMenu");
     var onlineMapDropDown = new ctrls.DropDownControl(parentEl, "onlineMapDropDown", "Map", null, "img/ws.wigo.menuicon.png");
-    /* //// example for fill
-    <div id="panel" class="wigo_ws_NoShow">
-        <input id="buGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
-        <input id="buGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
-        <input id="buMinMaxMap" type="button" title="Toggle Full Screen" data-minstate="true" value="Full Screen" />
-        <label id="labelGeoTrack" for="selectGeoTrack">Track</label>
-        <select id="selectGeoTrack">
-            <option value="on">On</option>
-            <option value="off" selected="selected">Off</option>
-        </select>
-        <label id="labelAlert" for="selectAlert">Ph Alert</label>
-        <select id="selectAlert">
-            <option value="on">On</option>
-            <option value="off" selected="selected">Off</option>
-        </select>
-    </div>
-    */
-    
     onlineMapDropDown.fill([["center_trail","Center Geo Trail"],
                             ["my_geo_loc", "My Geo Location"],
                             ["toggle_full_screen","Full Screen"],
@@ -3963,17 +3964,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
                             ["toggle_phone_alert", ""]
                            ]);
     
-    ////20160826NotNeeded // Extended property for tracking contronl.
-    ////20160826NotNeeded parentEl = onlineMapDropDown.getListEl('toggle_track');
-    ////20160826NotNeeded onlineMapDropDown.trackingCtrl = new ctrls.OnOffControl(parentEl, null, "Tracking", 0);
-
     // Set event handler for tracking ctrl in DropDownListItem changed.
     parentEl = onlineMapDropDown.getListEl('toggle_track');
     var trackingCtrl = new ctrls.OnOffControl(parentEl, null, "Tracking", -1);
     trackingCtrl.onChanged = function(nState) {
         that.ClearStatus(); 
         // Save state of flag to track geo location.
-        ////20160826 trackTimer.bOn = IsGeoTrackValueOn();    // Allow/disallow geo-tracking.
         trackTimer.bOn = nState === 1;    // Allow/disallow geo-tracking.
         if (!trackTimer.bOn) {
             // Send message to Pebble that tracking is off.
@@ -3986,12 +3982,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
         RunTrackTimer();
     }
 
-    // Set event handler for tracking ctrl in DropDownListItem changed.
+    // Set event handler for phone alert ctrl in DropDownListItem changed.
     parentEl = onlineMapDropDown.getListEl('toggle_phone_alert');
     var alertCtrl = new ctrls.OnOffControl(parentEl, null, "Ph Alert", -1);
     alertCtrl.onChanged = function(nState) {
         // Enable/disable alerts.
-        ////20160826 alerter.bPhoneEnabled = selectAlert.value === 'on';
         alerter.bPhoneEnabled = nState === 1;
         // Show status because Ph Alert on Panel is no longer used.
         var sMsg = nState === 1 ? "Phone Alert On." : "Phone Alert Off.";
@@ -4005,47 +4000,20 @@ may not be appropriate for your ablities and that the trails could have inaccura
     //  dropDown: DropDownControl. Ref to DropDown control.
     //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
     function EnableMapDropDownGeoTrackingOptions(dropDown, settings) {
-        ////$$$$ fix this
         var bAllow = settings.bAllowGeoTracking;
         var bOffPathAlert = settings.bOffPathAlert;
         var bTracking = settings.bEnableGeoTracking;
         dropDown.hideListEl('toggle_track', !bAllow);
         dropDown.hideListEl('toggle_phone_alert', !settings.bPhoneAlert);
         if (bAllow) {
-            ////20160820 $(selectGeoTrack).show();
-            ////20160820 $(labelGeoTrack).show();
-            ////20160828 dropDown.hideListEl('toggle_track', false);
-            ////20160828 dropDown.hideListEl('toggle_phone_alert', !settings.bPhoneAlert);
-            ////20160820 if (settings.bPhoneAlert) {
-            ////20160820     ////20160820 $(selectAlert).show();
-            ////20160820     ////20160820 $(labelAlert).show();
-            ////20160820     dropDown.dimListEl('toggle_phone_alert', false);
-            ////20160820 } else {
-            ////20160820     ////20160820 $(selectAlert).hide();
-            ////20160820     ////20160820 $(labelAlert).hide();
-            ////20160820     dropDown.dimListEl('toggle_phone_alert', true);
-            ////20160820 }
-            ////20160828 $(selectGeoTrack).val(bTracking ? 'on' : 'off');
-            ////20160828 $(selectAlert).val(bOffPathAlert ? 'on' : 'off');
             var nState = bTracking ? 1 : 0;
             trackingCtrl.setState(nState);
             nState = bOffPathAlert ? 1 : 0;
             alertCtrl.setState(nState);    
         } else {
-            ////20160828 $(selectGeoTrack).hide();
-            ////20160828 $(labelGeoTrack).hide();
-            ////20160828 $(selectAlert).hide();
-            ////20160828 $(labelAlert).hide();
-            ////20160828 $(selectGeoTrack).val('off');
-            ////20160828 $(selectAlert).val('off');
-            ////20160828 dropDown.hideListEl('toggle_track', true);
-            ////20160828 dropDown.hideListEl('toggle_phone_alert', true)
             trackingCtrl.setState(0);
             alertCtrl.setState(0);
         }
-        ////20160828 $(selectGeoTrack).prop('disabled', !bAllow);
-        ////20160828 $(selectAlert).prop('disabled', !bAllow);
-
     }
 
     onlineMapDropDown.onListElClicked = function(dataValue) {
@@ -4065,6 +4033,62 @@ may not be appropriate for your ablities and that the trails could have inaccura
             ; // No op, handled by alertCtrl.onChanged(nState) above.
         }
     };
+    */
+
+
+
+
+    ////20160901 added
+    // OnOffControl for Phone Alert on map bar.
+    parentEl = document.getElementById('mapPhAlertToggle');
+    var mapAlertCtrl = new ctrls.OnOffControl(parentEl, null, "Alert", -1);
+    mapAlertCtrl.onChanged = function(nState) {
+        // Enable/disable alerts.
+        alerter.bPhoneEnabled = nState === 1;
+        // Show status because Ph Alert on Panel is no longer used.
+        var sMsg = nState === 1 ? "Phone Alert On." : "Phone Alert Off.";
+        that.ShowStatus(sMsg, false); 
+    }
+
+    // OnOffControl for Tracking on map bar.
+    parentEl = document.getElementById('mapTrackToggle');
+    var mapTrackingCtrl = new ctrls.OnOffControl(parentEl, null, "Track", -1);
+    mapTrackingCtrl.onChanged = function(nState) {
+        that.ClearStatus(); 
+        // Save state of flag to track geo location.
+        trackTimer.bOn = nState === 1;    // Allow/disallow geo-tracking.
+        if (!trackTimer.bOn) {
+            // Send message to Pebble that tracking is off.
+            pebbleMsg.Send("Track Off", false, false); // no vibration, no timeout.
+        } else {
+            // Show status that tracking is on. The Alert On/Fff ctrl on Panel used to indicate the state.
+            that.ShowStatus("Tracking on", false); ////20160827
+        }
+        // Start or clear trackTimer.
+        RunTrackTimer();
+    }
+
+    // Sets values for the Track and Alert OnOffCtrls on the mapBar.
+    // Arg:
+    //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
+    function EnableMapBarGeoTrackingOptions(settings) {
+        var bAllow = settings.bAllowGeoTracking;
+        var bOffPathAlert = settings.bOffPathAlert;
+        var bTracking = settings.bEnableGeoTracking;
+        ////20160901 dropDown.hideListEl('toggle_track', !bAllow);
+        ////20160901 dropDown.hideListEl('toggle_phone_alert', !settings.bPhoneAlert);
+        if (bAllow) {
+            var nState = bTracking ? 1 : 0;
+            mapTrackingCtrl.setState(nState);
+            nState = bOffPathAlert ? 1 : 0;
+            mapAlertCtrl.setState(nState);    
+        } else {
+            mapTrackingCtrl.setState(0);
+            mapAlertCtrl.setState(0);
+        }
+    }
+
+
 
     // Event hanndler for click on back arrow icon for online, offline, and edit bars..
     var onlineOfflineEditBackArrow = document.getElementById("onlineOfflineEditBackIcon");
@@ -4132,14 +4156,12 @@ Are you sure you want to delete the maps?";
     };
 
     // Set current mode for processing geo paths based on selectEditMode ctrl.
-    MinimizeMap();
+    ////20160902????Needed? MinimizeMap();
 
     // Set Facebook login.
     var fb = new wigo_ws_FaceBookAuthentication('694318660701967');
     fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 }
-
-
 
 
 // Object for controller of the page.
