@@ -43,6 +43,7 @@
     <!-- ////20160805 delete 
     <div id="divStatus"></div>
     -->
+    <!-- ////90160908 move under divMode.
     <div id="divOwnerId" class="wigo_ws_Bar">
         <label id="labelSignIn" for="txbxOwnerName">User </label>
         <input id="txbxOwnerName" type="text" disabled: disabled/>
@@ -52,11 +53,27 @@
             <option value="logout">Logout</option>
         </select>
         <br/>
-        <!-- buInitView is commented out except if debugging map view initialization.
+        -- buInitView is commented out except if debugging map view initialization.
         <button id="buInitView" value="InitView">Init View</button>
-        -->
+        --
     </div>
-    <div id="divMode">    
+    -->
+    <div id="divMode">  
+        <div id="titleHolder"></div> <!-- container for title bar -->
+        <div id="divStatus"></div> <!-- container for StatusDiv ctrl. -->  
+        <div id="divOwnerId" class="wigo_ws_Bar">
+            <label id="labelSignIn" for="txbxOwnerName">User </label>
+            <input id="txbxOwnerName" type="text" disabled: disabled/>
+            <select id="selectSignIn">
+                <option value="set">Sign In</option>
+                <option value="facebook">Facebook</option>
+                <option value="logout">Logout</option>
+            </select>
+            <br/>
+            <!-- buInitView is commented out except if debugging map view initialization.
+            <button id="buInitView" value="InitView">Init View</button>
+            -->
+        </div>
         <div id="modeBar" class="wigo_ws_Bar">
             <div id="mainMenu"></div> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
             <!-- //// not using tabs for modes. 
@@ -81,7 +98,7 @@
                 -->
             </div>
             <div id="onlineOfflineEditAction">
-                <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, offlineAction, or editAction exclusively -->
+                <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, or offlineAction exclusively -->
                     <!-- ////2060901 moved to mapBar 
                     <input id="onlineMyLoc" type="button" value="MyLoc"/>
                     -->
@@ -111,42 +128,50 @@
                     <div id="selectMapCache">
                         <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
                     </div>
-                    <!-- use mapBar instead
+                    <!-- //// use mapBar instead
                     <div id="offlineMapMenu"> 
                         -- Container for droplist control for map options 
                     </div>
                     -->
                 </div>
+                <!-- ////20160906 moved ot pathDescrBar
                 <div id="editAction" class="wigo_ws_NoShow">
                     <input id="editUpload" type="button" value="Upload"/>
                     <input id="editDelete" type="button" value="Delete"/>
                     <input id="editCancel" type="button" value="Cancel"/>
                 </div>
+                -->
                 <!-- ////20160816 not needed
                 <div id='onlineOffLineEditSpacer'>
                 </div>
                 -->
             </div>
-            <img id="onlineOfflineEditBackIcon" src="img/ws.wigo.backicon.png" alt="Back"/> <!-- online, offline, edit all have backIcon.-->
+            <!-- ////20160910 now only on titleBar. 
+            <img id="onlineOfflineEditBackIcon" src="img/ws.wigo.backicon.png" alt="Back"/> -- online, offline, edit all have backIcon.--
+            -->
         </div>
 
-        <div id="defineBar" class="wigo_ws_Bar wigo_ws_NoShow">
-            <div id="divDefineTrailInfo">
-                <label id="labelPathName" for="txbxPathName">Trail Name</label>
-                <input id="txbxPathName" type="text"/>  
+        <div id="pathDescrBar" class="wigo_ws_Bar wigo_ws_NoShow"> <!-- ////20160906 was defineBar -->
+            <div id=labelPathName>Trail Name</div>
+            <div id="editAction" >
+                <input id="buUpload" type="button" value="Upload"/> <!-- ////20160906 was editUpload -->
+                <input id="buDelete" type="button" value="Delete"/> <!-- ////201609906 was editDelet -->
+                <input id="buCancel" type="button" value="Cancel"/> <!-- ////20160906 was editCanbel -->
             </div>
-            <div id="defineAction">
-                    <input id="defineUpload" type="button" value="Upload"/>
-                    <input id="defineCancel" type="button" value="Cancel"/>
+            <!-- ////20160910 now only on titleBar.
+            <img id="pathDescrBarBackIcon" src="img/ws.wigo.backicon.png" alt="Back"/> -- online, offline, edit all have backIcon.--
+            -->
+            <div id="divPathName">
+                <input id="txbxPathName" type="text"/>  
             </div>
         </div>
 
         <div id="editDefineBar2" class="wigo_ws_NoShow">
             <div id="editDefineShare"> 
-                <!-- Container for dropdown list for Share options -->
+                <!-- Container for dropdown list for Share options, selectShareDropDown -->
             </div>
             <div id="editDefinePtAction">
-                <!-- Container for dropdown list for PtAction -->
+                <!-- Container for dropdown list for PtAction, selectPtActionDropDown -->
             </div>
         </div>
 
@@ -170,6 +195,7 @@
                 <input id="buPtDeleteDo" type="button" value="OK" />
             </div>
         </div>
+         <!--  <div id="map-canvas" /> ////20160908 try here. did not work. -->
     </div>
     <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
         <div id="mapBarBtns">
@@ -411,6 +437,7 @@
         <button id="buSettingsDone">Done</button>
         <button id="buSettingsCancel">Cancel</button>
     </div>
+    <!-- ////20160902 no longer used
     <div id="panel" class="wigo_ws_NoShow">
         <input id="buGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
         <input id="buGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
@@ -426,6 +453,8 @@
             <option value="off" selected="selected">Off</option>
         </select>
     </div>
-    <div id="map-canvas" /> <!-- Note: Do not put div for map inside a section. -->
+    -->
+    <div id="map-canvas" />   
+    <!-- Note: Do not put map-canvas div inside another div or section. -->
 </body>
 </html>

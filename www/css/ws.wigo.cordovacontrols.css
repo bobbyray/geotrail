@@ -32,7 +32,7 @@
     position: relative;
 }
 .wigo_ws_StatusClose {
-    position: fixed;
+    position: absolute;  /* ////20160909 was fixed */
     top: 0px;
     right: 0px;
 

@@ -35,6 +35,8 @@ Class Names for CSS
     wigo_ws_NoDim
     wigo_ws_Dim
 
+    wigo_ws_Title
+
     wigo_ws_BackIcon  // Image for back arrow icon.
 */
 'use strict';
@@ -396,6 +398,20 @@ function Wigo_Ws_CordovaControls() {
             }
         };
 
+        /* ////20160910 added, NOT USED
+        // Returns HTML element id for the dropdownlist div.
+        this.getDropDownListId = function() {
+            return list.id;
+        };
+        */
+
+        // Returns true if the dropdown list is scrolling.
+        // Remarks: 
+        // A touchmove event is considered to initiate scrolling.
+        this.isDropDownListScrolling = function() {
+            return bDropDownListDropped; 
+        }
+
         // Shows the dropdown list or hide it.
         // Arg:
         //  bDrop: boolean. true to show the dropdown list, false to hide it.
@@ -432,6 +448,16 @@ function Wigo_Ws_CordovaControls() {
         this.ctrl.appendChild(list);
 
         parentEl.appendChild(this.ctrl);
+
+        // Event listeners for detect scrolling of dropdownlist.
+        var bDropDownListScrolling = false;
+        list.addEventListener('touchmove', function(event){
+            bDropDownListScrolling = true;
+        }, false);
+
+        list.addEventListener('touchend', function(event){
+            bDropDownListScrolling = false;
+        }, false);        
 
         // Helper to set data-value attribute and text for an element.
         // Args:
@@ -764,12 +790,13 @@ function Wigo_Ws_CordovaControls() {
 
     // Object for showing a status message in a div.
     // Constructor args:
-    //  There are no arguments for the constuctor.
+    //  parentEl: HTML Element, optional. Defaults to body if not given.
     //  A div is created for the status message with class name wigo_ws_StatusMsg.
+    //  The div is inserted as first child element of parentEl.
     // Remarks: 
     // The status div overlays at the top of the page and scrolls within its specified 
     // height. 
-    function StatusDiv() {
+    function StatusDiv(parentEl) {
         var that = this;
         // Clears and hides the status div.
         this.clear = function () {
@@ -831,10 +858,21 @@ function Wigo_Ws_CordovaControls() {
         statusCloseDiv.innerText = "X";
         statusCloseDiv.addEventListener('click', OnStatusCloseClicked, false);
         statusDiv.appendChild(statusCloseDiv);
-        if (document.body.children.length > 0)
-            document.body.insertBefore(statusDiv, document.body.children[0]);
-        else 
-            document.body.appendChild(statusDiv);
+        
+        // alert('Testing creating StatusDiv'); ////20160908 debug, only.
+        // Attach statusDiv to its parent.
+        if (parentEl instanceof Element) {
+            if (parentEl.children.length > 0)
+                parentEl.insertBefore(statusDiv, parentEl.children[0]);
+            else 
+                parentEl.appendChild(statusDiv);
+        } else {
+            if (document.body.children.length > 0)
+                document.body.insertBefore(statusDiv, document.body.children[0]);
+            else 
+                document.body.appendChild(statusDiv);
+        }
+
 
         function OnStatusCloseClicked(event) {
             that.clear();
@@ -845,10 +883,72 @@ function Wigo_Ws_CordovaControls() {
     StatusDiv.prototype = controlBase;
     StatusDiv.constructor = StatusDiv;
 
+    // Object to display a title bar.
+    // Args:
+    //  holderDiv: HTMLDivElemnt, rquired. Container for the title.
+    //  backArrowPath: string, optional. Path to icon (image) for a back arrow.
+    //      If not given, there is not back arrow icon.
+    //      class for back arrow is wigo_ws_BackIcon.
+    function TitleBar(holderDiv, backArrowPath) {
+        var that = this;
+
+        // Sets the title text.
+        // Arg:
+        //  sTitle: string. Text for the title.
+        //  bShowBackArrow: boolean, optional. True to show the backarrow icon.
+        //                  Defaults to true.
+        this.setTitle = function(sTitle, bShowBackArrow) {
+            ////20160910 holderDiv.innerText = sTitle;
+            titleEl.innerText = sTitle;
+            if ('boolean' !== typeof bShowBackArrow) {
+                bShowBackArrow = true;
+            }
+            
+            if (imgBackArrow)
+                this.show(imgBackArrow, bShowBackArrow)
+        }
+
+        // Scrolls this title bar into view.
+        this.scrollIntoView = function() {
+            holderDiv.scrollIntoView();
+        }
+
+        // Event handler called when back arrow icon in title bar is clicked.
+        // Signature:
+        //  Arg:
+        //      event: Event object for the click.
+        // Returns nothing.
+        // Remarks: Set to null to disable event handler.
+        this.onBackArrowClicked = function(event) {};
+
+        if (!(holderDiv instanceof HTMLDivElement))  {
+            throw new Error("Container for TitleBar must be a div.");
+        }
+
+        ////20160909 var titleBar = holderDiv;
+        var titleEl = this.create('span', null, 'wigo_ws_Title');
+        holderDiv.appendChild(titleEl);
+
+        var imgBackArrow = null;
+        if ('string' === typeof backArrowPath) {
+            imgBackArrow = this.create("img", null, 'wigo_ws_BackIcon'); 
+            imgBackArrow.setAttribute("src", backArrowPath);
+            holderDiv.appendChild(imgBackArrow);;
+            imgBackArrow.addEventListener('click', function(event) {
+                if ('function' === typeof that.onBackArrowClicked)
+                    that.onBackArrowClicked(event);
+            }, false);
+            
+        }
+    }
+    TitleBar.prototype = controlBase;
+    TitleBar.constructor = TitleBar;
+
     return {
         DropDownControl: DropDownControl,
         TabControl: TabControl,
         StatusDiv: StatusDiv,
-        OnOffControl: OnOffControl
+        OnOffControl: OnOffControl, 
+        TitleBar: TitleBar,
     }
 }
