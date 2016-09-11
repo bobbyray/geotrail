@@ -30,8 +30,6 @@ Class Names for CSS
 
     wigo_ws_NoShow
     wigo_ws_Show
-    ////20160827 wigo_ws_Invisible
-    ////20160827 wigo_ws_Visible
     wigo_ws_NoDim
     wigo_ws_Dim
 
@@ -169,18 +167,7 @@ function Wigo_Ws_CordovaControls() {
         //  Returns: not used
         // Remarks: Set to null to remove a handler function that has been previously assigned.
         this.onListElClicked = function (dataValue) { };
-
         
-        /* ////20160812 not needed
-        // Set to Event handler function called when user clicks on this container control, this.ctrl. 
-        // Handler Signature:
-        //  No argument.
-        //  Returns: not used
-        // Remarks: Set to null to remove a handler function that has been previously assigned.
-        //          May not necesarily need to set a handler.
-        this.onClicked = function () { };
-        */
-
         // Fills dropdown list with values.
         // Arg:
         //  values: 2D array of [string, string, boolean]. droplist element shown for each list item when it is dropped.
@@ -193,7 +180,6 @@ function Wigo_Ws_CordovaControls() {
         //  Hides the dropdown list after filling it.
         //  Use this.drop(bDrop) to show or hide the dropdown list.
         this.fill = function (values) {
-            ////20160830 alert("Filling droplist"); // For debug only
             if (!values)
                 throw new Error('DropDownControl.FillList(values) requires values to be array of [string, integer] elements.');
             /* 
@@ -206,25 +192,6 @@ function Wigo_Ws_CordovaControls() {
             */
             // Empty the droplist before filling it.
             this.empty();
-
-            /* ////20160811 redo
-            // Append header as first item with index of -1 show header for the value. 
-            if (value && sHeader) {
-                this.appendItem(-1, sHeader, true);
-            }
-
-            // Fill the dropdown list.
-            for (var i = 0; i < values.length; i++) {
-                ////20160808 Redo to allow optional header.
-                ////20160808 child = this.create('div', null, 'wigo_ws_DropDownItem');
-                ////20160808 child.className = 'wigo_ws_DropDownListItem';
-                ////20160808 child.setAttribute('data-value', i)
-                ////20160808 child.innerHTML = values[i];
-                ////20160808 child.addEventListener('click', DropDownListElClicked, false);
-                ////20160808 list.appendChild(child);
-                this.appendItem(i, values[i]);
-            }
-            */
             var el;
             var bSelected = false;
             for (var i = 0; i < values.length; i++) {
@@ -262,8 +229,6 @@ function Wigo_Ws_CordovaControls() {
         this.appendItem = function(sDataValue, sText, bSelected) {
             var child = this.create('div', null, 'wigo_ws_DropDownItem');
             child.className = 'wigo_ws_DropDownListItem';
-            ////20160812 child.setAttribute('data-value', sDataValue)
-            ////20160812 child.innerHTML = sText;
             SetValueAndText(child, sDataValue, sText);
             child.addEventListener('click', DropDownListElClicked, false);
             list.appendChild(child);
@@ -271,8 +236,6 @@ function Wigo_Ws_CordovaControls() {
             // Set value div to the item if item is seleeted.
             if (typeof bSelected === 'boolean') {
                 if (bSelected) {
-                    ////20160812 value.innerHTML = sItem;
-                    ////20160812 value.setAttribute("data-value", i);
                     SetValueAndText(value, sDataValue, sText)
                 }
             }
@@ -286,10 +249,6 @@ function Wigo_Ws_CordovaControls() {
         // which contains the selected value.
         this.getSelectedIndex = function() {
             var iFound = -1;
-            ////20160812 if (value) {
-            ////20160812     iFound = Number(value.getAttribute(''));
-            ////20160812 }
-
             var valueToMatch = GetValue(value); 
             var listEl, listValue;
             for (var i=0; i <list.children.length; i++) {
@@ -309,13 +268,6 @@ function Wigo_Ws_CordovaControls() {
         this.setSelectedIndex = function(index) {
             if (index >= 0 && index < list.children.length) {
                 var listEl = list.children[index];
-                ////20160813 if (value) {
-                    ////20160812 var listElData = GetValue(listEl);
-                    ////20160812 value.setAttribute('data-value', listElData);
-                    ////20160812 value.innerHTML = GetText(listEl); 
-                    ////20160812 SetValueAndText(value, listElData, listEl.innerHTML);
-                    ////20160813 SetValueAndText(value, GetValue(listEl), GetText(listEl));
-                ////20160813}
                 SetValueAndText(value, GetValue(listEl), GetText(listEl));
             }
         };
@@ -341,8 +293,7 @@ function Wigo_Ws_CordovaControls() {
         this.getSelectedValue = function() {
             var sValue = "";
             if (value) {
-                ////20160820sValue = value.value;
-                sValue = GetValue(value); ////20160820 value.value;
+                sValue = GetValue(value); 
             }
             return sValue;
         }
@@ -389,21 +340,9 @@ function Wigo_Ws_CordovaControls() {
         this.hideListEl = function(dataValue, bHide) {
             var el = FindListEl(dataValue);
             if (el) {
-                ////20160828 if (bHide)
-                ////20160828     el.classList.add('wigo_ws_DropDownListItemHidden');
-                ////20160828 else 
-                ////20160828     el.classList.remove('wigo_ws_DropDownListItemHidden');
-                ////20160828 
                 this.show(el, !bHide)
             }
         };
-
-        /* ////20160910 added, NOT USED
-        // Returns HTML element id for the dropdownlist div.
-        this.getDropDownListId = function() {
-            return list.id;
-        };
-        */
 
         // Returns true if the dropdown list is scrolling.
         // Remarks: 
@@ -422,7 +361,7 @@ function Wigo_Ws_CordovaControls() {
 
         
         // Indiates that the droplist is shown when user clicks on the value.
-        this.bDropOnValueClicked = true;  ////20160901 was false.
+        this.bDropOnValueClicked = true; 
 
         var label = null;
         if (typeof labelStr === 'string') {
@@ -437,8 +376,6 @@ function Wigo_Ws_CordovaControls() {
         var value = null;
         if (typeof valueStr === 'string') {
             value = this.create("div", null, 'wigo_ws_DropDownValue');
-            ////20160812 value.innerText = valueStr;
-            ////20160812 value.setAttribute('', "-1");
             SetValueAndText(value, valueStr, "");
             value.addEventListener('click', ValueClicked, false);
             this.ctrl.appendChild(value);
@@ -467,7 +404,6 @@ function Wigo_Ws_CordovaControls() {
         function SetValueAndText(el, sValue, sText) {
             if (el && el instanceof Element) {
                 el.setAttribute('data-value', sValue);
-                ////20160818Refactor el.innerHTML = sText;
                 SetText(el, sText);
             }
         }
@@ -525,14 +461,6 @@ function Wigo_Ws_CordovaControls() {
         function DropDownListElClicked(event) {
             // Call onListElClicked property with index of list element.
             if (that.onListElClicked) {
-                /* ////20160813
-                var i = Number(this.getAttribute('data-value'));
-                if (value) {
-                    value.innerHTML = this.innerHTML;
-                    value.setAttribute("data-value", i);
-                }
-                that.onListElClicked(i);
-                */
                 SetValueAndText(value, GetValue(this), GetText(this));
                 that.onListElClicked(GetValue(this));
             }
@@ -544,22 +472,10 @@ function Wigo_Ws_CordovaControls() {
         function ValueClicked(event) {
             if (that.bDropOnValueClicked) {
                 that.drop(true);
-                ////20160901 // Prevent bubble to body so that body does not close droplist.
-                ////20160901NotNeededNow event.stopPropagation();
             }
         }
 
         dropDownIcon.img.addEventListener('click', DropDownIconClicked, false);
-
-        /* ////20160812 not used
-        // Event handler for click on container div (this.ctrl).
-        function OnCtrlClicked(event) {
-            if (that.onClicked) {
-                that.onClicked();
-            }
-        }
-        this.ctrl.addEventListener('click', OnCtrlClicked, false);
-        */
 
         // Note: Element.onfocusout and Element.onblur events do not occur for Chrome.
 
@@ -567,7 +483,6 @@ function Wigo_Ws_CordovaControls() {
         // Closes the dropdown list that may be shown by any other droplist 
         // except for the dropdown icon that was clicked.
         function OnOutsideDropDownClicked(event) {
-            ////20160901CheckValueAlso var bMyDropDownIcon = dropDownIcon.img === event.srcElement;
             var bMyDropDownIcon = dropDownIcon.img === event.srcElement ||
                                   value === event.srcElement;
             if (!bMyDropDownIcon)
@@ -859,7 +774,7 @@ function Wigo_Ws_CordovaControls() {
         statusCloseDiv.addEventListener('click', OnStatusCloseClicked, false);
         statusDiv.appendChild(statusCloseDiv);
         
-        // alert('Testing creating StatusDiv'); ////20160908 debug, only.
+        // alert('Testing creating StatusDiv'); 
         // Attach statusDiv to its parent.
         if (parentEl instanceof Element) {
             if (parentEl.children.length > 0)
@@ -898,7 +813,6 @@ function Wigo_Ws_CordovaControls() {
         //  bShowBackArrow: boolean, optional. True to show the backarrow icon.
         //                  Defaults to true.
         this.setTitle = function(sTitle, bShowBackArrow) {
-            ////20160910 holderDiv.innerText = sTitle;
             titleEl.innerText = sTitle;
             if ('boolean' !== typeof bShowBackArrow) {
                 bShowBackArrow = true;
@@ -925,7 +839,6 @@ function Wigo_Ws_CordovaControls() {
             throw new Error("Container for TitleBar must be a div.");
         }
 
-        ////20160909 var titleBar = holderDiv;
         var titleEl = this.create('span', null, 'wigo_ws_Title');
         holderDiv.appendChild(titleEl);
 

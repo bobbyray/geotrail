@@ -32,7 +32,7 @@
     position: relative;
 }
 .wigo_ws_StatusClose {
-    position: absolute;  /* ////20160909 was fixed */
+    position: absolute;  
     top: 0px;
     right: 0px;
 
@@ -79,7 +79,7 @@
     position: absolute;
     top: 100%;
     left: 0px;
-    width: 100%;    /* ////20160902 added */
+    width: 100%;   
     background-color: white;
     z-index: 2;
 }
@@ -117,7 +117,7 @@
 .wigo_ws_OnCtrl {
     float: right;
     height: 100%;
-    /* width: 2em; ////20160901 remove */
+    /* width: 2em; 
     margin-left: 0.5em;
     margin-right: 0.5em;
     border: 1px solid black;
@@ -125,7 +125,6 @@
 .wigo_ws_OffCtrl {
     float: right;
     height: 100%;
-    /* width: 2em; /////20160901 remove */
     margin-left: 0.5em;
     margin-right: 0.5em;
     border: 1px solid black;
