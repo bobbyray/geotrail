@@ -160,6 +160,7 @@ label {
 
 #divOwnerId {
     width: 100%;
+    height: 1.5em;
     float: left;
     margin-left: 5px;
 }
@@ -174,9 +175,35 @@ label {
 {
     margin-right: 5px;
 }
+/* ////20160911
 #selectSignIn {
     clear: none;
     float: right;
+}
+*/
+#selectSignInHolder {
+    height: 100%;
+    width: 25%;
+    float: right;
+    position: relative;
+}
+
+#selectSignInHolder .wigo_ws_DropDownLabel {
+    height: 100%;
+    width: auto;
+    right: 45%;
+    top: 0px;
+    margin-top: 5%;
+
+}
+
+#selectSignInHolder .wigo_ws_DropDownIcon {
+    width: 41%;
+    height: auto;
+    right: 0px;
+    left: inherit;
+    top: 0px;
+    margin-top: 5%;
 }
 
 #divMode 

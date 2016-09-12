@@ -492,7 +492,9 @@ function wigo_ws_View() {
     var divOwnerId = document.getElementById('divOwnerId'); 
 
     var txbxOwnerId = $('#txbxOwnerId')[0];
-    var selectSignIn = $('#selectSignIn')[0];
+    ////20160911 var selectSignIn = $('#selectSignIn')[0];
+
+
 
     var divMode = document.getElementById('divMode');
 
@@ -626,34 +628,8 @@ function wigo_ws_View() {
         return mapCanvas;
     }
 
-    // ** Use jquery to attach event handler for controls.
-    // Note: All the control event handlers clear status first thing.
-
-    $(selectSignIn).bind('change', function (e) {
-        var val = this.selectedValue;
-        if (this.selectedIndex > 0) {
-            var option = this[this.selectedIndex];
-            if (option.value === 'facebook') {
-                that.ClearStatus();
-                fb.Authenticate();
-            } else if (option.value === 'logout') {
-                // Only allow Logout for View or Offline mode.
-                var nMode = that.curMode();
-                if (nMode === that.eMode.online_edit ) {
-                    that.AppendStatus("Complete editing the path, then logout.", false);
-                } else if (nMode === that.eMode.online_define) {
-                    that.AppendStatus("Complete defining a new path, then logout.", false);
-                } else {
-                    that.ClearStatus();
-                    fb.LogOut();
-                }
-            } else {
-                that.ClearStatus();
-            }
-            this.selectedIndex = 0;
-        }
-    });
-
+    
+    // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
     onlineSaveOffline.addEventListener('click', OnlineSaveOfflineClicked, false);
     function OnlineSaveOfflineClicked(event) {
@@ -3069,7 +3045,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
     }, false);
 
-    // **** Create modeBar
+    // ** Create modeBar
     var modeBar = document.getElementById('modeBar');
     // Fill the main menu drop list.
     var parentEl = document.getElementById('mainMenu');
@@ -3124,6 +3100,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         that.ClearStatus();
     };
 
+    // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
     var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Select Map View'],
@@ -3164,7 +3141,70 @@ may not be appropriate for your ablities and that the trails could have inaccura
 
     };
 
-    // **** Initialize online bar.
+    // *** Signin dropdown ctrl
+    parentEl = document.getElementById('selectSignInHolder');
+    var selectSignIn = new ctrls.DropDownControl(parentEl, "signinDropDown", "SignIn", null, "img/ws.wigo.dropdownhorizontalicon.png"); 
+    /* ////20160911 options
+                <option value="set">Sign In</option>
+                <option value="facebook">Facebook</option>
+                <option value="logout">Logout</option>
+    */
+    selectSignIn.fill([['set',"Sign In", true],
+                       ['facebook', 'Facebook'],
+                       ['logout', 'Logout']
+                      ]);
+    /* ////20160911
+    $(selectSignIn).bind('change', function (e) {
+        var val = this.selectedValue;
+        if (this.selectedIndex > 0) {
+            var option = this[this.selectedIndex];
+            if (option.value === 'facebook') {
+                that.ClearStatus();
+                fb.Authenticate();
+            } else if (option.value === 'logout') {
+                // Only allow Logout for View or Offline mode.
+                var nMode = that.curMode();
+                if (nMode === that.eMode.online_edit ) {
+                    that.AppendStatus("Complete editing the path, then logout.", false);
+                } else if (nMode === that.eMode.online_define) {
+                    that.AppendStatus("Complete defining a new path, then logout.", false);
+                } else {
+                    that.ClearStatus();
+                    fb.LogOut();
+                }
+            } else {
+                that.ClearStatus();
+            }
+            this.selectedIndex = 0;
+        }
+    });
+    */ 
+
+    selectSignIn.onListElClicked = function(dataValue) {
+        var option = this[this.selectedIndex];
+        if (dataValue === 'facebook') {
+            that.ClearStatus();
+            fb.Authenticate();
+        } else if (dataValue === 'logout') {
+            // Only allow Logout for View or Offline mode.
+            var nMode = that.curMode();
+            if (nMode === that.eMode.online_edit ) {
+                that.AppendStatus("Complete editing the path, then logout.", false);
+            } else if (nMode === that.eMode.online_define) {
+                that.AppendStatus("Complete defining a new path, then logout.", false);
+            } else {
+                that.ClearStatus();
+                fb.LogOut();
+            }
+        } else if (dataValue === 'set') {
+            that.ClearStatus();
+        } else {
+            that.ClearStatus();
+        }
+        selectSignIn.setSelected('set'); // Select Signin element.
+    }
+
+    // ** Initialize online bar.
     // Select GeoTrail control
     parentEl = document.getElementById('divTrailInfo');
     var selectGeoTrail = new ctrls.DropDownControl(parentEl, "selectGeoTrailDropDown", "Trails", "Select a Geo Trail", "img/ws.wigo.menuicon.png");
