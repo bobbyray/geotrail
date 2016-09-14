@@ -108,25 +108,27 @@
 .wigo_ws_OnOffControl {
     width: 100%;
     height: 80%;
+    margin-top: 0.1em;
 }
 .wigo_ws_OnOffLabel {
     clear: both;
     float: left;
     height: 100%;
+    margin-top: 0.2em;
+    margin-left: 0.1em;
 }
 .wigo_ws_OnCtrl {
     float: right;
-    height: 100%;
-    /* width: 2em; 
     margin-left: 0.5em;
     margin-right: 0.5em;
+    margin-top: 0.2em;
     border: 1px solid black;
 }
 .wigo_ws_OffCtrl {
     float: right;
-    height: 100%;
     margin-left: 0.5em;
     margin-right: 0.5em;
+    margin-top: 0.2em;
     border: 1px solid black;
 }
 .wigo_ws_Unknown {

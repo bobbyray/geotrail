@@ -391,6 +391,7 @@ function wigo_ws_View() {
                 HideAllBars();
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
+                map.ClearPath();
                 ShowOwnerIdDiv(true);
                 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
@@ -492,22 +493,19 @@ function wigo_ws_View() {
     var divOwnerId = document.getElementById('divOwnerId'); 
 
     var txbxOwnerId = $('#txbxOwnerId')[0];
-    ////20160911 var selectSignIn = $('#selectSignIn')[0];
-
-
 
     var divMode = document.getElementById('divMode');
 
     var divSettings = $('#divSettings')[0];
-    var selectAllowGeoTracking = $('#selectAllowGeoTracking')[0];
-    var numberGeoTrackingSecs = $('#numberGeoTrackingSecs')[0];
-    var numberOffPathThresMeters = $('#numberOffPathThresMeters')[0];
-    var selectOffPathAlert = $('#selectOffPathAlert')[0];
-    var selectPhoneAlert = $('#selectPhoneAlert')[0];
-    var selectPebbleAlert = $('#selectPebbleAlert')[0];
-    var selectClickForGeoLoc = $('#selectClickForGeoLoc')[0];
-    var selectCompassHeadingVisible = $('#selectCompassHeadingVisible')[0];
-    var numberPrevGeoLocThresMeters = $('#numberPrevGeoLocThresMeters')[0];
+    ////20160912 var selectAllowGeoTracking = $('#selectAllowGeoTracking')[0];
+    ////20160912 var numberGeoTrackingSecs = $('#numberGeoTrackingSecs')[0];
+    ////20160913 var numberOffPathThresMeters = $('#numberOffPathThresMeters')[0];
+    ////20160913 var selectOffPathAlert = $('#selectOffPathAlert')[0];
+    ////20160913 var selectPhoneAlert = $('#selectPhoneAlert')[0];
+    ////20160913 var selectPebbleAlert = $('#selectPebbleAlert')[0];
+    ////20160913 var selectClickForGeoLoc = $('#selectClickForGeoLoc')[0];
+    ////20160913 var selectCompassHeadingVisible = $('#selectCompassHeadingVisible')[0];
+    ////20160913 var numberPrevGeoLocThresMeters = $('#numberPrevGeoLocThresMeters')[0];
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
     var numberHomeAreaNELat = $('#numberHomeAreaNELat')[0];
@@ -615,10 +613,10 @@ function wigo_ws_View() {
         DoGeoLocation();
     }, false)
 
-    var selectEnableGeoTracking = $('#selectEnableGeoTracking')[0];
-    var numberPhoneVibeSecs = $('#numberPhoneVibeSecs')[0];
-    var numberPhoneBeepCount = $('#numberPhoneBeepCount')[0];
-    var numberPebbleVibeCount = $('#numberPebbleVibeCount')[0];
+    ////20160912 var selectEnableGeoTracking = $('#selectEnableGeoTracking')[0];
+    ////20160913 var numberPhoneVibeSecs = $('#numberPhoneVibeSecs')[0];
+    ////20160913 var numberPhoneBeepCount = $('#numberPhoneBeepCount')[0];
+    ////20160913 var numberPebbleVibeCount = $('#numberPebbleVibeCount')[0];
 
     // Returns ref to div for the map-canvas element.
     // Note: The div element seems to change dynamically. 
@@ -658,9 +656,11 @@ function wigo_ws_View() {
         }
     }
 
+    /* ////20160912 
     $(selectAllowGeoTracking).bind('change', function(e) {
         // No longer disabling some settings ctrls for allow geo tracking off.
     });
+    */
 
     $(buSetHomeArea).bind('click', function (e) {
         var corners = map.GetBounds();
@@ -677,11 +677,13 @@ function wigo_ws_View() {
             var settings = GetSettingsValues();
             SetSettingsParams(settings);
             that.onSaveSettings(settings);
+            titleBar.scrollIntoView();   
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
         ShowSettingsDiv(false);
         that.ClearStatus();
+        titleBar.scrollIntoView();   
     });
 
     // Selects droplist for Tracking on/off and runs the tract timer accordingly.
@@ -700,11 +702,10 @@ function wigo_ws_View() {
 
     //20160507 Added only to debug problem with filesytem for TileLayer for map.
     /* Normally commented out
-    $('#buInitView').bind('click', function (e) {
+    document.getElementById('buInitView').addEventListener('click', function(event) {
         that.Initialize();
-    });
+    }, false);
     */
-
 
     /* //20150716 Trying to detect app ending does not work. These events do NOT fire
     $(window).bind('unload', function (e) {
@@ -1820,7 +1821,19 @@ function wigo_ws_View() {
     var titleHolder = document.getElementById('titleHolder');
     var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png');
     titleBar.onBackArrowClicked = function(event) {
-        that.setModeUI(that.eMode.select_mode); 
+        // Prompt user to save changes if editing.
+        var sPrompt = "Cancel return so you can save your changes first?";
+        if ( fsmEdit.IsPathChanged()) {
+            ConfirmYesNo(sPrompt, function(bYes){
+                if (!bYes) {
+                    fsmEdit.ClearPathChange();
+                    that.setModeUI(that.eMode.select_mode);        
+                }
+            });
+            
+        } else {
+            that.setModeUI(that.eMode.select_mode);
+        } 
     };
 
     var fsmEdit = new EditFSM(this);
@@ -2235,15 +2248,176 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
     }
 
+    // ** Controls for Settings
+    var parentEl = document.getElementById('holderAllowGeoTracking');
+    var selectAllowGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Allow Geo Tracking', -1);
+    
+    parentEl = document.getElementById('holderEnableGeoTracking');
+    var selectEnableGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Geo Tracking Initially On', -1);
+
+    parentEl = document.getElementById('holderGeoTrackingSecs');
+    var numberGeoTrackingSecs = new ctrls.DropDownControl(parentEl, null, 'Geo Tracking Interval', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberGeoTrackingSecsValues = 
+    [
+        ['30', '30 secs'],
+        ['40', '40 secs'],
+        ['50', '50 secs'],        
+        ['60', '60 secs'],
+        ['90', '1.5 mins'],
+        ['120', '2.0 mins'],        
+        ['150', '2.5 mins'],
+        ['180', '3.0 mins'],
+        ['240', '4.0 mins'],        
+        ['300', '5.0 mins'],
+        ['600', '10.0 mins'],
+        ['900', '15.0 mins'],        
+        ['1800', '30.0 mins'],        
+        ['3600', '60.0 mins']        
+    ];
+    numberGeoTrackingSecs.fill(numberGeoTrackingSecsValues);
+
+    parentEl = document.getElementById('holderOffPathThresMeters');
+    var numberOffPathThresMeters = new ctrls.DropDownControl(parentEl, null, 'Off-Path Threshold', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberOffPathThresMetersValues = 
+    [
+        ['30', '30m (33yds)'],
+        ['40', '40m (44yds)'],
+        ['50', '50m (55yds)'],
+        ['60', '60m (66yds)'],
+        ['60', '60m (66yds)'],
+        ['70', '70m (77yds)'],
+        ['80', '80m (87yds)'],
+        ['90', '90m (98yds)'],
+        ['100', '100m (109yds)'],
+        ['200', '200m (219yds)'],
+        ['300', '300m (328yds)'],
+        ['400', '400m (437yds)'],
+        ['500', '500m (547yds)'],
+        ['600', '600m (656yds)'],
+        ['700', '700m (766yds)'],
+        ['800', '800m (875yds)'],
+        ['900', '900m (984yds)'],
+        ['1000','1km (1094yds)']
+    ];
+    /* ////20160913 smaller value text
+    [
+        ['30', '30 meters (33 yards)'],
+        ['40', '40 meters (44 yards)'],
+        ['50', '50 meters (55 yards)'],
+        ['60', '60 meters (66 yards)'],
+        ['60', '60 meters (66 yards)'],
+        ['70', '70 meters (77 yards)'],
+        ['80', '80 meters (87 yards)'],
+        ['90', '90 meters (98 yards)'],
+        ['100', '100 meters (109 yards)'],
+        ['200', '200 meters (219 yards)'],
+        ['300', '300 meters (328 yards)'],
+        ['400', '400 meters (437 yards)'],
+        ['500', '500 meters (547 yards)'],
+        ['600', '600 meters (656 yards)'],
+        ['700', '700 meters (766 yards)'],
+        ['800', '800 meters (875 yards)'],
+        ['900', '900 meters (984 yards)'],
+        ['1000', '1000 meters (1094 yards)']
+    ];
+    */
+    numberOffPathThresMeters.fill(numberOffPathThresMetersValues);
+
+    parentEl = document.getElementById('holderPhoneAlert');
+    var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert', -1);
+
+    parentEl = document.getElementById('holderOffPathAlert');
+    var selectOffPathAlert = ctrls.NewYesNoControl(parentEl, null, 'Phone Alert Initially On', -1);
+
+    parentEl = document.getElementById('holderPhoneVibeSecs');
+    var numberPhoneVibeSecs = new ctrls.DropDownControl(parentEl, null, 'Phone Vibration in Secs', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberPhoneVibeSecsValues = 
+    [
+        ['0.0', '0.0 secs (no vibe)'],
+        ['0.5', '0.5 secs'],
+        ['1.0', '1.0 secs'],
+        ['1.5', '1.5 secs'],
+        ['2.0', '2.0 secs'],
+        ['2.5', '2.5 secs'],
+        ['3.0', '3.0 secs']
+    ];
+    numberPhoneVibeSecs.fill(numberPhoneVibeSecsValues);
+
+    parentEl =document.getElementById('holderPhoneBeepCount');
+    var numberPhoneBeepCount = new ctrls.DropDownControl(parentEl, null, 'Phone Beep Count', '',  'img/ws.wigo.dropdownhorizontalicon.png'); 
+    var numberPhoneBeepCountValues = 
+    [
+        ['0', '0 (none)'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4'],
+        ['5', '5']
+    ];
+    numberPhoneBeepCount.fill(numberPhoneBeepCountValues);
+
+    parentEl = document.getElementById('holderPebbleAlert');
+    var selectPebbleAlert = ctrls.NewYesNoControl(parentEl, null, 'Pebble Watch', -1);
+
+    parentEl = document.getElementById('holderPebbleVibleCount');
+    var numberPebbleVibeCount = new ctrls.DropDownControl(parentEl, null, 'Pebble Vibration Count', '',  'img/ws.wigo.dropdownhorizontalicon.png');;
+    var numberPebbleVibeCountValues = 
+    [
+        ['0', '0 (no vibe)'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4'],
+        ['5', '5']
+    ];
+    numberPebbleVibeCount.fill(numberPebbleVibeCountValues);
+    
+    parentEl = document.getElementById('holderPrevGeoLocThresMeters');
+    var numberPrevGeoLocThresMeters = new ctrls.DropDownControl(parentEl, null, 'Prev Geo Loc Thres', '',  'img/ws.wigo.dropdownhorizontalicon.png'); 
+    var numberPrevGeoLocThresMetersValues =
+    [
+        ['30', '30 m (33 yds)'],
+        ['40', '40 m (44 yds)'],
+        ['50', '50 m (55 yds)'],
+        ['60', '60 m (66 yds)']
+    ];
+    numberPrevGeoLocThresMeters.fill(numberPrevGeoLocThresMetersValues);
+
+    parentEl = document.getElementById('holderCompassHeadingVisible');
+    ////20160913 var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass Heading on Map?', -1);
+    var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass on Map?', -1);
+
+    parentEl = document.getElementById('holderClickForGeoLoc');
+    var selectClickForGeoLoc = ctrls.NewYesNoControl(parentEl, null, 'Touch for Loc Testing?', -1);
+
+    // ** Helper for Settings
+
     // Checks that the control values for settings are valid.
     // Shows dialog for an invalid setting and sets focus to the control.
     // Returns true for all settings valid.
     function CheckSettingsValues() {
-        // Helper to checking select droplist.
+        // Helper to checking html select droplist.
         function IsSelectCtrlOk(ctrl) {
             var bOk = ctrl.selectedIndex >= 0;
             var sMsg = "Selection is invalid. Select a valid option from drop list.";
             ShowOrClearError(bOk, ctrl, sMsg);
+            return bOk;
+        }
+
+        // Helper for checking wigo_ws_cordova dropdown list.
+        function IsSelectCtrlOk2(dropDownCtrl) {
+            var bOk = dropDownCtrl.getSelectedIndex() >= 0;
+            var sMsg = "Selection is invalid. Select a valid option from drop list.";
+            ShowOrClearError(bOk, dropDownCtrl.ctrl, sMsg);
+            return bOk;
+        }
+        
+        // Helper for checking if an OnOffControl or YesNoControl is valid.
+        function IsYesNoCtrlOk(onOffCtrl) {
+            var nState = onOffCtrl.getState();
+            var bOk = nState >= 0 && nState <= 1;
+            var sMsg = "Selection is invalid. Select Yes or No";
+            ShowOrClearError(bOk, onOffCtrl.ctrl, sMsg);
             return bOk;
         }
         // Helper for checking latitude of home area.
@@ -2262,6 +2436,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
         // Helper for clearing or shown background for a control.
         function ShowOrClearError(bOk, ctrl, sMsg) {
+            /* ////20160912 simplify
             // Remove class name indicating ErrorMsg.
             var sClass = ctrl.getAttribute('class');
             if (sClass) { // Note: class is null if it does not exist for the ctrl.
@@ -2273,6 +2448,16 @@ may not be appropriate for your ablities and that the trails could have inaccura
             if (!bOk) {
                 sClass += ' ErrorMsg';
                 ctrl.setAttribute('class', sClass);
+                ctrl.focus();
+                AlertMsg(sMsg);
+            }
+            */
+            if (bOk) {
+                // Remove class name indicating ErrorMsg.
+                ctrl.classList.remove('ErrorMsg');
+            } else {
+                // Set class name indicationg ErrorMsg.
+                ctrl.classList.add('ErrorMsg');
                 ctrl.focus();
                 AlertMsg(sMsg);
             }
@@ -2289,32 +2474,32 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
 
         // Check each ctrl for validity one by one.
-        if (!IsSelectCtrlOk(selectAllowGeoTracking))
+        if (!IsYesNoCtrlOk(selectAllowGeoTracking))  ////20160912 Was IsSelectCtrl(...)
             return false;
 
-        if (!IsSelectCtrlOk(numberOffPathThresMeters))
+        if (!IsSelectCtrlOk2(numberOffPathThresMeters)) ////20160913 Was IsSelectCtrl(...)
             return false;
 
-        if (!IsSelectCtrlOk(numberGeoTrackingSecs))
+        if (!IsSelectCtrlOk2(numberGeoTrackingSecs))
             return false;
 
-        if (!IsSelectCtrlOk(selectEnableGeoTracking))
+        if (!IsYesNoCtrlOk(selectEnableGeoTracking)) ////20160912 Was IsSelectCtrlOk
             return false;
-        if (!IsSelectCtrlOk(selectOffPathAlert))
+        if (!IsYesNoCtrlOk(selectOffPathAlert))  ////20160912 Was IsSelectCtrlOk
             return false;
-        if (!IsSelectCtrlOk(selectPhoneAlert))
+        if (!IsYesNoCtrlOk(selectPhoneAlert)) /////20160913 Was IsSelectCtrlOk
             return false;
-        if (!IsSelectCtrlOk(numberPhoneVibeSecs))
+        if (!IsSelectCtrlOk2(numberPhoneVibeSecs))
             return false;
-        if (!IsSelectCtrlOk(numberPhoneBeepCount))
+        if (!IsSelectCtrlOk2(numberPhoneBeepCount))
             return false;
-        if (!IsSelectCtrlOk(selectPebbleAlert))
+        if (!IsYesNoCtrlOk(selectPebbleAlert))  /////20160913 Was IsSelectCtrlOk
             return false;
-        if (!IsSelectCtrlOk(numberPebbleVibeCount))
+        if (!IsSelectCtrlOk2(numberPebbleVibeCount))
             return false;
-        if (!IsSelectCtrlOk(numberPrevGeoLocThresMeters))
+        if (!IsSelectCtrlOk2(numberPrevGeoLocThresMeters))
             return false;
-        if (!IsSelectCtrlOk(selectClickForGeoLoc))
+        if (!IsYesNoCtrlOk(selectClickForGeoLoc)) /////20160913 Was IsSelectCtrlOk 
             return false;
 
         if (!IsLatCtrlOk(numberHomeAreaSWLat))
@@ -2332,19 +2517,32 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Returns settings object wigo_ws_GeoTrailSettings from values in controls.
     function GetSettingsValues() {
         var settings = new wigo_ws_GeoTrailSettings();
-        settings.bAllowGeoTracking = selectAllowGeoTracking.value === 'yes';
-        settings.mOffPathThres = parseFloat(numberOffPathThresMeters.value);
-        settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.value);
-        settings.bEnableGeoTracking = selectEnableGeoTracking.value === 'yes';
-        settings.bOffPathAlert = selectOffPathAlert.value === 'yes';
-        settings.bPhoneAlert = selectPhoneAlert.value === 'yes';
-        settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.value);
-        settings.countPhoneBeep = parseInt(numberPhoneBeepCount.value);
-        settings.bPebbleAlert = selectPebbleAlert.value === 'yes';
-        settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
-        settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
-        settings.bCompassHeadingVisible = selectCompassHeadingVisible.value === 'yes'; 
-        settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
+        ////20160912 settings.bAllowGeoTracking = selectAllowGeoTracking.value === 'yes';
+        settings.bAllowGeoTracking = selectAllowGeoTracking.getState() === 1;    
+        
+        settings.mOffPathThres = parseFloat(numberOffPathThresMeters.getSelectedValue());
+        ////20160912 settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.value);
+        settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.getSelectedValue());
+        ////20160912 settings.bEnableGeoTracking = selectEnableGeoTracking.value === 'yes';
+        settings.bEnableGeoTracking = selectEnableGeoTracking.getState() === 1;
+        ////20160913 settings.bOffPathAlert = selectOffPathAlert.value === 'yes';
+        settings.bOffPathAlert = selectOffPathAlert.getState() === 1;
+        ////20160913 settings.bPhoneAlert = selectPhoneAlert.value === 'yes';
+        settings.bPhoneAlert = selectPhoneAlert.getState() === 1;
+        ////20160913 settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.value);
+        settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
+        ////20160913 settings.countPhoneBeep = parseInt(numberPhoneBeepCount.value);
+        settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
+        ////20160913 settings.bPebbleAlert = selectPebbleAlert.value === 'yes';
+        settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
+        ////20160913 settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
+        settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
+        ////20160913 settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
+        settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
+        ////20160913 settings.bCompassHeadingVisible = selectCompassHeadingVisible.value === 'yes'; 
+        settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
+        ////20160913 settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
+        settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
         settings.gptHomeAreaSW.lon = numberHomeAreaSWLon.value;
         settings.gptHomeAreaNE.lat = numberHomeAreaNELat.value;
@@ -2358,19 +2556,36 @@ may not be appropriate for your ablities and that the trails could have inaccura
     function SetSettingsValues(settings) {
         if (!settings)
             return;
-        selectAllowGeoTracking.value = settings.bAllowGeoTracking ? 'yes' : 'no';
-        numberOffPathThresMeters.value = settings.mOffPathThres.toFixed(0);
-        numberGeoTrackingSecs.value = settings.secsGeoTrackingInterval.toFixed(0);
-        selectEnableGeoTracking.value = settings.bEnableGeoTracking ? 'yes' : 'no';
-        selectOffPathAlert.value = settings.bOffPathAlert ? 'yes' : 'no';
-        selectPhoneAlert.value = settings.bPhoneAlert ? 'yes' : 'no';
-        numberPhoneVibeSecs.value = settings.secsPhoneVibe.toFixed(1);
-        numberPhoneBeepCount.value = settings.countPhoneBeep.toFixed(0);
-        selectPebbleAlert.value = settings.bPebbleAlert ? 'yes' : 'no';
-        numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
-        numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
-        selectCompassHeadingVisible.value = settings.bCompassHeadingVisible ? 'yes' : 'no'; 
-        selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
+        ////20160912 selectAllowGeoTracking.value = settings.bAllowGeoTracking ? 'yes' : 'no';
+        selectAllowGeoTracking.setState(settings.bAllowGeoTracking ? 1 : 0);
+        
+        ////20160913 numberOffPathThresMeters.value = settings.mOffPathThres.toFixed(0);
+        numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
+        ////20160912 numberGeoTrackingSecs.value = settings.secsGeoTrackingInterval.toFixed(0);
+        numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
+
+        ////20160912 selectEnableGeoTracking.value = settings.bEnableGeoTracking ? 'yes' : 'no';
+        selectEnableGeoTracking.setState(settings.bEnableGeoTracking ? 1 : 0);
+
+
+        ////20160913 selectOffPathAlert.value = settings.bOffPathAlert ? 'yes' : 'no';
+        selectOffPathAlert.setState(settings.bOffPathAlert ? 1 : 0);
+        ////20160913 selectPhoneAlert.value = settings.bPhoneAlert ? 'yes' : 'no';
+        selectPhoneAlert.setState(settings.bPhoneAlert ? 1 : 0);
+        ////20160913 numberPhoneVibeSecs.value = settings.secsPhoneVibe.toFixed(1);
+        numberPhoneVibeSecs.setSelected(settings.secsPhoneVibe.toFixed(1));
+        ////20160913 numberPhoneBeepCount.value = settings.countPhoneBeep.toFixed(0);
+        numberPhoneBeepCount.setSelected(settings.countPhoneBeep.toFixed(0));
+        ////20160913 selectPebbleAlert.value = settings.bPebbleAlert ? 'yes' : 'no';
+        selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
+        ////20160913 numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
+        numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
+        ////20160913 numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
+        numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
+        ////20160913 selectCompassHeadingVisible.value = settings.bCompassHeadingVisible ? 'yes' : 'no'; 
+        selectCompassHeadingVisible.setState(settings.bCompassHeadingVisible ? 1 : 0); 
+        ////20160913 selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
+        selectClickForGeoLoc.setState(settings.bClickForGeoLoc ? 1 : 0);
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
         numberHomeAreaSWLon.value = settings.gptHomeAreaSW.lon;
         numberHomeAreaNELat.value = settings.gptHomeAreaNE.lat;
@@ -2423,9 +2638,13 @@ may not be appropriate for your ablities and that the trails could have inaccura
     function ShowSettingsDiv(bShow) {
         var sShowSettings = bShow ? 'block' : 'none';
         var sShowMap = bShow ? 'none' : 'block'; 
-       
         divSettings.style.display = sShowSettings;
+        ////20160914 add show / hide mapCanvas.
+        var mapCanvas = getMapCanvas();
+        mapCanvas.style.display = sShowMap;
     }
+
+    // ** More function 
 
     // Returns true if HTML el is hiddent.
     // Note: Do not use for a fixed position element, which is not used anyway.
@@ -3048,7 +3267,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // ** Create modeBar
     var modeBar = document.getElementById('modeBar');
     // Fill the main menu drop list.
-    var parentEl = document.getElementById('mainMenu');
+    parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
     var mainMenuValues = [['terms_of_use','Terms of Use'],                       // 0
                           ['settings', 'Settings'],                               // 1
@@ -3144,41 +3363,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // *** Signin dropdown ctrl
     parentEl = document.getElementById('selectSignInHolder');
     var selectSignIn = new ctrls.DropDownControl(parentEl, "signinDropDown", "SignIn", null, "img/ws.wigo.dropdownhorizontalicon.png"); 
-    /* ////20160911 options
-                <option value="set">Sign In</option>
-                <option value="facebook">Facebook</option>
-                <option value="logout">Logout</option>
-    */
     selectSignIn.fill([['set',"Sign In", true],
                        ['facebook', 'Facebook'],
                        ['logout', 'Logout']
                       ]);
-    /* ////20160911
-    $(selectSignIn).bind('change', function (e) {
-        var val = this.selectedValue;
-        if (this.selectedIndex > 0) {
-            var option = this[this.selectedIndex];
-            if (option.value === 'facebook') {
-                that.ClearStatus();
-                fb.Authenticate();
-            } else if (option.value === 'logout') {
-                // Only allow Logout for View or Offline mode.
-                var nMode = that.curMode();
-                if (nMode === that.eMode.online_edit ) {
-                    that.AppendStatus("Complete editing the path, then logout.", false);
-                } else if (nMode === that.eMode.online_define) {
-                    that.AppendStatus("Complete defining a new path, then logout.", false);
-                } else {
-                    that.ClearStatus();
-                    fb.LogOut();
-                }
-            } else {
-                that.ClearStatus();
-            }
-            this.selectedIndex = 0;
-        }
-    });
-    */ 
 
     selectSignIn.onListElClicked = function(dataValue) {
         var option = this[this.selectedIndex];
@@ -3887,7 +4075,7 @@ function wigo_ws_Controller() {
     var sOwnerId = model.getOwnerId();
     view.setOwnerId(sOwnerId);
     view.setOwnerName(model.getOwnerName());
-    // Comment out next stmt only if debugging map initialization, in case handler for buInitView does initialization.
+    // Comment out next stmt only if debugging map initialization, in which case handler for buInitView does initialization.
     view.Initialize();
 }
 

@@ -249,6 +249,8 @@ function Wigo_Ws_CordovaControls() {
         // which contains the selected value.
         this.getSelectedIndex = function() {
             var iFound = -1;
+            if (!value)        ////20160912 added
+                return -1;     ////20160912 added
             var valueToMatch = GetValue(value); 
             var listEl, listValue;
             for (var i=0; i <list.children.length; i++) {
@@ -503,7 +505,7 @@ function Wigo_Ws_CordovaControls() {
     //  nState: number. 0 for off, 1 for on, -1 for unknown.
     function OnOffControl(parentEl, idName, labelStr, nState) {
         var that = this; 
-        // Html div created as container for this dropdown control.
+        // Html div created as container for this OnOff control.
         // NOte: Likely not accessed by owner of this object.        
         this.ctrl = this.create("div", idName, 'wigo_ws_OnOffControl');
 
@@ -553,7 +555,7 @@ function Wigo_Ws_CordovaControls() {
         //  text: string. Text shown for the Off ctrl.
         this.setOffText = function(text) {
             offText = text;
-            SetOnText();
+            SetOffText();
         };
 
         // Sets text for the On ctrl.
@@ -650,6 +652,21 @@ function Wigo_Ws_CordovaControls() {
     }
     OnOffControl.prototype = controlBase;
     OnOffControl.prototype.constructor = OnOffControl;
+
+    // Returns new OnOffControl object.
+    // Text for On is set to Yes, corresponding to nState of 1.
+    // Text for Off is set to No, corresonding to nState of 0.
+    // Args: Same as for OnOffControl constructor.
+    // Returns: OnOffControl object.
+    // Remarks: This is a function and not an object.
+    // Do NOT use new YesNoControl(...), just call YesNoControl(...).
+    function NewYesNoControl(parentEl, idName, labelStr, nState) {
+        var yesNoCtrl = new OnOffControl(parentEl, idName, labelStr, nState);
+        yesNoCtrl.setOnText('Yes');
+        yesNoCtrl.setOffText('No');
+        return yesNoCtrl;
+    }
+
 
     // Object for array of tabs.
     // Constructor Args:
@@ -863,5 +880,6 @@ function Wigo_Ws_CordovaControls() {
         StatusDiv: StatusDiv,
         OnOffControl: OnOffControl, 
         TitleBar: TitleBar,
+        NewYesNoControl: NewYesNoControl,
     }
 }

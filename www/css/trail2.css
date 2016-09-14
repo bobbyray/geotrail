@@ -128,8 +128,8 @@ label {
     clear: both;
     float: left;
     padding-top: 4px;
-    font-weight: 400;
-    font-size: larger;
+    /* ////20160913 font-weight: 400; */
+    /* ////20160913 font-size: larger; */
 }
 
 #map-canvas {
@@ -160,7 +160,7 @@ label {
 
 #divOwnerId {
     width: 100%;
-    height: 1.5em;
+    height: 1.9em;
     float: left;
     margin-left: 5px;
 }
@@ -175,16 +175,11 @@ label {
 {
     margin-right: 5px;
 }
-/* ////20160911
-#selectSignIn {
-    clear: none;
-    float: right;
-}
-*/
 #selectSignInHolder {
     height: 100%;
     width: 25%;
     float: right;
+    margin-right: 5%;
     position: relative;
 }
 
@@ -378,7 +373,7 @@ label {
     float: left;
 }
 
-
+/* Settings home area */
 #divSettings {
     position: absolute;
     left: 0px;
@@ -388,11 +383,24 @@ label {
     padding: 5px;
     border: 1px solid #999;
     z-index: 2;
-    font-size: 130%;
+    font-size: 120%;
+    width: 95%;
 }
 
+/* ////20160914 moved to #divSettings .settingItem
 #divSettings > div {
-    margin-bottom: 0.07in;
+    margin-bottom: 0.35em;
+    height: 2.0em;
+    border: black 2px solid;
+    width: 100%;
+}
+*/
+/* Settings items */
+.settingItem {
+    margin-bottom: 0.35em;
+    height: 2.0em;
+    border: black 2px solid;
+    width: 100%;
 }
 
 #divSettings input {
@@ -403,11 +411,75 @@ label {
     padding-top: 0px;
 }
 
-#buSettingsDone {
-    margin-left: 15%;
-    min-width: 5em;
+.settingItem .wigo_ws_DropDownLabel {
+    top: 20%;
+    left: 0px;
+    width: inherit;
+    text-align: left;
+} 
+.settingItem .wigo_ws_DropDownValue {
+    top: 20%;
+    left: inherit;
+    right: 16%;
+    background-color: lightgray;
+    padding-left: 0.2em;
+}
+.settingItem .wigo_ws_DropDownIcon {
+    width: 15%;
+    /* ////20160914 height: auto;*/
+    height: 80%;
+    top: 10%;
+    left: inherit;
+    right: 0px;
 }
 
+#divHomeArea  {
+    height: 8.5em;
+}
+
+#numberHomeAreaSWLat, #numberHomeAreaNELat {
+    /* ////20160914
+    clear: right;
+    float: right;
+    */
+    clear: both;
+    float: left;
+    margin-left: 25%;   
+} 
+#numberHomeAreaSWLon, #numberHomeAreaNELon {
+    clear: right;
+    float: left;
+    margin-left: 5%;
+}
+/* ////20160914
+#divHomeAreaSW {
+    height: 3em;
+    border-bottom: 1px solid black;
+}
+*/
+#divHomeAreaSW, #divHomeAreaNE {
+    height: 3em;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid black;
+}
+#divSetHomeArea {
+    border: none
+}
+#buSetHomeArea {
+    float: right;
+}
+
+#divSettingsDoneCancel {
+    border: none;
+    margin-top: 0.85em;
+
+}
+#buSettingsDone {
+    margin-left: 25%;
+    min-width: 5em;
+}
 #buSettingsCancel {
     margin-left: 2em;
 }
@@ -476,6 +548,7 @@ label {
     float: left;
     width: 12%;
     height: 100%;
+    margin-right: 2em;
 }
 
 #mainMenu .wigo_ws_DropDownIcon {
@@ -585,4 +658,4 @@ label {
     width: 31%;
     float: right;
 }
- 
+
