@@ -128,8 +128,6 @@ label {
     clear: both;
     float: left;
     padding-top: 4px;
-    /* ////20160913 font-weight: 400; */
-    /* ////20160913 font-size: larger; */
 }
 
 #map-canvas {
@@ -387,14 +385,6 @@ label {
     width: 95%;
 }
 
-/* ////20160914 moved to #divSettings .settingItem
-#divSettings > div {
-    margin-bottom: 0.35em;
-    height: 2.0em;
-    border: black 2px solid;
-    width: 100%;
-}
-*/
 /* Settings items */
 .settingItem {
     margin-bottom: 0.35em;
@@ -426,7 +416,6 @@ label {
 }
 .settingItem .wigo_ws_DropDownIcon {
     width: 15%;
-    /* ////20160914 height: auto;*/
     height: 80%;
     top: 10%;
     left: inherit;
@@ -438,10 +427,6 @@ label {
 }
 
 #numberHomeAreaSWLat, #numberHomeAreaNELat {
-    /* ////20160914
-    clear: right;
-    float: right;
-    */
     clear: both;
     float: left;
     margin-left: 25%;   
@@ -451,12 +436,6 @@ label {
     float: left;
     margin-left: 5%;
 }
-/* ////20160914
-#divHomeAreaSW {
-    height: 3em;
-    border-bottom: 1px solid black;
-}
-*/
 #divHomeAreaSW, #divHomeAreaNE {
     height: 3em;
     border-top: none;

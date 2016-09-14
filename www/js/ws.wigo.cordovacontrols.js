@@ -249,8 +249,8 @@ function Wigo_Ws_CordovaControls() {
         // which contains the selected value.
         this.getSelectedIndex = function() {
             var iFound = -1;
-            if (!value)        ////20160912 added
-                return -1;     ////20160912 added
+            if (!value)        
+                return -1;     
             var valueToMatch = GetValue(value); 
             var listEl, listValue;
             for (var i=0; i <list.children.length; i++) {
