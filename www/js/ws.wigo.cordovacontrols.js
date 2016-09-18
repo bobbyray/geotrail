@@ -34,6 +34,7 @@ Class Names for CSS
     wigo_ws_Dim
 
     wigo_ws_Title
+    wigo_ws_TitleBarHelp
 
     wigo_ws_BackIcon  // Image for back arrow icon.
 */
@@ -821,7 +822,10 @@ function Wigo_Ws_CordovaControls() {
     //  backArrowPath: string, optional. Path to icon (image) for a back arrow.
     //      If not given, there is not back arrow icon.
     //      class for back arrow is wigo_ws_BackIcon.
-    function TitleBar(holderDiv, backArrowPath) {
+    //  sHelp: string, optional. A Help symbol or phrase is shown on the title bar.
+    //         Defaults to no help shown. class is wigo_ws_TitleBarHelp and the 
+    //         element is a span with text given by sHelp. A click handler can be provided.
+    function TitleBar(holderDiv, backArrowPath, sHelp) {
         var that = this;
 
         // Sets the title text.
@@ -851,6 +855,14 @@ function Wigo_Ws_CordovaControls() {
         // Returns nothing.
         // Remarks: Set to null to disable event handler.
         this.onBackArrowClicked = function(event) {};
+        
+        // Event handler called when Help symbol in title bar is clicked.
+        // Signature:
+        //  Arg:
+        //      event: Event object for the click.
+        // Returns nothing.
+        // Remarks: Set to null to disable event handler.
+        this.onHelpClicked = function(event){};
 
         if (!(holderDiv instanceof HTMLDivElement))  {
             throw new Error("Container for TitleBar must be a div.");
@@ -869,6 +881,18 @@ function Wigo_Ws_CordovaControls() {
                     that.onBackArrowClicked(event);
             }, false);
             
+        }
+
+        var helpSpan = null;
+        if ('string' === typeof sHelp && sHelp) {
+            helpSpan = this.create("span", null, 'wigo_ws_TitleBarHelp');
+            helpSpan.innerText = sHelp;
+            holderDiv.appendChild(helpSpan);
+            helpSpan.addEventListener('click', function() {
+                if ('function' === typeof that.onHelpClicked)
+                    that.onHelpClicked(event);
+            }, false);
+
         }
     }
     TitleBar.prototype = controlBase;

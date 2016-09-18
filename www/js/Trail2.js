@@ -3,6 +3,12 @@
 
 // wigo_GeoPathMap object is in js/GeoPathMapView.js.
 
+// Note: I was thinking of removing the dependency on jquery since the target platforms are ios and android only.
+// However, the $.parseXML() function is used to parse an XML string for the gpx data for a path in js/GeoPathsApi2.js.
+// While many of the JqueryObject.bind(..) and $(selector) functions have been replaced by 
+// HtmlElement.addEventListener(..) and document.getElementById(HTML_ELMENT_id), some have not been 
+// converted because jquery is still a requirement. 
+
 // Object for parameters for this.onSavePathOffline()
 wigo_ws_GeoPathMap.OfflineParams = function () {
     this.nIx = -1;      // Number for index of wigo_ws_Gpx object in list of objects.
@@ -1799,7 +1805,7 @@ function wigo_ws_View() {
     var divStatus = new ctrls.StatusDiv(divStatus);
 
     var titleHolder = document.getElementById('titleHolder');
-    var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png');
+    var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
     titleBar.onBackArrowClicked = function(event) {
         // Prompt user to save changes if editing.
         var sPrompt = "Cancel return so you can save your changes first?";
@@ -1815,6 +1821,10 @@ function wigo_ws_View() {
             that.setModeUI(that.eMode.select_mode);
         } 
     };
+
+    titleBar.onHelpClicked = function(event) {
+        ShowHelpGuide(true);
+    }
 
     var fsmEdit = new EditFSM(this);
 
@@ -2486,7 +2496,9 @@ may not be appropriate for your ablities and that the trails could have inaccura
         if (!settings)
             return;
         selectAllowGeoTracking.setState(settings.bAllowGeoTracking ? 1 : 0);
-        
+        ////20160917 add stmt to show/hide mapTrackToggle.
+        ////20160917 ShowElement(holderMapTrackToggle, settings.bAllowGeoTracking);
+
         numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
         numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
 
@@ -2513,12 +2525,17 @@ may not be appropriate for your ablities and that the trails could have inaccura
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Enable phone alerts.
+        /* ////20160917 
         alerter.bAlertsAllowed = settings.bAllowGeoTracking && settings.bPhoneAlert;
         if (settings.bAllowGeoTracking) {
             alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
         } else {
             alerter.bPhoneEnabled = false;
         }
+        */
+        alerter.bAlertsAllowed = settings.bPhoneAlert;
+        alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
+
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
 
@@ -2546,16 +2563,65 @@ may not be appropriate for your ablities and that the trails could have inaccura
         RunTrackTimer();
     }
 
+
+    // Shows or the map-canvas div.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    function ShowMapCanvas(bShow)
+    {
+        var sShowMap = bShow ? 'block' : 'none'; 
+        var mapCanvas = getMapCanvas();
+        mapCanvas.style.display = sShowMap;
+    }
+
+
+    /* ////20160915 not needed and not working.
+    // Show the bars used for Select View Mode.
+    // Arg:
+    //  bShow: boolean indicating to show the bars.
+    function ShowSelectModeBars(bShow) { ////20160916 added
+        ShowElement(titleBar.ctrl, bShow);
+        ShowOwnerIdDiv(bShow);
+        ShowElement(modeBar, bShow);
+    }
+    */
+
+
     // Shows or hides the divSettings.
     // Arg:
     //  bShow: boolean to indicate to show.
     function ShowSettingsDiv(bShow) {
         var sShowSettings = bShow ? 'block' : 'none';
-        var sShowMap = bShow ? 'none' : 'block'; 
         divSettings.style.display = sShowSettings;
-        var mapCanvas = getMapCanvas();
-        mapCanvas.style.display = sShowMap;
+        ////21060915Refactor var sShowMap = bShow ? 'none' : 'block'; 
+        ////21060915Refactor var mapCanvas = getMapCanvas();
+        ////21060915Refactor mapCanvas.style.display = sShowMap;
+        ////21060915Refactor ShowMapCanvas(bShow);
+        ShowMapCanvas(!bShow); 
     }
+
+    // Shows or hides the divHelpGuide.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpGuide = document.getElementById('divHelpGuide');
+    function ShowHelpGuide(bShow) {
+        ////20160915 ShowSelectModeBars(!bShow);  ////20160916 ???? fix 
+        ShowModeDiv(!bShow);
+        ShowElement(divHelpGuide, bShow);
+        ShowElement(closeDialogBar, bShow);
+        ShowMapCanvas(!bShow);    
+    }
+
+    // Button and event handler to close the HelpGuide.
+    var closeDialogBar = document.getElementById('closeDialogBar');
+    var buCloseDialogBar = document.getElementById('buCloseDialogBar');
+    buCloseDialogBar.addEventListener('click', CloseHelpGuide, false);
+    function CloseHelpGuide() {
+        ShowHelpGuide(false);
+        that.ClearStatus();
+        titleBar.scrollIntoView();   
+    }
+
 
     // ** More function 
 
@@ -3217,7 +3283,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
             AlertMsg(LicenseMsg());
             this.selectedIndex = 0;
         } else if (dataValue === 'help') {
-            AlertMsg(HelpMsg());
+            ////20160915 AlertMsg(HelpMsg());
+            ShowHelpGuide(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'back_to_trail') {
             AlertMsg(BackToTrailHelp());
@@ -3401,8 +3468,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
     
 
     // OnOffControl for Phone Alert on map bar.
-    parentEl = document.getElementById('mapPhAlertToggle');
-    var mapAlertCtrl = new ctrls.OnOffControl(parentEl, null, "Alert", -1);
+    ////20160917 parentEl = document.getElementById('mapPhAlertToggle');
+    ////20160917 var mapAlertCtrl = new ctrls.OnOffControl(parentEl, null, "Alert", -1);
+    var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
+    var mapAlertCtrl = new ctrls.OnOffControl(holderMapPhAlertToggle, null, "Alert", -1);
     mapAlertCtrl.onChanged = function(nState) {
         // Enable/disable alerts.
         alerter.bPhoneEnabled = nState === 1;
@@ -3412,8 +3481,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
     }
 
     // OnOffControl for Tracking on map bar.
-    parentEl = document.getElementById('mapTrackToggle');
-    var mapTrackingCtrl = new ctrls.OnOffControl(parentEl, null, "Track", -1);
+    ////20160917 parentEl = document.getElementById('mapTrackToggle');
+    ////20160917 var mapTrackingCtrl = new ctrls.OnOffControl(parentEl, null, "Track", -1);
+    var holderMapTrackToggle = document.getElementById('mapTrackToggle');
+    var mapTrackingCtrl = new ctrls.OnOffControl(holderMapTrackToggle, null, "Track", -1);
     mapTrackingCtrl.onChanged = function(nState) {
         that.ClearStatus(); 
         // Save state of flag to track geo location.
@@ -3433,7 +3504,9 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
     function EnableMapBarGeoTrackingOptions(settings) {
+        /* ////20160917 redo
         var bAllow = settings.bAllowGeoTracking;
+        ShowElement(holderMapTrackToggle, bAllow);  ////20160917 added stmt.
         var bOffPathAlert = settings.bOffPathAlert;
         var bTracking = settings.bEnableGeoTracking;
         if (bAllow) {
@@ -3445,6 +3518,39 @@ may not be appropriate for your ablities and that the trails could have inaccura
             mapTrackingCtrl.setState(0);
             mapAlertCtrl.setState(0);
         }
+        */
+
+        /* ////20160917 try again
+        var bAllowTracking = settings.bAllowGeoTracking;
+        var bEnableTracking = settings.bEnableGeoTracking;
+        var bAllowPhoneAlert = settings.bPhoneAlert;
+        var bEnablePhoneAlert = settings.bOffPathAlert; 
+        if (bAllowTracking) {
+            var nState = bEnableTracking ? 1 : 0;
+            mapTrackingCtrl.setState(nState);
+            nState = bAllowPhoneAlert && bEnablePhoneAlert ? 1 : 0;
+            mapAlertCtrl.setState(nState);
+            ShowElement(holderMapTrackToggle, true);  ////20160917 added stmt.
+            ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  ////20160917 added stmt.
+        } else {
+            mapTrackingCtrl.setState(0);
+            mapAlertCtrl.setState(0);
+            ShowElement(holderMapTrackToggle, false);  ////20160917 added stmt.
+            ShowElement(holderMapPhAlertToggle, false);  ////20160917 added stmt.
+        }
+        */
+
+        var bAllowTracking = settings.bAllowGeoTracking;
+        var bEnableTracking = settings.bEnableGeoTracking;
+        var bAllowPhoneAlert = settings.bPhoneAlert;
+        var bEnablePhoneAlert = settings.bOffPathAlert; 
+        ShowElement(holderMapTrackToggle, bAllowTracking);  ////20160917 added stmt.
+        ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  ////20160917 added stmt.
+
+        var nState = bAllowTracking && bEnableTracking? 1 : 0;
+        mapTrackingCtrl.setState(nState);
+        nState = bAllowPhoneAlert && bEnablePhoneAlert ? 1 : 0;
+        mapAlertCtrl.setState(nState);
     }
 
     parentEl = document.getElementById("selectMapCache");

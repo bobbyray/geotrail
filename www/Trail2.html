@@ -131,7 +131,11 @@
         <div id="mapPhAlertToggle"></div> <!-- Container for Cordova OnOffControl -->
         <div id="mapTrackToggle"></div> <!-- Container for Cordova OnOffControl -->
     </div>
+    <div id="closeDialogBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <button id=buCloseDialogBar>Close</button>
+    </div>
 
+    <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
         <h2>Settings for GeoTrail</h2> 
         <div id='holderAllowGeoTracking' class='settingItem'>
@@ -183,6 +187,219 @@
             <button id="buSettingsCancel">Cancel</button>
         </div>
     </div>
+    <!-- Help Guide, only shown when selected from mainMenu -->
+    <div id="divHelpGuide" class='wigo_ws_NoShow'>
+        <h1>Help - Guide</h1>
+        <h2>Title Bar</h2>
+        <p>At the top of the screen is a title describing the currently selected map view.
+        The back arrow on the right of the Title Bar returns to selecting
+        a Map View. (When you are selecting a map view, there is no back arrow.)</p>
+        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p> 
+        <h2>Sign-In</h2>
+        <p>Select Sign-In > Facebook to sign in. Your sign-in id is remembered so 
+        you do not need to sign in again unless you log out. </p>
+        <p>You do not need to sign in, but you can only view public trails if not signed in.</p>
+        <h2>Select Map View</h2>
+        Select a view from the Select Map View DropList.
+        <ul>
+        <li><a href="#helpOnlineMap">Online</a> lets you select a trail from ones saved on a web server.</li>
+        <li><a href="#helpOfflineMap">Offline</a> lets you view trails when you are 
+        not connected to the web. You need to select the trails to save to your phone when 
+        you are online.</li>
+        <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
+        <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
+        you have saved online.</li> 
+        </ul>
+        <p>The <a href="#helpMainMenu">Main Menu</a> droplist is on the left and provides more options.</p>
+        <p>More details about the map views and Main Menu follow.
+        <h2 id="helpOnlineMap">Online Map</h2>
+        <ul>
+        <li>Trails DropList<br/>
+        Select a trail from the web that others have made public and ones
+        that are private to you.</li>
+        <li>Save Offline Button<br/>
+        Touch the Save Offline button to save a path you are viewing so that you can
+        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</li>
+        <li>Find Trails DropList<br/>
+        Select an option from the droplist to search for paths to view.
+        The Trails droplist is filled with the paths found.
+            <ul> 
+                <li>Find Trails > Home Area<br/>
+                Searches for paths that are in your Home Area, which is a geo-rectangle
+                defined in <a href="#helpHomeArea">Menu > Settings > Home Area</a>.
+                All public paths and your private paths are included.</li>
+                <li>Find Trails > On Screen<br/>
+                Searches for paths that are in the area displayed on the screen. 
+                First, pan, zoom, and pinch to select the area you see on the screen.</li>
+                <li>Find Trails > All Paths<br>
+                Searches for all public paths and your private paths.</li>
+                <li>Find Trails > All Mine<br/>
+                Searchs for all your paths, both public and private.
+                You must be signed in to search for your paths.</li>
+                <li>Find Trails > My Public<br/>
+                Searches for all of your public paths, paths that anyone can see.</li>
+                <li>Find Trails > My Private<br/>
+                Searches for your private paths, paths that only you can see.</li>
+            </ul>
+        </li>
+        <li id="helpControlsAtBottom">Controls at Bottom of Map<br/>
+        <ul>
+            <li>Ctr Trail Button<br/>
+            Pans the map to the center of the selected path.</li>
+            <li>MyLoc Button<br/>
+            Displays your current location on the map.</li>
+            <li>Track Off | On</br>
+            Switches between geo-location tracking On or Off.<br/>
+            Note: Track On will run down your battery more quickly.</li>
+            <li>Ph Alert Off | On<br/>
+            Switches between Ph Alert On or Off.
+            A phone alert is given if you are off the trail.</li>
+        </ul>
+        </li>
+        </ul>
+        <h2 id="helpOfflineMap">Offline Map</h2>
+        <!-- ////20160916 <p>You select a trail you have saved offline.<p> -->
+        <ul>
+            <li>Trails DropList<br/>  
+            Select a trail from the list you have saved.</li>
+            <li>Map Cache DropList<br/>
+            Shows information about the cache of map tiles.<br/>
+            <ul>
+                <li>Size<br/>Select to see the number of files and the size in MB of all the files.</li>
+                <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
+                the offline trails from the phone.</li>
+            </ul>
+        </ul>
+        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
+        <h2 id="helpDrawTrail">Draw a Trail</h2>
+        <p>Provides a way to create a trail and save it online.</p>
+        <p>You must be signed into Facebook to create a trail.</p>
+        <p>Instructions are shown at the top of the screen to guide you through the process,
+        which is outlined below.</p>
+        <ul>
+            <li>Enter a path name for the trail.</li>
+            <li>Share DropList<br/>
+            Select Public for anyone to see the trail.<br/>
+            Select Private for only you to see the trail.</li>
+            <li>Touch on the screen to define the first point on the path.</li>
+            <li>Soft Cursor Keys<br/>
+            Use the cursor keys 
+            that appear to nudge the point left, right, up, or down to get the point exactly where
+            you want it. Holding down a cursor button causes the point to move faster on the screen.
+            Touch OK to confirm that the point is to be added. Repeat the process to define
+            all the points for your trail.</li>
+            <li>Upload Button<br/>
+            Touch the Upload button to upload (save online) the data for your trail.</li>
+            <li>Cancel Button<br/>
+            Touch the Cancel button if you decide not to create the trail.</li>
+            <li>Pt Action DropList<br/>
+            You can edit an existing point in the trail by selecting Select Pt instead of Append Pt.
+            Touch on the trail near the point you want to edit.<br/>
+            <ul>
+                <li>Prev, Next Buttons<br/>
+                If the correct point is not highlighted on the trail, use 
+                the Prev and Next buttons to move to the previous or next point on the trail.</li>
+                <li>From the Pt Action droplist select:
+                    <ul>
+                        <li>Move Pt<br/>
+                        When moving a point, touch where the point should go and nudge it with the cursors.
+                        Touch OK to confirm that the point is where you want it.</li>
+                        <li>Insert Pt<br/>
+                        When inserting a point, touch where the inserted point should be and use the cursors to nudge it.
+                        Touch OK to confirm the location is correct. The point is inserted in the
+                        path before the selected point.</li>
+                        <li>Delete Pt<br/>
+                        When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons
+                        to move to a different point on the path if the correct point is not selected (highlighted).
+                    </ul>
+                </li>
+            </ul>
+        </ul>
+        <h2 id="helpEditTrail">Edit a Trail</h2>
+        <p> Edit provides a way to edit a trail you have saved online.
+        The precedure is the same as for drawing a new trail, except that you select a path to edit first.</p>
+        <p>You must be signed in to edit a path, and you can only edit paths that you have defined.</p>
+        <h2>Creating Trail Maps at Hillmap</h2>
+        <p>An alternative to creating a trail on your phone is to
+        use the site http://www.hillmap.com to create a trail from a laptop or desktop computer.</p>
+        <ul>
+            <li>Use the Path tab to define your trail.</li>
+            <li>Use Tools > Download Gpx to save your path.</li>
+        </ul>
+        <p>Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
+        downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.</p>
+        <h2 id="helpMainMenu">Main Menu</h2>
+        The Main Menu is available from Select Map View, and is the droplist on the left.  
+        <h3>Menu > Terms of Use</h3>
+        <p>Displays the Terms of Use for this app.
+        When the app is first installed or the app is updated, the Terms of Use must be accepted before
+        the app can be used. If you do not accept the Terms of Use, uninstall this app.</p>
+        <h3>Menu > Settings</h3>
+        <p>Presents a dialog to set your preferences for the app.</p>  
+        <ul>
+            <li>Allow Geo Tracking Yes | No<br/> 
+            For No, geo-location is NOT obtained automatically.
+            However, the MyLoc button will still get your geo-location.<br/>
+            MyLoc and Track are on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.</li>
+            <li>Geo Tracking Initially On Yes | No<br/>
+            Yes to start with Track On when app loads.</li>
+            <li>Geo Tracking Interval (secs)<br/>
+            Number of seconds to check your geo-location when tracking is allowed.</li>
+            <li>Off-Path Threshold<br/>
+            Number of meters that you need to be off-path for an alert to be given.</li>
+            <li>Allow Phone Alert Yes | No<br/>
+            Determines if alerts (beeps) from you phone are given.<br/> 
+            Ph Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.</li>
+            <li>Phone Alert Initially On Yes | No<br/> 
+            Yes to start with Ph Alert On when app loads.</li>
+            <li>Phone Vibration in Secs<br>
+            Number of seconds phone vibrates for an alert. Set to 0 for no vibration.</li>
+            <li>Phone Beep Count<br/>
+            Number of beeps to give for an alert. Set to 0 for no beepings.</li>
+            <li>Pebble Watch Yes | No<br/>
+            Yes to show messages on a Pebble Watch that is connected to the phone.</li>
+            <li>Pebble Vibration Count<br/>
+            Number of vibrations given on Pebble Watch for message indicating
+            off trail. Count of 0 disables vibrations.<br/>
+            Note that Ph Alert Off does not inhibit vibrations for being off-trail.</li>
+            <li>Prev Geo Loc Thres<br/>
+            Number of meters of current geo-location with respect to previous location 
+            for change in location to be considered valid. (This prevents small variations in the geo-location of
+            the same point to appear to be a change in location.)</li>
+            <li>Show Compass Heading on Map?<br/>Yes | No<br/>
+            An arrow for the compass heading from your current location may be shown on the map.</li>
+            <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>
+            Touching a point on the map simulates getting the geo location for the point on the map.
+            This is just for testing.</li>
+            <li id="helpHomeArea">Set Home Area to Screen<br>
+            Touch the Set button to set your home area to be that shown on the screen<br/>
+            First, pan, zoom, and pinch to display the area you want on the screen.<br/>
+            The paths in the Home Area are found when the app starts.
+            Also, the Home Area can be chosen in Online Map, from the Find Trails droplist.<br/>
+            <li>Done Button<br/>
+            Touch Done to save the changes and close the Settings dialog.
+            <li>Cancel Button<br/>
+            Touch Cancel to close the Setting dialog ignoring any changes that may have been made.<br/>
+            Note: You must touch Done or Cancel for the dialog to close.</li>
+        </ul>
+        <h3>Menu > Start Pebble</h3>
+        <p>Starts the Pebble app on the watch. The Pebble app should be started automatically so it is unlikely
+        you need to do this.</p>
+        <h3>Menu > Help - Guide</h3>
+        Displays a guide (which you are viewing) for using this app.
+        <h3>Menu > Help - Back to Trail</h3>
+        Display instructions for returning to the trail when you are off the trail. Explains why the instructions 
+        may be inaccurate and that you need to use your judgement.
+        <h3>Menu > Help - Tracking vs Battery Drain</h3>
+        Explains that automatic tracking causes faster battery drain.
+        <h3>Menu > About</h3>
+        Displays app version number and copyright.
+        <h3>Menu > Licencse</h3>
+        Displays the open licenses for components used in this app.
+        <br/><br/><br/> <!-- Blank line at bottom for fixed close dialog bar to overlay. -->  
+    </div>
+
+
     <div id="map-canvas" />   
     <!-- Note: Do not put map-canvas div inside another div or section. -->
 </body>

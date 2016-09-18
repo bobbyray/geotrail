@@ -20,6 +20,31 @@
     border-right: 2px solid lightcyan;
 }
 
+.wigo_ws_Title {
+    font-size: 1.5em;
+    font-weight: bold;  
+}
+.wigo_ws_BackIcon {
+    height: 100%;
+    width: auto;
+    margin-top: 0.1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: 0.5em;
+    float: right;
+}
+.wigo_ws_TitleBarHelp {
+    height: 100%;
+    width: 1.0em;
+    margin-top: 0.1em;
+    margin-left: 0.5em;
+    /* ////20160916 margin-right: 0.5em; */
+    /* ////20160916 margin-bottom: 0.3em; */
+    font-size: 140%;
+    color: white;
+    float: right;
+}
+
 .wigo_ws_StatusMsg {
     background-color: aliceblue;    
     font-size: 1.3em;
