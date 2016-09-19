@@ -534,7 +534,7 @@ label {
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;
-    width: 80%;
+    width: 82%;
     margin-left: 2%;
 }
 
@@ -623,7 +623,7 @@ label {
     float: right;
 }
 
-#closeDialogBar {
+#closeDialogBar, #confirmDialogBar {
     position: fixed;
     bottom: 0px;
     left: 0px;
@@ -635,9 +635,17 @@ label {
     margin-left: 40%;
     width: 20%;
 }
+#buAcceptConfirmDialogBar {
+    margin-left: 20%;
+    width: 25%;
+}
+#buRejectConfirmDialogBar {
+    margin-left: 10%;
+    width: 20%;
+}
 
-
-#divHelpGuide {
+#divHelpGuide, #divHelpBackToTrail, 
+#divHelpTrackingVsBattery, #divTermsOfUse {
     position: absolute;
     left: 0px;
     top: 0px;

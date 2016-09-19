@@ -135,6 +135,13 @@
         <button id=buCloseDialogBar>Close</button>
     </div>
 
+    <div id="confirmDialogBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <button id=buAcceptConfirmDialogBar>Accept</button>
+        <button id='buRejectConfirmDialogBar'>Reject</button>
+    </div>
+
+
+
     <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
         <h2>Settings for GeoTrail</h2> 
@@ -200,49 +207,53 @@
         you do not need to sign in again unless you log out. </p>
         <p>You do not need to sign in, but you can only view public trails if not signed in.</p>
         <h2>Select Map View</h2>
-        Select a view from the Select Map View DropList.
+        Select a view from the Select Map View droplist.
         <ul>
-        <li><a href="#helpOnlineMap">Online</a> lets you select a trail from ones saved on a web server.</li>
-        <li><a href="#helpOfflineMap">Offline</a> lets you view trails when you are 
-        not connected to the web. You need to select the trails to save to your phone when 
-        you are online.</li>
-        <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
-        <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
-        you have saved online.</li> 
+            <li><a href="#helpOnlineMap">Online</a> lets you select a trail from ones saved on a web server.</li>
+            <li><a href="#helpOfflineMap">Offline</a> lets you view trails when you are 
+            not connected to the web. You need to select the trails to save to your phone when 
+            you are online.</li>
+            <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
+            <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
+            you have saved online.</li> 
         </ul>
         <p>The <a href="#helpMainMenu">Main Menu</a> droplist is on the left and provides more options.</p>
         <p>More details about the map views and Main Menu follow.
         <h2 id="helpOnlineMap">Online Map</h2>
-        <ul>
-        <li>Trails DropList<br/>
-        Select a trail from the web that others have made public and ones
-        that are private to you.</li>
-        <li>Save Offline Button<br/>
-        Touch the Save Offline button to save a path you are viewing so that you can
-        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</li>
-        <li>Find Trails DropList<br/>
-        Select an option from the droplist to search for paths to view.
-        The Trails droplist is filled with the paths found.
-            <ul> 
-                <li>Find Trails > Home Area<br/>
-                Searches for paths that are in your Home Area, which is a geo-rectangle
-                defined in <a href="#helpHomeArea">Menu > Settings > Home Area</a>.
-                All public paths and your private paths are included.</li>
-                <li>Find Trails > On Screen<br/>
-                Searches for paths that are in the area displayed on the screen. 
-                First, pan, zoom, and pinch to select the area you see on the screen.</li>
-                <li>Find Trails > All Paths<br>
-                Searches for all public paths and your private paths.</li>
-                <li>Find Trails > All Mine<br/>
-                Searchs for all your paths, both public and private.
-                You must be signed in to search for your paths.</li>
-                <li>Find Trails > My Public<br/>
-                Searches for all of your public paths, paths that anyone can see.</li>
-                <li>Find Trails > My Private<br/>
-                Searches for your private paths, paths that only you can see.</li>
-            </ul>
-        </li>
-        <li id="helpControlsAtBottom">Controls at Bottom of Map<br/>
+        You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
+        from which you select a trail to view. Your current geo-location on the trail is shown 
+        and you can be alerted if you are off path. When you are off path, instructions for returning to the trail
+        are shown. Also automatic tracking can be enabled to determine if you are off path.
+        <h3>Trails DropList</h3>
+        <p>Select a trail from the web that others have made public and ones
+        that are private to you.</p>
+        <h3>Save Offline Button</h3>
+        <p>Touch the Save Offline button to save a path you are viewing so that you can
+        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
+        <h3>Find Trails DropList</h3>
+        <p>Select an option from the droplist to search for paths to view.
+        The Trails droplist is filled with the paths found.</p>
+        <ul> 
+            <li>Find Trails > Home Area<br/>
+            Searches for paths that are in your Home Area, which is a geo-rectangle
+            defined in <a href="#helpHomeArea">Menu > Settings > Home Area</a>.
+            All public paths and your private paths are included.</li>
+            <li>Find Trails > On Screen<br/>
+            Searches for paths that are in the area displayed on the screen. 
+            First, pan, zoom, and pinch to select the area you see on the screen.</li>
+            <li>Find Trails > All Paths<br>
+            Searches for all public paths and your private paths.</li>
+            <li>Find Trails > All Mine<br/>
+            Searchs for all your paths, both public and private.
+            You must be signed in to search for your paths.</li>
+            <li>Find Trails > My Public<br/>
+            Searches for all of your public paths, paths that anyone can see.</li>
+            <li>Find Trails > My Private<br/>
+            Searches for your private paths, paths that only you can see.</li>
+        </ul>
+        <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
+        These controls let you see your current geo-location, turn automatic tracking on or off,
+        and turn receiving alerts for your phone on or off.
         <ul>
             <li>Ctr Trail Button<br/>
             Pans the map to the center of the selected path.</li>
@@ -255,10 +266,11 @@
             Switches between Ph Alert On or Off.
             A phone alert is given if you are off the trail.</li>
         </ul>
-        </li>
-        </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
-        <!-- ////20160916 <p>You select a trail you have saved offline.<p> -->
+        You select a trail you have saved offline. Offline Map works the same as <a href="#helpOnlineMap">Online Map</a>,
+        except that the map is shown from map tiles saved on your phone instead of from the web, 
+        which means that the map is limited and is blank if you pan or zoom beyond the bounds
+        of the saved map.
         <ul>
             <li>Trails DropList<br/>  
             Select a trail from the list you have saved.</li>
@@ -293,7 +305,7 @@
             <li>Cancel Button<br/>
             Touch the Cancel button if you decide not to create the trail.</li>
             <li>Pt Action DropList<br/>
-            You can edit an existing point in the trail by selecting Select Pt instead of Append Pt.
+            You can edit an existing point in the trail by selecting Select Pt.
             Touch on the trail near the point you want to edit.<br/>
             <ul>
                 <li>Prev, Next Buttons<br/>
@@ -310,14 +322,16 @@
                         path before the selected point.</li>
                         <li>Delete Pt<br/>
                         When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons
-                        to move to a different point on the path if the correct point is not selected (highlighted).
+                        to move to a different point on the path if the correct point is not selected (highlighted).</li>
                     </ul>
                 </li>
             </ul>
+            </li>
         </ul>
         <h2 id="helpEditTrail">Edit a Trail</h2>
         <p> Edit provides a way to edit a trail you have saved online.
-        The precedure is the same as for drawing a new trail, except that you select a path to edit first.</p>
+        The precedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
+        except that you select a path to edit instead of defining a name for the path.</p>
         <p>You must be signed in to edit a path, and you can only edit paths that you have defined.</p>
         <h2>Creating Trail Maps at Hillmap</h2>
         <p>An alternative to creating a trail on your phone is to
@@ -398,7 +412,102 @@
         Displays the open licenses for components used in this app.
         <br/><br/><br/> <!-- Blank line at bottom for fixed close dialog bar to overlay. -->  
     </div>
-
+    <!-- Help Back To Trail, only shown when selected from mainMenu -->
+    <div id='divHelpBackToTrail' class='wigo_ws_NoShow'>
+        <h1>Help - Back To Trail</h1>
+        <p>The instructions for returning to the trail give the heading 
+        to return to the nearest point on the trail from your
+        current location.</p>
+        <p>There are also suggestions on how to turn from your current traveling direction
+        to return back to the trail. While the heading back to the trail is accurate,
+        suggestions for turning may not be. Since a turning suggestion may be
+        inaccurate, it is prefixed with a "?" mark.</p>
+        <p><b>THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:</b></p>
+        <ul>
+            <li>One kind of suggestion is based on the heading from your previous locaton.
+            You may not have traveled in a straight line from your previous location.</li>
+            <li>The second kind of suggestion is based on the compass heading that your phone 
+            may be able to provide. The compass heading is the direction your phone indicates 
+            you are traveling and is most accurate when you are holding 
+            your phone level with its top pointing in the direction you are traveling. 
+            The compass may need to be calibrated to show accurately.<br/><br/>
+            To calibrate your compass, rotate it three times or so around each axis:<br/>
+            <ol>
+                <li>Hold the phone vertically facing you.<br/>
+                Tilt top of phone down and then back up toward you.</li>
+                <li>Rotate top of phone phone left and right keeping the face of phone towards you.</li>
+                <li>Rotate face of phone away and back toward you, keeping the phone vertical.</li>
+            </ol>
+            </li>
+        </ul>        
+        <p>To get an accurate turning suggestion from your previous location:</p>
+        <ol>
+            <li>Touch MyLoc button to get your location.</li>
+            <li>Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards).
+            The Prev Geo Loc Thres is given in Settings.</li>
+            <li>Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.</li>
+        </ol>
+        <p>Of course, if you know accurate compass directions yourself, follow the heading back to the trail.
+        The turning suggestions are only an aid if you do not know accurate compass directions.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+    <!-- Help Tracking vs Battery Drain, only shown when selected from mainMenu -->
+    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow'>
+        <h1>Help - Tracking vs Battery Drain</h1>
+        <p>When automatic tracking is on, the battery in the phone is drained more quickly.
+        The shorter the time interval for automatic tracking, the quicker the battery drains.</p>
+        <p>Menu > Settings > Geo Tracking Interval sets the time interval. So make the time interval longer 
+        to reduce the drain on the battery.</p>
+        <p>When automatic tracking is off, the drain on the battery is mininal.</p>
+        <p>Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking,
+        which minimizes the battery drain. 
+        <p>You can still check your geo location manually by touching
+        the MyLoc button on the bottom of the map.
+        Also, if using a Pebble watch, the Select (middle) button does the same thing.</p>
+        <p>The Track control on the bottom of the map lets you toggle automatic tracking On or Off.</p>
+        When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery.
+        However, if the app is in the background with automatic tracking on, the app is draining the battery.</p>
+        <p>Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled
+        is still occurring, which is draining the battery.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+    <!-- Terms of Use, Shown from Help and when installed -->
+    <div id='divTermsOfUse' class='wigo_ws_NoShow'>
+        <h1>TERMS OF USE</h1>
+        <p><b>IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.</b></p>
+        <p>This app is released free of charge in the hope that it will be useful.
+        However, it is provided without any warranty of any kind; without even the implied warranty of
+        usefulness, accuracy, reliability, availability, or free of software defects.</p>
+        <b>ADVICE FOR TURNING TO RETURN TO TRAIL MAYBE WRONG</b></p>
+        <p>The heading back to the trail should be accurate, but the suggestions for turning back to the trail
+        may not be.</p>
+        <p>A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and 
+        is only a <b>SUGGESTION TO BE VERIFIED BY YOU</b>. The suggestions for turning my be wrong for various reasons:</p>
+        <ul>
+            <li>The heading from your previous geo-location is a straight line, and you may not have traveled in a straight line.</li>
+            <li>The compass may need to be calibrated.</li>
+            <li>The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling)
+            is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.</li>
+            <li>The geolocation provided by your phone has tolerances for its accuracy.</li>
+        </ul>
+        <h2>DATA AND PRIVACY</h2>
+        <h3>Server Data</h3>
+        <p>For trails that you define, data is stored on a server. The data has latitude and longitude for points
+        defining the trail. Your Facebook public identification (not your name) is associated with your trails.
+        The data is not encrypted. Minual protection for the database is provided through access controlled by a password.
+        Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
+        <h3>Data on Your Phone</h3>
+        <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
+        It can be deleted by you from your phone by managing the application on your phone.</p>
+        <h3>Making Your Trails Public or Private</h3>
+        <p>When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone
+        using this app. If the trail is marked Private, the trail is only visible by you when using the app.
+        However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.</p>
+        <h2>A FURTHER CAUTION</h2>
+        <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
+        may not be appropriate for your ablities and that the trails could have inaccuracies.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
 
     <div id="map-canvas" />   
     <!-- Note: Do not put map-canvas div inside another div or section. -->

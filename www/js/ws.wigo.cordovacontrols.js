@@ -846,7 +846,15 @@ function Wigo_Ws_CordovaControls() {
         // Scrolls this title bar into view.
         this.scrollIntoView = function() {
             holderDiv.scrollIntoView();
-        }
+        };
+
+        // Shows or hides the title bar.
+        // Arg:
+        //  bShow: boolean. true to show.
+        // Note: Initially title bar is shown. You may not need to hide it.
+        this.show = function(bShow) {
+            TitleBar.prototype.show(holderDiv, bShow);
+        };
 
         // Event handler called when back arrow icon in title bar is clicked.
         // Signature:

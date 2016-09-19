@@ -203,6 +203,8 @@ function wigo_ws_View() {
         if (version.bTermsOfUseAccepted) {
             DoInitialization();
         } else {
+            ////20160919 alert('Checking Terms of Use'); ////20160918 !!!! delete stmt.
+            /* ////20160919
             ConfirmYesNo(TermsOfUseMsg(), function(bConfirm) {
                 if (bConfirm) {
                     version.bTermsOfUseAccepted = true;
@@ -215,6 +217,23 @@ function wigo_ws_View() {
                     that.setModeUI(that.eMode.tou_not_accepted);
                 }
             },'Terms of Use', 'Accept,Reject');
+            */
+            //// $$$$ map not showing correctly first time.
+            ////20160919???? alert('Checking Terms of Use'); ////20160918 !!!! delete stmt.
+            ConfirmTermsOfUse(true, function(bConfirm) {
+                ConfirmTermsOfUse(false); // Hide the Terms of Use div.
+                if (bConfirm) {
+                    version.bTermsOfUseAccepted = true;
+                    that.onSaveVersion(version);
+                    DoInitialization();
+                } else {
+                    var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
+                    sMsg += "Uninstall GeoTrail or end the app, start it again and accept the Terms of Use.<br/>";
+                    that.ShowStatus(sMsg, false); // false => no error highlite.
+                    that.setModeUI(that.eMode.tou_not_accepted);
+                }
+            });
+            
         }
     };
 
@@ -403,8 +422,15 @@ function wigo_ws_View() {
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
-                ShowOwnerIdDiv(false);
-                ShowModeDiv(false);
+                ////20160919 ShowOwnerIdDiv(false);
+                ////20160919 ShowModeDiv(false);
+                ////20160919 Show divMode so that status msg is visible.
+                ////20160919 All other divs are hidden.
+                ////20160919 ShowModeDiv(true);
+                HideAllBars();
+                /////20160918 ShowElement(titleHolder, false);
+                titleBar.show(false);
+                ShowMapCanvas(false);
                 break;
         }
     };
@@ -1927,6 +1953,7 @@ org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
     }
 
     // Returns string for help message.
+/* ////20160918 use hmtl     
     function HelpMsg() {
         var sMsg = '\
 Select Sign In > Facebook to sign in. Your sign-in id is remembered so \
@@ -2063,7 +2090,10 @@ downloaded from hillmap.com so that you can access the path (aka trail) online f
 ';
         return sMsg;
     }
+*/
 
+
+/* ////20160918 
     // Returns string for message describing what back to trail instructions mean.
     function BackToTrailHelp() {
         var sMsg = '\
@@ -2096,7 +2126,9 @@ Of course, if you know accurate compass directions yourself, follow the heading 
 The turning suggestions are only an aid if you do not know accurate compass directions.';
         return sMsg;
     }
+*/
 
+/* ////20160918 
     // Returns string for message describing how tracking interval affects battery usage.
     function BatteryDrainVsTrackingHelp() {
         var sMsg = '\
@@ -2117,6 +2149,7 @@ is still occurring, which is draining the battery.\
 ';
         return sMsg;
     }
+*/
 
     function TermsOfUseMsg() {
         var sMsg = '\
@@ -2600,27 +2633,104 @@ may not be appropriate for your ablities and that the trails could have inaccura
         ShowMapCanvas(!bShow); 
     }
 
+    function ShowHelpDiv(div, bShow) {
+        ShowModeDiv(!bShow);
+        ShowElement(div, bShow);
+        ShowElement(closeDialogBar, bShow);
+        ShowMapCanvas(!bShow);    
+    }
+
     // Shows or hides the divHelpGuide.
     // Arg:
     //  bShow: boolean to indicate to show.
     var divHelpGuide = document.getElementById('divHelpGuide');
     function ShowHelpGuide(bShow) {
         ////20160915 ShowSelectModeBars(!bShow);  ////20160916 ???? fix 
+        /* ////20160918 refactor
         ShowModeDiv(!bShow);
         ShowElement(divHelpGuide, bShow);
         ShowElement(closeDialogBar, bShow);
         ShowMapCanvas(!bShow);    
+        */
+        ShowHelpDiv(divHelpGuide, bShow);
     }
+
+    // Shows or hides the divHelpBackToTrail.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpBackToTrail = document.getElementById('divHelpBackToTrail');
+    function ShowHelpBackToTrail(bShow) {
+        ShowHelpDiv(divHelpBackToTrail, bShow);    
+    }
+
+    // Shows or hides the divHelpTrackingVsBattery.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpTrackingVsBattery = document.getElementById('divHelpTrackingVsBattery');
+    function ShowHelpTrackingVsBattery(bShow) {
+        ShowHelpDiv(divHelpTrackingVsBattery, bShow);    
+    }
+
+    // Shows or hides the divHelpTrackingVsBattery.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divTermsOfUse = document.getElementById('divTermsOfUse');
+    function ShowTermsOfUse(bShow) {
+        ShowHelpDiv(divTermsOfUse, bShow);    
+    }
+
+
+    // Shows or hides the divTermsOfUse with confirmDialogBar at the bottom.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var confirmDialogBar = document.getElementById('confirmDialogBar');
+    
+    function ConfirmTermsOfUse(bShow, onDone) {
+        ShowModeDiv(!bShow);
+        ShowElement(divTermsOfUse, bShow);
+        ShowElement(confirmDialogBar, bShow);
+        ////20160919????? ShowMapCanvas(!bShow);   
+        // Note: Do NOT hide map-canvas div because doing so prevents map from initializing.  
+        if ( bShow) 
+            onConfirmTermsOfUseAnswer = onDone;
+        else 
+           onConfirmTermsOfUseAnswer = null;     
+    }
+    var buAcceptConfirmDialogBar = document.getElementById('buAcceptConfirmDialogBar');
+    var buRejectConfirmDialogBar = document.getElementById('buRejectConfirmDialogBar');
+    // Callback for Confirm Terms of Use.
+    // Signature:
+    //  bConfirm: boolean. true indicated accepted.
+    //  Returns nothing. 
+    var onConfirmTermsOfUseAnswer = null;
+    buAcceptConfirmDialogBar.addEventListener('click', function(event){
+        if (typeof onConfirmTermsOfUseAnswer === 'function')
+            onConfirmTermsOfUseAnswer(true);
+        ////20160919 ConfirmTermsOfUse(false); // Hide the Terms of Use div.
+    }, false);
+    buRejectConfirmDialogBar.addEventListener('click', function(event){
+        if (typeof onConfirmTermsOfUseAnswer === 'function')
+            onConfirmTermsOfUseAnswer(false);
+        ////20160919 ConfirmTermsOfUse(false); // Hide the Terms of Use div.
+    }, false);
+
 
     // Button and event handler to close the HelpGuide.
     var closeDialogBar = document.getElementById('closeDialogBar');
     var buCloseDialogBar = document.getElementById('buCloseDialogBar');
-    buCloseDialogBar.addEventListener('click', CloseHelpGuide, false);
-    function CloseHelpGuide() {
+    buCloseDialogBar.addEventListener('click', CloseHelpDiv, false);
+    function CloseHelpDiv() {
         ShowHelpGuide(false);
+        ShowHelpBackToTrail(false);
+        ShowHelpTrackingVsBattery(false);
+        ShowTermsOfUse(false);
         that.ClearStatus();
         titleBar.scrollIntoView();   
     }
+
+
+
+
 
 
     // ** More function 
@@ -3287,13 +3397,16 @@ may not be appropriate for your ablities and that the trails could have inaccura
             ShowHelpGuide(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'back_to_trail') {
-            AlertMsg(BackToTrailHelp());
+            ////20160918 AlertMsg(BackToTrailHelp());
+            ShowHelpBackToTrail(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'terms_of_use') {
-            AlertMsg(TermsOfUseMsg());
+            ////20160918 AlertMsg(TermsOfUseMsg());
+            ShowTermsOfUse(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'battery_drain') {
-            AlertMsg(BatteryDrainVsTrackingHelp());
+            ////20160918 AlertMsg(BatteryDrainVsTrackingHelp());
+            ShowHelpTrackingVsBattery(true);
             this.selectedIndex = 0;
         }
         that.ClearStatus();
