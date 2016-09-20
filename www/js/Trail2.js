@@ -1902,35 +1902,6 @@ function wigo_ws_View() {
         return sMsg;
     }
 
-    /* ////20160919
-    // Returns message for source code license for this app.
-    function LicenseMsg() {
-        var sMsg = '\
-The main source code for this app is open source licensed under\n\
-The MIT License (MIT)\n\n\
-The open source Cordova / Appache platform is used to build this mobile app. Refer to \
-the Cordova / Appache license.\n\
-Plugins and modules used by the main code have individual open source licenses \
-and are listed below. Refer to them individually to determine their kind of license.\n\n\
-jquery 1-11.3\n\n\
-Leaflet 0.7.3 for maps\n\n\
-L.TileLayer.Cordova for caching map tiles\n\n\
-com.jetboystudio.pebble.PebblePGPlugin 0.2.6 "Pebble"\n\n\
-com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"\n\n\
-cordova-plugin-compat 1.0.0 "Compat"\n\n\
-cordova-plugin-device-orientation 1.0.3 "Device Orientation"\n\n\
-cordova-plugin-dialogs 1.2.1 "Notification"\n\n\
-cordova-plugin-file 4.2.0 "File"\n\n\
-cordova-plugin-file-transfer 1.5.1 "File Transfer"\n\n\
-cordova-plugin-geolocation 2.2.0 "Geolocation"\n\n\
-cordova-plugin-vibration 2.2.1-dev "Vibration"\n\n\
-cordova-plugin-whitelist 1.2.2 "Whitelist"\n\n\
-org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
-';
-        return sMsg;
-    }
-    */
-
     // Displays alert message given the string sMsg.
     function AlertMsg(sMsg) {
         var sTitle = document.title;
@@ -3106,7 +3077,6 @@ org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
             AlertMsg(AboutMsg())
             this.selectedIndex = 0;
         } else if (dataValue === 'license') {
-            ////20160919 AlertMsg(LicenseMsg());
             ShowHelpLicense(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'help') {
