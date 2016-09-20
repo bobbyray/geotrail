@@ -203,23 +203,6 @@ function wigo_ws_View() {
         if (version.bTermsOfUseAccepted) {
             DoInitialization();
         } else {
-            ////20160919 alert('Checking Terms of Use'); ////20160918 !!!! delete stmt.
-            /* ////20160919
-            ConfirmYesNo(TermsOfUseMsg(), function(bConfirm) {
-                if (bConfirm) {
-                    version.bTermsOfUseAccepted = true;
-                    that.onSaveVersion(version);
-                    DoInitialization();
-                } else {
-                    var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
-                    sMsg += "Uninstall GeoTrail or end the app, start it again and accept the Terms of Use.<br/>";
-                    that.ShowStatus(sMsg);
-                    that.setModeUI(that.eMode.tou_not_accepted);
-                }
-            },'Terms of Use', 'Accept,Reject');
-            */
-            //// $$$$ map not showing correctly first time.
-            ////20160919???? alert('Checking Terms of Use'); ////20160918 !!!! delete stmt.
             ConfirmTermsOfUse(true, function(bConfirm) {
                 ConfirmTermsOfUse(false); // Hide the Terms of Use div.
                 if (bConfirm) {
@@ -422,13 +405,7 @@ function wigo_ws_View() {
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
-                ////20160919 ShowOwnerIdDiv(false);
-                ////20160919 ShowModeDiv(false);
-                ////20160919 Show divMode so that status msg is visible.
-                ////20160919 All other divs are hidden.
-                ////20160919 ShowModeDiv(true);
                 HideAllBars();
-                /////20160918 ShowElement(titleHolder, false);
                 titleBar.show(false);
                 ShowMapCanvas(false);
                 break;
@@ -1925,6 +1902,7 @@ function wigo_ws_View() {
         return sMsg;
     }
 
+    /* ////20160919
     // Returns message for source code license for this app.
     function LicenseMsg() {
         var sMsg = '\
@@ -1951,242 +1929,7 @@ org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
 ';
         return sMsg;
     }
-
-    // Returns string for help message.
-/* ////20160918 use hmtl     
-    function HelpMsg() {
-        var sMsg = '\
-Select Sign In > Facebook to sign in. Your sign-in id is remembered so \
-you do not need to sign in again unless you log out.\n\
-You do not need to sign in, but you can only view public trails if not signed in.\n\n\
-View, Edit, Define, or Offline Mode\n\
-View lets you select a trail from ones saved online. Edit lets you edit a trail that \
-you have saved online. Define lets you create a new trail and save it online. \
-Offline lets you view trails when you are \
-not connected to the web. You need to select the trails to save to your phone when \
-you are online. \
-More details about these modes are given below.\n\n\
-View Mode\n\
-View lets you \
-access Geo-paths from the web that others have made public and ones \
-that are private to you. \
-Select a path from the drop list to view.\n\n\
-Save Offline\n\
-Touch the Save Offline button to save a path you are viewing so that you can \
-view it when you are offline. (See Offline Mode below.)\n\n\
-Find\n\
-Select an option from the Find drop list to search for paths to view. \n\
-The Select a Path drop list is filled with the paths found:\n\n\
-Find > Home Area\n\
-Searches for paths that are in your Home Area, which is a geo-rectangle \
-defined in Menu > Settings. \
-All public paths and your private paths are included.\n\n\
-Find > On Screen\n\
-Searches for paths that are in the area displayed on the screen. \
-First, pan, zoom, and pinch to select the area you see on the screen.\n\n\
-Find > All Paths\n\
-Searches for all your public and private paths.\n\n\
-Find > All Mine\n\
-Searchs for all your paths, both public and private. \
-You must be logged in to search for your paths.\n\n\
-Find > My Public\n\
-Searches for all of your public paths, paths that anyone can see.\n\n\
-Find > My Private\n\
-Searches for your private paths, paths that only you can see.\n\n\
-Menu Provides More Options\n\
-Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\n\
-* Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
-and Track and Ph Alert are ignored. \
-However, the MyLoc button will still get your geo-location.\n\n\
-* Geo Tracking Initially On Yes | No: Yes to start with Track On when app loads.\n\n\
-* Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
-* Off-Path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
-* Allow Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
-* Phone Alert Initially On Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
-* Phone Vibration in Secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
-* Phone Beep Count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
-* Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
-* Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
-off trail. Count of 0 disables vibrations. \
-Note that Ph Alert Off does not inhibit vibrations for being off-trail.\n\n\
-* Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
-for change in location to be considered valid. (This prevents small variations in the geo-location of \
-the same point to appear to be a change in location.)\n\n\
-* Show Compass Heading on Map? Yes | No:\n\
-An arrow for the compass heading from your current location may be shown on the map.\n\n\
-* Touch Map for Geo Location Testing? Yes | No:\n\
-Touching a point on the map simulates getting the geo location for the point on the map. \
-This is just for testing.\n\n\
-* Set Home Area to Screen:\n\
-Touch the Set button to set your home area to be that shown on the screen. \
-First, pan, zoom, and pinch to display the area you want on the screen. \n\
-The paths in the Home Area are found when the app starts. \
-Also, the Home Area can be chosen in View mode, from the Find drop list.\n\n\
-Menu > Start Pebble\n\
-Starts the Pebble app on the watch. The Pebble app should be started automatically so it is unlikely \
-you need to do this.\n\n\
-Using Controls at Top of Map\n\
-Ctr Trail brings the map to the center of the selected path.\n\n\
-MyLoc displays your current location on the map.\n\n\
-Full Screen / Reduce Screen switches between the map filling the screen and \
-the map being below the selection controls.\n\n\
-Track switches between geo-location tracking On or Off.\n\
-Note: Track On will run down your battery more quickly.\n\n\
-Ph Alert, which is given if you are off the trail, switches between Ph Alert On or Off.\n\n\
-Offline Mode\n\
-Offline lets you select paths you have saved offline. Select a Geo Path from the \
-list you have saved.\n\n\
-Map Cache shows information about the cache of map tiles.\n\
-Select Size to see the number of files and the size in MB of all the files.\n\
-Select Clear to empty the cache of map files. Once the cache is cleared, \
-all the offline paths are deleted from the phone.\n\n\
-Define Mode\n\
-Define provides a way to create a trail and save it online. \
-You must be signed into Facebook to define a trail.\n\n\
-Instructions are shown at the top of the screen to guide you through the process, \
-which is outlined below.\n\n\
-Enter a path name for the trail.\n\n\
-Touch on the screen to define the first point on the path.\n\n\
-Soft Cursor Keys\n\
-Use the cursor keys \
-that appear to nudge the point left, right, up, or down to get the point exactly where \
-you want it. Holding down a cursor button causes the point to move faster on the screen. \
-Touch OK to confirm that the point is to be added. Repeat the process to define \
-all the points for your trail.\n\n\
-Upload Button\n\
-Touch the Upload button to upload (save online) the data for your trail.\n\n\
-Cancel Button\n\
-Touch the Cancel button if you decide not to create the trail.\n\n\
-Select Pt\n\
-You can edit an existing point in the trail by selecting Select Pt instead of Append Pt. \
-Touch on the trail near the point you want to edit.\n\n\
-Prev, Next Buttons\n\
-If the correct point is not highlighted on the trail, use \
-the Prev and Next buttons to move to the previous or next point on the trail.\n\n\
-Move Pt, Insert Pt, Delete Pt\n\
-Then select Move Pt, Insert Pt, or Delete Pt instead of Select Pt to \
-move, insert, or delete the selected (highlighted) point.\n\n\
-Move Pt\n\
-When moving a point, touch where the point should go and nudge it with the cursors. \
-Touch OK to confirm that the point is where you want it.\n\n\
-Insert Pt\n\
-When inserting a point, touch where the inserted point should be and use the cursors to nudge it.\
-Touch OK to confirm the location is correct. The point is inserted in the \
-path before the selected point.\n\n\
-Delete Pt\n\
-When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons \
-to move to a different point on the path if the correct point is not selected (highlighted).\n\n\
-Edit Mode\n\
-Edit provides a way to edit a trail you have saved online. \
-The precedure is the same as for defining a new path, except that you select a path to edit first. \
-You must be signed in to edit a path, and you can only edit paths that you have defined.\n\n\
-Creating Trail Maps at Hillmap\n\
-An alternative to creating a trail on your phone is to \
-use the site http://www.hillmap.com to create a trail from a laptop or desktop computer. \
-Use the Path tab to define your trail.\n\
-Use Tools > Download Gpx to save your path.\n\n\
-Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have \
-downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.\
-';
-        return sMsg;
-    }
-*/
-
-
-/* ////20160918 
-    // Returns string for message describing what back to trail instructions mean.
-    function BackToTrailHelp() {
-        var sMsg = '\
-The instructions for returning to the trail give the heading \
-to return to the nearest point on the trail from your \
-current location.\n\n\
-There are also suggestions on how to turn from your current traveling direction \
-to return back to the trail. While the heading back to the trail is accurate, \
-suggestions for turning may not be. Since a turning suggestion may be \
-inaccurate, it is prefixed with a "?" mark.\n\
-THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:\n\
-    * One kind of suggestion is based on the heading from your previous locaton. \
-You may not have traveled in a straight line from your previous location.\n\
-    * The second kind of suggestion is based on the compass heading that your phone \
-may be able to provide. The compass heading is the direction your phone indicates \
-you are traveling and is most accurate when you are holding \
-your phone level with its top pointing in the direction you are traveling. \
-The compass may need to be calibrated to show accurately.\n\n\
-To calibrate your compass, rotate it three times or so around each axis:\n\
-    Hold the phone vertically facing you.\n\
-    1) Tilt top of phone down and then back up toward you.\n\
-    2) Rotate top of phone phone left and right keeping the face of phone towards you.\n\
-    3) Rotate face of phone away and back toward you, keeping the phone vertical.\n\n\
-To get an accurate turning suggestion from your previous location:\n\
-    1) Touch MyLoc button to get your location.\n\
-    2) Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards). \
-The Prev Geo Loc Thres is given in Settings.\n\
-    3) Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
-Of course, if you know accurate compass directions yourself, follow the heading back to the trail. \
-The turning suggestions are only an aid if you do not know accurate compass directions.';
-        return sMsg;
-    }
-*/
-
-/* ////20160918 
-    // Returns string for message describing how tracking interval affects battery usage.
-    function BatteryDrainVsTrackingHelp() {
-        var sMsg = '\
-When automatic tracking is on, the battery in the phone is drained more quickly.\
-The shorter the time interval for automatic tracking, the quicker the battery drains.\n\n\
-Menu > Settings > Geo Tracking sets the time interval. So make the time interval longer \
-to reduce the drain on the battery. \
-When automatic tracking is off, the drain on the battery is mininal.\n\n\
-Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking, \
-which minimizes the battery drain. You can still check your geo location manually by touching \
-the MyLoc button on the top of the map. \
-Also, if using a Pebble watch, the Select (middle) button does the same thing.\n\n\
-The Track control on the top of the map lets you toggle automatic tracking On or Off.\n\n\
-When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery. \
-However, if the app is in the background with automatic tracking on, the app is draining the battery.\n\n\
-Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled \
-is still occurring, which is draining the battery.\
-';
-        return sMsg;
-    }
-*/
-
-    function TermsOfUseMsg() {
-        var sMsg = '\
-TERMS OF USE\n\n\
-IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.\n\n\
-This app is released free of charge in the hope that it will be useful. \
-However, it is provided without any warranty of any kind; without even the implied warranty of \
-usefulness, accuracy, reliability, availability, or free of software defects.\n\n\
-ADVICE FOR TURNING TO RETURN TO TRAIL MAYBE WRONG\n\
-The heading back to the trail should be accurate, but the suggestions for turning back to the trail \
-may not be. \
-A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and \
-is only a SUGGESTION TO BE VERIFIED BY YOU. The suggestions for turning my be wrong for various reasons:\n\
-    * The heading from your previous geo-location is a straight line, and you may not have traveled in a straight line.\n\
-    * The compass may need to be calibrated.\n\
-    * The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling) \
-is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.\n\
-    * The geolocation provided by your phone has tolerances for its accuracy.\n\n\
-DATA AND PRIVACY\n\
-Server Data\n\
-For trails that you define, data is stored on a server. The data has latitude and longitude for points \
-defining the trail. Your Facebook public identification (not your name) is associated with your trails. \
-The data is not encrypted. Minual protection for the database is provided through access controlled by a password. \
-Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority. \n\n\
-Data on Your Phone\n\
-Data is saved on your phone for defining trails and caching map sections when you are offline. \
-It can be deleted by you from your phone by managing the application on your phone.\n\n\
-Making Your Trails Public or Private\n\
-When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone \
-using this app. If the trail is marked Private, the trail is only visible by you when using the app.\
-However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.\n\n\
-A FURTHER CAUTION\n\
-Hiking depends on your own self reliance and good judgment. Realize that trails you find \
-may not be appropriate for your ablities and that the trails could have inaccuracies.\
-';
-        return sMsg;
-    }
+    */
 
     // Displays alert message given the string sMsg.
     function AlertMsg(sMsg) {
@@ -2529,9 +2272,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
         if (!settings)
             return;
         selectAllowGeoTracking.setState(settings.bAllowGeoTracking ? 1 : 0);
-        ////20160917 add stmt to show/hide mapTrackToggle.
-        ////20160917 ShowElement(holderMapTrackToggle, settings.bAllowGeoTracking);
-
         numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
         numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
 
@@ -2558,14 +2298,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Enable phone alerts.
-        /* ////20160917 
-        alerter.bAlertsAllowed = settings.bAllowGeoTracking && settings.bPhoneAlert;
-        if (settings.bAllowGeoTracking) {
-            alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
-        } else {
-            alerter.bPhoneEnabled = false;
-        }
-        */
         alerter.bAlertsAllowed = settings.bPhoneAlert;
         alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
 
@@ -2607,29 +2339,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
         mapCanvas.style.display = sShowMap;
     }
 
-
-    /* ////20160915 not needed and not working.
-    // Show the bars used for Select View Mode.
-    // Arg:
-    //  bShow: boolean indicating to show the bars.
-    function ShowSelectModeBars(bShow) { ////20160916 added
-        ShowElement(titleBar.ctrl, bShow);
-        ShowOwnerIdDiv(bShow);
-        ShowElement(modeBar, bShow);
-    }
-    */
-
-
     // Shows or hides the divSettings.
     // Arg:
     //  bShow: boolean to indicate to show.
     function ShowSettingsDiv(bShow) {
         var sShowSettings = bShow ? 'block' : 'none';
         divSettings.style.display = sShowSettings;
-        ////21060915Refactor var sShowMap = bShow ? 'none' : 'block'; 
-        ////21060915Refactor var mapCanvas = getMapCanvas();
-        ////21060915Refactor mapCanvas.style.display = sShowMap;
-        ////21060915Refactor ShowMapCanvas(bShow);
         ShowMapCanvas(!bShow); 
     }
 
@@ -2645,13 +2360,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
     //  bShow: boolean to indicate to show.
     var divHelpGuide = document.getElementById('divHelpGuide');
     function ShowHelpGuide(bShow) {
-        ////20160915 ShowSelectModeBars(!bShow);  ////20160916 ???? fix 
-        /* ////20160918 refactor
-        ShowModeDiv(!bShow);
-        ShowElement(divHelpGuide, bShow);
-        ShowElement(closeDialogBar, bShow);
-        ShowMapCanvas(!bShow);    
-        */
         ShowHelpDiv(divHelpGuide, bShow);
     }
 
@@ -2671,6 +2379,14 @@ may not be appropriate for your ablities and that the trails could have inaccura
         ShowHelpDiv(divHelpTrackingVsBattery, bShow);    
     }
 
+    // Shows or hides the divHelpLicense.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpLicense = document.getElementById('divHelpLicense');
+    function ShowHelpLicense(bShow) {
+        ShowHelpDiv(divHelpLicense, bShow);
+    }
+
     // Shows or hides the divHelpTrackingVsBattery.
     // Arg:
     //  bShow: boolean to indicate to show.
@@ -2678,6 +2394,8 @@ may not be appropriate for your ablities and that the trails could have inaccura
     function ShowTermsOfUse(bShow) {
         ShowHelpDiv(divTermsOfUse, bShow);    
     }
+
+
 
 
     // Shows or hides the divTermsOfUse with confirmDialogBar at the bottom.
@@ -2689,7 +2407,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
         ShowModeDiv(!bShow);
         ShowElement(divTermsOfUse, bShow);
         ShowElement(confirmDialogBar, bShow);
-        ////20160919????? ShowMapCanvas(!bShow);   
         // Note: Do NOT hide map-canvas div because doing so prevents map from initializing.  
         if ( bShow) 
             onConfirmTermsOfUseAnswer = onDone;
@@ -2706,12 +2423,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
     buAcceptConfirmDialogBar.addEventListener('click', function(event){
         if (typeof onConfirmTermsOfUseAnswer === 'function')
             onConfirmTermsOfUseAnswer(true);
-        ////20160919 ConfirmTermsOfUse(false); // Hide the Terms of Use div.
     }, false);
     buRejectConfirmDialogBar.addEventListener('click', function(event){
         if (typeof onConfirmTermsOfUseAnswer === 'function')
             onConfirmTermsOfUseAnswer(false);
-        ////20160919 ConfirmTermsOfUse(false); // Hide the Terms of Use div.
     }, false);
 
 
@@ -2724,6 +2439,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         ShowHelpBackToTrail(false);
         ShowHelpTrackingVsBattery(false);
         ShowTermsOfUse(false);
+        ShowHelpLicense(false);
         that.ClearStatus();
         titleBar.scrollIntoView();   
     }
@@ -3390,22 +3106,19 @@ may not be appropriate for your ablities and that the trails could have inaccura
             AlertMsg(AboutMsg())
             this.selectedIndex = 0;
         } else if (dataValue === 'license') {
-            AlertMsg(LicenseMsg());
+            ////20160919 AlertMsg(LicenseMsg());
+            ShowHelpLicense(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'help') {
-            ////20160915 AlertMsg(HelpMsg());
             ShowHelpGuide(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'back_to_trail') {
-            ////20160918 AlertMsg(BackToTrailHelp());
             ShowHelpBackToTrail(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'terms_of_use') {
-            ////20160918 AlertMsg(TermsOfUseMsg());
             ShowTermsOfUse(true);
             this.selectedIndex = 0;
         } else if (dataValue === 'battery_drain') {
-            ////20160918 AlertMsg(BatteryDrainVsTrackingHelp());
             ShowHelpTrackingVsBattery(true);
             this.selectedIndex = 0;
         }
@@ -3581,8 +3294,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
     
 
     // OnOffControl for Phone Alert on map bar.
-    ////20160917 parentEl = document.getElementById('mapPhAlertToggle');
-    ////20160917 var mapAlertCtrl = new ctrls.OnOffControl(parentEl, null, "Alert", -1);
     var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
     var mapAlertCtrl = new ctrls.OnOffControl(holderMapPhAlertToggle, null, "Alert", -1);
     mapAlertCtrl.onChanged = function(nState) {
@@ -3594,8 +3305,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
     }
 
     // OnOffControl for Tracking on map bar.
-    ////20160917 parentEl = document.getElementById('mapTrackToggle');
-    ////20160917 var mapTrackingCtrl = new ctrls.OnOffControl(parentEl, null, "Track", -1);
     var holderMapTrackToggle = document.getElementById('mapTrackToggle');
     var mapTrackingCtrl = new ctrls.OnOffControl(holderMapTrackToggle, null, "Track", -1);
     mapTrackingCtrl.onChanged = function(nState) {
@@ -3617,48 +3326,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
     function EnableMapBarGeoTrackingOptions(settings) {
-        /* ////20160917 redo
-        var bAllow = settings.bAllowGeoTracking;
-        ShowElement(holderMapTrackToggle, bAllow);  ////20160917 added stmt.
-        var bOffPathAlert = settings.bOffPathAlert;
-        var bTracking = settings.bEnableGeoTracking;
-        if (bAllow) {
-            var nState = bTracking ? 1 : 0;
-            mapTrackingCtrl.setState(nState);
-            nState = bOffPathAlert ? 1 : 0;
-            mapAlertCtrl.setState(nState);    
-        } else {
-            mapTrackingCtrl.setState(0);
-            mapAlertCtrl.setState(0);
-        }
-        */
-
-        /* ////20160917 try again
         var bAllowTracking = settings.bAllowGeoTracking;
         var bEnableTracking = settings.bEnableGeoTracking;
         var bAllowPhoneAlert = settings.bPhoneAlert;
         var bEnablePhoneAlert = settings.bOffPathAlert; 
-        if (bAllowTracking) {
-            var nState = bEnableTracking ? 1 : 0;
-            mapTrackingCtrl.setState(nState);
-            nState = bAllowPhoneAlert && bEnablePhoneAlert ? 1 : 0;
-            mapAlertCtrl.setState(nState);
-            ShowElement(holderMapTrackToggle, true);  ////20160917 added stmt.
-            ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  ////20160917 added stmt.
-        } else {
-            mapTrackingCtrl.setState(0);
-            mapAlertCtrl.setState(0);
-            ShowElement(holderMapTrackToggle, false);  ////20160917 added stmt.
-            ShowElement(holderMapPhAlertToggle, false);  ////20160917 added stmt.
-        }
-        */
-
-        var bAllowTracking = settings.bAllowGeoTracking;
-        var bEnableTracking = settings.bEnableGeoTracking;
-        var bAllowPhoneAlert = settings.bPhoneAlert;
-        var bEnablePhoneAlert = settings.bOffPathAlert; 
-        ShowElement(holderMapTrackToggle, bAllowTracking);  ////20160917 added stmt.
-        ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  ////20160917 added stmt.
+        ShowElement(holderMapTrackToggle, bAllowTracking);  
+        ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  
 
         var nState = bAllowTracking && bEnableTracking? 1 : 0;
         mapTrackingCtrl.setState(nState);

@@ -645,19 +645,11 @@ label {
 }
 
 #divHelpGuide, #divHelpBackToTrail, 
-#divHelpTrackingVsBattery, #divTermsOfUse {
+#divHelpTrackingVsBattery, #divTermsOfUse,
+#divHelpLicense {
     position: absolute;
     left: 0px;
     top: 0px;
-    /* ////20160916
-    display: none;
-    background-color: #fff;
-    padding: 5px;
-    border: 1px solid #999;
-    z-index: 2;
-    font-size: 120%;
-    width: 95%;
-    */
     font-size: 120%;
 }
 
