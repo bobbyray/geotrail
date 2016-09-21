@@ -1806,6 +1806,10 @@ function wigo_ws_View() {
     var ctrls = Wigo_Ws_CordovaControls();
     var divStatus = document.getElementById('divStatus');
     var divStatus = new ctrls.StatusDiv(divStatus);
+    divStatus.onTouchEnd = function(event) {
+        // Ensure titlebar is at top after scrolling divStatus.
+        titleBar.scrollIntoView();
+    };
 
     var titleHolder = document.getElementById('titleHolder');
     var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
@@ -3005,22 +3009,6 @@ function wigo_ws_View() {
         return bHidden;
     }
 
-    // Display map below divPath info rather than at the top of the screen.
-    // Also positions panel to be over the top of the map.
-    function MinimizeMap() {
-        ShowOwnerIdDiv(true);
-        ShowModeDiv(true);
-        ShowPathInfoDiv(true);
-    }
-
-    // Display map at top of screen by hiding edit mode and path info.
-    // Also positions panel to be over the top of the map.
-    function MaximizeMap() {
-        ShowOwnerIdDiv(false);
-        ShowModeDiv(false);
-        ShowPathInfoDiv(false);
-    }
-
     // ** Private members for Facebook
     // Callback after Facebook authentication has completed.
     function cbFbAuthenticationCompleted(result) {
@@ -3035,10 +3023,18 @@ function wigo_ws_View() {
     divMode.addEventListener('touchmove', function(event){
         // Allow scrolling of selectGoTrail dropdown list.
         if (!selectGeoTrail.isDropDownListScrolling() ) {
+            // Scrolling is prevented except for selectGeoTrail droplist.
             event.preventDefault();
             event.stopPropagation();
         }
+        
+        // Note: The statusDiv is not allowed to scroll to avoid 
+        // problems with divMode scrolling off the screen.
+        // Tried to have statusDiv indicate it was scrolling but 
+        // was unsuccessful. The scheme used for selectGeoTrail
+        // did not work for statusDiv.
     }, false);
+
 
     // ** Create modeBar
     var modeBar = document.getElementById('modeBar');
@@ -3052,7 +3048,7 @@ function wigo_ws_View() {
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
                           ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
                           ['about', 'About'],                                     // 6
-                          ['license', 'License']                                  // 7
+                          ['license', 'Licenses']                                  // 7
                          ];
     mainMenu.fill(mainMenuValues);
     mainMenu.onListElClicked = function (dataValue) {

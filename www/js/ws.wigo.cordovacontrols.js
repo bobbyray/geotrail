@@ -787,6 +787,7 @@ function Wigo_Ws_CordovaControls() {
         };
 
         var statusDiv = this.create("div", null, "wigo_ws_StatusMsg wigo_ws_NoShow");  
+
         var statusCloseDiv = this.create("div", null, "wigo_ws_StatusClose");
         statusCloseDiv.innerText = "X";
         statusCloseDiv.addEventListener('click', OnStatusCloseClicked, false);
@@ -810,8 +811,6 @@ function Wigo_Ws_CordovaControls() {
         function OnStatusCloseClicked(event) {
             that.clear();
         }
-
-
     }
     StatusDiv.prototype = controlBase;
     StatusDiv.constructor = StatusDiv;

@@ -46,17 +46,16 @@
 .wigo_ws_StatusMsg {
     background-color: aliceblue;    
     font-size: 1.3em;
-    max-height: 6em;
     width: 100%;
     top: 0px;
     left: 0px;
     cursor: none;
-    overflow-y: scroll;
     position: relative;
+    min-height: 1.6em;
 }
 .wigo_ws_StatusClose {
     position: absolute;  
-    top: 0px;
+    top: 0.2em;
     right: 0px;
 
     width: 1.5em;
