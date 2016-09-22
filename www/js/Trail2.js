@@ -161,7 +161,7 @@ function wigo_ws_View() {
             // Set view find paramters for search for geo paths to the home area.
             viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
             that.setModeUI(that.curMode());  
-            selectMode.setSelectedIndex(that.curMode()); 
+            selectMode.setSelectedIndex(0);  
             map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
 
             if (!map.isOfflineDataEnabled()) {
@@ -334,6 +334,19 @@ function wigo_ws_View() {
         AlertMsg(s);
     };
 
+    // Display confirmation dialog with Yes, No as default for buttons.
+    // Arg:
+    //  onDone: asynchronous callback with signature:
+    //      bConfirm: boolean indicating Yes.
+    //  sTitle: string, optional. Title for the dialog. Defauts to Confirm.
+    //                            Use empty string, null, or undefined for default.
+    //  sAnswerBtns: string, optional. Caption for the two buttons delimited by a comma.  
+    //               Defaults to 'Yes,No'.
+    // Returns synchronous: false. Only onDone callback is meaningful.
+    this.ShowConfirm = function(sMsg, onDone, sTitle, sAnswerBtns) {
+        ConfirmYesNo(sMsg, onDone, sTitle, sAnswerBtns);
+    }
+
     // Clears the status message.
     this.ClearStatus = function () {
         divStatus.clear();
@@ -359,6 +372,9 @@ function wigo_ws_View() {
         }
 
         nMode = newMode;
+        var bOffline = nMode === this.eMode.offline;
+        map.GoOffline(bOffline);  
+         
         // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
@@ -383,7 +399,19 @@ function wigo_ws_View() {
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
-                this.onGetPaths(nMode, that.getOwnerId()); 
+                this.onGetPaths(nMode, that.getOwnerId());
+                var listLength = selectGeoTrail.getListLength();
+                if (listLength < 2) {
+                    // Inform user that offline path must be saved from Online Map.
+                    var sMsg = "You need to save Offline trail(s) from the Online Map first.\n\n";
+                    var sAnswerBtns = "Go Online, Stay Offline";
+                    ConfirmYesNo(sMsg, function(bConfirm){
+                        if (bConfirm) {
+                            that.setModeUI(that.eMode.select_mode); 
+                            that.setModeUI(that.eMode.online_view);
+                        }
+                    },"",sAnswerBtns);
+                }
                 break;
             case this.eMode.online_edit:
                 HideAllBars();

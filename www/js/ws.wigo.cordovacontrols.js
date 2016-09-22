@@ -347,6 +347,12 @@ function Wigo_Ws_CordovaControls() {
             }
         };
 
+        // Returns length of dropdown list.
+        this.getListLength = function() {
+            var length = list.children.length;
+            return length;
+        };
+
         // Returns true if the dropdown list is scrolling.
         // Remarks: 
         // A touchmove event is considered to initiate scrolling.
