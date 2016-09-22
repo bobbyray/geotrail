@@ -3749,18 +3749,11 @@ function wigo_ws_Controller() {
     // as be user id.
     // Args
     //  sOwnerId: string for path owner id.
-    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  nFindIx: number view.eFindIx enumeration for kind of find to do.
     //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
-    //  bQuiet: boolean, optional. true indicates no interum status msg is shown on success. If there
-    //          is an error, a status msg is shown regardless. However a final status message is shown.
-    //          For true, the final message is appended to current messages displayed. For false, 
-    //          the final message replaces previous displayed message(s).
-    //          Defaults to false (show interum status msg and replaces messages displayed for final message).
-    function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE, bQuiet) {
-        if (typeof (bQuiet) !== 'boolean')
-            bQuiet = false;
-
+    //  bQuiet: boolean. No longer used.
+    function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE) {
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
@@ -3773,8 +3766,8 @@ function wigo_ws_Controller() {
                     gpxArray.push(gpxList[i]);
                 }
             }
-            if (!bOk || !bQuiet)
-                view.ShowStatus(sStatus, !bOk);
+            if (!bOk )
+                view.AppendStatus(sStatus, !bOk);
         }
 
         // Local helper that returns a status message for ok.
@@ -3795,10 +3788,7 @@ function wigo_ws_Controller() {
             view.setPathList(arPath, true);
             // Show number of paths found.
             if (bOk) {
-                if (!bQuiet)
-                    view.ShowStatus(StatusOkMsg(arPath.length), false);
-                else 
-                    view.AppendStatus(StatusOkMsg(arPath.length), false); 
+                view.AppendStatus(StatusOkMsg(arPath.length), false); 
             }
         }
 
@@ -3806,6 +3796,8 @@ function wigo_ws_Controller() {
         switch (nFindIx) {
             case view.eFindIx.home_area:
             case view.eFindIx.on_screen:
+                var sSearchingFor = nFindIx === view.eFindIx.home_area ? "Searching for trails in Home Area." : "Searching for trails On Screen."
+                view.ShowStatus(sSearchingFor, false);   
                 if (gptSW && gptNE) {
                     // Get all public paths found on screen.
                     model.getGpxListByLatLon("any", eShare.public, gptSW, gptNE, function (bOk, gpxList, sStatus) {
@@ -3824,6 +3816,7 @@ function wigo_ws_Controller() {
                 break;
             case view.eFindIx.all_public:
                 // Get all public paths for any path owner.
+                view.ShowStatus("Searching for All trails.", false);
                 model.getGpxList("any", eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     if (bOk && sPathOwnerId) {
@@ -3836,10 +3829,10 @@ function wigo_ws_Controller() {
                         SetPathList(bOk);
                     }
                 });
-
                 break;
             case view.eFindIx.all_mine:
                 // Get all public paths for path owner.
+                view.ShowStatus("Searching for All My trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     if (bOk && sPathOwnerId) {
@@ -3855,17 +3848,23 @@ function wigo_ws_Controller() {
                 break;
             case view.eFindIx.my_public:
                 // Get all public paths for path owner.
+                view.ShowStatus("Searching for My Public trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     SetPathList(bOk);
                 });
                 break;
             case view.eFindIx.my_private:
+
                 // Get all private paths for path owner.
+                view.ShowStatus("Searching for My Private trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     SetPathList(bOk);
                 });
+                break;
+            default:
+                view.ShowStatus("Unknown search type for finding paths.");
                 break;
         }
     }
