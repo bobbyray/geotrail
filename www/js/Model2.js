@@ -29,9 +29,9 @@ function wigo_ws_GeoTrailSettings() {
     // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
     this.countPebbleVibe = 1;
     // Float for distance in meters for threshold for minimum change in distance
-    // for previous geo-location to be updated wrt to current geo-location.
+    // for previous geolocation to be updated wrt to current geolocation.
     this.dPrevGeoLocThres = 40.0;
-    // Boolean to indicate a mouse click (touch) simulates getting the geo-location
+    // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
     // Boolean to indicate compass heading arrow is drawn on map.
@@ -532,6 +532,7 @@ function wigo_ws_Model() {
     geoTrailSettings.LoadFromLocalStorage();
 
     // Version for GeoTrail app in localStorage.
+    alert("Creating version in model constructor"); ////20160922 Debug only, remove.
     var geoTrailVersion = new GeoTrailVersion();
     geoTrailVersion.LoadFromLocalStorage();
 }

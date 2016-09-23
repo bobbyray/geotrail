@@ -140,8 +140,6 @@
         <button id='buRejectConfirmDialogBar'>Reject</button>
     </div>
 
-
-
     <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
         <h2>Settings for GeoTrail</h2> 
@@ -218,11 +216,11 @@
             you have saved online.</li> 
         </ul>
         <p>The <a href="#helpMainMenu">Main Menu</a> droplist is on the left and provides more options.
-        <a href="#helpSettings">Menu > Settings</a> is used to set your prefernces for the app.</p>
+        <a href="#helpSettings">Menu > Settings</a> is used to set your preferences for the app.</p>
         <p>More details about the map views and Main Menu follow.
         <h2 id="helpOnlineMap">Online Map</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
-        from which you select a trail to view. Your current geo-location on the trail is shown 
+        from which you select a trail to view. Your current geolocation on the trail is shown 
         and you can be alerted if you are off path. When you are off path, instructions for returning to the trail
         are shown. Also automatic tracking can be enabled to determine if you are off path.
         <h3>Trails DropList</h3>
@@ -245,7 +243,7 @@
             <li>Find Trails > All Trails<br>
             Searches for all public paths and your private paths.</li>
             <li>Find Trails > All Mine<br/>
-            Searchs for all your paths, both public and private.
+            Searches for all your paths, both public and private.
             You must be signed in to search for your paths.</li>
             <li>Find Trails > My Public<br/>
             Searches for all of your public paths, paths that anyone can see.</li>
@@ -253,7 +251,7 @@
             Searches for your private paths, paths that only you can see.</li>
         </ul>
         <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
-        These controls let you see your current geo-location, turn automatic tracking on or off,
+        These controls let you see your current geolocation, turn automatic tracking on or off,
         and turn receiving alerts for your phone on or off.
         <ul>
             <li>Ctr Trail Button<br/>
@@ -261,7 +259,7 @@
             <li>MyLoc Button<br/>
             Displays your current location on the map.</li>
             <li>Track Off | On</br>
-            Switches between geo-location tracking On or Off.<br/>
+            Switches between geolocation tracking On or Off.<br/>
             Note: Track On will run down your battery more quickly.</li>
             <li>Ph Alert Off | On<br/>
             Switches between Ph Alert On or Off.
@@ -332,7 +330,7 @@
         </ul>
         <h2 id="helpEditTrail">Edit a Trail</h2>
         <p> Edit provides a way to edit a trail you have saved online.
-        The precedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
+        The procedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
         except that you select a path to edit instead of defining a name for the path.</p>
         <p>You must be signed in to edit a path, and you can only edit paths that you have defined.</p>
         <h2>Creating Trail Maps at Hillmap</h2>
@@ -354,13 +352,13 @@
         <p>Presents a dialog to set your preferences for the app.</p>  
         <ul>
             <li>Allow Geo Tracking Yes | No<br/> 
-            For No, geo-location is NOT obtained automatically.
-            However, the MyLoc button will still get your geo-location.<br/>
+            For No, geolocation is NOT obtained automatically.
+            However, the MyLoc button will still get your geolocation.<br/>
             MyLoc and Track are on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.</li>
             <li>Geo Tracking Initially On Yes | No<br/>
             Yes to start with Track On when app loads.</li>
             <li>Geo Tracking Interval (secs)<br/>
-            Number of seconds to check your geo-location when tracking is allowed.</li>
+            Number of seconds to check your geolocation when tracking is allowed.</li>
             <li>Off-Path Threshold<br/>
             Number of meters that you need to be off-path for an alert to be given.</li>
             <li>Allow Phone Alert Yes | No<br/>
@@ -379,8 +377,8 @@
             off trail. Count of 0 disables vibrations.<br/>
             Note that Ph Alert Off does not inhibit vibrations for being off-trail.</li>
             <li>Prev Geo Loc Thres<br/>
-            Number of meters of current geo-location with respect to previous location 
-            for change in location to be considered valid. (This prevents small variations in the geo-location of
+            Number of meters of current geolocation with respect to previous location 
+            for change in location to be considered valid. (This prevents small variations in the geolocation of
             the same point to appear to be a change in location.)</li>
             <li>Show Compass Heading on Map?<br/>Yes | No<br/>
             An arrow for the compass heading from your current location may be shown on the map.</li>
@@ -410,7 +408,7 @@
         Explains that automatic tracking causes faster battery drain.
         <h3>Menu > About</h3>
         Displays app version number and copyright.
-        <h3>Menu > Licencse</h3>
+        <h3>Menu > License</h3>
         Displays the open licenses for components used in this app.
         <br/><br/><br/> <!-- Blank line at bottom for fixed close dialog bar to overlay. -->  
     </div>
@@ -426,7 +424,7 @@
         inaccurate, it is prefixed with a "?" mark.</p>
         <p><b>THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:</b></p>
         <ul>
-            <li>One kind of suggestion is based on the heading from your previous locaton.
+            <li>One kind of suggestion is based on the heading from your previous location.
             You may not have traveled in a straight line from your previous location.</li>
             <li>The second kind of suggestion is based on the compass heading that your phone 
             may be able to provide. The compass heading is the direction your phone indicates 
@@ -445,7 +443,7 @@
         <p>To get an accurate turning suggestion from your previous location:</p>
         <ol>
             <li>Touch MyLoc button to get your location.</li>
-            <li>Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards).
+            <li>Walk in a straight line more than the previous geolocation threshold, typically 40 meters (44 yards).
             The Prev Geo Loc Thres is given in Menu > Settings.</li>
             <li>Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.</li>
         </ol>
@@ -460,7 +458,7 @@
         The shorter the time interval for automatic tracking, the quicker the battery drains.</p>
         <p>Menu > Settings > Geo Tracking Interval sets the time interval. So make the time interval longer 
         to reduce the drain on the battery.</p>
-        <p>When automatic tracking is off, the drain on the battery is mininal.</p>
+        <p>When automatic tracking is off, the drain on the battery is minimal.</p>
         <p>Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking,
         which minimizes the battery drain. 
         <p>You can still check your geo location manually by touching
@@ -478,8 +476,8 @@
         <h1>Licenses</h1>
         <p>The main source code for this app is open source licensed under
         the MIT License.</p>
-        <p>The open source Cordova / Appache platform is used to build this mobile app. Refer to
-        the Cordova / Appache license.</p>
+        <p>The open source Cordova / Apache platform is used to build this mobile app. Refer to
+        the Cordova / Apache license.</p>
         <p>Plugins and modules used by the main code have individual open source licenses
         and are listed below. Refer to them individually to determine their kind of license.</p>
         <ul>
@@ -514,7 +512,8 @@
         <p>A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and 
         is only a <b>SUGGESTION TO BE VERIFIED BY YOU</b>. The suggestions for turning my be wrong for various reasons:</p>
         <ul>
-            <li>The heading from your previous geo-location is a straight line, and you may not have traveled in a straight line.</li>
+            <li>The heading from your previous geolocation is assumed to be a straight line, 
+            but you may not have traveled in a straight line.</li>
             <li>The compass may need to be calibrated.</li>
             <li>The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling)
             is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.</li>
@@ -524,7 +523,7 @@
         <h3>Server Data</h3>
         <p>For trails that you define, data is stored on a server. The data has latitude and longitude for points
         defining the trail. Your Facebook public identification (not your name) is associated with your trails.
-        The data is not encrypted. Minual protection for the database is provided through access controlled by a password.
+        The data is not encrypted. Minimal protection for the database is provided through access controlled by a password.
         Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
         <h3>Data on Your Phone</h3>
         <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
@@ -535,7 +534,7 @@
         However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.</p>
         <h2>A FURTHER CAUTION</h2>
         <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
-        may not be appropriate for your ablities and that the trails could have inaccuracies.</p>
+        may not be appropriate for your abilities and that the trails could have inaccuracies.</p>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
 

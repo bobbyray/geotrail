@@ -188,7 +188,7 @@ function wigo_ws_View() {
             });
         }
 
-        // alert("Waiting to continue for debug."); 
+        alert("Waiting to continue for debug.");   ////20160922 comment out 
         var version = that.onGetVersion();
         if (!version)
             version = new wigo_ws_GeoTrailVersion();
@@ -2503,7 +2503,7 @@ function wigo_ws_View() {
         this.bOn = false; // Boolean indicating timer runs repeatedly.
 
         // Threshold in meters for distance to nearest point on path.
-        // If distance from geo-location to nearest point on the path
+        // If distance from geolocation to nearest point on the path
         // is > dCloseToPathThres, then geo location is off-path.
         this.dCloseToPathThres = -1;
 
