@@ -845,7 +845,7 @@ function Wigo_Ws_CordovaControls() {
             }
             
             if (imgBackArrow)
-                this.show(imgBackArrow, bShowBackArrow)
+                TitleBar.prototype.show(imgBackArrow, bShowBackArrow)
         }
 
         // Scrolls this title bar into view.

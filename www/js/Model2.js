@@ -532,7 +532,6 @@ function wigo_ws_Model() {
     geoTrailSettings.LoadFromLocalStorage();
 
     // Version for GeoTrail app in localStorage.
-    alert("Creating version in model constructor"); ////20160922 Debug only, remove.
     var geoTrailVersion = new GeoTrailVersion();
     geoTrailVersion.LoadFromLocalStorage();
 }

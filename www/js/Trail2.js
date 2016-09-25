@@ -36,7 +36,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-    var sVersion = "1.1.019  06/13/2016"; // Constant string for App version.
+    var sVersion = "1.1.020  09/24/2016"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -188,7 +188,7 @@ function wigo_ws_View() {
             });
         }
 
-        alert("Waiting to continue for debug.");   ////20160922 comment out 
+        //alert("Waiting to continue for debug.");   // comment out 
         var version = that.onGetVersion();
         if (!version)
             version = new wigo_ws_GeoTrailVersion();
@@ -379,7 +379,7 @@ function wigo_ws_View() {
         switch (nMode) {
             case this.eMode.online_view:
                 HideAllBars();
-                titleBar.setTitle("Online Map");
+                titleBar.setTitle("Online Map"); 
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
                 ShowPathInfoDiv(true); 
