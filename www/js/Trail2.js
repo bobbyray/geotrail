@@ -633,7 +633,7 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
         var bOk = map.PanToPathCenter();
         if (!bOk) {
-            that.ShowStatus("No Geo Path currently defined to pan-to.");
+            that.ShowStatus("No Geo Trail currently defined to pan-to.");
         }
     }, false);
     var mapGeoLocate = document.getElementById('mapGeoLocate');
@@ -1102,7 +1102,7 @@ function wigo_ws_View() {
                         // Fire signed in event for this same state.
                         that.DoEditTransition(that.eventEdit.SignedIn);
                     } else {
-                        sMsg = bNew ? "Sign In to define a new path." : "Sign In to edit a path."
+                        sMsg = bNew ? "Sign In to define a new trail." : "Sign In to edit a trail."
                         view.AppendStatus(sMsg, false); 
                     }
                     break;
@@ -1111,7 +1111,7 @@ function wigo_ws_View() {
                     // (Do not allow user to SignIn again or Logout while editing.)
                     ShowSignInCtrl(false);
                     if (bNew) {
-                        view.AppendStatus("Enter a name for a new path.", false);
+                        view.AppendStatus("Enter a name for a new trail.", false);
                     } else {
                         // Load path drop list for select of path to edit.
                         ShowElement(onlineOfflineEditBar, true);  
@@ -1221,10 +1221,10 @@ function wigo_ws_View() {
                     // in which case state remains the same.
                     break;
                 case that.eventEdit.Delete:
-                    ConfirmYesNo("OK to delete selected path?", function (bConfirm) {
+                    ConfirmYesNo("OK to delete selected trail?", function (bConfirm) {
                         if (bConfirm) {
                             // Delete path at server.
-                            view.ShowStatus("Deleting GPX path at server.", false);
+                            view.ShowStatus("Deleting GPX trail at server.", false);
                             curEditState = stDeletePending;
                             var gpxId = { sOwnerId: view.getOwnerId(), nId: that.nPathId };
                             view.onDelete(view.curMode(), gpxId);
@@ -1327,7 +1327,7 @@ function wigo_ws_View() {
                         // Show the path cursors.
                         ShowPathCursors(false);
                         ShowPathIxButtons(true);
-                        view.ShowStatus("Use Prev/Next to move selected point along path. Select Move Pt, Insert Pt, or Delete Pt.", false);
+                        view.ShowStatus("Use Prev/Next to move selected point along trail. Select Move Pt, Insert Pt, or Delete Pt.", false);
                         // Get the the touch point.
                         var gpt = curTouchPt.getGpt();
                         // map.DrawTouchPt(gpt); // Helps for debug, not needed.
@@ -1388,7 +1388,7 @@ function wigo_ws_View() {
                     opts.Select = true;
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Inserting);
-                    view.ShowStatus("Touch where to insert touch point into the path.", false);
+                    view.ShowStatus("Touch where to insert point into the trail.", false);
                     curEditState = stInsertPt;
                     break;
                 case that.eventEdit.DeletePt:  
@@ -1405,7 +1405,7 @@ function wigo_ws_View() {
                     opts.Select = true;
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Deleting);
-                    view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along path.", false);
+                    view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along trail.", false);
                     map.DrawDeleteSegment(curSelectPt.getPathIx());    
                     curEditState = stDeletePt;
                     break;
@@ -1725,8 +1725,8 @@ function wigo_ws_View() {
             opts.Select = !bPathEmpty;
             opts.SetOptions();
             opts.SelectOption(EPtAction.Appending);
-            var sMsg = bPathEmpty ? "Touch to start a new path." :
-                                    "Touch to append point to end of path or change Append Pt to Select Pt."
+            var sMsg = bPathEmpty ? "Touch to start a new trail." :
+                                    "Touch to append point to end of trail or change Append Pt to Select Pt."
             view.ShowStatus(sMsg, false);
         }
 
@@ -1748,7 +1748,7 @@ function wigo_ws_View() {
             opts.Append = true;
             opts.SetOptions();
             opts.SelectOption(EPtAction.Selecting);
-            view.ShowStatus("Touch to choose point on path.", false);
+            view.ShowStatus("Touch to choose point on trail.", false);
         }
 
         // Shows instructions for moving a draw circle. 
@@ -1815,12 +1815,12 @@ function wigo_ws_View() {
                     path.sShare = selectShareDropDown.getSelectedValue();
                     path.arGeoPt = that.gpxPath.arGeoPt;
                     view.onUpload(view.curMode(), path);
-                    view.ShowStatus("Uploading path to server.", false);
+                    view.ShowStatus("Uploading trail to server.", false);
                     bOk = true;
                     curEditState = stUploadPending;
 
                 } else {
-                    var sMsg = "Cannot upload the geo path because it must have more than one point.";
+                    var sMsg = "Cannot upload the geo trail because it must have more than one point.";
                     AlertMsg(sMsg);
                 }
             }
@@ -2046,7 +2046,7 @@ function wigo_ws_View() {
     numberGeoTrackingSecs.fill(numberGeoTrackingSecsValues);
 
     parentEl = document.getElementById('holderOffPathThresMeters');
-    var numberOffPathThresMeters = new ctrls.DropDownControl(parentEl, null, 'Off-Path Threshold', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberOffPathThresMeters = new ctrls.DropDownControl(parentEl, null, 'Off Trail Threshold', '',  'img/ws.wigo.dropdownhorizontalicon.png');
     var numberOffPathThresMetersValues = 
     [
         ['30', '30m (33yds)'],
@@ -2941,10 +2941,10 @@ function wigo_ws_View() {
         that.ClearStatus();
         if (!upd.bToPath) {
             if (map.IsPathDefined()) {
-                var sMsg = "On Path<br/>";
+                var sMsg = "On Trail<br/>";
                 sMsg += PathDistancesMsg(upd);
                 that.ShowStatus(sMsg, false); // false => not an error.
-                sMsg = "On Path<br/>";
+                sMsg = "On Trail<br/>";
                 sMsg += PathDistancesPebbleMsg(upd);
                 pebbleMsg.Send(sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking.
             } else {
@@ -2967,20 +2967,20 @@ function wigo_ws_View() {
             var sToPathDir = map.BearingWordTo(upd.bearingToPath);
             var phi = upd.bearingToPath - upd.bearingRefLine;
             var phiCompass = upd.bearingToPath -  upd.bearingCompass;
-            var sTurn = 'right';
-            var sTurnCompass = 'right';
+            var sTurn = 'Right';
+            var sTurnCompass = 'Right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Head {0} ({1}&deg; wrt N) to go to path ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
+            var s = "Head {0} ({1}&deg; wrt N) to go to trail ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path based on previous heading.
                 if (phi < 0)
                     phi += 360.0;
                 if (phi > 180.0) {
-                    sTurn = 'left';
+                    sTurn = 'Left';
                     phi = 360.0 - phi;
                 }
-                s = "?Turn {1} {0}&deg; from PrevLoc Hdg {2}&deg;.<br/>".format(phi.toFixed(0), sTurn, upd.bearingRefLine.toFixed(0));
+                s = "?P {1} {0}&deg; from Previous Hdg of {2}&deg;.<br/>".format(phi.toFixed(0), sTurn, upd.bearingRefLine.toFixed(0));
                 sMsg += s;
             }
             // Show angle to turn based on compass bearing.
@@ -2989,10 +2989,10 @@ function wigo_ws_View() {
                 if (phiCompass < 0)
                     phiCompass += 360.0;
                 if (phiCompass > 180.0) {
-                    sTurnCompass = 'left';
+                    sTurnCompass = 'Left';
                     phiCompass = 360.0 - phiCompass;
                 }
-                s = "?Turn {1} {0}&deg; from Compass Hdg {2}&deg;.<br/>".format(phiCompass.toFixed(0), sTurnCompass, upd.bearingCompass.toFixed(0));
+                s = "?C {1} {0}&deg; from Compass Hdg of {2}&deg;.<br/>".format(phiCompass.toFixed(0), sTurnCompass, upd.bearingCompass.toFixed(0));
                 sMsg += s;
             }
             // Show distance from start and to end.
@@ -3145,7 +3145,7 @@ function wigo_ws_View() {
         }
 
         if (fsmEdit.IsPathChanged()) {
-            ConfirmYesNo("The geo path has been changed. OK to continue and loose any change?", function (bConfirm) {
+            ConfirmYesNo("The geo trail has been changed. OK to continue and loose any change?", function (bConfirm) {
                 if (bConfirm) {
                     fsmEdit.ClearPathChange();
                     AcceptModeChange();
@@ -3177,9 +3177,9 @@ function wigo_ws_View() {
             // Only allow Logout for View or Offline mode.
             var nMode = that.curMode();
             if (nMode === that.eMode.online_edit ) {
-                that.AppendStatus("Complete editing the path, then logout.", false);
+                that.AppendStatus("Complete editing the trail, then logout.", false);
             } else if (nMode === that.eMode.online_define) {
-                that.AppendStatus("Complete defining a new path, then logout.", false);
+                that.AppendStatus("Complete defining a new trail, then logout.", false);
             } else {
                 that.ClearStatus();
                 fb.LogOut();
@@ -3269,7 +3269,7 @@ function wigo_ws_View() {
                    nFindIx === that.eFindIx.my_public  ||
                    nFindIx === that.eFindIx.my_private) {
             if (!sOwnerId) {
-                that.ShowStatus("You must be signed in to find your paths.", true);
+                that.ShowStatus("You must be signed in to find your trails.", true);
                 ShowOwnerIdDiv(true); // Shopw sign-in bar 
                 bClearPath = false;
             } else {
@@ -3545,11 +3545,11 @@ function wigo_ws_Controller() {
                         } else if (oStatus.eDup === eDuplicate.Match) {
                             // gpx obj has same name as its record in database so there is no name change.
                             // No need to reload the list of paths.
-                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                            view.ShowStatus("Successfully uploaded GPX trail.", false);
                         } else if (oStatus.eDup === eDuplicate.NotDup) {
-                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                            view.ShowStatus("Successfully uploaded GPX trail.", false);
                         } else {
-                            view.ShowStatus("Error occurred uploading GPX path.");
+                            view.ShowStatus("Error occurred uploading GPX trail.");
                         }
                     } else {
                         // Show error message.
@@ -3560,7 +3560,7 @@ function wigo_ws_Controller() {
                     fsm.DoEditTransition(fsm.eventEdit.Init);
                 });
             if (!bOk) {
-                var sError = "Cannot upload GPX path to server because another transfer is already in progress."
+                var sError = "Cannot upload GPX trail to server because another transfer is already in progress."
                 view.ShowStatus(sError, !bOk);
             }
         }
@@ -3577,18 +3577,18 @@ function wigo_ws_Controller() {
             var bOk = model.deleteGpx(gpxId,
                 // Async callback upon storing record at server.
                 function (bOk, sStatus) {
-                    var sMsg = bOk ? "Successfully deleted GPX path at server." : sStatus;
+                    var sMsg = bOk ? "Successfully deleted GPX trail at server." : sStatus;
                     view.ShowStatus(sMsg, !bOk);
                     fsm.DoEditTransition(fsm.eventEdit.Init);
 
                 });
             if (!bOk) {
-                var sError = "Cannot delete GPX path at server because another transfer is already in progress."
+                var sError = "Cannot delete GPX trail at server because another transfer is already in progress."
                 view.ShowStatus(sError, !bOk);
                 fsm.DoEditTransition(fsm.eventEdit.Init);
             }
         } else {
-            ShowStatus("Owner must be signed in to delete GPX path at server.");
+            ShowStatus("Owner must be signed in to delete GPX trail at server.");
             fsm.DoEditTransition(fsm.eventEdit.Init);
         }
     };
@@ -3774,10 +3774,10 @@ function wigo_ws_Controller() {
         function StatusOkMsg(nCount) {
             var sMsg;
             if (nCount <= 0) {
-                sMsg = "No paths found."
+                sMsg = "No trails found."
             } else {
-                var sFound = nCount === 1 ? "Found 1 path" : "Found {0} paths".format(nCount);
-                var sMsg = "{0}. Select path from droplist.".format(sFound);
+                var sFound = nCount === 1 ? "Found 1 trail" : "Found {0} trails".format(nCount);
+                var sMsg = "{0}. Select trail from droplist.".format(sFound);
             }
             return sMsg;
         }
@@ -3864,7 +3864,7 @@ function wigo_ws_Controller() {
                 });
                 break;
             default:
-                view.ShowStatus("Unknown search type for finding paths.");
+                view.ShowStatus("Unknown search type for finding trails.");
                 break;
         }
     }

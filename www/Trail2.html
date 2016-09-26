@@ -125,7 +125,7 @@
     </div>
     <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
         <div id="mapBarBtns">
-            <input id="mapGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
+            <input id="mapGoToPath" type="button" title="Center Geo Trail" value="Ctr Trail" />
             <input id="mapGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
         </div>
         <div id="mapPhAlertToggle"></div> <!-- Container for Cordova OnOffControl -->
@@ -205,7 +205,7 @@
         <p>Select Sign-In > Facebook to sign in. Your sign-in id is remembered so 
         you do not need to sign in again unless you log out. </p>
         <p>If you do not sign in, you can only view public trails created by others.
-        However, if you sign in, you can create trails and edit your trails. Your trails can be marked
+        However, if you sign in, you can create trails and edit your trails, which can be marked
         as Private for only you to view, or Public for anyone to view.</p>
         <h2>Select Map View</h2>
         Select a view from the Select Map View droplist.
@@ -224,41 +224,41 @@
         <h2 id="helpOnlineMap">Online Map</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
         from which you select a trail to view. Your current geolocation on the trail is shown 
-        and you can be alerted if you are off path. When you are off path, instructions for returning to the trail
-        are shown. Also automatic tracking can be enabled to determine if you are off path.
+        and you can be alerted if you are off trail. When you are off trail, instructions for returning to the trail
+        are shown. Also automatic tracking can be enabled to determine if you are off trail.
         <h3>Trails DropList</h3>
         <p>Select a trail from the web that others have made public and ones
         that are private to you.</p>
         <h3>Save Offline Button</h3>
-        <p>Touch the Save Offline button to save a path you are viewing so that you can
+        <p>Touch the Save Offline button to save a trail you are viewing so that you can
         view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
         <h3>Find Trails DropList</h3>
-        <p>Select an option from the droplist to search for paths to view.
-        The Trails droplist is filled with the paths found.</p>
+        <p>Select an option from the droplist to search for trails to view.
+        The Trails droplist is filled with the trails found.</p>
         <ul> 
             <li>Find Trails > Home Area<br/>
-            Searches for paths that are in your Home Area, which is a geo-rectangle
+            Searches for trails that are in your Home Area, which is a geo-rectangle
             defined in <a href="#helpHomeArea">Menu > Settings > Home Area</a>.
-            All public paths and your private paths are included.</li>
+            All public trails and your private trails are included.</li>
             <li>Find Trails > On Screen<br/>
-            Searches for paths that are in the area displayed on the screen. 
+            Searches for trails that are in the area displayed on the screen. 
             First, pan, zoom, and pinch to select the area you see on the screen.</li>
             <li>Find Trails > All Trails<br>
-            Searches for all public paths and your private paths.</li>
+            Searches for all public trails and your private trails.</li>
             <li>Find Trails > All Mine<br/>
-            Searches for all your paths, both public and private.
-            You must be signed in to search for your paths.</li>
+            Searches for all your trails, both public and private.
+            You must be signed in to search for your trails.</li>
             <li>Find Trails > My Public<br/>
-            Searches for all of your public paths, paths that anyone can see.</li>
+            Searches for all of your public trails, trails that anyone can see.</li>
             <li>Find Trails > My Private<br/>
-            Searches for your private paths, paths that only you can see.</li>
+            Searches for your private trails, trails that only you can see.</li>
         </ul>
         <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
         These controls let you see your current geolocation, turn automatic tracking on or off,
         and turn receiving alerts for your phone on or off.
         <ul>
             <li>Ctr Trail Button<br/>
-            Pans the map to the center of the selected path.</li>
+            Pans the map to the center of the selected trail.</li>
             <li>MyLoc Button<br/>
             Displays your current location on the map.</li>
             <li>Track Off | On</br>
@@ -294,11 +294,11 @@
         <p>Instructions are shown at the top of the screen to guide you through the process,
         which is outlined below.</p>
         <ul>
-            <li>Enter a path name for the trail.</li>
+            <li>Enter a name for the trail.</li>
             <li>Share DropList<br/>
             Select Public for anyone to see the trail.<br/>
             Select Private for only you to see the trail.</li>
-            <li>Touch on the screen to define the first point on the path.</li>
+            <li>Touch on the screen to define the first point on the trail.</li>
             <li>Soft Cursor Keys<br/>
             Use the cursor keys 
             that appear to nudge the point left, right, up, or down to get the point exactly where
@@ -324,10 +324,10 @@
                         <li>Insert Pt<br/>
                         When inserting a point, touch where the inserted point should be and use the cursors to nudge it.
                         Touch OK to confirm the location is correct. The point is inserted in the
-                        path before the selected point.</li>
+                        trail before the selected point.</li>
                         <li>Delete Pt<br/>
                         When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons
-                        to move to a different point on the path if the correct point is not selected (highlighted).</li>
+                        to move to a different point on the trail if the correct point is not selected (highlighted).</li>
                     </ul>
                 </li>
             </ul>
@@ -336,8 +336,8 @@
         <h2 id="helpEditTrail">Edit a Trail</h2>
         <p> Edit provides a way to edit a trail you have saved online.
         The procedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
-        except that you select a path to edit instead of defining a name for the path.</p>
-        <p>You must be signed in to edit a path, and you can only edit paths that you have defined.</p>
+        except that you select a trail to edit instead of defining a name for the trail.</p>
+        <p>You must be signed in to edit a trail, and you can only edit trails that you have defined.</p>
         <h2>Creating Trail Maps at Hillmap</h2>
         <p>An alternative to creating a trail on your phone is to
         use the site http://www.hillmap.com to create a trail from a laptop or desktop computer.</p>
@@ -365,8 +365,8 @@
             Yes to start with Track On when app loads.</li>
             <li>Geo Tracking Interval (secs)<br/>
             Number of seconds to check your geolocation when tracking is allowed.</li>
-            <li>Off-Path Threshold<br/>
-            Number of meters that you need to be off-path for an alert to be given.</li>
+            <li>Off Trail Threshold<br/>
+            Number of meters that you need to be off trail for an alert to be given.</li>
             <li>Allow Phone Alert Yes | No<br/>
             Determines if alerts (beeps) from you phone are given.<br/> 
             Ph Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.</li>
@@ -394,7 +394,7 @@
             <li id="helpHomeArea">Set Home Area to Screen<br>
             Touch the Set button to set your home area to be that shown on the screen<br/>
             First, pan, zoom, and pinch to display the area you want on the screen.<br/>
-            The paths in the Home Area are found when the app starts.
+            The trails in the Home Area are found when the app starts.
             Also, the Home Area can be chosen in Online Map, from the Find Trails droplist.<br/>
             <li>Done Button<br/>
             Touch Done to save the changes and close the Settings dialog.
@@ -451,7 +451,7 @@
             <li>Touch MyLoc button to get your location.</li>
             <li>Walk in a straight line more than the previous geolocation threshold, typically 40 meters (44 yards).
             The Prev Geo Loc Thres is given in Menu > Settings.</li>
-            <li>Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.</li>
+            <li>Touch MyLoc button again to see the off trail distance, return heading, and turning suggestion.</li>
         </ol>
         <p>Of course, if you know accurate compass directions yourself, follow the heading back to the trail.
         The turning suggestions are only an aid if you do not know accurate compass directions.</p>
