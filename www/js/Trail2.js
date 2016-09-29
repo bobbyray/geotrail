@@ -3144,14 +3144,11 @@ function wigo_ws_View() {
             SetSettingsValues(settings);
             ShowSettingsDiv(true);
         } else if (dataValue === 'start_pebble') {
-            if (pebbleMsg.IsConnected()) {
-                if (pebbleMsg.IsEnabled()) {
-                    pebbleMsg.StartApp();
-                } else {
-                    AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
-                }
+            // Note: pebbleMsg.IsConnected() does not work. Do not check for Pebble connected.
+            if (pebbleMsg.IsEnabled()) {
+                pebbleMsg.StartApp();
             } else {
-                AlertMsg("Pebble watch is not connected.");
+                AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
             }
             this.selectedIndex = 0;
         } else if (dataValue === 'about') {
