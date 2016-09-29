@@ -36,7 +36,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-    var sVersion = "1.1.020  09/24/2016"; // Constant string for App version.
+    var sVersion = "1.1.020  09/29/2016"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -228,7 +228,7 @@ function wigo_ws_View() {
     // Enumeration of mode for processing geo paths.
     // NOTE: the values must match the index of the option in selectMode drop list in trail2.html.
     this.eMode = {
-        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5,
+        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, unknown: 6,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -371,6 +371,8 @@ function wigo_ws_View() {
                 ShowPathInfoDiv(false);  
         }
 
+        var nPrevMode = nMode; 
+
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
         map.GoOffline(bOffline);  
@@ -387,6 +389,7 @@ function wigo_ws_View() {
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
+                selectGeoTrail.clearValueDisplay(); 
                 this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
@@ -399,6 +402,7 @@ function wigo_ws_View() {
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
+                selectGeoTrail.clearValueDisplay(); 
                 this.onGetPaths(nMode, that.getOwnerId());
                 var listLength = selectGeoTrail.getListLength();
                 if (listLength < 2) {
@@ -407,7 +411,13 @@ function wigo_ws_View() {
                     var sAnswerBtns = "Go Online, Stay Offline";
                     ConfirmYesNo(sMsg, function(bConfirm){
                         if (bConfirm) {
+                            // Save auto selection for selectOnceAfterSetPathList.
+                            var savedPathName = selectOnceAfterSetPathList.sPathName;  
+                            var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
                             that.setModeUI(that.eMode.select_mode); 
+                            // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
+                            selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
+                            selectOnceAfterSetPathList.sPathName = savedPathName;
                             that.setModeUI(that.eMode.online_view);
                         }
                     },"",sAnswerBtns);
@@ -428,6 +438,8 @@ function wigo_ws_View() {
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
                 map.ClearPath();
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 ShowOwnerIdDiv(true);
                 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
@@ -478,6 +490,9 @@ function wigo_ws_View() {
             // dataIx is data-value attribute of item and is index to arPath element.
             selectGeoTrail.appendItem(dataIx, name);
         }
+
+        // Select previous path is indicated.
+        selectOnceAfterSetPathList.select();  
     };
 
     // Clears the list of paths that the user can select.
@@ -486,7 +501,7 @@ function wigo_ws_View() {
         this.setPathList([]);
     };
 
-    // Returns selected Path Name from selectGeoPath drop list.
+    // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
         var sName = selectGeoTrail.getSelectedText();
@@ -527,6 +542,48 @@ function wigo_ws_View() {
 
     // ** Private members for html elements
     var that = this;
+
+    // Object specifying selection of path after paths have been loaded into droplist.
+    // nPrevMode: eMode enumeration. Previous mode for sPathName.
+    // sPathName: string. Path name to match in the droplist.
+    // select: function(). Does selection in droplist if there is a match.
+    //         Clears nPrevMode and sPathName unless droplist is empty.
+    //         Therefore auto selection is only done once until nPrevMode and sPathName
+    //         are set again.
+    // Remarks: 
+    //  selectGeoTrail is the droplist control. 
+    //  If nPrevNode is unknown, there is no selection to match.
+    //  if sPathName is not found in droplist, the droplis selection is not changed.
+    //  View setModeUI() initializes nPrevMode, sPathName.
+    //  View setPathList(..) calls select() after filling selectGeoTrail.
+    var selectOnceAfterSetPathList = {nPrevMode: that.eMode.unknown, sPathName: "",
+        select: function() {
+            var nCurMode = that.curMode();
+            switch (nCurMode)
+            {
+                case that.eMode.online_view:
+                case that.eMode.offline:
+                    // Note: Do not select on Edit mode because Edit mode must start by user 
+                    // selecting a trail so that message to append to path is shown.
+                    switch(this.nPrevMode) {
+                        case that.eMode.online_view:
+                        case that.eMode.offline:
+                        case that.eMode.online_edit:
+                            var dataValue = selectGeoTrail.selectByText(this.sPathName);
+                            if (dataValue) 
+                                selectGeoTrail.onListElClicked(dataValue);
+                            // Clear after selecting unless droplist is empty.
+                            if (selectGeoTrail.getListLength() > 1) { // First entry is Select a Trail, which is same as empty.
+                                this.nPrevMode = that.eMode.unknown;
+                                this.sPathName = "";
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }};
+
+
     var divOwnerId = document.getElementById('divOwnerId'); 
 
     var txbxOwnerId = $('#txbxOwnerId')[0];
@@ -1148,7 +1205,7 @@ function wigo_ws_View() {
                     curPathName = view.getSelectedPathName();
                     // Set path name for editing.
                     txbxPathName.value = curPathName;
-                    // Disable selectGeoPath droplist (by hiding) selection of different path.
+                    // Disable selectGeoTrail droplist (by hiding) selection of different path.
                     ShowPathInfoDiv(false);
                     // Set options and show message for appending.
                     PrepareForEditing();
@@ -1974,7 +2031,7 @@ function wigo_ws_View() {
     }
 
 
-    // Removes all elements after the first element (index 0) from selectGeoPath control,
+    // Removes all elements after the first element (index 0) from selectGeoTrail control,
     // provide the current mode is offline. Also clears the path drawn on the map.
     function ClearOfflineGeoPathSelect(select) {
         if (that.curMode() === that.eMode.offline) {
@@ -3229,7 +3286,7 @@ function wigo_ws_View() {
     onlineSelectFind.fill([ ['find', 'Find'],
                             ['home_area', 'Home Area'],
                             ['on_screen', 'On Screen'],
-                            ['all_public', 'All Trails'],
+                            ['all_public', 'All Public Trails'],
                             ['all_mine', 'All Mine'],
                             ['my_public', 'My Public'],
                             ['my_private','My Private']
@@ -3261,19 +3318,19 @@ function wigo_ws_View() {
             viewFindParams.setRect(nFindIx, gptSW, gptNE);
             if (that.onFindPaths)
                 that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
-        } else if (nFindIx === that.eFindIx.all_public) {
+        } else if (nFindIx === that.eFindIx.all_public) { 
             viewFindParams.init(nFindIx);
             if (that.onFindPaths)
                 that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
         } else if (nFindIx === that.eFindIx.all_mine ||
                    nFindIx === that.eFindIx.my_public  ||
                    nFindIx === that.eFindIx.my_private) {
+            viewFindParams.init(nFindIx);
             if (!sOwnerId) {
                 that.ShowStatus("You must be signed in to find your trails.", true);
                 ShowOwnerIdDiv(true); // Shopw sign-in bar 
                 bClearPath = false;
             } else {
-                viewFindParams.init(nFindIx);
                 if (that.onFindPaths)
                     that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
             }
@@ -3281,7 +3338,7 @@ function wigo_ws_View() {
             bClearPath = false;
         }
 
-        // Clear the drawn map path because the selectGeoPath drop has been reloaded.
+        // Clear the drawn map path because the selectGeoTrail droplist has been reloaded.
         if (bClearPath)
             map.ClearPath();
     };
@@ -3770,14 +3827,32 @@ function wigo_ws_Controller() {
                 view.AppendStatus(sStatus, !bOk);
         }
 
+        // Local helper to form part of msg indicating trails <for kind of search>.
+        // <for kind of search> is determined base on nFindIx.
+        // Returns: string. " for <kind of search>" 
+        //          <kind of search> is a phrase for the kind of search, e.g All Trails.
+        function TrailsForMsg() {
+            var sMsg;
+            switch (nFindIx) {
+                case view.eFindIx.home_area:  sMsg = ' for Home Area Trails'; break;
+                case view.eFindIx.on_screen:  sMsg = ' for On Screen Trails'; break;
+                case view.eFindIx.all_public: sMsg = ' for All Public Trails'; break; 
+                case view.eFindIx.all_mine:   sMsg = ' for All My Trails'; break;
+                case view.eFindIx.my_public:  sMsg = ' for My Public Trails'; break;
+                case view.eFindIx.my_private: sMsg = ' for My Private Trails'; break;
+                default: sMsg = "";
+            }
+            return sMsg;
+        }
+
+
         // Local helper that returns a status message for ok.
         function StatusOkMsg(nCount) {
             var sMsg;
             if (nCount <= 0) {
-                sMsg = "No trails found."
+                sMsg = "No trails found{0}.".format(TrailsForMsg());
             } else {
-                var sFound = nCount === 1 ? "Found 1 trail" : "Found {0} trails".format(nCount);
-                var sMsg = "{0}. Select trail from droplist.".format(sFound);
+                sMsg = "Found {0}{1}.<br/>Select from droplist.".format(nCount, TrailsForMsg());
             }
             return sMsg;
         }
@@ -3788,7 +3863,7 @@ function wigo_ws_Controller() {
             view.setPathList(arPath, true);
             // Show number of paths found.
             if (bOk) {
-                view.AppendStatus(StatusOkMsg(arPath.length), false); 
+                view.ShowStatus(StatusOkMsg(arPath.length), false); 
             }
         }
 
@@ -3816,7 +3891,7 @@ function wigo_ws_Controller() {
                 break;
             case view.eFindIx.all_public:
                 // Get all public paths for any path owner.
-                view.ShowStatus("Searching for All trails.", false);
+                view.ShowStatus("Searching for All Public Trails.", false);
                 model.getGpxList("any", eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     if (bOk && sPathOwnerId) {

@@ -8,13 +8,6 @@ module.exports = [
         ]
     },
     {
-        "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
-        "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
-        "clobbers": [
-            "Pebble"
-        ]
-    },
-    {
         "file": "plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js",
         "id": "com.phonegap.plugins.facebookconnect.FacebookConnectPlugin",
         "clobbers": [
@@ -239,6 +232,13 @@ module.exports = [
         "id": "cordova-plugin-device-orientation.compass",
         "clobbers": [
             "navigator.compass"
+        ]
+    },
+    {
+        "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
+        "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
+        "clobbers": [
+            "Pebble"
         ]
     }
 ];

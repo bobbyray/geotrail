@@ -285,7 +285,15 @@ function Wigo_Ws_CordovaControls() {
              if (listEl) {
                 SetValueAndText(value, GetValue(listEl), GetText(listEl));
              }
-        }
+        };
+
+        // Clears text in value control.
+        // Remarks: Does not change data-value attribute of value control.  
+        this.clearValueDisplay = function() {
+            if (value) {
+                SetText(value, "");
+            }
+        };
 
 
         // Returns string for selected data-value. 
@@ -299,7 +307,7 @@ function Wigo_Ws_CordovaControls() {
                 sValue = GetValue(value); 
             }
             return sValue;
-        }
+        };
 
         // Returns string for text of from the value control, which represents
         // the selected droplist element.
@@ -311,8 +319,25 @@ function Wigo_Ws_CordovaControls() {
             if (value)
                 sText = value.innerHTML;
             return sText;
-        }
+        };
 
+        // Selects item from droplist by text for the item.
+        // If there is no match, does not change the selection.
+        // Returns: string. data-value attribute of if selection is found.
+        //          Empty string if selection is not found.
+        // Arg:
+        //  sText: string. Text of item in droplist to match.
+        // Remarks: value control is set to the matched item. 
+        // If there is no match, value control is not changed.
+        this.selectByText = function(sText) {
+            var dataValue = "";
+            var el = FindListElByText(sText);
+            if (el && value) {
+                dataValue = GetValue(el);
+                SetValueAndText(value, dataValue, sText);
+            }
+            return dataValue;
+        };
         
         // Returns ref to html Element for given list item.
         // Arg: 
@@ -449,6 +474,24 @@ function Wigo_Ws_CordovaControls() {
             for (var i=0; list.children && i <  list.children.length; i++) {
                 sElValue = GetValue(list.children[i]);
                 if (sElValue === dataValue) {
+                    elFound = list.children[i];
+                    break;
+                }
+            }
+            return elFound;
+        }
+
+        // Helper to find droplist item given text for an item.
+        // Returns ref to Element in droplist that matches text.
+        // Return null if text is not found.
+        // Arg:
+        //  text: string for text of element in the droplist.
+        function FindListElByText(text) {
+            var elFound = null;
+            var sElText;
+            for (var i=0; list.children && i <  list.children.length; i++) {
+                sElText = GetText(list.children[i]);
+                if (sElText === text) {
                     elFound = list.children[i];
                     break;
                 }

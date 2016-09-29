@@ -5,9 +5,6 @@
         <param name="android-package" value="org.nypr.cordova.wakeupplugin.WakeupPlugin" />
         <param name="onload" value="true" />
     </feature>
-    <feature name="Pebble">
-        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
-    </feature>
     <feature name="FacebookConnectPlugin">
         <param name="android-package" value="org.apache.cordova.facebook.ConnectPlugin" />
     </feature>
@@ -38,6 +35,9 @@
     </feature>
     <feature name="Compass">
         <param name="android-package" value="org.apache.cordova.deviceorientation.CompassListener" />
+    </feature>
+    <feature name="Pebble">
+        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
     </feature>
     <allow-intent href="market:*" />
     <name>GeoTrail</name>
