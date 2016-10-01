@@ -10,11 +10,13 @@ function wigo_ws_GeoTrailSettings() {
     // Float for distance in meters for threshold beyond which nearest distance to path is 
     // considered to be off-path.
     this.mOffPathThres = 30;
-    // Boolean indication geo location tracking is enabled.
+    // Boolean indicating geo location tracking is initially enabled.
     // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
     //       and tracking is not enabled.
     this.bEnableGeoTracking = false;
-    // Boolean to indicate alert is issued when off-path.
+    // Boolean to indicate phone alert is initially enabled.
+    // Note: bOffPathAlert is misnamed. Still using the misleading name 
+    //       so that localData storage key is not changed. 
     this.bOffPathAlert = true;
     // Boolean to indicate a phone alert (vibration) is given when off-path. 
     this.bPhoneAlert = true;
@@ -27,9 +29,9 @@ function wigo_ws_GeoTrailSettings() {
     // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
     this.countPebbleVibe = 1;
     // Float for distance in meters for threshold for minimum change in distance
-    // for previous geo-location to be updated wrt to current geo-location.
+    // for previous geolocation to be updated wrt to current geolocation.
     this.dPrevGeoLocThres = 40.0;
-    // Boolean to indicate a mouse click (touch) simulates getting the geo-location
+    // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
     // Boolean to indicate compass heading arrow is drawn on map.

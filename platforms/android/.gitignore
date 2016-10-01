@@ -12,6 +12,10 @@ gen
 out
 # Gradle builds
 /build
+# Ignore assets/www subdirectory, generated when built.
+/assets/www
+#ignore release signing file
+release-signing.properties
 # 
 # Additions to the above std ignores provided by Android Studio itself.
 # From https://gist.github.com/vtanathip/9414323#file-gitignore-android-studio-list

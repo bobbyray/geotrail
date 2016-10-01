@@ -185,7 +185,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //       is a bit different and previous geo point in addition to current geo point 
     //       are used to draw the figures.
     // Arg:
-    //  location: Map LatLng object for current geo-location.
+    //  location: Map LatLng object for current geolocation.
     //  dOffPath: float for distance from location off-path to on-path for which 
     //      valid result is returned.
     //  callbackCompassBearing: optional. Callback after compass bearing is obtained. 
@@ -312,7 +312,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             } else {
                 // Clear previous off path drawings.
                 this.ClearGeoLocationUpdate();
-                // Draw the current geo-location circle only.
+                // Draw the current geolocation circle only.
                 SetGeoLocationCircle(location, rCircle);
                 map.panTo(location);
             }
@@ -635,11 +635,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         return bearingword;
     };
 
-    // Distance in meters for changing previous geo-location wrt current geo-location.
+    // Distance in meters for changing previous geolocation wrt current geolocation.
     // Note: Parameter for updating prevGeoLocCircle when current location changes.
     this.dPrevGeoLocThres = 10.0;
 
-    // For debug, a mouse click (touch) on the map can simulate a geo-location.
+    // For debug, a mouse click (touch) on the map can simulate a geolocation.
     // Boolean to indicate mouse clicks are ignored so that this.onMapClick(llAt) 
     // is not called.  this.onMapClick2(e) is always called regardless of state of
     // this.bIgnoreMapClick.
@@ -923,8 +923,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         curLocToPathArrow = mapPath;
     }
 
-    var prevGeoLoc = null;       // geo-location of previous geo-location update. 
-    var prevGeoLocCircle = null; // L.Circle object for previous geo-location.
+    var prevGeoLoc = null;       // geolocation of previous geolocation update. 
+    var prevGeoLocCircle = null; // L.Circle object for previous geolocation.
     var prevGeoLocRefLine = null;// L.Polyline object for reference line though geolocCircle and preGeoLocCircle.
     
     // Clears from map the previous geo location reference line.
@@ -946,7 +946,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Current geolocCircle must exist.
         if (!geolocCircle)
             return 0.0;
-        // Draw circle for previous geo-location.
+        // Draw circle for previous geolocation.
         var circleOptions = {
             color: that.color.prevLocCircle, 
             opacity: 1.0,
@@ -957,7 +957,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         prevGeoLocCircle = L.circle(prevLocation, r, circleOptions);
         prevGeoLocCircle.addTo(map);
 
-        // Draw thin reference line from previous geo-location thru current geo-location.
+        // Draw thin reference line from previous geolocation thru current geolocation.
         var llTo = geolocCircle.getLatLng();
         var dest = ExtendLine(prevLocation, llTo, 30); // Extend end point of reference line by 30 meters.
         var mapCoords = [prevLocation, dest.at];
@@ -1053,8 +1053,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
     // Determines heading of line and extends line by a given delta.
     // Args:
-    //  llFrom: L.LatLng object for from geo-location.
-    //  llTo: L.LatLng for to geo-location.
+    //  llFrom: L.LatLng object for from geolocation.
+    //  llTo: L.LatLng for to geolocation.
     //  delta: float for number of meters to extend line in direction of bearing
     //         beyond llTo.
     //         Currently delta is ignored. Works pretty good without extending line.

@@ -1,12 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="ws.wigo.geotrail" version="1.1.019" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="ws.wigo.geotrail" version="1.1.020" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <preference name="loglevel" value="DEBUG" />
     <feature name="WakeupPlugin">
         <param name="android-package" value="org.nypr.cordova.wakeupplugin.WakeupPlugin" />
         <param name="onload" value="true" />
-    </feature>
-    <feature name="Pebble">
-        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
     </feature>
     <feature name="FacebookConnectPlugin">
         <param name="android-package" value="org.apache.cordova.facebook.ConnectPlugin" />
@@ -38,6 +35,9 @@
     </feature>
     <feature name="Compass">
         <param name="android-package" value="org.apache.cordova.deviceorientation.CompassListener" />
+    </feature>
+    <feature name="Pebble">
+        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
     </feature>
     <allow-intent href="market:*" />
     <name>GeoTrail</name>

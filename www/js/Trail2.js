@@ -3,6 +3,12 @@
 
 // wigo_GeoPathMap object is in js/GeoPathMapView.js.
 
+// Note: I was thinking of removing the dependency on jquery since the target platforms are ios and android only.
+// However, the $.parseXML() function is used to parse an XML string for the gpx data for a path in js/GeoPathsApi2.js.
+// While many of the JqueryObject.bind(..) and $(selector) functions have been replaced by 
+// HtmlElement.addEventListener(..) and document.getElementById(HTML_ELMENT_id), some have not been 
+// converted because jquery is still a requirement. 
+
 // Object for parameters for this.onSavePathOffline()
 wigo_ws_GeoPathMap.OfflineParams = function () {
     this.nIx = -1;      // Number for index of wigo_ws_Gpx object in list of objects.
@@ -30,7 +36,8 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-    var sVersion = "1.1.019  06/13/2016"; // Constant string for App version.
+    // Release buld for Google Play on 09/20/2016 16:03
+    var sVersion = "1.1.020  09/29/2016"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -39,11 +46,6 @@ function wigo_ws_View() {
     // Signature of handler:
     //  sOwnerId: string for owner id.
     this.onOwnerId = function (sOwnerId) { };
-
-    // Returns ref to Edit Finite State Machine editing path path.
-    this.fsmEdit = function () {
-        return fsmEdit;
-    }
 
     // The view mode has changed.
     // Handler Signature:
@@ -85,7 +87,7 @@ function wigo_ws_View() {
     // as be user id.
     // Handler Signature
     //  sOwnerId: string for path owner id.
-    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  nFindIx: number, this.eFindIx enumeration for kind of find to do.
     //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
     this.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) { };
@@ -155,12 +157,12 @@ function wigo_ws_View() {
         // Helper to complete initialization after map has been initialized.
         function CompleteInitialization(bOk, sMsg) {
             that.ShowStatus(sMsg, !bOk)
-            SetMapPanelTop();
             var settings = that.onGetSettings();
             SetSettingsParams(settings);
             // Set view find paramters for search for geo paths to the home area.
             viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
             that.setModeUI(that.curMode());  
+            selectMode.setSelectedIndex(0);  
             map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
 
             if (!map.isOfflineDataEnabled()) {
@@ -187,7 +189,7 @@ function wigo_ws_View() {
             });
         }
 
-        // alert("Waiting to continue for debug."); 
+        //alert("Waiting to continue for debug.");   // comment out 
         var version = that.onGetVersion();
         if (!version)
             version = new wigo_ws_GeoTrailVersion();
@@ -202,7 +204,8 @@ function wigo_ws_View() {
         if (version.bTermsOfUseAccepted) {
             DoInitialization();
         } else {
-            ConfirmYesNo(TermsOfUseMsg(), function(bConfirm) {
+            ConfirmTermsOfUse(true, function(bConfirm) {
+                ConfirmTermsOfUse(false); // Hide the Terms of Use div.
                 if (bConfirm) {
                     version.bTermsOfUseAccepted = true;
                     that.onSaveVersion(version);
@@ -210,10 +213,11 @@ function wigo_ws_View() {
                 } else {
                     var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
                     sMsg += "Uninstall GeoTrail or end the app, start it again and accept the Terms of Use.<br/>";
-                    that.ShowStatus(sMsg);
+                    that.ShowStatus(sMsg, false); // false => no error highlite.
                     that.setModeUI(that.eMode.tou_not_accepted);
                 }
-            },'Terms of Use', 'Accept,Reject');
+            });
+            
         }
     };
 
@@ -223,9 +227,9 @@ function wigo_ws_View() {
     };
 
     // Enumeration of mode for processing geo paths.
-    // NOTE: the values must match the index of the option in selectGeoPath drop list in trail2.html.
+    // NOTE: the values must match the index of the option in selectMode drop list in trail2.html.
     this.eMode = {
-        online_view: 0, online_edit: 1, online_define: 2, offline: 3, tou_not_accepted: 4,
+        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, unknown: 6,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -239,6 +243,7 @@ function wigo_ws_View() {
                 case this.online_edit: sMode = 'online_edit'; break;
                 case this.online_define: sMode = 'online_define'; break;
                 case this.offline: sMode = 'offline'; break;
+                case this.select_mode:sMode = 'select_mode'; break;
                 case this.tou_not_accepted: sMode = 'tou_not_accepted'; break;
                 default: sMode = 'online_view';
             }
@@ -283,19 +288,7 @@ function wigo_ws_View() {
     //  sShare: string for the value of option.
     //          Value is property name of wigo_ws_GeoPathsRESTfulApi eShare enumeration.
     this.setShareOption = function (sShare) {
-        var bFound = false;
-        var opt;
-        for (var i = 0; i < selectShare.options.length; i++) {
-            opt = selectShare.options[i];
-            if (sShare === opt.value) {
-                opt.selected = true;
-                bFound = true;
-                break;
-            }
-        }
-        if (!bFound) {
-            selectShare.selectedIndex = 0;
-        }
+        selectShareDropDown.setSelected(sShare);
     };
 
     // Returns reference to home area rectangle.
@@ -317,28 +310,20 @@ function wigo_ws_View() {
     //  sStatus: string of html to display.
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     this.ShowStatus = function (sStatus, bError) {
-        if (typeof (bError) === 'undefined')
-            bError = true;
-        if (bError)
-            divStatus.className = 'ErrorMsg';
-        else
-            divStatus.className = 'NormalMsg';
-        divStatus.style.display = "block";
-        divStatus.innerHTML = sStatus;
-        SetMapPanelTop();
+        divStatus.set(sStatus, bError);
     };
 
-    // Appends a status message to current status message and
+    // Appends a status messages starting on a new line to current status message and
     // shows the full message.
     // Arg:
     //  sStatus: string of html to display.
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     this.AppendStatus = function (sStatus, bError) {
-        var sMsg = divStatus.innerHTML;
-        if (sMsg.length > 0)
-            sMsg += "<br/>";
-        sMsg += sStatus;
-        this.ShowStatus(sMsg, bError);
+        if (!divStatus.isEmpty()) {
+            sStatus = "<br/>" + sStatus;
+        }
+
+        divStatus.add(sStatus, bError);
     };
 
     // Displays an Alert message box which user must dismiss.
@@ -350,64 +335,127 @@ function wigo_ws_View() {
         AlertMsg(s);
     };
 
+    // Display confirmation dialog with Yes, No as default for buttons.
+    // Arg:
+    //  onDone: asynchronous callback with signature:
+    //      bConfirm: boolean indicating Yes.
+    //  sTitle: string, optional. Title for the dialog. Defauts to Confirm.
+    //                            Use empty string, null, or undefined for default.
+    //  sAnswerBtns: string, optional. Caption for the two buttons delimited by a comma.  
+    //               Defaults to 'Yes,No'.
+    // Returns synchronous: false. Only onDone callback is meaningful.
+    this.ShowConfirm = function(sMsg, onDone, sTitle, sAnswerBtns) {
+        ConfirmYesNo(sMsg, onDone, sTitle, sAnswerBtns);
+    }
+
     // Clears the status message.
     this.ClearStatus = function () {
-        divStatus.innerHTML = "";
-        divStatus.style.display = 'none';
-        SetMapPanelTop();
+        divStatus.clear();
     };
 
     // Set the user interface for a new mode.
     // Arg:
     //  newMode: eMode enumeration value for the new mode.
     this.setModeUI = function (newMode) {
+        // Helper to hide all bars.
+        function HideAllBars() {
+                ShowElement(pathDescrBar, false);
+                ShowElement(editDefineBar2, false);
+                ShowElement(editDefineCursorsBar, false);
+                ShowElement(onlineOfflineEditBar, false);
+                ShowElement(onlineAction, false);
+                ShowElement(offlineAction, false);
+                ShowElement(pathDescrBar, false);
+                ShowElement(modeBar, false);
+                ShowElement(mapBar, false);
+                ShowOwnerIdDiv(false);
+                ShowPathInfoDiv(false);  
+        }
+
+        var nPrevMode = nMode; 
+
         nMode = newMode;
+        var bOffline = nMode === this.eMode.offline;
+        map.GoOffline(bOffline);  
+         
         // Show SignIn control, which may have been hidden by Edit or Define mode.
-        ShowSignInCtrl(true); 
         switch (nMode) {
             case this.eMode.online_view:
+                HideAllBars();
+                titleBar.setTitle("Online Map"); 
+                ShowElement(onlineOfflineEditBar, true);
+                ShowElement(onlineAction, true);
                 ShowPathInfoDiv(true); 
-                ShowMapCacheSelect(false);
-                ShowSaveOfflineButton(true);
-                ShowMenu(true);
-                ShowFind(true);
-                // Hide ctrls for editing path.
-                HidePathEditCtrls();
-                ShowMapPanelForMode(nMode);
-                SetMapPanelTop(); 
+                ShowElement(mapBar, true);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
+                selectGeoTrail.clearValueDisplay(); 
                 this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
-                ShowPathInfoDiv(true); 
-                ShowMapCacheSelect(true);
-                ShowSaveOfflineButton(false);
-                ShowMenu(true);
-                ShowFind(false);
-                // Hide ctrls for editing path.
-                HidePathEditCtrls();
-                ShowMapPanelForMode(nMode);
-                SetMapPanelTop(); 
+                HideAllBars();
+                titleBar.setTitle("Offline Map");
+                ShowElement(onlineOfflineEditBar, true);
+                ShowElement(offlineAction, true);
+                ShowPathInfoDiv(true);  
+                ShowElement(mapBar, true);
                 // Clear path on map in case one exists because user needs to select a path
                 // from the new list of paths.
                 map.ClearPath();
-                this.onGetPaths(nMode, that.getOwnerId()); 
+                selectGeoTrail.clearValueDisplay(); 
+                this.onGetPaths(nMode, that.getOwnerId());
+                var listLength = selectGeoTrail.getListLength();
+                if (listLength < 2) {
+                    // Inform user that offline path must be saved from Online Map.
+                    var sMsg = "You need to save Offline trail(s) from the Online Map first.\n\n";
+                    var sAnswerBtns = "Go Online, Stay Offline";
+                    ConfirmYesNo(sMsg, function(bConfirm){
+                        if (bConfirm) {
+                            // Save auto selection for selectOnceAfterSetPathList.
+                            var savedPathName = selectOnceAfterSetPathList.sPathName;  
+                            var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
+                            that.setModeUI(that.eMode.select_mode); 
+                            // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
+                            selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
+                            selectOnceAfterSetPathList.sPathName = savedPathName;
+                            that.setModeUI(that.eMode.online_view);
+                        }
+                    },"",sAnswerBtns);
+                }
                 break;
             case this.eMode.online_edit:
+                HideAllBars();
+                titleBar.setTitle("Editing a Trail");
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
                 break;
             case this.eMode.online_define:
+                HideAllBars();
+                titleBar.setTitle("Drawing a New Trail");
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
+            case this.eMode.select_mode: 
+                HideAllBars();
+                titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
+                this.ClearStatus();
+                map.ClearPath();
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
+                ShowOwnerIdDiv(true);
+                ShowElement(modeBar, true);
+                selectMode.setSelected(this.eMode.toStr(nMode));
+                break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
-                ShowOwnerIdDiv(false);
-                ShowModeDiv(false);
-                
-                ShowMapPanelForMode(nMode);
+                HideAllBars();
+                titleBar.show(false);
+                ShowMapCanvas(false);
                 break;
         }
+    };
+
+    // Returns ref to Edit Finite State Machine editing path path.
+    this.fsmEdit = function () {
+        return fsmEdit;
     };
 
     // Fill the list of paths that user can select.
@@ -432,15 +480,20 @@ function wigo_ws_View() {
             });
         }
 
-        InitPathList("Select a Geo Path");
+        selectGeoTrail.empty();
+        selectGeoTrail.appendItem("-1", "Select a Geo Trail", true); // true => show header as value.
+
         // Add the list of geo paths.
-        var name, iStr;
+        var name, dataIx;
         for (var i = 0; i < arSelect.length; i++) {
             name = arSelect[i].s;
-            iStr = arSelect[i].i.toString();
-            var option = new Option(name, iStr);
-            selectGeoPath.add(option);
+            dataIx = arSelect[i].i.toString();
+            // dataIx is data-value attribute of item and is index to arPath element.
+            selectGeoTrail.appendItem(dataIx, name);
         }
+
+        // Select previous path is indicated.
+        selectOnceAfterSetPathList.select();  
     };
 
     // Clears the list of paths that the user can select.
@@ -449,16 +502,10 @@ function wigo_ws_View() {
         this.setPathList([]);
     };
 
-    // Returns selected Path Name from selectGeoPath drop list.
+    // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
-        var sName = "";
-        var nCount = selectGeoPath.options.length;
-        var i = selectGeoPath.selectedIndex;
-        // Note: ignore option 0, which is prompt to select a path.
-        if (nCount > 0 && i > 0 && i < nCount) {
-            sName = selectGeoPath.options[i].innerText;
-        }
+        var sName = selectGeoTrail.getSelectedText();
         return sName;
     };
 
@@ -496,28 +543,55 @@ function wigo_ws_View() {
 
     // ** Private members for html elements
     var that = this;
-    var divStatus = $('#divStatus')[0];
-    var divOwnerId = $('#divOwnerId')[0];
-    var txbxOwnerId = $('#txbxOwnerId')[0];
-    var selectSignIn = $('#selectSignIn')[0];
 
-    var divMode = $('#divMode')[0];
-    var selectMode = $('#selectMode')[0];
-    var buSaveOffline = $('#buSaveOffline')[0];
-    var selectMapCache = $('#selectMapCache')[0];
-    var selectFind = $('#selectFind')[0];
-    var selectMenu = $('#selectMenu')[0];
+    // Object specifying selection of path after paths have been loaded into droplist.
+    // nPrevMode: eMode enumeration. Previous mode for sPathName.
+    // sPathName: string. Path name to match in the droplist.
+    // select: function(). Does selection in droplist if there is a match.
+    //         Clears nPrevMode and sPathName unless droplist is empty.
+    //         Therefore auto selection is only done once until nPrevMode and sPathName
+    //         are set again.
+    // Remarks: 
+    //  selectGeoTrail is the droplist control. 
+    //  If nPrevNode is unknown, there is no selection to match.
+    //  if sPathName is not found in droplist, the droplis selection is not changed.
+    //  View setModeUI() initializes nPrevMode, sPathName.
+    //  View setPathList(..) calls select() after filling selectGeoTrail.
+    var selectOnceAfterSetPathList = {nPrevMode: that.eMode.unknown, sPathName: "",
+        select: function() {
+            var nCurMode = that.curMode();
+            switch (nCurMode)
+            {
+                case that.eMode.online_view:
+                case that.eMode.offline:
+                    // Note: Do not select on Edit mode because Edit mode must start by user 
+                    // selecting a trail so that message to append to path is shown.
+                    switch(this.nPrevMode) {
+                        case that.eMode.online_view:
+                        case that.eMode.offline:
+                        case that.eMode.online_edit:
+                            var dataValue = selectGeoTrail.selectByText(this.sPathName);
+                            if (dataValue) 
+                                selectGeoTrail.onListElClicked(dataValue);
+                            // Clear after selecting unless droplist is empty.
+                            if (selectGeoTrail.getListLength() > 1) { // First entry is Select a Trail, which is same as empty.
+                                this.nPrevMode = that.eMode.unknown;
+                                this.sPathName = "";
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }};
+
+
+    var divOwnerId = document.getElementById('divOwnerId'); 
+
+    var txbxOwnerId = $('#txbxOwnerId')[0];
+
+    var divMode = document.getElementById('divMode');
 
     var divSettings = $('#divSettings')[0];
-    var selectAllowGeoTracking = $('#selectAllowGeoTracking')[0];
-    var numberGeoTrackingSecs = $('#numberGeoTrackingSecs')[0];
-    var numberOffPathThresMeters = $('#numberOffPathThresMeters')[0];
-    var selectOffPathAlert = $('#selectOffPathAlert')[0];
-    var selectPhoneAlert = $('#selectPhoneAlert')[0];
-    var selectPebbleAlert = $('#selectPebbleAlert')[0];
-    var selectClickForGeoLoc = $('#selectClickForGeoLoc')[0];
-    var selectCompassHeadingVisible = $('#selectCompassHeadingVisible')[0];
-    var numberPrevGeoLocThresMeters = $('#numberPrevGeoLocThresMeters')[0];
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
     var numberHomeAreaNELat = $('#numberHomeAreaNELat')[0];
@@ -526,44 +600,104 @@ function wigo_ws_View() {
     var buSettingsDone = $('#buSettingsDone')[0];
     var buSettingsCancel = $('#buSettingsCancel')[0];
 
-    var divPathInfo = $('#divPathInfo')[0];
-    var selectGeoPath = $('#selectGeoPath')[0];
-
-    var divPathDescr = $('#divPathDescr')[0];
-    var divCursors = $('#divCursors')[0];
-    var selectPtAction = $('#selectPtAction')[0];
-    var buPtDo = $('#buPtDo')[0];
-    var buCursorLeft = $('#buCursorLeft')[0];
-    var buCursorRight = $('#buCursorRight')[0];
-    var buCursorUp = $('#buCursorUp')[0];
-    var buCursorDown = $('#buCursorDown')[0];
-
-    var divPathIx = $('#divPathIx')[0];
     var buPathIxPrev = $('#buPathIxPrev')[0];
     var buPathIxNext = $('#buPathIxNext')[0];
     var buPtDeleteDo = $('#buPtDeleteDo')[0];  
 
-    var txbxPathName = $('#txbxPathName')[0];
-    var labelPathName = $('#labelPathName')[0];
-    var selectShare = $('#selectShare')[0];
-    var labelShare = $('#labelShare')[0];
-    var buUpload = $('#buUpload')[0];
-    var buDelete = $('#buDelete')[0];
-    var buCancel = $('#buCancel')[0];
+    var buPtDo = document.getElementById('buPtDo');
+    buPtDo.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Do);
+    }, false);
+    var buCursorLeft = document.getElementById('buCursorLeft');
+    buCursorLeft.addEventListener('touchstart', function(event){
+        fsmEdit.CursorDown(fsmEdit.dirCursor.left);
+    }, false);
+    buCursorLeft.addEventListener('touchend', function(event){
+        fsmEdit.CursorUp(fsmEdit.dirCursor.left);
+    }, false);
+    var buCursorRight = document.getElementById('buCursorRight');
+    buCursorRight.addEventListener('touchstart', function(event){
+        fsmEdit.CursorDown(fsmEdit.dirCursor.right);
+    }, false);
+    buCursorRight.addEventListener('touchend', function(event){
+        fsmEdit.CursorUp(fsmEdit.dirCursor.right);
+    }, false);
+    var buCursorUp = document.getElementById('buCursorUp');
+    buCursorUp.addEventListener('touchstart', function(event){
+        fsmEdit.CursorDown(fsmEdit.dirCursor.up);
+    }, false);
+    buCursorUp.addEventListener('touchend', function(event){
+        fsmEdit.CursorUp(fsmEdit.dirCursor.up);
+    }, false);
+    var buCursorDown = document.getElementById('buCursorDown');
+    buCursorDown.addEventListener('touchstart', function(event){
+        fsmEdit.CursorDown(fsmEdit.dirCursor.down);
+    }, false);
+    buCursorDown.addEventListener('touchend', function(event){
+        fsmEdit.CursorUp(fsmEdit.dirCursor.down);
+    }, false);
 
-    var panel = $('#panel')[0];
-    var buGeoLocate = $('#buGeoLocate')[0];
-    var selectGeoTrack = $('#selectGeoTrack')[0];
-    var labelGeoTrack = $('#labelGeoTrack')[0];
-    var selectAlert = $('#selectAlert')[0];
-    var labelAlert = $('#labelAlert')[0];
-    var buGoToPath = $('#buGoToPath')[0];
-    var buMinMaxMap = $('#buMinMaxMap')[0];
+    var buPathIxPrev = document.getElementById('buPathIxPrev');
+    buPathIxPrev.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxPrev);
+    }, false);
+    var buPathIxNext = document.getElementById('buPathIxNext');
+    buPathIxNext.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxNext);
+    }, false);
+    var buPtDeleteDo = document.getElementById('buPtDeleteDo'); 
+    buPtDeleteDo.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.DeletePtDo);
+    }, false); 
 
-    var selectEnableGeoTracking = $('#selectEnableGeoTracking')[0];
-    var numberPhoneVibeSecs = $('#numberPhoneVibeSecs')[0];
-    var numberPhoneBeepCount = $('#numberPhoneBeepCount')[0];
-    var numberPebbleVibeCount = $('#numberPebbleVibeCount')[0];
+    var txbxPathName = document.getElementById('txbxPathName');
+    txbxPathName.addEventListener('change', function(event){
+        var fsm = that.fsmEdit();
+        // Ensure soft keyboard is removed after the change.
+        txbxPathName.blur();
+        fsm.setPathChanged();   
+        fsm.DoEditTransition(fsm.eventEdit.ChangedPathName);
+    }, false);
+    var labelPathName = document.getElementById('labelPathName');
+
+
+    var buUpload = document.getElementById('buUpload');
+    buUpload.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
+    }, false);
+    var buDelete = document.getElementById('buDelete');
+    buDelete.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Delete);
+    }, false);
+    var buCancel = document.getElementById('buCancel');
+    buCancel.addEventListener('click', function(event){
+        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);
+    }, false);
+
+    var onlineOfflineEditBar = document.getElementById('onlineOfflineEditBar');
+    var onlineAction = document.getElementById('onlineAction');
+    var offlineAction = document.getElementById('offlineAction');
+    var editAction = document.getElementById('editAction');
+    var pathDescrBar = document.getElementById('pathDescrBar');
+    var editDefineBar2 = document.getElementById('editDefineBar2');
+    var editDefineCursorsBar = document.getElementById('editDefineCursorsBar');
+    var divCursors = document.getElementById('divCursors');
+    var divPathIx = document.getElementById('divPathIx');
+
+    var mapBar = document.getElementById('mapBar');
+    var mapGoToPath = document.getElementById('mapGoToPath');
+    mapGoToPath.addEventListener('click', function(event ) {
+        that.ClearStatus();
+        titleBar.scrollIntoView(); 
+        var bOk = map.PanToPathCenter();
+        if (!bOk) {
+            that.ShowStatus("No Geo Trail currently defined to pan-to.");
+        }
+    }, false);
+    var mapGeoLocate = document.getElementById('mapGeoLocate');
+    mapGeoLocate.addEventListener('click', function() {
+        DoGeoLocation();
+    }, false)
 
     // Returns ref to div for the map-canvas element.
     // Note: The div element seems to change dynamically. 
@@ -573,69 +707,21 @@ function wigo_ws_View() {
         return mapCanvas;
     }
 
-    // ** Use jquery to attach event handler for controls.
-    // Note: All the control event handlers clear status first thing.
-
-    $(selectSignIn).bind('change', function (e) {
-        var val = this.selectedValue;
-        if (this.selectedIndex > 0) {
-            var option = this[this.selectedIndex];
-            if (option.value === 'facebook') {
-                that.ClearStatus();
-                fb.Authenticate();
-            } else if (option.value === 'logout') {
-                // Only allow Logout for View or Offline mode.
-                var nMode = that.curMode();
-                if (nMode === that.eMode.online_edit ) {
-                    that.AppendStatus("Complete editing the path, then logout.", false);
-                } else if (nMode === that.eMode.online_define) {
-                    that.AppendStatus("Complete defining a new path, then logout.", false);
-                } else {
-                    that.ClearStatus();
-                    fb.LogOut();
-                }
-            } else {
-                that.ClearStatus();
-            }
-            this.selectedIndex = 0;
-        }
-    });
-
-    $(selectGeoPath).bind('change', function (e) {
-        that.ClearStatus();
-        if (this.selectedIndex >= 0) {
-            var iList = parseInt(this.value);
-            if (iList < 0) {
-                // No path selected.
-                map.ClearPath();
-            } else {
-                // Path is selected
-                that.onPathSelected(that.curMode(), iList);
-                // Update status for track timer unless editing.
-                if (that.curMode() === that.eMode.online_view ||
-                    that.curMode() === that.eMode.offline) {
-                    if (trackTimer.bOn) {
-                        if (map.IsPathDefined()) {
-                            // Tracking timer is on so show current geo location right away.
-                            DoGeoLocation();
-                        }
-                    } else {
-                        that.ShowStatus("Geo tracking off.", false); // false => not an error.
-                    }
-                }
-            }
-        }
-    });
-
-    $(buSaveOffline).bind('click', function (e) {
+    
+    // ** Attach event handler for controls.
+    var onlineSaveOffline = document.getElementById('onlineSaveOffline');
+    onlineSaveOffline.addEventListener('click', OnlineSaveOfflineClicked, false);
+    function OnlineSaveOfflineClicked(event) {
         that.ClearStatus();
 
-        if (selectGeoPath.selectedIndex === 0) {
-            that.ShowStatus("Select a Geo Path first before saving.")
+        var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+        var selectedDataIx = parseInt(sSelectedDataIx); 
+        if ( selectedDataIx < 0) {    
+            that.ShowStatus("Select a Geo Trail first before saving.")
         } else if (nMode === that.eMode.online_view) {
             var oMap = map.getMap();
             var params = new wigo_ws_GeoPathMap.OfflineParams();
-            params.nIx = parseInt(selectGeoPath.value);
+            params.nIx = selectedDataIx;
             var bounds = oMap.getBounds();
             params.bounds.ne.lat = bounds.getNorthEast().lat;
             params.bounds.ne.lon = bounds.getNorthEast().lng;
@@ -649,169 +735,7 @@ function wigo_ws_View() {
         } else {
             that.ShowStatus("Must be in online mode to save for offline.");
         }
-    });
-
-    $(selectMode).bind('change', function (e) {
-        // this.value is value of selectMode control.
-        var nMode = that.eMode.toNum(this.value);
-
-        // Helper function to change mode.
-        function AcceptModeChange() {
-            that.ClearStatus();
-            // Inform controller of the mode change.
-            that.onModeChanged(nMode);
-            var bOffline = nMode === that.eMode.offline;
-            var result = map.GoOffline(bOffline);
-            that.setModeUI(nMode);
-        }
-
-        if (fsmEdit.IsPathChanged()) {
-            ConfirmYesNo("The geo path has been changed. OK to continue and loose any change?", function (bConfirm) {
-                if (bConfirm) {
-                    fsmEdit.ClearPathChange();
-                    AcceptModeChange();
-                } else {
-                    // Restore the current mode selected before the change.
-                    selectMode.selectedIndex = that.curMode();
-                }
-            });
-        } else {
-            AcceptModeChange();
-        }
-    });
-
-    $(selectMapCache).bind('change', function (e) {
-        if (that.curMode() === that.eMode.offline) {
-            if (this.value === 'clear') {
-                // Confirm it is ok to clear the cache.
-                var sMsg =
-"Clearing the map cache deletes all the trail maps you have saved.\n\
-Are you sure you want to delete the maps?";
-                ConfirmYesNo(sMsg, function (bYes) {
-                    if (bYes) {
-                        that.ShowStatus("Clearing map cache ...", false); // false => not an error.
-                        map.ClearCache(function (nFilesDeleted, nFilesIfError) {
-                            var sResult;
-                            if (nFilesIfError > 0)
-                                sResult = "Error occurred, deleted {0} files.".format(nFilesIfError);
-                            else
-                                sResult = "Deleted {0} cache files.".format(nFilesDeleted);
-                            AlertMsg(sResult);
-                            that.ClearStatus();
-                            ClearOfflineGeoPathSelect();
-                            if (that.onMapCacheCleared)
-                                that.onMapCacheCleared();
-                        });
-                    }
-                });
-            } else if (this.value === 'size') {
-                // Display number of files and size of cache.
-                that.ShowStatus("Calculating map cache size ...", false); // false => not an error.
-                map.CacheSize(function (nFiles, nBytes) {
-                    var sMBytes = (nBytes / 1000).toFixed(2);
-                    var sMsg = "Map cache contains:\n{0} files\n{1} MB".format(nFiles, sMBytes);
-                    AlertMsg(sMsg);
-                    that.ClearStatus();
-                });
-            }
-        }
-        selectMapCache.selectedIndex = 0;
-    });
-
-    $(selectFind).bind('change', function (e) {
-        // The Find droplist is only valid in view mode.
-        if (that.curMode() !== that.eMode.online_view)
-            return; // Note: should not happen because selectFind should only be visible in view mode.
-
-        // Save parameters for view for finding paths.
-        var nFindIx = that.eFindIx.toNum(this.value);
-        var sOwnerId = that.getOwnerId();
-        var bClearPath = true;
-        if (nFindIx === that.eFindIx.home_area) {
-            viewFindParams.setRect(nFindIx, homeArea.gptSW, homeArea.gptNE);
-            if (that.onFindPaths)
-                that.onFindPaths(sOwnerId, nFindIx, homeArea.gptSW, homeArea.gptNE);
-        } else if (nFindIx === that.eFindIx.on_screen) {
-            var oMap = map.getMap(); // Get underlying Leaflet map object.
-            var bounds = oMap.getBounds();
-            var ptSW = bounds.getSouthWest();
-            var ptNE = bounds.getNorthEast();
-            var gptSW = new wigo_ws_GeoPt();
-            gptSW.lat = ptSW.lat;
-            gptSW.lon = ptSW.lng;
-            var gptNE = new wigo_ws_GeoPt();
-            gptNE.lat = ptNE.lat;
-            gptNE.lon = ptNE.lng;
-            viewFindParams.setRect(nFindIx, gptSW, gptNE);
-            if (that.onFindPaths)
-                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
-        } else if (nFindIx === that.eFindIx.all_public) {
-            viewFindParams.init(nFindIx);
-            if (that.onFindPaths)
-                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
-        } else if (nFindIx === that.eFindIx.all_mine ||
-                   nFindIx === that.eFindIx.my_public  ||
-                   nFindIx === that.eFindIx.my_private) {
-            if (!sOwnerId) {
-                that.ShowStatus("You must be signed in to find your paths.", true);
-                bClearPath = false;
-            } else {
-                viewFindParams.init(nFindIx);
-                if (that.onFindPaths)
-                    that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
-            }
-        } else {
-            bClearPath = false;
-        }
-
-        this.selectedIndex = 0;
-        // Clear the drawn map path because the selectGeoPath drop has been reloaded.
-        if (bClearPath)
-            map.ClearPath();
-    });
-
-    $(selectMenu).bind('change', function (e) {
-        if (this.value === 'settings') {
-            var settings = that.onGetSettings();
-            SetSettingsValues(settings);
-            ShowSettingsDiv(true);
-            SetMapPanelTop();
-        } else if (this.value === 'startpebble') {
-            if (pebbleMsg.IsConnected()) {
-                if (pebbleMsg.IsEnabled()) {
-                    pebbleMsg.StartApp();
-                } else {
-                    AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
-                }
-            } else {
-                AlertMsg("Pebble watch is not connected.");
-            }
-            this.selectedIndex = 0;
-        } else if (this.value === 'about') {
-            AlertMsg(AboutMsg())
-            this.selectedIndex = 0;
-        } else if (this.value === 'license') {
-            AlertMsg(LicenseMsg());
-            this.selectedIndex = 0;
-        } else if (this.value === 'help') {
-            AlertMsg(HelpMsg());
-            this.selectedIndex = 0;
-        } else if (this.value === 'back_to_trail') {
-            AlertMsg(BackToTrailHelp());
-            this.selectedIndex = 0;
-        } else if (this.value === 'terms_of_use') {
-            AlertMsg(TermsOfUseMsg());
-            this.selectedIndex = 0;
-        } else if (this.value === 'battery_drain') {
-            AlertMsg(BatteryDrainVsTrackingHelp());
-            this.selectedIndex = 0;
-        }
-        that.ClearStatus();
-    });
-
-    $(selectAllowGeoTracking).bind('change', function(e) {
-        // No longer disabling some settings ctrls for allow geo tracking off.
-    });
+    }
 
     $(buSetHomeArea).bind('click', function (e) {
         var corners = map.GetBounds();
@@ -827,31 +751,14 @@ Are you sure you want to delete the maps?";
             that.ClearStatus();
             var settings = GetSettingsValues();
             SetSettingsParams(settings);
-            selectMenu[0].selected = true;
             that.onSaveSettings(settings);
+            titleBar.scrollIntoView();   
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
         ShowSettingsDiv(false);
         that.ClearStatus();
-        selectMenu[0].selected = true;
-    });
-
-
-    $(buGeoLocate).bind('click', function (e) {
-        DoGeoLocation();
-    });
-
-    $(selectGeoTrack).bind('change', function (e) {
-        that.ClearStatus(); 
-        // Save state of flag to track geo location.
-        trackTimer.bOn = IsGeoTrackValueOn();    // Allow/disallow geo-tracking.
-        if (!trackTimer.bOn) {
-            // Send message to Pebble that tracking is off.
-            pebbleMsg.Send("Track Off", false, false); // no vibration, no timeout.
-        }
-        // Start or clear trackTimer.
-        RunTrackTimer();
+        titleBar.scrollIntoView();   
     });
 
     // Selects droplist for Tracking on/off and runs the tract timer accordingly.
@@ -868,125 +775,11 @@ Are you sure you want to delete the maps?";
         RunTrackTimer();
     }
 
-
-    $(selectAlert).bind('change', function () {
-        // Enable/disable alerts.
-        alerter.bPhoneEnabled = selectAlert.value === 'on';
-    });
-
-    $(buGoToPath).bind('click', function (e) {
-        that.ClearStatus();
-        var bOk = map.PanToPathCenter();
-        if (!bOk) {
-            that.ShowStatus("No Geo Path currently defined to pan-to.");
-        }
-    });
-
-    $(buMinMaxMap).bind('click', function (e) {
-        that.ClearStatus();
-        // Toggle minimum/maximum display of map.
-        var minState = $(this).prop('data-minState')
-        if (minState === undefined)
-            minState = 'true';
-        var bMin = minState === 'true';
-        bMin = !bMin;
-        // For bMin true, show the edit mode and path info so that map is shown
-        // only in a small portion at bottom of the screen.
-        // Otherwise, hide edit mode and path info so map is shown full screen.
-        // Set the value of this button, which is the button caption, to be opposite of 
-        // bMin because pressing the button toggles the current state.
-        if (bMin) {
-            MinimizeMap();
-            this.value = 'Full Screen';
-        } else {
-            MaximizeMap();
-            this.value = 'Reduce';
-        }
-        // Save the current minState.
-        $(this).prop('data-minState', bMin.toString());
-    });
-
-    $(selectShare).bind('change', function () { 
-        var fsm = that.fsmEdit();
-        fsm.setPathChanged();
-        fsm.DoEditTransition(fsm.eventEdit.ChangedShare);
-    });
-
-    $(txbxPathName).bind('change', function (e) {
-        var fsm = that.fsmEdit();
-        // Ensure soft keyboard is removed after the change.
-        txbxPathName.blur();
-        fsm.setPathChanged();   
-        fsm.DoEditTransition(fsm.eventEdit.ChangedPathName);
-    });
-
-    $(buCursorLeft).bind('touchstart', function (e) {  
-        fsmEdit.CursorDown(fsmEdit.dirCursor.left);
-    });
-    $(buCursorLeft).bind('touchend', function (e) {     
-        fsmEdit.CursorUp(fsmEdit.dirCursor.left);
-    });
-
-    $(buCursorRight).bind('touchstart', function (e) {
-        fsmEdit.CursorDown(fsmEdit.dirCursor.right);
-    });
-    $(buCursorRight).bind('touchend', function (e) {
-        fsmEdit.CursorUp(fsmEdit.dirCursor.right);
-    });
-
-    $(buCursorUp).bind('touchstart', function (e) {
-        fsmEdit.CursorDown(fsmEdit.dirCursor.up);
-    });
-    $(buCursorUp).bind('touchend', function (e) {
-        fsmEdit.CursorUp(fsmEdit.dirCursor.up);
-    });
-
-    $(buCursorDown).bind('touchstart', function (e) {
-        fsmEdit.CursorDown(fsmEdit.dirCursor.down);
-    });
-    $(buCursorDown).bind('touchend', function (e) {
-        fsmEdit.CursorUp(fsmEdit.dirCursor.down);
-    });
-
-    $(buPtDo).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Do);
-    });
-
-    $(buPathIxNext).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxNext);
-    });
-
-    $(buPathIxPrev).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.PathIxPrev);
-    });
-
-    $(buPtDeleteDo).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.DeletePtDo);
-    });
-
-
-    $(buUpload).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
-    });
-
-    $(buDelete).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Delete);
-    });
-
-    $(buCancel).bind('click', function (e) {
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);
-    });
-
-    $(selectPtAction).bind('change', function (e) {
-        // Note: the selection value is the EditFSM event.
-        fsmEdit.DoEditTransition(Number(selectPtAction.value));
-    });
-
     //20160507 Added only to debug problem with filesytem for TileLayer for map.
     /* Normally commented out
-    $('#buInitView').bind('click', function (e) {
+    document.getElementById('buInitView').addEventListener('click', function(event) {
         that.Initialize();
-    });
+    }, false);
     */
 
     /* //20150716 Trying to detect app ending does not work. These events do NOT fire
@@ -1011,6 +804,8 @@ Are you sure you want to delete the maps?";
         pebbleMsg.Send(sMsg, false)
     });
     */
+
+
 
     // **  State Machine for Editing Path, New or Existing
 
@@ -1341,37 +1136,31 @@ Are you sure you want to delete the maps?";
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Appending);
                     if (bNew) {
-                        // Show Path Name textbox, but not Share select.
-                        ShowPathDescrCtrls(true);
-                        ShowPathNameCtrl(true);
+                        ShowOwnerIdDiv(true); // Hidden after signin.
+                        ShowElement(onlineOfflineEditBar, false);
+                        ShowElement(pathDescrBar, true);
+                        ShowUploadButton(false);  
+                        ShowDeleteButton(false);  
+                        ShowCancelButton(false);  
+                        ShowElement(editDefineBar2, false);
+                        ShowElement(editDefineCursorsBar, false);                    
                         txbxPathName.value = "";   
-                        ShowShareCtrl(false);
-                        // Hide server action buttons.
-                        ShowPtActionCtrl(false);  
-                        ShowUploadButton(false);
-                        ShowDeleteButton(false);
-                        ShowCancelButton(false);
                     } else {
                         // Hide path description including textbox and server action buttons.
-                        ShowPathDescrCtrls(false);
+                        ShowOwnerIdDiv(true); // Hidden after signin.
+                        ShowElement(onlineOfflineEditBar, false); // Shown after signin.
+                        ShowElement(pathDescrBar, false);
+                        ShowElement(editDefineBar2, false);
+                        ShowElement(editDefineCursorsBar, false);                    
+                        txbxPathName.value = "";   
                     }
                     // Hide buttons for online-view and offline.
-                    ShowMapCacheSelect(false);
-                    ShowSaveOfflineButton(false);
-                    ShowMenu(false);
-                    ShowFind(false);
-                    // Hide select path drop list.
-                    ShowPathInfoDiv(false);
-                    // Hide cursors.
-                    ShowPathCursors(false);
-                    ShowPathIxButtons(false); 
-                    ShowMapPanelForMode(view.curMode()); 
                     // Check if  user is signed in.
                     if (view.getOwnerId()) {
                         // Fire signed in event for this same state.
                         that.DoEditTransition(that.eventEdit.SignedIn);
                     } else {
-                        sMsg = bNew ? "Sign In to define a new path." : "Sign In to edit a path."
+                        sMsg = bNew ? "Sign In to define a new trail." : "Sign In to edit a trail."
                         view.AppendStatus(sMsg, false); 
                     }
                     break;
@@ -1380,9 +1169,10 @@ Are you sure you want to delete the maps?";
                     // (Do not allow user to SignIn again or Logout while editing.)
                     ShowSignInCtrl(false);
                     if (bNew) {
-                        view.AppendStatus("Enter a name for a new path.", false);
+                        view.AppendStatus("Enter a name for a new trail.", false);
                     } else {
                         // Load path drop list for select of path to edit.
+                        ShowElement(onlineOfflineEditBar, true);  
                         ShowPathInfoDiv(true); // Show the select Path drop list.
                         view.onGetPaths(view.curMode(), view.getOwnerId());
                         // Note: view.onGetPaths(..) will show a message to select path after droplist is loaded.
@@ -1398,20 +1188,16 @@ Are you sure you want to delete the maps?";
             // State entry actions.
             // Set UI states.
             // Only show select path drop list for editing existing path.
-            ShowPathInfoDiv(!bNew); // Note: divPathInfo only has selectGeoPath and its label.
-            ShowPathDescrCtrls(true);
-            // Show Path Name text box.
-            ShowPathNameCtrl(true);
-            // Show sharing select ctrl for path (public, private).
-            ShowShareCtrl(true);
-            // Show  Server Action ctrls for Cancel button and PtAction select ctrl.
-            ShowUploadButton(false);
-            ShowDeleteButton(false);
-            ShowCancelButton(true);
-            ShowPtActionCtrl(true); 
-            // Hide cursors.
-            ShowPathCursors(false);
+            // Show pathDescrBar and bar2 for Share and PtAction ctrls.
+            ShowElement(pathDescrBar, true);
+            ShowElement(editDefineBar2, true);
+            // Enable showing cursor arrows and index buttons, 
+            // but show arrows and hide index buttons.
+            ShowElement(editDefineCursorsBar, true); 
+            ShowPathCursors(true);
             ShowPathIxButtons(false); 
+
+            // Show  Server Action ctrls for Cancel button.
             // Enable touch to define a point for stEdit.
             bTouchAllowed = true;
             // Do output actions for next state and transition to next state.
@@ -1420,7 +1206,7 @@ Are you sure you want to delete the maps?";
                     curPathName = view.getSelectedPathName();
                     // Set path name for editing.
                     txbxPathName.value = curPathName;
-                    // Disable selectGeoPath droplist (by hiding) selection of different path.
+                    // Disable selectGeoTrail droplist (by hiding) selection of different path.
                     ShowPathInfoDiv(false);
                     // Set options and show message for appending.
                     PrepareForEditing();
@@ -1439,7 +1225,7 @@ Are you sure you want to delete the maps?";
                     if (bNew) {
                         PrepareForEditing();
                         // Always hide Upload button (it is shown after a change has been made). 
-                        ShowUploadButton(false);
+                        ShowUploadButton(false); 
                         curEditState = stEdit;
                     } 
                     break;
@@ -1468,6 +1254,7 @@ Are you sure you want to delete the maps?";
                     ShowPathIxButtons(false); 
                     ShowDeleteButton(false);
                     ShowUploadButton(false);
+                    ShowCancelButton(false);  
                     map.DrawAppendSegment(curTouchPt.getGpt());
                     curEditState = stAppendPt;
                     break;
@@ -1476,6 +1263,7 @@ Are you sure you want to delete the maps?";
                     // Changed path name or share (public/private).
                     // Ensure Upload button is shown and Delete button hidden.
                     ShowUploadButton(true);
+                    ShowCancelButton(true); 
                     ShowDeleteButton(false);
                     // Stay in same state.
                     break;
@@ -1491,10 +1279,10 @@ Are you sure you want to delete the maps?";
                     // in which case state remains the same.
                     break;
                 case that.eventEdit.Delete:
-                    ConfirmYesNo("OK to delete selected path?", function (bConfirm) {
+                    ConfirmYesNo("OK to delete selected trail?", function (bConfirm) {
                         if (bConfirm) {
                             // Delete path at server.
-                            view.ShowStatus("Deleting GPX path at server.", false);
+                            view.ShowStatus("Deleting GPX trail at server.", false);
                             curEditState = stDeletePending;
                             var gpxId = { sOwnerId: view.getOwnerId(), nId: that.nPathId };
                             view.onDelete(view.curMode(), gpxId);
@@ -1597,7 +1385,7 @@ Are you sure you want to delete the maps?";
                         // Show the path cursors.
                         ShowPathCursors(false);
                         ShowPathIxButtons(true);
-                        view.ShowStatus("Use Prev/Next to move selected point along path. Select Move Pt, Insert Pt, or Delete Pt.", false);
+                        view.ShowStatus("Use Prev/Next to move selected point along trail. Select Move Pt, Insert Pt, or Delete Pt.", false);
                         // Get the the touch point.
                         var gpt = curTouchPt.getGpt();
                         // map.DrawTouchPt(gpt); // Helps for debug, not needed.
@@ -1630,6 +1418,7 @@ Are you sure you want to delete the maps?";
                     ShowPathIxButtons(false);
                     // Hide Upload button, which is shown when selecting a point on path.
                     ShowUploadButton(false);
+                    ShowCancelButton(false); 
                     // Set PtAction options to Move and Select only with Move selected.
                     opts.Init(false);
                     opts.Move = true;
@@ -1650,13 +1439,14 @@ Are you sure you want to delete the maps?";
                     ShowPathIxButtons(false);
                     // Hide Upload button, which is shown when selecting a point on path.
                     ShowUploadButton(false);
+                    ShowCancelButton(false); 
                     // Set PtAction options to Move and Select only with Move selected.
                     opts.Init(false);
                     opts.Insert = true;
                     opts.Select = true;
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Inserting);
-                    view.ShowStatus("Touch where to insert touch point into the path.", false);
+                    view.ShowStatus("Touch where to insert point into the trail.", false);
                     curEditState = stInsertPt;
                     break;
                 case that.eventEdit.DeletePt:  
@@ -1666,13 +1456,14 @@ Are you sure you want to delete the maps?";
                     ShowPtDeleteDoButton(true);
                     // Hide Upload button, which is shown when selecting a point on path.
                     ShowUploadButton(false);
+                    ShowCancelButton(false); 
                     // Set PtAction options to Move and Select only with Move selected.
                     opts.Init(false);
                     opts.Delete = true;
                     opts.Select = true;
                     opts.SetOptions();
                     opts.SelectOption(EPtAction.Deleting);
-                    view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along path.", false);
+                    view.ShowStatus("OK to confirm Delete Pt. Use Prev/Next to move selected point along trail.", false);
                     map.DrawDeleteSegment(curSelectPt.getPathIx());    
                     curEditState = stDeletePt;
                     break;
@@ -1876,23 +1667,22 @@ Are you sure you want to delete the maps?";
             // Shows buPtDo based on option for Do.
             this.SetOptions = function() {
                 // Empty the drop list.
-                var nCount = selectPtAction.length;
-                for (var i=0; i < nCount; i++) {
-                    selectPtAction.remove(0);
-                }
+                selectPtActionDropDown.empty();
+
+                // Fill the droplist.
                 // Fill the drop list. 
                 // Note: Set value to string for EditFSM.event enumeration value.
                 //       SelectPt: 1, AppendPt: 2, InsertPt: 3, MovePt: 4, DeletePt: 5,
                 if (this.Select)
-                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Selecting), "Select Pt"));
+                    selectPtActionDropDown.appendItem(ToPtActionValue(EPtAction.Selecting), "Select Pt");
                 if (this.Append)
-                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Appending), "Append Pt"));
+                    selectPtActionDropDown.appendItem(ToPtActionValue(EPtAction.Appending), "Append Pt");
                 if (this.Insert)
-                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Inserting), "Insert Pt"));
+                    selectPtActionDropDown.appendItem(ToPtActionValue(EPtAction.Inserting), "Insert Pt");
                 if (this.Move)
-                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Moving), "Move Pt"));
+                    selectPtActionDropDown.appendItem(ToPtActionValue(EPtAction.Moving), "Move Pt");
                 if (this.Delete)
-                    selectPtAction.add(NewOption(ToPtActionValue(EPtAction.Deleting), "Delete Pt"));
+                    selectPtActionDropDown.appendItem(ToPtActionValue(EPtAction.Deleting), "Delete Pt");
 
                 ShowElement(buPtDo, this.Do);
             }
@@ -1902,18 +1692,8 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  ePtAction: EPtAction enumeration number for option to select.
             this.SelectOption = function (ePtAction) {
-                var opt;
                 var sValue = ToPtActionValue(ePtAction);
-                var nCount = selectPtAction.options.length;
-                // Note: loop thru all options so that only one will be selected.
-                for (var i = 0; i < nCount; i++) {
-                    opt = selectPtAction.options[i];
-                    if (opt.value === sValue) {
-                        opt.selected = true;
-                    } else {
-                        opt.selected = false;
-                    }
-                }
+                selectPtActionDropDown.setSelected(sValue);
             }
 
             // Returns string value for an EPtAction enumeration number.
@@ -1976,8 +1756,13 @@ Are you sure you want to delete the maps?";
         // Prepare for editing, which initially appends point to end of the path.
         // Set PtAction options and show instructions.
         function PrepareForEditing() {
+            // Ensure onlineOfflineEditBar for select a path is hidden.
+            ShowElement(onlineOfflineEditBar, false); 
+
             // Show Upload if path has been changed.
             ShowUploadButton(bPathChanged);  
+            // Show Cancel if path has changed.
+            ShowCancelButton(bPathChanged); 
 
             // Ensure cursors and next/previous buttons are hidden.
             ShowPathCursors(false);
@@ -1998,14 +1783,15 @@ Are you sure you want to delete the maps?";
             opts.Select = !bPathEmpty;
             opts.SetOptions();
             opts.SelectOption(EPtAction.Appending);
-            var sMsg = bPathEmpty ? "Touch to start a new path." :
-                                    "Touch to append point to end of path or change Append Pt to Select Pt."
+            var sMsg = bPathEmpty ? "Touch to start a new trail." :
+                                    "Touch to append point to end of trail or change Append Pt to Select Pt."
             view.ShowStatus(sMsg, false);
         }
 
         function PrepareForSelectingPt() {
             // Show Upload and hide Delete button.
             ShowUploadButton(bPathChanged);
+            ShowCancelButton(bPathChanged); 
             ShowDeleteButton(false);
             // Hide cursor buttons. (Will be shown after a touch).
             ShowPathCursors(false);
@@ -2020,7 +1806,7 @@ Are you sure you want to delete the maps?";
             opts.Append = true;
             opts.SetOptions();
             opts.SelectOption(EPtAction.Selecting);
-            view.ShowStatus("Touch to choose point on path.", false);
+            view.ShowStatus("Touch to choose point on trail.", false);
         }
 
         // Shows instructions for moving a draw circle. 
@@ -2084,15 +1870,15 @@ Are you sure you want to delete the maps?";
                     path.nId = that.nPathId;
                     path.sOwnerId = view.getOwnerId();
                     path.sPathName = txbxPathName.value;
-                    path.sShare = selectShare.value;
+                    path.sShare = selectShareDropDown.getSelectedValue();
                     path.arGeoPt = that.gpxPath.arGeoPt;
                     view.onUpload(view.curMode(), path);
-                    view.ShowStatus("Uploading path to server.", false);
+                    view.ShowStatus("Uploading trail to server.", false);
                     bOk = true;
                     curEditState = stUploadPending;
 
                 } else {
-                    var sMsg = "Cannot upload the geo path because it must have more than one point.";
+                    var sMsg = "Cannot upload the geo trail because it must have more than one point.";
                     AlertMsg(sMsg);
                 }
             }
@@ -2102,6 +1888,37 @@ Are you sure you want to delete the maps?";
 
 
     // ** More private members
+    
+    var ctrls = Wigo_Ws_CordovaControls();
+    var divStatus = document.getElementById('divStatus');
+    var divStatus = new ctrls.StatusDiv(divStatus);
+    divStatus.onTouchEnd = function(event) {
+        // Ensure titlebar is at top after scrolling divStatus.
+        titleBar.scrollIntoView();
+    };
+
+    var titleHolder = document.getElementById('titleHolder');
+    var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
+    titleBar.onBackArrowClicked = function(event) {
+        // Prompt user to save changes if editing.
+        var sPrompt = "Cancel return so you can save your changes first?";
+        if ( fsmEdit.IsPathChanged()) {
+            ConfirmYesNo(sPrompt, function(bYes){
+                if (!bYes) {
+                    fsmEdit.ClearPathChange();
+                    that.setModeUI(that.eMode.select_mode);        
+                }
+            });
+            
+        } else {
+            that.setModeUI(that.eMode.select_mode);
+        } 
+    };
+
+    titleBar.onHelpClicked = function(event) {
+        ShowHelpGuide(true);
+    }
+
     var fsmEdit = new EditFSM(this);
 
     var nMode = that.eMode.online_view; // Current mode.
@@ -2175,262 +1992,6 @@ Are you sure you want to delete the maps?";
         return sMsg;
     }
 
-    // Returns message for source code license for this app.
-    function LicenseMsg() {
-        var sMsg = '\
-The main source code for this app is open source licensed under\n\
-The MIT License (MIT)\n\n\
-The open source Cordova / Appache platform is used to build this mobile app. Refer to \
-the Cordova / Appache license.\n\
-Plugins and modules used by the main code have individual open source licenses \
-and are listed below. Refer to them individually to determine their kind of license.\n\n\
-jquery 1-11.3\n\n\
-Leaflet 0.7.3 for maps\n\n\
-L.TileLayer.Cordova for caching map tiles\n\n\
-com.jetboystudio.pebble.PebblePGPlugin 0.2.6 "Pebble"\n\n\
-com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"\n\n\
-cordova-plugin-compat 1.0.0 "Compat"\n\n\
-cordova-plugin-device-orientation 1.0.3 "Device Orientation"\n\n\
-cordova-plugin-dialogs 1.2.1 "Notification"\n\n\
-cordova-plugin-file 4.2.0 "File"\n\n\
-cordova-plugin-file-transfer 1.5.1 "File Transfer"\n\n\
-cordova-plugin-geolocation 2.2.0 "Geolocation"\n\n\
-cordova-plugin-vibration 2.2.1-dev "Vibration"\n\n\
-cordova-plugin-whitelist 1.2.2 "Whitelist"\n\n\
-org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"\n\n\
-';
-        return sMsg;
-    }
-
-    // Returns string for help message.
-    function HelpMsg() {
-        var sMsg = '\
-Select Sign In > Facebook to sign in. Your sign-in id is remembered so \
-you do not need to sign in again unless you log out.\n\
-You do not need to sign in, but you can only view public trails if not signed in.\n\n\
-View, Edit, Define, or Offline Mode\n\
-View lets you select a trail from ones saved online. Edit lets you edit a trail that \
-you have saved online. Define lets you create a new trail and save it online. \
-Offline lets you view trails when you are \
-not connected to the web. You need to select the trails to save to your phone when \
-you are online. \
-More details about these modes are given below.\n\n\
-View Mode\n\
-View lets you \
-access Geo-paths from the web that others have made public and ones \
-that are private to you. \
-Select a path from the drop list to view.\n\n\
-Save Offline\n\
-Touch the Save Offline button to save a path you are viewing so that you can \
-view it when you are offline. (See Offline Mode below.)\n\n\
-Find\n\
-Select an option from the Find drop list to search for paths to view. \n\
-The Select a Path drop list is filled with the paths found:\n\n\
-Find > Home Area\n\
-Searches for paths that are in your Home Area, which is a geo-rectangle \
-defined in Menu > Settings. \
-All public paths and your private paths are included.\n\n\
-Find > On Screen\n\
-Searches for paths that are in the area displayed on the screen. \
-First, pan, zoom, and pinch to select the area you see on the screen.\n\n\
-Find > All Paths\n\
-Searches for all your public and private paths.\n\n\
-Find > All Mine\n\
-Searchs for all your paths, both public and private. \
-You must be logged in to search for your paths.\n\n\
-Find > My Public\n\
-Searches for all of your public paths, paths that anyone can see.\n\n\
-Find > My Private\n\
-Searches for your private paths, paths that only you can see.\n\n\
-Menu Provides More Options\n\
-Menu > Settings presents a dialog to set preferences for geo-location tracking and alerts:\n\n\
-* Allow Geo Tracking Yes | No: For No, geo-location is NOT obtained automatically, \
-and Track and Ph Alert are ignored. \
-However, the MyLoc button will still get your geo-location.\n\n\
-* Geo Tracking Initially On Yes | No: Yes to start with Track On when app loads.\n\n\
-* Geo Tracking Interval (secs): number of seconds to check your geo-location when tracking is allowed.\n\n\
-* Off-Path Threshold (m): number of meters that you need to be off-path for an alert to be given.\n\n\
-* Allow Phone Alert Yes | No: detemines if alerts (beeps) from you phone are given. \n\n\
-* Phone Alert Initially On Yes | No: Yes to start with Phone Alert On when app loads.\n\n\
-* Phone Vibration in Secs: number of seconds phone vibrates for an alert. Set to 0 for no vibration.\n\n\
-* Phone Beep Count: number of beeps to give for an alert. Set to 0 for no beepings.\n\n\
-* Pebble Watch Yes | No: Yes to show messages on a Pebble Watch that is connected to the phone.\n\n\
-* Pebble Vibration Count: number of vibrations given on Pebble Watch for message indicating \
-off trail. Count of 0 disables vibrations. \
-Note that Ph Alert Off does not inhibit vibrations for being off-trail.\n\n\
-* Prev Geo Loc Thres (m): number of meters of current geo-location with respect to previous location \
-for change in location to be considered valid. (This prevents small variations in the geo-location of \
-the same point to appear to be a change in location.)\n\n\
-* Show Compass Heading on Map? Yes | No:\n\
-An arrow for the compass heading from your current location may be shown on the map.\n\n\
-* Touch Map for Geo Location Testing? Yes | No:\n\
-Touching a point on the map simulates getting the geo location for the point on the map. \
-This is just for testing.\n\n\
-* Set Home Area to Screen:\n\
-Touch the Set button to set your home area to be that shown on the screen. \
-First, pan, zoom, and pinch to display the area you want on the screen. \n\
-The paths in the Home Area are found when the app starts. \
-Also, the Home Area can be chosen in View mode, from the Find drop list.\n\n\
-Menu > Start Pebble\n\
-Starts the Pebble app on the watch. The Pebble app should be started automatically so it is unlikely \
-you need to do this.\n\n\
-Using Controls at Top of Map\n\
-Ctr Trail brings the map to the center of the selected path.\n\n\
-MyLoc displays your current location on the map.\n\n\
-Full Screen / Reduce Screen switches between the map filling the screen and \
-the map being below the selection controls.\n\n\
-Track switches between geo-location tracking On or Off.\n\
-Note: Track On will run down your battery more quickly.\n\n\
-Ph Alert, which is given if you are off the trail, switches between Ph Alert On or Off.\n\n\
-Offline Mode\n\
-Offline lets you select paths you have saved offline. Select a Geo Path from the \
-list you have saved.\n\n\
-Map Cache shows information about the cache of map tiles.\n\
-Select Size to see the number of files and the size in MB of all the files.\n\
-Select Clear to empty the cache of map files. Once the cache is cleared, \
-all the offline paths are deleted from the phone.\n\n\
-Define Mode\n\
-Define provides a way to create a trail and save it online. \
-You must be signed into Facebook to define a trail.\n\n\
-Instructions are shown at the top of the screen to guide you through the process, \
-which is outlined below.\n\n\
-Enter a path name for the trail.\n\n\
-Touch on the screen to define the first point on the path.\n\n\
-Soft Cursor Keys\n\
-Use the cursor keys \
-that appear to nudge the point left, right, up, or down to get the point exactly where \
-you want it. Holding down a cursor button causes the point to move faster on the screen. \
-Touch OK to confirm that the point is to be added. Repeat the process to define \
-all the points for your trail.\n\n\
-Upload Button\n\
-Touch the Upload button to upload (save online) the data for your trail.\n\n\
-Cancel Button\n\
-Touch the Cancel button if you decide not to create the trail.\n\n\
-Select Pt\n\
-You can edit an existing point in the trail by selecting Select Pt instead of Append Pt. \
-Touch on the trail near the point you want to edit.\n\n\
-Prev, Next Buttons\n\
-If the correct point is not highlighted on the trail, use \
-the Prev and Next buttons to move to the previous or next point on the trail.\n\n\
-Move Pt, Insert Pt, Delete Pt\n\
-Then select Move Pt, Insert Pt, or Delete Pt instead of Select Pt to \
-move, insert, or delete the selected (highlighted) point.\n\n\
-Move Pt\n\
-When moving a point, touch where the point should go and nudge it with the cursors. \
-Touch OK to confirm that the point is where you want it.\n\n\
-Insert Pt\n\
-When inserting a point, touch where the inserted point should be and use the cursors to nudge it.\
-Touch OK to confirm the location is correct. The point is inserted in the \
-path before the selected point.\n\n\
-Delete Pt\n\
-When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons \
-to move to a different point on the path if the correct point is not selected (highlighted).\n\n\
-Edit Mode\n\
-Edit provides a way to edit a trail you have saved online. \
-The precedure is the same as for defining a new path, except that you select a path to edit first. \
-You must be signed in to edit a path, and you can only edit paths that you have defined.\n\n\
-Creating Trail Maps at Hillmap\n\
-An alternative to creating a trail on your phone is to \
-use the site http://www.hillmap.com to create a trail from a laptop or desktop computer. \
-Use the Path tab to define your trail.\n\
-Use Tools > Download Gpx to save your path.\n\n\
-Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have \
-downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.\
-';
-        return sMsg;
-    }
-
-    // Returns string for message describing what back to trail instructions mean.
-    function BackToTrailHelp() {
-        var sMsg = '\
-The instructions for returning to the trail give the heading \
-to return to the nearest point on the trail from your \
-current location.\n\n\
-There are also suggestions on how to turn from your current traveling direction \
-to return back to the trail. While the heading back to the trail is accurate, \
-suggestions for turning may not be. Since a turning suggestion may be \
-inaccurate, it is prefixed with a "?" mark.\n\
-THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:\n\
-    * One kind of suggestion is based on the heading from your previous locaton. \
-You may not have traveled in a straight line from your previous location.\n\
-    * The second kind of suggestion is based on the compass heading that your phone \
-may be able to provide. The compass heading is the direction your phone indicates \
-you are traveling and is most accurate when you are holding \
-your phone level with its top pointing in the direction you are traveling. \
-The compass may need to be calibrated to show accurately.\n\n\
-To calibrate your compass, rotate it three times or so around each axis:\n\
-    Hold the phone vertically facing you.\n\
-    1) Tilt top of phone down and then back up toward you.\n\
-    2) Rotate top of phone phone left and right keeping the face of phone towards you.\n\
-    3) Rotate face of phone away and back toward you, keeping the phone vertical.\n\n\
-To get an accurate turning suggestion from your previous location:\n\
-    1) Touch MyLoc button to get your location.\n\
-    2) Walk in a straight line more than the previous geo location threshold, typically 40 meters (44 yards). \
-The Prev Geo Loc Thres is given in Settings.\n\
-    3) Touch MyLoc button again to see the off-path distance, return heading, and turning suggestion.\n\n\
-Of course, if you know accurate compass directions yourself, follow the heading back to the trail. \
-The turning suggestions are only an aid if you do not know accurate compass directions.';
-        return sMsg;
-    }
-
-    // Returns string for message describing how tracking interval affects battery usage.
-    function BatteryDrainVsTrackingHelp() {
-        var sMsg = '\
-When automatic tracking is on, the battery in the phone is drained more quickly.\
-The shorter the time interval for automatic tracking, the quicker the battery drains.\n\n\
-Menu > Settings > Geo Tracking sets the time interval. So make the time interval longer \
-to reduce the drain on the battery. \
-When automatic tracking is off, the drain on the battery is mininal.\n\n\
-Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking, \
-which minimizes the battery drain. You can still check your geo location manually by touching \
-the MyLoc button on the top of the map. \
-Also, if using a Pebble watch, the Select (middle) button does the same thing.\n\n\
-The Track control on the top of the map lets you toggle automatic tracking On or Off.\n\n\
-When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery. \
-However, if the app is in the background with automatic tracking on, the app is draining the battery.\n\n\
-Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled \
-is still occurring, which is draining the battery.\
-';
-        return sMsg;
-    }
-
-    function TermsOfUseMsg() {
-        var sMsg = '\
-TERMS OF USE\n\n\
-IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.\n\n\
-This app is released free of charge in the hope that it will be useful. \
-However, it is provided without any warranty of any kind; without even the implied warranty of \
-usefulness, accuracy, reliability, availability, or free of software defects.\n\n\
-ADVICE FOR TURNING TO RETURN TO TRAIL MAYBE WRONG\n\
-The heading back to the trail should be accurate, but the suggestions for turning back to the trail \
-may not be. \
-A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and \
-is only a SUGGESTION TO BE VERIFIED BY YOU. The suggestions for turning my be wrong for various reasons:\n\
-    * The heading from your previous geo-location is a straight line, and you may not have traveled in a straight line.\n\
-    * The compass may need to be calibrated.\n\
-    * The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling) \
-is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.\n\
-    * The geolocation provided by your phone has tolerances for its accuracy.\n\n\
-DATA AND PRIVACY\n\
-Server Data\n\
-For trails that you define, data is stored on a server. The data has latitude and longitude for points \
-defining the trail. Your Facebook public identification (not your name) is associated with your trails. \
-The data is not encrypted. Minual protection for the database is provided through access controlled by a password. \
-Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority. \n\n\
-Data on Your Phone\n\
-Data is saved on your phone for defining trails and caching map sections when you are offline. \
-It can be deleted by you from your phone by managing the application on your phone.\n\n\
-Making Your Trails Public or Private\n\
-When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone \
-using this app. If the trail is marked Private, the trail is only visible by you when using the app.\
-However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.\n\n\
-A FURTHER CAUTION\n\
-Hiking depends on your own self reliance and good judgment. Realize that trails you find \
-may not be appropriate for your ablities and that the trails could have inaccuracies.\
-';
-        return sMsg;
-    }
-
     // Displays alert message given the string sMsg.
     function AlertMsg(sMsg) {
         var sTitle = document.title;
@@ -2471,14 +2032,11 @@ may not be appropriate for your ablities and that the trails could have inaccura
     }
 
 
-    // Removes all elements after the first element (index 0) from selectGeoPathSelect control,
+    // Removes all elements after the first element (index 0) from selectGeoTrail control,
     // provide the current mode is offline. Also clears the path drawn on the map.
     function ClearOfflineGeoPathSelect(select) {
         if (that.curMode() === that.eMode.offline) {
-            var nCount = selectGeoPath.length;
-            for (var i = 1; i < nCount; i++) {
-                selectGeoPath.remove(1);
-            }
+            selectGeoTrail.empty(1); // Keeps first item in the list.
             map.ClearPath();
         }
     }
@@ -2517,15 +2075,153 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
     }
 
+    // ** Controls for Settings
+    var parentEl = document.getElementById('holderAllowGeoTracking');
+    var selectAllowGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Allow Geo Tracking', -1);
+    
+    parentEl = document.getElementById('holderEnableGeoTracking');
+    var selectEnableGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Geo Tracking Initially On', -1);
+
+    parentEl = document.getElementById('holderGeoTrackingSecs');
+    var numberGeoTrackingSecs = new ctrls.DropDownControl(parentEl, null, 'Geo Tracking Interval', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberGeoTrackingSecsValues = 
+    [
+        ['30', '30 secs'],
+        ['40', '40 secs'],
+        ['50', '50 secs'],        
+        ['60', '60 secs'],
+        ['90', '1.5 mins'],
+        ['120', '2.0 mins'],        
+        ['150', '2.5 mins'],
+        ['180', '3.0 mins'],
+        ['240', '4.0 mins'],        
+        ['300', '5.0 mins'],
+        ['600', '10.0 mins'],
+        ['900', '15.0 mins'],        
+        ['1800', '30.0 mins'],        
+        ['3600', '60.0 mins']        
+    ];
+    numberGeoTrackingSecs.fill(numberGeoTrackingSecsValues);
+
+    parentEl = document.getElementById('holderOffPathThresMeters');
+    var numberOffPathThresMeters = new ctrls.DropDownControl(parentEl, null, 'Off Trail Threshold', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberOffPathThresMetersValues = 
+    [
+        ['30', '30m (33yds)'],
+        ['40', '40m (44yds)'],
+        ['50', '50m (55yds)'],
+        ['60', '60m (66yds)'],
+        ['60', '60m (66yds)'],
+        ['70', '70m (77yds)'],
+        ['80', '80m (87yds)'],
+        ['90', '90m (98yds)'],
+        ['100', '100m (109yds)'],
+        ['200', '200m (219yds)'],
+        ['300', '300m (328yds)'],
+        ['400', '400m (437yds)'],
+        ['500', '500m (547yds)'],
+        ['600', '600m (656yds)'],
+        ['700', '700m (766yds)'],
+        ['800', '800m (875yds)'],
+        ['900', '900m (984yds)'],
+        ['1000','1km (1094yds)']
+    ];
+    numberOffPathThresMeters.fill(numberOffPathThresMetersValues);
+
+    parentEl = document.getElementById('holderPhoneAlert');
+    var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert', -1);
+
+    parentEl = document.getElementById('holderOffPathAlert');
+    var selectOffPathAlert = ctrls.NewYesNoControl(parentEl, null, 'Phone Alert Initially On', -1);
+
+    parentEl = document.getElementById('holderPhoneVibeSecs');
+    var numberPhoneVibeSecs = new ctrls.DropDownControl(parentEl, null, 'Phone Vibration in Secs', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberPhoneVibeSecsValues = 
+    [
+        ['0.0', '0.0 secs (no vibe)'],
+        ['0.5', '0.5 secs'],
+        ['1.0', '1.0 secs'],
+        ['1.5', '1.5 secs'],
+        ['2.0', '2.0 secs'],
+        ['2.5', '2.5 secs'],
+        ['3.0', '3.0 secs']
+    ];
+    numberPhoneVibeSecs.fill(numberPhoneVibeSecsValues);
+
+    parentEl =document.getElementById('holderPhoneBeepCount');
+    var numberPhoneBeepCount = new ctrls.DropDownControl(parentEl, null, 'Phone Beep Count', '',  'img/ws.wigo.dropdownhorizontalicon.png'); 
+    var numberPhoneBeepCountValues = 
+    [
+        ['0', '0 (none)'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4'],
+        ['5', '5']
+    ];
+    numberPhoneBeepCount.fill(numberPhoneBeepCountValues);
+
+    parentEl = document.getElementById('holderPebbleAlert');
+    var selectPebbleAlert = ctrls.NewYesNoControl(parentEl, null, 'Pebble Watch', -1);
+
+    parentEl = document.getElementById('holderPebbleVibleCount');
+    var numberPebbleVibeCount = new ctrls.DropDownControl(parentEl, null, 'Pebble Vibration Count', '',  'img/ws.wigo.dropdownhorizontalicon.png');;
+    var numberPebbleVibeCountValues = 
+    [
+        ['0', '0 (no vibe)'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4'],
+        ['5', '5']
+    ];
+    numberPebbleVibeCount.fill(numberPebbleVibeCountValues);
+    
+    parentEl = document.getElementById('holderPrevGeoLocThresMeters');
+    var numberPrevGeoLocThresMeters = new ctrls.DropDownControl(parentEl, null, 'Prev Geo Loc Thres', '',  'img/ws.wigo.dropdownhorizontalicon.png'); 
+    var numberPrevGeoLocThresMetersValues =
+    [
+        ['30', '30 m (33 yds)'],
+        ['40', '40 m (44 yds)'],
+        ['50', '50 m (55 yds)'],
+        ['60', '60 m (66 yds)']
+    ];
+    numberPrevGeoLocThresMeters.fill(numberPrevGeoLocThresMetersValues);
+
+    parentEl = document.getElementById('holderCompassHeadingVisible');
+    var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass on Map?', -1);
+
+    parentEl = document.getElementById('holderClickForGeoLoc');
+    var selectClickForGeoLoc = ctrls.NewYesNoControl(parentEl, null, 'Touch for Loc Testing?', -1);
+
+    // ** Helper for Settings
+
     // Checks that the control values for settings are valid.
     // Shows dialog for an invalid setting and sets focus to the control.
     // Returns true for all settings valid.
     function CheckSettingsValues() {
-        // Helper to checking select droplist.
+        // Helper to checking html select droplist.
         function IsSelectCtrlOk(ctrl) {
             var bOk = ctrl.selectedIndex >= 0;
             var sMsg = "Selection is invalid. Select a valid option from drop list.";
             ShowOrClearError(bOk, ctrl, sMsg);
+            return bOk;
+        }
+
+        // Helper for checking wigo_ws_cordova dropdown list.
+        function IsSelectCtrlOk2(dropDownCtrl) {
+            var bOk = dropDownCtrl.getSelectedIndex() >= 0;
+            var sMsg = "Selection is invalid. Select a valid option from drop list.";
+            ShowOrClearError(bOk, dropDownCtrl.ctrl, sMsg);
+            return bOk;
+        }
+        
+        // Helper for checking if an OnOffControl or YesNoControl is valid.
+        function IsYesNoCtrlOk(onOffCtrl) {
+            var nState = onOffCtrl.getState();
+            var bOk = nState >= 0 && nState <= 1;
+            var sMsg = "Selection is invalid. Select Yes or No";
+            ShowOrClearError(bOk, onOffCtrl.ctrl, sMsg);
             return bOk;
         }
         // Helper for checking latitude of home area.
@@ -2544,17 +2240,12 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
         // Helper for clearing or shown background for a control.
         function ShowOrClearError(bOk, ctrl, sMsg) {
-            // Remove class name indicating ErrorMsg.
-            var sClass = ctrl.getAttribute('class');
-            if (sClass) { // Note: class is null if it does not exist for the ctrl.
-                sClass = sClass.replace(/ErrorMsg/g,"").trim();
-                ctrl.setAttribute('class', sClass);
+            if (bOk) {
+                // Remove class name indicating ErrorMsg.
+                ctrl.classList.remove('ErrorMsg');
             } else {
-                sClass = "";
-            }
-            if (!bOk) {
-                sClass += ' ErrorMsg';
-                ctrl.setAttribute('class', sClass);
+                // Set class name indicationg ErrorMsg.
+                ctrl.classList.add('ErrorMsg');
                 ctrl.focus();
                 AlertMsg(sMsg);
             }
@@ -2571,32 +2262,32 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
 
         // Check each ctrl for validity one by one.
-        if (!IsSelectCtrlOk(selectAllowGeoTracking))
+        if (!IsYesNoCtrlOk(selectAllowGeoTracking))  
             return false;
 
-        if (!IsSelectCtrlOk(numberOffPathThresMeters))
+        if (!IsSelectCtrlOk2(numberOffPathThresMeters)) 
             return false;
 
-        if (!IsSelectCtrlOk(numberGeoTrackingSecs))
+        if (!IsSelectCtrlOk2(numberGeoTrackingSecs))
             return false;
 
-        if (!IsSelectCtrlOk(selectEnableGeoTracking))
+        if (!IsYesNoCtrlOk(selectEnableGeoTracking)) 
             return false;
-        if (!IsSelectCtrlOk(selectOffPathAlert))
+        if (!IsYesNoCtrlOk(selectOffPathAlert))  
             return false;
-        if (!IsSelectCtrlOk(selectPhoneAlert))
+        if (!IsYesNoCtrlOk(selectPhoneAlert)) 
             return false;
-        if (!IsSelectCtrlOk(numberPhoneVibeSecs))
+        if (!IsSelectCtrlOk2(numberPhoneVibeSecs))
             return false;
-        if (!IsSelectCtrlOk(numberPhoneBeepCount))
+        if (!IsSelectCtrlOk2(numberPhoneBeepCount))
             return false;
-        if (!IsSelectCtrlOk(selectPebbleAlert))
+        if (!IsYesNoCtrlOk(selectPebbleAlert))  
             return false;
-        if (!IsSelectCtrlOk(numberPebbleVibeCount))
+        if (!IsSelectCtrlOk2(numberPebbleVibeCount))
             return false;
-        if (!IsSelectCtrlOk(numberPrevGeoLocThresMeters))
+        if (!IsSelectCtrlOk2(numberPrevGeoLocThresMeters))
             return false;
-        if (!IsSelectCtrlOk(selectClickForGeoLoc))
+        if (!IsYesNoCtrlOk(selectClickForGeoLoc))  
             return false;
 
         if (!IsLatCtrlOk(numberHomeAreaSWLat))
@@ -2614,19 +2305,20 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Returns settings object wigo_ws_GeoTrailSettings from values in controls.
     function GetSettingsValues() {
         var settings = new wigo_ws_GeoTrailSettings();
-        settings.bAllowGeoTracking = selectAllowGeoTracking.value === 'yes';
-        settings.mOffPathThres = parseFloat(numberOffPathThresMeters.value);
-        settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.value);
-        settings.bEnableGeoTracking = selectEnableGeoTracking.value === 'yes';
-        settings.bOffPathAlert = selectOffPathAlert.value === 'yes';
-        settings.bPhoneAlert = selectPhoneAlert.value === 'yes';
-        settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.value);
-        settings.countPhoneBeep = parseInt(numberPhoneBeepCount.value);
-        settings.bPebbleAlert = selectPebbleAlert.value === 'yes';
-        settings.countPebbleVibe = parseInt(numberPebbleVibeCount.value);
-        settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.value);
-        settings.bCompassHeadingVisible = selectCompassHeadingVisible.value === 'yes'; 
-        settings.bClickForGeoLoc = selectClickForGeoLoc.value === 'yes';
+        settings.bAllowGeoTracking = selectAllowGeoTracking.getState() === 1;    
+        
+        settings.mOffPathThres = parseFloat(numberOffPathThresMeters.getSelectedValue());
+        settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.getSelectedValue());
+        settings.bEnableGeoTracking = selectEnableGeoTracking.getState() === 1;
+        settings.bOffPathAlert = selectOffPathAlert.getState() === 1;
+        settings.bPhoneAlert = selectPhoneAlert.getState() === 1;
+        settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
+        settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
+        settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
+        settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
+        settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
+        settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
+        settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
         settings.gptHomeAreaSW.lon = numberHomeAreaSWLon.value;
         settings.gptHomeAreaNE.lat = numberHomeAreaNELat.value;
@@ -2640,71 +2332,36 @@ may not be appropriate for your ablities and that the trails could have inaccura
     function SetSettingsValues(settings) {
         if (!settings)
             return;
-        selectAllowGeoTracking.value = settings.bAllowGeoTracking ? 'yes' : 'no';
-        numberOffPathThresMeters.value = settings.mOffPathThres.toFixed(0);
-        numberGeoTrackingSecs.value = settings.secsGeoTrackingInterval.toFixed(0);
-        selectEnableGeoTracking.value = settings.bEnableGeoTracking ? 'yes' : 'no';
-        selectOffPathAlert.value = settings.bOffPathAlert ? 'yes' : 'no';
-        selectPhoneAlert.value = settings.bPhoneAlert ? 'yes' : 'no';
-        numberPhoneVibeSecs.value = settings.secsPhoneVibe.toFixed(1);
-        numberPhoneBeepCount.value = settings.countPhoneBeep.toFixed(0);
-        selectPebbleAlert.value = settings.bPebbleAlert ? 'yes' : 'no';
-        numberPebbleVibeCount.value = settings.countPebbleVibe.toFixed(0);
-        numberPrevGeoLocThresMeters.value = settings.dPrevGeoLocThres.toFixed(0);
-        selectCompassHeadingVisible.value = settings.bCompassHeadingVisible ? 'yes' : 'no'; 
-        selectClickForGeoLoc.value = settings.bClickForGeoLoc ? 'yes' : 'no';
+        selectAllowGeoTracking.setState(settings.bAllowGeoTracking ? 1 : 0);
+        numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
+        numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
+
+        selectEnableGeoTracking.setState(settings.bEnableGeoTracking ? 1 : 0);
+        selectOffPathAlert.setState(settings.bOffPathAlert ? 1 : 0);
+        selectPhoneAlert.setState(settings.bPhoneAlert ? 1 : 0);
+        numberPhoneVibeSecs.setSelected(settings.secsPhoneVibe.toFixed(1));
+        numberPhoneBeepCount.setSelected(settings.countPhoneBeep.toFixed(0));
+        selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
+        numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
+        numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
+        selectCompassHeadingVisible.setState(settings.bCompassHeadingVisible ? 1 : 0); 
+        selectClickForGeoLoc.setState(settings.bClickForGeoLoc ? 1 : 0);
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
         numberHomeAreaSWLon.value = settings.gptHomeAreaSW.lon;
         numberHomeAreaNELat.value = settings.gptHomeAreaNE.lat;
         numberHomeAreaNELon.value = settings.gptHomeAreaNE.lon;
     }
 
-    // Enables/disables, shows/hides, and sets values for the Track and Alert select controls
-    // on the map panel. 
-    // Arg:
-    //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
-    function EnableMapPanelGeoTrackingOptions(settings) {
-        var bAllow = settings.bAllowGeoTracking;
-        var bOffPathAlert = settings.bOffPathAlert;
-        var bTracking = settings.bEnableGeoTracking;
-        if (bAllow) {
-            $(selectGeoTrack).show();
-            $(labelGeoTrack).show();
-            if (settings.bPhoneAlert) {
-                $(selectAlert).show();
-                $(labelAlert).show();
-            } else {
-                $(selectAlert).hide();
-                $(labelAlert).hide();
-            }
-            $(selectGeoTrack).val(bTracking ? 'on' : 'off');
-            $(selectAlert).val(bOffPathAlert ? 'on' : 'off');
-        } else {
-            $(selectGeoTrack).hide();
-            $(labelGeoTrack).hide();
-            $(selectAlert).hide();
-            $(labelAlert).hide();
-            $(selectGeoTrack).val('off');
-            $(selectAlert).val('off');
-        }
-        $(selectGeoTrack).prop('disabled', !bAllow);
-        $(selectAlert).prop('disabled', !bAllow);
-    }
-
     // Sets parameters in other member vars/objects based on settings.
     function SetSettingsParams(settings) {
-        EnableMapPanelGeoTrackingOptions(settings);
-
+        EnableMapBarGeoTrackingOptions(settings); 
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Enable phone alerts.
-        alerter.bAlertsAllowed = settings.bAllowGeoTracking && settings.bPhoneAlert;
-        if (settings.bAllowGeoTracking) {
-            alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
-        } else {
-            alerter.bPhoneEnabled = false;
-        }
+        alerter.bAlertsAllowed = settings.bPhoneAlert;
+        alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
+
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
 
@@ -2732,16 +2389,128 @@ may not be appropriate for your ablities and that the trails could have inaccura
         RunTrackTimer();
     }
 
+
+    // Shows or the map-canvas div.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    function ShowMapCanvas(bShow)
+    {
+        var sShowMap = bShow ? 'block' : 'none'; 
+        var mapCanvas = getMapCanvas();
+        mapCanvas.style.display = sShowMap;
+    }
+
     // Shows or hides the divSettings.
     // Arg:
     //  bShow: boolean to indicate to show.
     function ShowSettingsDiv(bShow) {
         var sShowSettings = bShow ? 'block' : 'none';
-        var sShowMap = bShow ? 'none' : 'block'; 
-       
-        panel.style.display = sShowMap;
         divSettings.style.display = sShowSettings;
+        ShowMapCanvas(!bShow); 
     }
+
+    function ShowHelpDiv(div, bShow) {
+        ShowModeDiv(!bShow);
+        ShowElement(div, bShow);
+        ShowElement(closeDialogBar, bShow);
+        ShowMapCanvas(!bShow);    
+    }
+
+    // Shows or hides the divHelpGuide.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpGuide = document.getElementById('divHelpGuide');
+    function ShowHelpGuide(bShow) {
+        ShowHelpDiv(divHelpGuide, bShow);
+    }
+
+    // Shows or hides the divHelpBackToTrail.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpBackToTrail = document.getElementById('divHelpBackToTrail');
+    function ShowHelpBackToTrail(bShow) {
+        ShowHelpDiv(divHelpBackToTrail, bShow);    
+    }
+
+    // Shows or hides the divHelpTrackingVsBattery.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpTrackingVsBattery = document.getElementById('divHelpTrackingVsBattery');
+    function ShowHelpTrackingVsBattery(bShow) {
+        ShowHelpDiv(divHelpTrackingVsBattery, bShow);    
+    }
+
+    // Shows or hides the divHelpLicense.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divHelpLicense = document.getElementById('divHelpLicense');
+    function ShowHelpLicense(bShow) {
+        ShowHelpDiv(divHelpLicense, bShow);
+    }
+
+    // Shows or hides the divHelpTrackingVsBattery.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var divTermsOfUse = document.getElementById('divTermsOfUse');
+    function ShowTermsOfUse(bShow) {
+        ShowHelpDiv(divTermsOfUse, bShow);    
+    }
+
+
+
+
+    // Shows or hides the divTermsOfUse with confirmDialogBar at the bottom.
+    // Arg:
+    //  bShow: boolean to indicate to show.
+    var confirmDialogBar = document.getElementById('confirmDialogBar');
+    
+    function ConfirmTermsOfUse(bShow, onDone) {
+        ShowModeDiv(!bShow);
+        ShowElement(divTermsOfUse, bShow);
+        ShowElement(confirmDialogBar, bShow);
+        // Note: Do NOT hide map-canvas div because doing so prevents map from initializing.  
+        if ( bShow) 
+            onConfirmTermsOfUseAnswer = onDone;
+        else 
+           onConfirmTermsOfUseAnswer = null;     
+    }
+    var buAcceptConfirmDialogBar = document.getElementById('buAcceptConfirmDialogBar');
+    var buRejectConfirmDialogBar = document.getElementById('buRejectConfirmDialogBar');
+    // Callback for Confirm Terms of Use.
+    // Signature:
+    //  bConfirm: boolean. true indicated accepted.
+    //  Returns nothing. 
+    var onConfirmTermsOfUseAnswer = null;
+    buAcceptConfirmDialogBar.addEventListener('click', function(event){
+        if (typeof onConfirmTermsOfUseAnswer === 'function')
+            onConfirmTermsOfUseAnswer(true);
+    }, false);
+    buRejectConfirmDialogBar.addEventListener('click', function(event){
+        if (typeof onConfirmTermsOfUseAnswer === 'function')
+            onConfirmTermsOfUseAnswer(false);
+    }, false);
+
+
+    // Button and event handler to close the HelpGuide.
+    var closeDialogBar = document.getElementById('closeDialogBar');
+    var buCloseDialogBar = document.getElementById('buCloseDialogBar');
+    buCloseDialogBar.addEventListener('click', CloseHelpDiv, false);
+    function CloseHelpDiv() {
+        ShowHelpGuide(false);
+        ShowHelpBackToTrail(false);
+        ShowHelpTrackingVsBattery(false);
+        ShowTermsOfUse(false);
+        ShowHelpLicense(false);
+        that.ClearStatus();
+        titleBar.scrollIntoView();   
+    }
+
+
+
+
+
+
+    // ** More function 
 
     // Returns true if HTML el is hiddent.
     // Note: Do not use for a fixed position element, which is not used anyway.
@@ -2752,13 +2521,13 @@ may not be appropriate for your ablities and that the trails could have inaccura
 
     // Clears geo tracking objects from map (circles, lines for tracking) and 
     // displays status of geo tracking off. 
-    // Sets selectGeoTrack control to show off.
+    // Sets mapTrackingCtrl control to show off.
     // Arg:
     //  sError: optional string for an error msg prefix.
     //      The status always includes text indicating geo tracking is off.
     //      When sError is given, the status shows as an error.
     function ShowGeoTrackingOff(sError) {
-        // Set selectGeoTrack control to show off.
+        // Set mapTrackingCtrl control to show off.
         SetGeoTrackValue(false);
         // Clear map of update objects and show status.
         var bError = typeof (sError) === 'string';
@@ -2768,21 +2537,23 @@ may not be appropriate for your ablities and that the trails could have inaccura
         that.ShowStatus(sMsg, bError); // false => not an error.
     }
 
-    // Sets value for selectGeoTrack control.
+    // Sets value for mapTrackingCtrl control.
     // Arg:
     //  bTracking: boolean indicating tracking is on.
     function SetGeoTrackValue(bTracking) {
-        $(selectGeoTrack).val(bTracking ? 'on' : 'off');
+        var nState = bTracking ? 1 : 0; 
+        mapTrackingCtrl.setState(nState);
     }
 
-    // Returns true if value of selectGeoTrack indicate on.
+    // Returns true if value of mapTrackingCtrl indicate on.
     function IsGeoTrackValueOn() {
-        var bOn = selectGeoTrack.value === 'on';
+        var nState = mapTrackingCtrl.getState();
+        var bOn = nState === 1;
         return bOn;
     }
 
     var trackTimer = new GeoTrackTimer(); // Timer for tracking geo location.
-    trackTimer.bOn = IsGeoTrackValueOn();
+    trackTimer.bOn = false; // Set from settings later. 
 
     // Object for tracking geo location on periodic time intervals.
     function GeoTrackTimer() {
@@ -2790,7 +2561,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
         this.bOn = false; // Boolean indicating timer runs repeatedly.
 
         // Threshold in meters for distance to nearest point on path.
-        // If distance from geo-location to nearest point on the path
+        // If distance from geolocation to nearest point on the path
         // is > dCloseToPathThres, then geo location is off-path.
         this.dCloseToPathThres = -1;
 
@@ -2929,76 +2700,41 @@ may not be appropriate for your ablities and that the trails could have inaccura
         geoLocationOptions);
     }
 
-    // Initialize selectGeoPath droplist to empty list of path.
-    // Arg:
-    //  sHeader: string for item 0 in the droplist, which is a header desribing the list.
-    function InitPathList(sHeader) {
-        // Remove any existing elements from selectGeoPath.
-        var nCount = selectGeoPath.length;
-        for (var i = 0; i < nCount; i++) {
-            selectGeoPath.remove(0);
-        }
-        // Add header element.
-        var option = new Option(sHeader, "-1");
-        selectGeoPath.add(option);
-
-    }
-
     // Shows or hides divOwnerId.
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowOwnerIdDiv(bShow) {
-        if (bShow)
-            divOwnerId.style.display = 'block';
-        else
-            divOwnerId.style.display = 'none';
+        ShowElement(divOwnerId, bShow); 
     }
 
     // Show selectSignIn control.
     // Arg: bShow is boolean to show or hide.
     function ShowSignInCtrl(bShow) {
-        ShowElement(selectSignIn, bShow);
+        ShowOwnerIdDiv(bShow);
     }
 
-    // Shows or hides selectMapCacke.
-    // Arg:
-    //  bShow: boolean indicating to show.
-    function ShowMapCacheSelect(bShow)
-    {
-        if (bShow)
-            selectMapCache.style.display = 'block';
-        else
-            selectMapCache.style.display = 'none';
-    }
-
-    // Shows or hides buSaveOffline button.
-    // Arg:
-    //  bShow: boolean indicating to show.
-    function ShowSaveOfflineButton(bShow) {
-        if (bShow)
-            buSaveOffline.style.display = 'block';
-        else
-            buSaveOffline.style.display = 'none';
-    }
-
-    // Shows or hides divPathInfo, which has textbox for Path Name.
+    // Shows or hides divTrailInfo, which has dropdown list for Path Name.
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowPathInfoDiv(bShow) {
-        if (bShow)
-            divPathInfo.style.display = 'block';
-        else
-            divPathInfo.style.display = 'none';
+        ShowElement(divTrailInfo, bShow);
     }
 
     function ShowElement(el, bShow) {
-        var sShow = bShow ? 'block' : 'none';
-        el.style.display = sShow;
-    }
-
-    // Shows or hides the selectMenu droplist.
-    function ShowMenu(bShow) {
-        ShowElement(selectMenu, bShow);
+        // var sShow = bShow ? 'block' : 'none';
+        // el.style.display = sShow;
+        // Use class name to show or hide.  
+        if (el) {
+            if (bShow) {
+                el.classList.add('wigo_ws_Show');
+                el.classList.remove('wigo_ws_NoShow');
+            } else {
+                el.classList.remove('wigo_ws_Show');
+                el.classList.add('wigo_ws_NoShow');
+            }
+        } else {
+            ShowStatus("element to show is undefined.");
+        }
     }
 
     // Shows or hides the selectFind droplist.
@@ -3009,24 +2745,13 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Shows or hides divPathDescr, which contains controls for
     // path name, sharing, and server action.
     function ShowPathDescrCtrls(bShow) {
-        ShowElement(divPathDescr, bShow);
+        ShowElement(pathDescrBar, bShow);
     }
 
     // Shows or hides textbox for Path Name and its label.
     function ShowPathNameCtrl(bShow) {
         ShowElement(labelPathName, bShow);
         ShowElement(txbxPathName, bShow);
-    }
-
-    // Shows or hides Share select ctrl and its label.
-    function ShowShareCtrl(bShow) {
-        ShowElement(labelShare, bShow);
-        ShowElement(selectShare, bShow);
-    }
-
-    // Shows or hides select point action ctrl.
-    function ShowPtActionCtrl(bShow) {
-        ShowElement(selectPtAction, bShow);
     }
 
     // Show or hide Delete button.
@@ -3074,10 +2799,7 @@ may not be appropriate for your ablities and that the trails could have inaccura
     // Arg:
     //  bShow: boolean indicating to show.
     function ShowModeDiv(bShow) {
-        if (bShow)
-            divMode.style.display = 'block';
-        else
-            divMode.style.display = 'none';
+        ShowElement(divMode, bShow); 
     }
 
     // Object for issuing phone alerts.
@@ -3277,10 +2999,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
         that.ClearStatus();
         if (!upd.bToPath) {
             if (map.IsPathDefined()) {
-                var sMsg = "On Path<br/>";
+                var sMsg = "On Trail<br/>";
                 sMsg += PathDistancesMsg(upd);
                 that.ShowStatus(sMsg, false); // false => not an error.
-                sMsg = "On Path<br/>";
+                sMsg = "On Trail<br/>";
                 sMsg += PathDistancesPebbleMsg(upd);
                 pebbleMsg.Send(sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking.
             } else {
@@ -3303,20 +3025,20 @@ may not be appropriate for your ablities and that the trails could have inaccura
             var sToPathDir = map.BearingWordTo(upd.bearingToPath);
             var phi = upd.bearingToPath - upd.bearingRefLine;
             var phiCompass = upd.bearingToPath -  upd.bearingCompass;
-            var sTurn = 'right';
-            var sTurnCompass = 'right';
+            var sTurn = 'Right';
+            var sTurnCompass = 'Right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Head {0} ({1}&deg; wrt N) to go to path ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
+            var s = "Head {0} ({1}&deg; wrt N) to go to trail ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path based on previous heading.
                 if (phi < 0)
                     phi += 360.0;
                 if (phi > 180.0) {
-                    sTurn = 'left';
+                    sTurn = 'Left';
                     phi = 360.0 - phi;
                 }
-                s = "?Turn {1} {0}&deg; from PrevLoc Hdg {2}&deg;.<br/>".format(phi.toFixed(0), sTurn, upd.bearingRefLine.toFixed(0));
+                s = "?P {1} {0}&deg; from Previous Hdg of {2}&deg;.<br/>".format(phi.toFixed(0), sTurn, upd.bearingRefLine.toFixed(0));
                 sMsg += s;
             }
             // Show angle to turn based on compass bearing.
@@ -3325,10 +3047,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
                 if (phiCompass < 0)
                     phiCompass += 360.0;
                 if (phiCompass > 180.0) {
-                    sTurnCompass = 'left';
+                    sTurnCompass = 'Left';
                     phiCompass = 360.0 - phiCompass;
                 }
-                s = "?Turn {1} {0}&deg; from Compass Hdg {2}&deg;.<br/>".format(phiCompass.toFixed(0), sTurnCompass, upd.bearingCompass.toFixed(0));
+                s = "?C {1} {0}&deg; from Compass Hdg of {2}&deg;.<br/>".format(phiCompass.toFixed(0), sTurnCompass, upd.bearingCompass.toFixed(0));
                 sMsg += s;
             }
             // Show distance from start and to end.
@@ -3367,55 +3089,10 @@ may not be appropriate for your ablities and that the trails could have inaccura
         }
     };
 
-    // Shows panel of controls over the map based on mode.
-    // For mode of online_edit or online_define, only shows
-    // the Fullscreen/Reduce button.
-    // For mode 
-    // Arg:
-    //  nMode is value given by eMode enumeration.
-    //      For online_edit or online_define, only shows Fullscreen/Reduce button.
-    //      For online_view or offline, shows all the buttons.
-    function ShowMapPanelForMode(nMode) {
-        var bShow = true;
-        switch (nMode) {
-            case that.eMode.online_edit:
-            case that.eMode.online_define:
-            case that.eMode.tou_not_accepted: 
-                bShow = false;
-                break;
-        }
-        // Show or hide the panel rather just showing/hiding certain ctrls on panel.
-        ShowElement(panel, bShow);
-    }
-
-    // Sets panel of controls for map at top of the map.
-    function SetMapPanelTop() {
-        var top = getMapCanvas().offsetTop;
-        panel.style.top = top + 'px';
-    }
-
     // Returns true if divSettings container is hidden.
     function IsSettingsHidden() {
         var bHidden = divSettings.style.display === 'none' || divSettings.style.dispaly === '';
         return bHidden;
-    }
-
-    // Display map below divPath info rather than at the top of the screen.
-    // Also positions panel to be over the top of the map.
-    function MinimizeMap() {
-        ShowOwnerIdDiv(true);
-        ShowModeDiv(true);
-        ShowPathInfoDiv(true);
-        SetMapPanelTop();
-    }
-
-    // Display map at top of screen by hiding edit mode and path info.
-    // Also positions panel to be over the top of the map.
-    function MaximizeMap() {
-        ShowOwnerIdDiv(false);
-        ShowModeDiv(false);
-        ShowPathInfoDiv(false);
-        SetMapPanelTop();
     }
 
     // ** Private members for Facebook
@@ -3426,6 +3103,351 @@ may not be appropriate for your ablities and that the trails could have inaccura
     }
 
     // ** Constructor initialization.
+
+    // **** provide event handler for preventing dragging of divMode area off the screen.
+    //      divMode area contains the bars and other user interface.
+    divMode.addEventListener('touchmove', function(event){
+        // Allow scrolling of selectGoTrail dropdown list.
+        if (!selectGeoTrail.isDropDownListScrolling() ) {
+            // Scrolling is prevented except for selectGeoTrail droplist.
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Note: The statusDiv is not allowed to scroll to avoid 
+        // problems with divMode scrolling off the screen.
+        // Tried to have statusDiv indicate it was scrolling but 
+        // was unsuccessful. The scheme used for selectGeoTrail
+        // did not work for statusDiv.
+    }, false);
+
+
+    // ** Create modeBar
+    var modeBar = document.getElementById('modeBar');
+    // Fill the main menu drop list.
+    parentEl = document.getElementById('mainMenu');
+    var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
+    var mainMenuValues = [['terms_of_use','Terms of Use'],                       // 0
+                          ['settings', 'Settings'],                               // 1
+                          ['start_pebble', 'Start Pebble'],                       // 2
+                          ['help', 'Help - Guide'],                               // 3 
+                          ['back_to_trail', 'Help - Back To Trail'],              // 4
+                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
+                          ['about', 'About'],                                     // 6
+                          ['license', 'Licenses']                                  // 7
+                         ];
+    mainMenu.fill(mainMenuValues);
+    mainMenu.onListElClicked = function (dataValue) {
+        divStatus.addLine("Main menu item  dataValue: " + dataValue); 
+
+        if (dataValue === 'settings') {
+            var settings = that.onGetSettings();
+            SetSettingsValues(settings);
+            ShowSettingsDiv(true);
+        } else if (dataValue === 'start_pebble') {
+            // Note: pebbleMsg.IsConnected() does not work. Do not check for Pebble connected.
+            if (pebbleMsg.IsEnabled()) {
+                pebbleMsg.StartApp();
+            } else {
+                AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
+            }
+            this.selectedIndex = 0;
+        } else if (dataValue === 'about') {
+            AlertMsg(AboutMsg())
+            this.selectedIndex = 0;
+        } else if (dataValue === 'license') {
+            ShowHelpLicense(true);
+            this.selectedIndex = 0;
+        } else if (dataValue === 'help') {
+            ShowHelpGuide(true);
+            this.selectedIndex = 0;
+        } else if (dataValue === 'back_to_trail') {
+            ShowHelpBackToTrail(true);
+            this.selectedIndex = 0;
+        } else if (dataValue === 'terms_of_use') {
+            ShowTermsOfUse(true);
+            this.selectedIndex = 0;
+        } else if (dataValue === 'battery_drain') {
+            ShowHelpTrackingVsBattery(true);
+            this.selectedIndex = 0;
+        }
+        that.ClearStatus();
+    };
+
+    // ** Select Mode dropdown ctrl.
+    parentEl = document.getElementById('selectMode');
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
+    var selectModeValues = [['select_mode', 'Select Map View'],
+                            ['online_view',   'Online'],        
+                            ['offline',       'Offline'],       
+                            ['online_edit',   'Edit a Trail'],        
+                            ['online_define', 'Draw a Trail']       
+                           ]; 
+    selectMode.fill(selectModeValues);
+
+    selectMode.onListElClicked = function(dataValue) {
+        // this.value is value of selectMode control.
+        var nMode = that.eMode.toNum(dataValue);
+
+        // Helper function to change mode.
+        function AcceptModeChange() {
+            that.ClearStatus();
+            // Inform controller of the mode change.
+            that.onModeChanged(nMode);
+            var bOffline = nMode === that.eMode.offline;
+            var result = map.GoOffline(bOffline);
+            that.setModeUI(nMode);
+        }
+
+        if (fsmEdit.IsPathChanged()) {
+            ConfirmYesNo("The geo trail has been changed. OK to continue and loose any change?", function (bConfirm) {
+                if (bConfirm) {
+                    fsmEdit.ClearPathChange();
+                    AcceptModeChange();
+                } else {
+                    // Restore the current mode selected before the change.
+                    selectMode.selectedIndex = that.curMode();
+                }
+            });
+        } else {
+            AcceptModeChange();
+        }
+
+    };
+
+    // *** Signin dropdown ctrl
+    parentEl = document.getElementById('selectSignInHolder');
+    var selectSignIn = new ctrls.DropDownControl(parentEl, "signinDropDown", "Sign-In", null, "img/ws.wigo.dropdownhorizontalicon.png"); 
+    selectSignIn.fill([['set',"Sign In", true],
+                       ['facebook', 'Facebook'],
+                       ['logout', 'Logout']
+                      ]);
+
+    selectSignIn.onListElClicked = function(dataValue) {
+        var option = this[this.selectedIndex];
+        if (dataValue === 'facebook') {
+            that.ClearStatus();
+            fb.Authenticate();
+        } else if (dataValue === 'logout') {
+            // Only allow Logout for View or Offline mode.
+            var nMode = that.curMode();
+            if (nMode === that.eMode.online_edit ) {
+                that.AppendStatus("Complete editing the trail, then logout.", false);
+            } else if (nMode === that.eMode.online_define) {
+                that.AppendStatus("Complete defining a new trail, then logout.", false);
+            } else {
+                that.ClearStatus();
+                fb.LogOut();
+            }
+        } else if (dataValue === 'set') {
+            that.ClearStatus();
+        } else {
+            that.ClearStatus();
+        }
+        selectSignIn.setSelected('set'); // Select Signin element.
+    }
+
+    // ** Initialize online bar.
+    // Select GeoTrail control
+    parentEl = document.getElementById('divTrailInfo');
+    var selectGeoTrail = new ctrls.DropDownControl(parentEl, "selectGeoTrailDropDown", "Trails", "Select a Geo Trail", "img/ws.wigo.menuicon.png");
+    selectGeoTrail.onListElClicked = function(dataValue) { 
+        var listIx = parseInt(dataValue)
+        that.ClearStatus();
+        // Always hide sign-in bar when path is selected to conserver screen space.
+        ShowOwnerIdDiv(false); 
+        if (listIx < 0) {   
+            // No path selected.
+            map.ClearPath();
+        } else {
+            // Path is selected
+            that.onPathSelected(that.curMode(), listIx);
+            // Update status for track timer unless editing.
+            if (that.curMode() === that.eMode.online_view ||
+                that.curMode() === that.eMode.offline) {
+                if (trackTimer.bOn) {
+                    if (map.IsPathDefined()) {
+                        // Tracking timer is on so show current geo location right away.
+                        DoGeoLocation();
+                    }
+                } else {
+                    that.ShowStatus("Geo tracking off.", false); // false => not an error.
+                }
+            }
+        }
+        titleBar.scrollIntoView();
+    };
+
+
+    parentEl = document.getElementById('onlineSelectFind');
+    var onlineSelectFind = new ctrls.DropDownControl(parentEl, "onlineSelectFindDropDown", "Find Trails", null, "img/ws.wigo.dropdownicon.png"); 
+    onlineSelectFind.fill([ ['find', 'Find'],
+                            ['home_area', 'Home Area'],
+                            ['on_screen', 'On Screen'],
+                            ['all_public', 'All Public Trails'],
+                            ['all_mine', 'All Mine'],
+                            ['my_public', 'My Public'],
+                            ['my_private','My Private']
+                          ]); 
+    onlineSelectFind.onListElClicked = function(dataValue) { 
+        // The Find droplist is only valid in view mode.
+        if (that.curMode() !== that.eMode.online_view)
+            return; // Note: should not happen because selectFind should only be visible in view mode.
+
+        // Save parameters for view for finding paths.
+        var nFindIx = that.eFindIx.toNum(dataValue); 
+        var sOwnerId = that.getOwnerId();
+        var bClearPath = true;
+        if (nFindIx === that.eFindIx.home_area) {
+            viewFindParams.setRect(nFindIx, homeArea.gptSW, homeArea.gptNE);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, homeArea.gptSW, homeArea.gptNE);
+        } else if (nFindIx === that.eFindIx.on_screen) {
+            var oMap = map.getMap(); // Get underlying Leaflet map object.
+            var bounds = oMap.getBounds();
+            var ptSW = bounds.getSouthWest();
+            var ptNE = bounds.getNorthEast();
+            var gptSW = new wigo_ws_GeoPt();
+            gptSW.lat = ptSW.lat;
+            gptSW.lon = ptSW.lng;
+            var gptNE = new wigo_ws_GeoPt();
+            gptNE.lat = ptNE.lat;
+            gptNE.lon = ptNE.lng;
+            viewFindParams.setRect(nFindIx, gptSW, gptNE);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+        } else if (nFindIx === that.eFindIx.all_public) { 
+            viewFindParams.init(nFindIx);
+            if (that.onFindPaths)
+                that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+        } else if (nFindIx === that.eFindIx.all_mine ||
+                   nFindIx === that.eFindIx.my_public  ||
+                   nFindIx === that.eFindIx.my_private) {
+            viewFindParams.init(nFindIx);
+            if (!sOwnerId) {
+                that.ShowStatus("You must be signed in to find your trails.", true);
+                ShowOwnerIdDiv(true); // Shopw sign-in bar 
+                bClearPath = false;
+            } else {
+                if (that.onFindPaths)
+                    that.onFindPaths(sOwnerId, nFindIx, gptSW, gptNE);
+            }
+        } else {
+            bClearPath = false;
+        }
+
+        // Clear the drawn map path because the selectGeoTrail droplist has been reloaded.
+        if (bClearPath)
+            map.ClearPath();
+    };
+    
+
+    // OnOffControl for Phone Alert on map bar.
+    var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
+    var mapAlertCtrl = new ctrls.OnOffControl(holderMapPhAlertToggle, null, "Alert", -1);
+    mapAlertCtrl.onChanged = function(nState) {
+        // Enable/disable alerts.
+        alerter.bPhoneEnabled = nState === 1;
+        // Show status because Ph Alert on Panel is no longer used.
+        var sMsg = nState === 1 ? "Phone Alert On." : "Phone Alert Off.";
+        that.ShowStatus(sMsg, false); 
+    }
+
+    // OnOffControl for Tracking on map bar.
+    var holderMapTrackToggle = document.getElementById('mapTrackToggle');
+    var mapTrackingCtrl = new ctrls.OnOffControl(holderMapTrackToggle, null, "Track", -1);
+    mapTrackingCtrl.onChanged = function(nState) {
+        that.ClearStatus(); 
+        // Save state of flag to track geo location.
+        trackTimer.bOn = nState === 1;    // Allow/disallow geo-tracking.
+        if (!trackTimer.bOn) {
+            // Send message to Pebble that tracking is off.
+            pebbleMsg.Send("Track Off", false, false); // no vibration, no timeout.
+        } else {
+            // Show status that tracking is on. The Alert On/Fff ctrl on Panel used to indicate the state.
+            that.ShowStatus("Tracking on", false); 
+        }
+        // Start or clear trackTimer.
+        RunTrackTimer();
+    }
+
+    // Sets values for the Track and Alert OnOffCtrls on the mapBar.
+    // Arg:
+    //  settings: wigo_ws_GeoTrailSettings object for user settings (preferences).
+    function EnableMapBarGeoTrackingOptions(settings) {
+        var bAllowTracking = settings.bAllowGeoTracking;
+        var bEnableTracking = settings.bEnableGeoTracking;
+        var bAllowPhoneAlert = settings.bPhoneAlert;
+        var bEnablePhoneAlert = settings.bOffPathAlert; 
+        ShowElement(holderMapTrackToggle, bAllowTracking);  
+        ShowElement(holderMapPhAlertToggle, bAllowPhoneAlert);  
+
+        var nState = bAllowTracking && bEnableTracking? 1 : 0;
+        mapTrackingCtrl.setState(nState);
+        nState = bAllowPhoneAlert && bEnablePhoneAlert ? 1 : 0;
+        mapAlertCtrl.setState(nState);
+    }
+
+    parentEl = document.getElementById("selectMapCache");
+    var selectMapCache = new ctrls.DropDownControl(parentEl, "selectMapCacheDropDown", "Map Cache", null, "img/ws.wigo.dropdownicon.png");
+    var selectMapCacheValues = [['size', 'Size'],
+                                ['clear', 'Clear']];
+    selectMapCache.fill(selectMapCacheValues);
+    selectMapCache.onListElClicked = function(dataValue) {
+        if (that.curMode() === that.eMode.offline) {
+            if (dataValue === 'clear') {
+                // Confirm it is ok to clear the cache.
+                var sMsg =
+"Clearing the map cache deletes all the trail maps you have saved.\n\
+Are you sure you want to delete the maps?";
+                ConfirmYesNo(sMsg, function (bYes) {
+                    if (bYes) {
+                        that.ShowStatus("Clearing map cache ...", false); // false => not an error.
+                        map.ClearCache(function (nFilesDeleted, nFilesIfError) {
+                            var sResult;
+                            if (nFilesIfError > 0)
+                                sResult = "Error occurred, deleted {0} files.".format(nFilesIfError);
+                            else
+                                sResult = "Deleted {0} cache files.".format(nFilesDeleted);
+                            AlertMsg(sResult);
+                            that.ClearStatus();
+                            ClearOfflineGeoPathSelect();
+                            if (that.onMapCacheCleared)
+                                that.onMapCacheCleared();
+                        });
+                    }
+                });
+            } else if (dataValue === 'size') {
+                // Display number of files and size of cache.
+                that.ShowStatus("Calculating map cache size ...", false); // false => not an error.
+                map.CacheSize(function (nFiles, nBytes) {
+                    var sMBytes = (nBytes / 1000).toFixed(2);
+                    var sMsg = "Map cache contains:\n{0} files\n{1} MB".format(nFiles, sMBytes);
+                    AlertMsg(sMsg);
+                    that.ClearStatus();
+                });
+            }
+        }
+    };
+
+    // DropDownControl for share state for trail.
+    parentEl = document.getElementById('editDefineShare');
+    var selectShareDropDown = new ctrls.DropDownControl(parentEl, "selectShareDropDown", "Share", 'public', "img/ws.wigo.dropdownicon.png");
+    var selectShareDropDownValues = [['public', 'Public'], ['private', 'Private']];
+    selectShareDropDown.fill(selectShareDropDownValues);
+    selectShareDropDown.onListElClicked = function(dataValue) {
+        var fsm = that.fsmEdit();
+        fsm.setPathChanged();
+        fsm.DoEditTransition(fsm.eventEdit.ChangedShare);
+    };
+    
+    parentEl = document.getElementById('editDefinePtAction');
+    var selectPtActionDropDown = new ctrls.DropDownControl(parentEl, "selectPtActionDropDown", "Pt Action", "", "img/ws.wigo.dropdownicon.png")
+    selectPtActionDropDown.onListElClicked = function(dataValue) {
+        var nValue = Number(dataValue);
+        fsmEdit.DoEditTransition(nValue);
+    };
+
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
     var alerter = new Alerter(); // Object for issusing alert to phone.
     var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
@@ -3438,9 +3460,6 @@ may not be appropriate for your ablities and that the trails could have inaccura
     pebbleMsg.onTextReceived = function (sText) {
         that.ShowStatus(sText, false); 
     };
-
-    // Set current mode for processing geo paths based on selectEditMode ctrl.
-    MinimizeMap();
 
     // Set Facebook login.
     var fb = new wigo_ws_FaceBookAuthentication('694318660701967');
@@ -3581,11 +3600,11 @@ function wigo_ws_Controller() {
                         } else if (oStatus.eDup === eDuplicate.Match) {
                             // gpx obj has same name as its record in database so there is no name change.
                             // No need to reload the list of paths.
-                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                            view.ShowStatus("Successfully uploaded GPX trail.", false);
                         } else if (oStatus.eDup === eDuplicate.NotDup) {
-                            view.ShowStatus("Successfully uploaded GPX path.", false);
+                            view.ShowStatus("Successfully uploaded GPX trail.", false);
                         } else {
-                            view.ShowStatus("Error occurred uploading GPX path.");
+                            view.ShowStatus("Error occurred uploading GPX trail.");
                         }
                     } else {
                         // Show error message.
@@ -3596,7 +3615,7 @@ function wigo_ws_Controller() {
                     fsm.DoEditTransition(fsm.eventEdit.Init);
                 });
             if (!bOk) {
-                var sError = "Cannot upload GPX path to server because another transfer is already in progress."
+                var sError = "Cannot upload GPX trail to server because another transfer is already in progress."
                 view.ShowStatus(sError, !bOk);
             }
         }
@@ -3613,18 +3632,18 @@ function wigo_ws_Controller() {
             var bOk = model.deleteGpx(gpxId,
                 // Async callback upon storing record at server.
                 function (bOk, sStatus) {
-                    var sMsg = bOk ? "Successfully deleted GPX path at server." : sStatus;
+                    var sMsg = bOk ? "Successfully deleted GPX trail at server." : sStatus;
                     view.ShowStatus(sMsg, !bOk);
                     fsm.DoEditTransition(fsm.eventEdit.Init);
 
                 });
             if (!bOk) {
-                var sError = "Cannot delete GPX path at server because another transfer is already in progress."
+                var sError = "Cannot delete GPX trail at server because another transfer is already in progress."
                 view.ShowStatus(sError, !bOk);
                 fsm.DoEditTransition(fsm.eventEdit.Init);
             }
         } else {
-            ShowStatus("Owner must be signed in to delete GPX path at server.");
+            ShowStatus("Owner must be signed in to delete GPX trail at server.");
             fsm.DoEditTransition(fsm.eventEdit.Init);
         }
     };
@@ -3785,18 +3804,11 @@ function wigo_ws_Controller() {
     // as be user id.
     // Args
     //  sOwnerId: string for path owner id.
-    //  nFindIx: number this.eFindIx enumeration for kind of find to do.
+    //  nFindIx: number view.eFindIx enumeration for kind of find to do.
     //  gptSW: wigo_ws_GeoPt for Southwest corner of rectangle. If null, do not find by lat/lon.
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
-    //  bQuiet: boolean, optional. true indicates no interum status msg is shown on success. If there
-    //          is an error, a status msg is shown regardless. However a final status message is shown.
-    //          For true, the final message is appended to current messages displayed. For false, 
-    //          the final message replaces previous displayed message(s).
-    //          Defaults to false (show interum status msg and replaces messages displayed for final message).
-    function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE, bQuiet) {
-        if (typeof (bQuiet) !== 'boolean')
-            bQuiet = false;
-
+    //  bQuiet: boolean. No longer used.
+    function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE) {
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
@@ -3809,18 +3821,36 @@ function wigo_ws_Controller() {
                     gpxArray.push(gpxList[i]);
                 }
             }
-            if (!bOk || !bQuiet)
-                view.ShowStatus(sStatus, !bOk);
+            if (!bOk )
+                view.AppendStatus(sStatus, !bOk);
         }
+
+        // Local helper to form part of msg indicating trails <for kind of search>.
+        // <for kind of search> is determined base on nFindIx.
+        // Returns: string. " for <kind of search>" 
+        //          <kind of search> is a phrase for the kind of search, e.g All Trails.
+        function TrailsForMsg() {
+            var sMsg;
+            switch (nFindIx) {
+                case view.eFindIx.home_area:  sMsg = ' for Home Area Trails'; break;
+                case view.eFindIx.on_screen:  sMsg = ' for On Screen Trails'; break;
+                case view.eFindIx.all_public: sMsg = ' for All Public Trails'; break; 
+                case view.eFindIx.all_mine:   sMsg = ' for All My Trails'; break;
+                case view.eFindIx.my_public:  sMsg = ' for My Public Trails'; break;
+                case view.eFindIx.my_private: sMsg = ' for My Private Trails'; break;
+                default: sMsg = "";
+            }
+            return sMsg;
+        }
+
 
         // Local helper that returns a status message for ok.
         function StatusOkMsg(nCount) {
             var sMsg;
             if (nCount <= 0) {
-                sMsg = "No paths found."
+                sMsg = "No trails found{0}.".format(TrailsForMsg());
             } else {
-                var sFound = nCount === 1 ? "Found 1 path" : "Found {0} paths".format(nCount);
-                var sMsg = "{0}. Select path from droplist.".format(sFound);
+                sMsg = "Found {0}{1}.<br/>Select from droplist.".format(nCount, TrailsForMsg());
             }
             return sMsg;
         }
@@ -3831,10 +3861,7 @@ function wigo_ws_Controller() {
             view.setPathList(arPath, true);
             // Show number of paths found.
             if (bOk) {
-                if (!bQuiet)
-                    view.ShowStatus(StatusOkMsg(arPath.length), false);
-                else 
-                    view.AppendStatus(StatusOkMsg(arPath.length), false); 
+                view.ShowStatus(StatusOkMsg(arPath.length), false); 
             }
         }
 
@@ -3842,6 +3869,8 @@ function wigo_ws_Controller() {
         switch (nFindIx) {
             case view.eFindIx.home_area:
             case view.eFindIx.on_screen:
+                var sSearchingFor = nFindIx === view.eFindIx.home_area ? "Searching for trails in Home Area." : "Searching for trails On Screen."
+                view.ShowStatus(sSearchingFor, false);   
                 if (gptSW && gptNE) {
                     // Get all public paths found on screen.
                     model.getGpxListByLatLon("any", eShare.public, gptSW, gptNE, function (bOk, gpxList, sStatus) {
@@ -3860,6 +3889,7 @@ function wigo_ws_Controller() {
                 break;
             case view.eFindIx.all_public:
                 // Get all public paths for any path owner.
+                view.ShowStatus("Searching for All Public Trails.", false);
                 model.getGpxList("any", eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     if (bOk && sPathOwnerId) {
@@ -3872,10 +3902,10 @@ function wigo_ws_Controller() {
                         SetPathList(bOk);
                     }
                 });
-
                 break;
             case view.eFindIx.all_mine:
                 // Get all public paths for path owner.
+                view.ShowStatus("Searching for All My trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     if (bOk && sPathOwnerId) {
@@ -3891,17 +3921,23 @@ function wigo_ws_Controller() {
                 break;
             case view.eFindIx.my_public:
                 // Get all public paths for path owner.
+                view.ShowStatus("Searching for My Public trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     SetPathList(bOk);
                 });
                 break;
             case view.eFindIx.my_private:
+
                 // Get all private paths for path owner.
+                view.ShowStatus("Searching for My Private trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
                     SetPathList(bOk);
                 });
+                break;
+            default:
+                view.ShowStatus("Unknown search type for finding trails.");
                 break;
         }
     }
@@ -3910,7 +3946,7 @@ function wigo_ws_Controller() {
     var sOwnerId = model.getOwnerId();
     view.setOwnerId(sOwnerId);
     view.setOwnerName(model.getOwnerName());
-    // Comment out next stmt only if debugging map initialization, in case handler for buInitView does initialization.
+    // Comment out next stmt only if debugging map initialization, in which case handler for buInitView does initialization.
     view.Initialize();
 }
 

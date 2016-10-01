@@ -37,7 +37,7 @@ body {
     );
     background-attachment:fixed;
     font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
-    font-size:12px;
+    font-size: 0.9em; 
     height:100%;
     margin:0px;
     padding:0px;
@@ -128,8 +128,6 @@ label {
     clear: both;
     float: left;
     padding-top: 4px;
-    font-weight: 400;
-    font-size: larger;
 }
 
 #map-canvas {
@@ -138,8 +136,14 @@ label {
     padding: 0px;
     width: 100%;
 }
+
+#titleHolder {
+    height: 1.8em;
+}
+
 #divOwnerId {
     width: 100%;
+    height: 1.9em;
     float: left;
     margin-left: 5px;
 }
@@ -154,9 +158,30 @@ label {
 {
     margin-right: 5px;
 }
-#selectSignIn {
-    clear: none;
+#selectSignInHolder {
+    height: 100%;
+    width: 25%;
     float: right;
+    margin-right: 5%;
+    position: relative;
+}
+
+#selectSignInHolder .wigo_ws_DropDownLabel {
+    height: 100%;
+    width: auto;
+    right: 45%;
+    top: 0px;
+    margin-top: 5%;
+
+}
+
+#selectSignInHolder .wigo_ws_DropDownIcon {
+    width: 41%;
+    height: auto;
+    right: 0px;
+    left: inherit;
+    top: 0px;
+    margin-top: 5%;
 }
 
 #divMode 
@@ -167,34 +192,97 @@ label {
     margin-left: 5px;
     margin-bottom: 0px;
 }
-#selectMode {
-    clear: both;
-    float: left;
-}
 
-#buSaveOffline, #selectMapCache, #selectFind, #selectMenu {
+#buSaveOffline {
     clear: none;
     float: left;
     margin-left: 10px;
     width: 20%;
 }
 
-#divPathDescr, #divCursors {
-    clear: both;
-    float: left;
-    display: none; /* show when needed */
-}
-#divServerAction {
-    clear: none;
+#selectMapCache {
+    width: 28%;
+    height: 100%;
     float: left;
 }
-#selectShare, #buUpload, #buDelete, #txbxPathName {
+#selectMapCache .wigo_ws_DropDownIcon {
+    left: initial;
+    right: 0px;
+}
+
+#buUpload, #buCancel, #buDelete {  
     clear: none;
     float: left;
     margin-left: 5px;
     margin-right: 10px;
 }
 
+#onlineOfflineEditBackIcon {
+    height: auto;
+    width: 10%;
+    margin-left: 0.5em;
+}
+
+/* Bar for Share and PtAction ctrls */
+#editDefineBar2 {
+    height: 3em;
+}
+#editDefineShare {
+    width: 30%;
+    height: 100%;
+    float: left;
+} 
+#editDefineShare .wigo_ws_DropDownLabel{
+    width: auto;
+    height: 50%;
+    left: 0px;
+}
+#editDefineShare .wigo_ws_DropDownValue {
+    width: 70%;
+    height: 50%;
+    left: 0px;
+    margin-top: 0.3em;
+}
+#editDefineShare .wigo_ws_DropDownIcon {
+    width: 28%;
+    right: 0px;
+    left: inherit;
+}
+
+#editDefinePtAction {
+    width: 40%;
+    height: 100%;
+    margin-left: 5%;
+    float: left;
+}
+#editDefinePtAction .wigo_ws_DropDownLabel{
+    width: auto;
+    left: inherit;
+    right: 24%;
+    
+}
+#editDefinePtAction .wigo_ws_DropDownValue {
+    width: auto;
+    left: inherit;
+    right: 22%;
+    margin-top: 0.3em;
+}
+#editDefinePtAction .wigo_ws_DropDownIcon {
+    width: 20.8%;
+    right: 0px;
+    left: inherit;
+}
+
+
+/* bar for cursors */
+#editDefineCursorsBar {
+    height: auto;
+}
+
+#divCursors { 
+    clear: both;
+    float: left;
+}
 
 /* Cursor*/
 #divCursorLeft {
@@ -223,10 +311,6 @@ label {
 }
 
 /* Cursor Left Column */
-#selectPtAction {
-    clear: both;
-    float: right;
-}
 #buCursorLeft {
     clear: both;
     float: left;
@@ -256,7 +340,6 @@ label {
 #divPathIx {
     margin-left: 30%;
     clear: both;
-    display: none; /* show when needed. */
 }
 #divPathIx input[type='button'] {
     margin-left: 20px;
@@ -273,7 +356,7 @@ label {
     float: left;
 }
 
-
+/* Settings home area */
 #divSettings {
     position: absolute;
     left: 0px;
@@ -283,11 +366,16 @@ label {
     padding: 5px;
     border: 1px solid #999;
     z-index: 2;
-    font-size: 130%;
+    font-size: 120%;
+    width: 95%;
 }
 
-#divSettings > div {
-    margin-bottom: 0.07in;
+/* Settings items */
+.settingItem {
+    margin-bottom: 0.35em;
+    height: 2.0em;
+    border: black 2px solid;
+    width: 100%;
 }
 
 #divSettings input {
@@ -298,11 +386,64 @@ label {
     padding-top: 0px;
 }
 
-#buSettingsDone {
-    margin-left: 15%;
-    min-width: 5em;
+.settingItem .wigo_ws_DropDownLabel {
+    top: 20%;
+    left: 0px;
+    width: inherit;
+    text-align: left;
+} 
+.settingItem .wigo_ws_DropDownValue {
+    top: 20%;
+    left: inherit;
+    right: 16%;
+    background-color: lightgray;
+    padding-left: 0.2em;
+}
+.settingItem .wigo_ws_DropDownIcon {
+    width: 15%;
+    height: 80%;
+    top: 10%;
+    left: inherit;
+    right: 0px;
 }
 
+#divHomeArea  {
+    height: 8.5em;
+}
+
+#numberHomeAreaSWLat, #numberHomeAreaNELat {
+    clear: both;
+    float: left;
+    margin-left: 25%;   
+} 
+#numberHomeAreaSWLon, #numberHomeAreaNELon {
+    clear: right;
+    float: left;
+    margin-left: 5%;
+}
+#divHomeAreaSW, #divHomeAreaNE {
+    height: 3em;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid black;
+}
+#divSetHomeArea {
+    border: none
+}
+#buSetHomeArea {
+    float: right;
+}
+
+#divSettingsDoneCancel {
+    border: none;
+    margin-top: 0.85em;
+
+}
+#buSettingsDone {
+    margin-left: 25%;
+    min-width: 5em;
+}
 #buSettingsCancel {
     margin-left: 2em;
 }
@@ -317,63 +458,196 @@ label {
     margin-bottom: 0px;
 }
 
-#selectGeoPath {
+/* pathDescrBar */
+#pathDescrBar {
+    height: 4.0em;
+}
+#labelPathName {
+    height: 50%;
+    width: 10%;
     float: left;
 }
-
-
-
-/* Div panel to overlay google map.*/
-#panel {
-    clear: both; 
-    position: absolute;
-    left: 20%;
-    z-index: 1; 
-    background-color: #fff;
-    padding: 5px;
-    border: 1px solid #999;
-    display: none; /* show when needed. */
-}
- 
-#panel > input {
-    margin-top: 10px;
-    margin-left: 5px;
-    margin-right: 5px;
+#editAction {
+    height: 50%;
+    width: auto;
+    margin-left: 2em;
     float: left;
 }
-#panel > label{
-    float: left;
-    padding-top: 10px;
-    padding-left: 4px;
-    padding-right: 4px;
-    font-weight: 400;
-    font-size: larger;
+#pathDescrBarBackIcon {
+    height: 50%;
+    width: auto;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    float: right;
 }
-#panel > select {
-    float: left;
-    margin-top: 10px;
-}
-#buGoToPath {
+#divPathName {
+    height: 50%;
+    width: 95%;
     clear: both;
+    float: left;
 }
-#labelAlert {
+#txbxPathName {
     clear: none;
+    float: left;
+    margin-right: 10px;
+    height: 50%;
+    width: 100%;
 }
 
-/* Settings controls. Probably no special style.*/
-.GeoTrackingOption {
+#modeBar {
+    clear: both;
+    float: left;
+    font-size: 1.3em; 
+    width: 100%;
+    height: 2.0em;    
+    margin-bottom: 0.5em;
 
 }
 
-.ErrorMsg
-{
-    background-color: lightpink;
-    font-size: 1.4em;
+#mainMenu {
+    float: left;
+    width: 12%;
+    height: 100%;
+    margin-right: 2em;
 }
 
-.NormalMsg 
-{
-    background-color: azure;
-    font-size: 1.4em;
+#mainMenu .wigo_ws_DropDownIcon {
+    left: 0px;
 }
+
+#mainMenu .wigo_ws_DropDownList {
+    width: 17em;
+}
+
+#selectMode {
+    float: left;
+    width: 50%;
+    height: 100%;
+}
+#selectMode .wigo_ws_DropDownIcon {
+    left: inherit;
+    right: 0px;
+}
+#selectMode .wigo_ws_DropDownValue {
+    top: 0px;
+    width: 82%;
+    margin-left: 2%;
+}
+
+#onlineOfflineEditBar {
+    clear: both;
+    float: left;
+    height: 5.0em;
+    width: 100%;
+}
+
+#divTrailInfo {
+    width: 15%;
+    height: 50%;
+    clear: both;  
+    float: left;  
+    margin-right: 0.5em;
+}
+#divTrailInfo .wigo_ws_DropDownLabel {
+    left: 0px;
+    width: inherit;
+    text-align: left;
+}
+#divTrailInfo .wigo_ws_DropDownIcon {
+    left: inherit;
+    width: 70%;
+    height: 50%;
+    top: 50%;
+    right: 20%;
+}
+#divTrailInfo .wigo_ws_DropDownValue {
+    top: 100%;
+    height: 1.3em;
+    font-size: 1.3em;
+    width: 20em;
+}
+#divTrailInfo .wigo_ws_DropDownList {
+    width: 20em;
+}
+
+#onlineOfflineEditAction {
+    height: 50%;
+    width: 70%;
+    float: left; 
+}
+#onlineAction, #offlineAction {
+    height: 100%;
+    width: 100%
+}
+#onlineMyLoc {
+    float: left;
+}
+#onlineSaveOffline {
+    float: left
+}
+#onlineSelectFind {
+    height: 100%;
+    width: 50%; 
+    float: left;
+}
+#onlineSelectFind .wigo_ws_DropDownIcon {
+    left: inherit;
+    right: 0px;
+}
+#onlineSelectFind .wigo_ws_DropDownLabel {
+    left: 0px;
+    width: 75%;
+}
+
+#mapBar {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 2.0em;
+    z-index: 1;
+}
+#mapBarBtns {
+    height: 100%;
+    width: auto;
+    float: left;
+}
+#mapTrackToggle, #mapPhAlertToggle {
+    height: 100%;
+    border: 1px solid black;
+    width: 31%;
+    float: right;
+}
+
+#closeDialogBar, #confirmDialogBar {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 2.0em;
+    z-index: 1;
+}
+#buCloseDialogBar {
+    margin-left: 40%;
+    width: 20%;
+}
+#buAcceptConfirmDialogBar {
+    margin-left: 20%;
+    width: 25%;
+}
+#buRejectConfirmDialogBar {
+    margin-left: 10%;
+    width: 20%;
+}
+
+#divHelpGuide, #divHelpBackToTrail, 
+#divHelpTrackingVsBattery, #divTermsOfUse,
+#divHelpLicense {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    font-size: 120%;
+    margin-left: 0.4em;
+}
+
 

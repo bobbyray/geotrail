@@ -13,10 +13,6 @@
                             "count": 1
                         },
                         {
-                            "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
-                            "count": 1
-                        },
-                        {
                             "xml": "<feature name=\"FacebookConnectPlugin\"><param name=\"android-package\" value=\"org.apache.cordova.facebook.ConnectPlugin\" /></feature>",
                             "count": 1
                         },
@@ -66,6 +62,10 @@
                         },
                         {
                             "xml": "<feature name=\"Compass\"><param name=\"android-package\" value=\"org.apache.cordova.deviceorientation.CompassListener\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
                             "count": 1
                         }
                     ]
@@ -143,9 +143,6 @@
         "org.nypr.cordova.wakeupplugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
-        "com.jetboystudio.pebble.PebblePGPlugin": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
         "com.phonegap.plugins.facebookconnect": {
             "APP_ID": "694318660701967",
             "APP_NAME": "WigoGeoTrail",
@@ -174,6 +171,9 @@
         },
         "cordova-plugin-device-orientation": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "com.jetboystudio.pebble.PebblePGPlugin": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },
     "dependent_plugins": {},
@@ -183,13 +183,6 @@
             "id": "org.nypr.cordova.wakeupplugin.Wakeup",
             "clobbers": [
                 "wakeuptimer"
-            ]
-        },
-        {
-            "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
-            "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
-            "clobbers": [
-                "Pebble"
             ]
         },
         {
@@ -417,6 +410,13 @@
             "id": "cordova-plugin-device-orientation.compass",
             "clobbers": [
                 "navigator.compass"
+            ]
+        },
+        {
+            "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
+            "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
+            "clobbers": [
+                "Pebble"
             ]
         }
     ]

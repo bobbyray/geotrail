@@ -143,9 +143,6 @@
         "org.nypr.cordova.wakeupplugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
-        "com.jetboystudio.pebble.PebblePGPlugin": {
-            "PACKAGE_NAME": "ws.wigo.geotrail"
-        },
         "com.phonegap.plugins.facebookconnect": {
             "APP_ID": "694318660701967",
             "APP_NAME": "WigoGeoTrail",
@@ -167,6 +164,9 @@
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
         "cordova-plugin-device-orientation": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "com.jetboystudio.pebble.PebblePGPlugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },

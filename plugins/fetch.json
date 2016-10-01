@@ -8,15 +8,6 @@
         "is_top_level": true,
         "variables": {}
     },
-    "com.jetboystudio.pebble.PebblePGPlugin": {
-        "source": {
-            "type": "git",
-            "url": "https://github.com/konsumer/phonegap-pebble.git",
-            "subdir": "."
-        },
-        "is_top_level": true,
-        "variables": {}
-    },
     "com.phonegap.plugins.facebookconnect": {
         "source": {
             "type": "git",
@@ -89,6 +80,15 @@
         "source": {
             "type": "registry",
             "id": "cordova-plugin-device-orientation"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "com.jetboystudio.pebble.PebblePGPlugin": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/konsumer/phonegap-pebble.git",
+            "subdir": "."
         },
         "is_top_level": true,
         "variables": {}

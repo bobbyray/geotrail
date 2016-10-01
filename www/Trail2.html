@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="leaflet-0.7.3/leaflet.css" />
     <link rel="stylesheet" href="css/trail2.css"> 
+    <link rel="stylesheet" href="css/ws.wigo.cordovacontrols.css"> 
     
     <!-- 20150617 moved to here from bottom of body section. Kind of doubt this is necessary. -->
     <!-- Javascript for this page.-->
@@ -34,270 +35,541 @@
     <script src="js/GeoPathMapView2.js"></script>
     <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
     <script src="jsAuthCordova/FbAuthentication2.js"></script>
+    <script src="js/ws.wigo.cordovacontrols.js"></script>
     <script src="js/Trail2.js"></script>
 
 </head>
 <body>
-    <div id="divStatus"></div>
-    <div id="divOwnerId">
-        <label id="labelSignIn" for="txbxOwnerName">User </label>
-        <input id="txbxOwnerName" type="text" disabled: disabled/>
-        <select id="selectSignIn">
-            <option value="set">Sign In</option>
-            <option value="facebook">Facebook</option>
-            <option value="logout">Logout</option>
-        </select>
-        <br/>
-        <!-- buInitView is commented out except if debugging map view initialization.
+    <div id="divMode">  
+        <div id="titleHolder"></div> <!-- container for title bar -->
+        <div id="divStatus"></div> <!-- container for StatusDiv ctrl. -->  
+        <!-- buInitView is commented out except if debugging map view initialization. 
         <button id="buInitView" value="InitView">Init View</button>
-        -->
-    </div>
-    <div id="divMode">
-        <select id="selectMode">
-            <option value="online_view">View Mode</option>
-            <option value="online_edit">Edit Mode</option>
-            <option value="online_define">Define Mode</option>
-            <option value="offline">Offline Mode</option>
-        </select>
-        <input id="buSaveOffline" type="button" value="Save Offline" />
-        <select id="selectMapCache">
-            <option value="cache">Map Cache</option>
-            <option value="size">Size</option>
-            <option value="clear">Clear</option>
-        </select>
-        <select id="selectFind">
-            <option value="find">Find</option>
-            <option value="home_area">Home Area</option>
-            <option value="on_screen">On Screen</option>
-            <option value="all_public">All Paths</option>
-            <option value="all_mine">All Mine</option>
-            <option value="my_public">My Public</option>
-            <option value="my_private">My Private</option>
-        </select>
-        <select id="selectMenu">
-            <option value="menu">Menu</option>
-            <option value="terms_of_use">Terms of Use</option>
-            <option value="settings">Settings</option>
-            <option value="startpebble">Start Pebble</option>
-            <option value="help">Help - Guide</option>
-            <option value="back_to_trail">Help - Back To Trail</option>
-            <option value="battery_drain">Help - Tracking vs Battery Drain</option>
-            <option value="about">About</option>
-            <option value="license">License</option>
-        </select>
+         -->    
+        <div id="divOwnerId" class="wigo_ws_Bar">
+            <label id="labelSignIn" for="txbxOwnerName">User </label>
+            <input id="txbxOwnerName" type="text" disabled: disabled/>
+            <div id='selectSignInHolder'></div>
+        </div>
+        <div id="modeBar" class="wigo_ws_Bar">
+            <div id="mainMenu"></div> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
+            <div id="selectMode">
+                <!-- Container for id="" selectMode wigo_ws DropDownControl. -->
+            </div>
 
-        <div id="divPathInfo">
-            <label class="PathInfo" for="selectGeoPath">Geo Paths:</label>
-            <select id="selectGeoPath">
-                <option value="0">Select Geo Path</option>
-            </select>
         </div>
 
-        <div id="divPathDescr">
-            <label id="labelPathName" for="txbxPathName">Path Name</label>
-            <input id="txbxPathName" type="text"/>  
+        <div id="onlineOfflineEditBar" class="wigo_ws_Bar wigo_ws_NoShow">
+            <div id="divTrailInfo">
+                <!-- Container for id="selectGeoTrailDropDown" selectGeoTrail wigo_ws DropDownControl. -->
+            </div>
+            <div id="onlineOfflineEditAction">
+                <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, or offlineAction exclusively -->
+                    <input id="onlineSaveOffline" type="button" value="Save Offline" />
+                    <div id="onlineSelectFind">
+                        <!-- Container for dropdown list control with id="onlineSelectFindDropDown" for Find trails -->
+                    </div>
+                </div>
+                <div id="offlineAction" class="wigo_ws_NoShow"> 
+                    <!-- moved to mapBar 
+                    <input id="offlineMyLoc" type="button" value="MyLoc"/>
+                    -->
+                    <div id="selectMapCache">
+                        <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <label id="labelShare" for="selectShare">Share</label>
-            <select id="selectShare">
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-            </select>
-            <div id="divServerAction">
-                <select id="selectPtAction">
-                    <option value="ptaction">Pt Action</option>
-                </select>
-                <input id="buUpload" type="button" value="Up Load" />
-                <input id="buDelete" type="button" value="Delete" />
-                <input id="buCancel" type="button" value="Cancel" />
+        <div id="pathDescrBar" class="wigo_ws_Bar wigo_ws_NoShow"> 
+            <div id=labelPathName>Trail Name</div>
+            <div id="editAction" >
+                <input id="buUpload" type="button" value="Upload"/> 
+                <input id="buDelete" type="button" value="Delete"/> 
+                <input id="buCancel" type="button" value="Cancel"/> 
+            </div>
+            <div id="divPathName">
+                <input id="txbxPathName" type="text"/>  
             </div>
         </div>
-        <div id="divCursors">
-            <div id="divCursorLeft">
-                <input id="buCursorLeft" type="button" value="<"/>
+
+        <div id="editDefineBar2" class="wigo_ws_NoShow">
+            <div id="editDefineShare"> 
+                <!-- Container for dropdown list for Share options, selectShareDropDown -->
             </div>
-            <div id="divCursorCenter">
-                <input id="buCursorDown" type="button" value="V" />
-                <input id="buCursorUp" type="button" value="A" />
-            </div>
-            <div id="divCursorRight">
-                <input id="buCursorRight" type="button" value=">" />
-                <input id="buPtDo" type="button" value="OK" />
+            <div id="editDefinePtAction">
+                <!-- Container for dropdown list for PtAction, selectPtActionDropDown -->
             </div>
         </div>
-        <div id="divPathIx">
-            <input id="buPathIxPrev" type="button" value="Prev" />
-            <input id="buPathIxNext" type="button" value="Next" />
-            <input id="buPtDeleteDo" type="button" value="OK" />
+
+        <div id="editDefineCursorsBar" class="wigo_ws_NoShow">
+            <div id="divCursors">    <!-- Select divCurCursors or divPathIx exclusively -->
+                <div id="divCursorLeft">
+                    <input id="buCursorLeft" type="button" value="<"/>
+                </div>
+                <div id="divCursorCenter">
+                    <input id="buCursorDown" type="button" value="V" />
+                    <input id="buCursorUp" type="button" value="A" />
+                </div>
+                <div id="divCursorRight">
+                    <input id="buCursorRight" type="button" value=">" />
+                    <input id="buPtDo" type="button" value="OK" />
+                </div>
+            </div>
+            <div id="divPathIx">
+                <input id="buPathIxPrev" type="button" value="Prev" />
+                <input id="buPathIxNext" type="button" value="Next" />
+                <input id="buPtDeleteDo" type="button" value="OK" />
+            </div>
         </div>
     </div>
+    <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <div id="mapBarBtns">
+            <input id="mapGoToPath" type="button" title="Center Geo Trail" value="Ctr Trail" />
+            <input id="mapGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
+        </div>
+        <div id="mapPhAlertToggle"></div> <!-- Container for Cordova OnOffControl -->
+        <div id="mapTrackToggle"></div> <!-- Container for Cordova OnOffControl -->
+    </div>
+    <div id="closeDialogBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <button id=buCloseDialogBar>Close</button>
+    </div>
+
+    <div id="confirmDialogBar" class="wigo_ws_Bar wigo_ws_NoShow">
+        <button id=buAcceptConfirmDialogBar>Accept</button>
+        <button id='buRejectConfirmDialogBar'>Reject</button>
+    </div>
+
+    <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
         <h2>Settings for GeoTrail</h2> 
-        <div>
-            <label id="labelAllowGeoTracking">Allow Geo Tracking</label>
-            <select id="selectAllowGeoTracking">
-                <option value="yes" selected="selected">Yes</option>
-                <option value="no">No</option>
-            </select>
+        <div id='holderAllowGeoTracking' class='settingItem'>
         </div>
-        <div>
-            <label id="labelEnableGeoTracking" for="selectEnableGeoTracking">Geo Tracking Initially On</label>
-            <select id="selectEnableGeoTracking">
-                <option value="yes">Yes</option>
-                <option value="no" selected="selected">No</option>
-            </select>
+        <div id='holderEnableGeoTracking' class='settingItem'>
         </div>
-        <div>
-            <label id="labelGeoTrackingSecs" for="numberGeoTrackingSecs">Geo Tracking Interval</label>
-            <!-- <input id="numberGeoTrackingSecs"  type="number" value="30" /> -->
-            <select id="numberGeoTrackingSecs"  >
-                <option value="30">30 secs</option>
-                <option value="40">40 secs</option>
-                <option value="50">50 secs</option>
-                <option value="60">60 secs</option>
-                <option value="90">1.5 mins</option>
-                <option value="120">2.0 mins</option>
-                <option value="150">2.5 mins</option>
-                <option value="180">3.0 mins</option>
-                <option value="240>">4.0 mins</option>
-                <option value="300">5.0 mins</option>
-                <option value="600">10.0 mins</option>
-                <option value="900">15.0 mins</option>
-                <option value="1800">30.0 mins</option>
-                <option value="3600">60.0 mins</option>
-            </select>
+        <div id='holderGeoTrackingSecs' class='settingItem'>
         </div>
-        <div>
-            <label id="labelOffPathThresMeters"  for="numberOffPathThresMeters">Off-Path Threshold</label>
-            <!-- <input id="numberOffPathThresMeters" type="number" value="30" /> -->
-            <select id="numberOffPathThresMeters" >
-                <option value="30">30 meters (33 yards)</option>
-                <option value="40" selected="selected">40 meters (44 yards)</option>
-                <option value="50">50 meters (55 yards)</option>
-                <option value="60">60 meters (66 yards)</option>
-                <option value="70">70 meters (77 yards)</option>
-                <option value="80">80 meters (87 yards)</option>
-                <option value="90">90 meters (98 yards)</option>
-                <option value="100">100 meters (109 yards)</option>
-                <option value="200">200 meters (219 yards)</option>
-                <option value="300">300 meters (328 yards)</option>
-                <option value="400">400 meters (437 yards)</option>
-                <option value="500">500 meters (547 yards)</option>
-                <option value="600">600 meters (656 yards)</option>
-                <option value="700">700 meters (766 yards)</option>
-                <option value="800">800 meters (875 yards)</option>
-                <option value="900">900 meters (984 yards)</option>
-                <option value="1000">1000 meters (1094 yards)</option>
-            </select>
+        <div id='holderOffPathThresMeters' class='settingItem'>
         </div>
-        <div>
-            <label id="labelPhoneAlert"  for="selectPhoneAlert">Allow Phone Alert</label>
-            <select id="selectPhoneAlert" >
-                <option value="yes" selected="selected">Yes</option>
-                <option value="no" selected="selected">No</option>
-            </select>
+        <div id='holderPhoneAlert' class='settingItem'>
         </div>
-        <div>
-            <label id="labelOffPathAlert" for="selectOffPathAlert">Phone Alert Initially On</label>
-            <select id="selectOffPathAlert">
-                <option value="yes" selected="selected">Yes</option>
-                <option value="no">No</option>
-            </select>
+        <div id='holderOffPathAlert' class='settingItem'> 
         </div>
-        <div>
-            <label id="labelPhoneVibeSecs"  for="numberPhoneVibeSecs">Phone Vibration in Secs</label>
-            <select id="numberPhoneVibeSecs" >
-                <option value="0.0">0.0 secs (no vibe)</option>
-                <option value="0.5" selected="selected">0.5 secs</option>
-                <option value="1.0">1.0 secs</option>
-                <option value="1.5">1.5 secs</option>
-                <option value="2.0">2.0 secs</option>
-                <option value="2.5">2.5 secs</option>
-                <option value="3.0">3.0 secs</option>
-            </select>
+        <div id='holderPhoneVibeSecs' class='settingItem'>
         </div>
-        <div>
-            <label id="labelPhoneBeepCount"  for="numberPhoneBeepCount">Phone Beep Count</label>
-            <select id="numberPhoneBeepCount" >
-                <option value="0">0 (none)</option>
-                <option value="1" selected="selected">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
+        <div id='holderPhoneBeepCount' class='settingItem'>
         </div>
-        <div>
-            <label id="labelPebbleAlert"  for="selectPebbleAlert">Pebble Watch</label>
-            <select id="selectPebbleAlert" >
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
+        <div id='holderPebbleAlert' class='settingItem'>
         </div>
-        <div>
-            <label id="labelPebbleVibeCount"  for="numberPebbleVibeCount">Pebble Vibration Count</label>
-            <select id="numberPebbleVibeCount"  >
-                <option value="0">0 (no vibe)</option>
-                <option value="1" selected="selected">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
+        <div id='holderPebbleVibleCount' class='settingItem'>
         </div>    
-        <div>
-            <label id="labelPrevGeoLocThresMeters"  for="dPrevGeoLocThres">Prev Geo Loc Thres</label>
-            <!-- <input id="numberPrevGeoLocThresMeters" type="number" value="10" />-->
-            <select id="numberPrevGeoLocThresMeters" >
-                <option value="30">30 meters (33 yards)</option>
-                <option value="40" selected="selected">40 meters (44 yards) </option>
-                <option value="50">50 meters (55 yards)</option>
-                <option value="60">60 meters (66 yards)</option>
-            </select>
+        <div id='holderPrevGeoLocThresMeters' class='settingItem'>
         </div>
-        <div> 
-            <label id="labelCompassHeadingVisible" for="selectCompassHeadingVisible">Show Compass Heading on Map?</label>
-            <select id="selectCompassHeadingVisible">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>>
+        <div id='holderCompassHeadingVisible' class='settingItem'> 
         </div>
-        <div>
-            <label id="labelClickForGeoLoc"  for="selectClickForGeoLoc">Touch Map for Geo Loc Testing?</label>
-            <select id="selectClickForGeoLoc" >
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
+        <div id='holderClickForGeoLoc' class='settingItem'>
         </div>
-        <div>
-            <!-- 20151204 add settings for home area -->
-            <label id="labelHomeAreaSW"  for="numberHomeAreaSWLat">Home Area SW Corner</label>
-            <input id="numberHomeAreaSWLat"  type="number" disabled="disabled" />
-            <input id="numberHomeAreaSWLon"  type="number" disabled="disabled" /><br />
-            <label id="labelHomeAreaNE"  for="numberHomeAreaNELat">Home Area NE Corner</label>
-            <input id="numberHomeAreaNELat"  type="number" disabled="disabled" />
-            <input id="numberHomeAreaNELon"  type="number" disabled="disabled" /><br />
-            <label id="labelSetHomeArea"  for="buSetHomeArea">Set Home Area to Screen</label>
-            <input id="buSetHomeArea"  type="button" value="Set" />
+        <!-- Settings for home area -->
+        <div id='divHomeArea' class='settingItem'>
+            <div id='divHomeAreaSW' class='settingItem'>
+                <label id="labelHomeAreaSW"  for="numberHomeAreaSWLat">Home Area SW Corner</label>
+                <input id="numberHomeAreaSWLat"  type="number" disabled="disabled" />
+                <input id="numberHomeAreaSWLon"  type="number" disabled="disabled" /><br />
+            </div>
+            <div id='divHomeAreaNE' class='settingItem'>
+                <label id="labelHomeAreaNE"  for="numberHomeAreaNELat">Home Area NE Corner</label>
+                <input id="numberHomeAreaNELat"  type="number" disabled="disabled" />
+                <input id="numberHomeAreaNELon"  type="number" disabled="disabled" /><br />
+            </div>
+            <div id='divSetHomeArea' class='settingItem'>
+                <label id="labelSetHomeArea"  for="buSetHomeArea">Set Home Area to Screen</label>
+                <input id="buSetHomeArea"  type="button" value="Set" />
+            </div>
         </div>
         <!-- end of home area -->
-        <button id="buSettingsDone">Done</button>
-        <button id="buSettingsCancel">Cancel</button>
+        <div id='divSettingsDoneCancel' class='settingItem'>
+            <button id="buSettingsDone">Done</button>
+            <button id="buSettingsCancel">Cancel</button>
+        </div>
     </div>
-    <div id="panel">
-        <input id="buGoToPath" type="button" title="Center Geo Path" value="Ctr Trail" />
-        <input id="buGeoLocate" type="button" title="Get My Geo Location" value="MyLoc" />
-        <input id="buMinMaxMap" type="button" title="Toggle Full Screen" data-minstate="true" value="Full Screen" />
-        <label id="labelGeoTrack" for="selectGeoTrack">Track</label>
-        <select id="selectGeoTrack">
-            <option value="on">On</option>
-            <option value="off" selected="selected">Off</option>
-        </select>
-        <label id="labelAlert" for="selectAlert">Ph Alert</label>
-        <select id="selectAlert">
-            <option value="on">On</option>
-            <option value="off" selected="selected">Off</option>
-        </select>
+    
+    <!-- Help Guide, only shown when selected from mainMenu -->
+    <div id="divHelpGuide" class='wigo_ws_NoShow'>
+        <h1>Help - Guide</h1>
+        <h2>Title Bar</h2>
+        <p>At the top of the screen is a title describing the currently selected map view.
+        The back arrow on the right of the Title Bar returns to selecting
+        a Map View. (When you are selecting a map view, there is no back arrow.)</p>
+        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p> 
+        <p>The question mark (?) displays this Help Guide. Also displaying Help and closing it
+        resets the screen display, which is useful if the screen is not displaying properly.</p> 
+        <h2>Sign-In</h2>
+        <p>Select Sign-In > Facebook to sign in. Your sign-in id is remembered so 
+        you do not need to sign in again unless you log out. </p>
+        <p>If you do not sign in, you can only view public trails created by others.
+        However, if you sign in, you can create trails and edit your trails, which can be marked
+        as Private for only you to view, or Public for anyone to view.</p>
+        <h2>Select Map View</h2>
+        Select a view from the Select Map View droplist.
+        <ul>
+            <li><a href="#helpOnlineMap">Online</a> lets you select a trail from ones saved on a web server.</li>
+            <li><a href="#helpOfflineMap">Offline</a> lets you view trails when you are 
+            not connected to the web. You need to select the trails to save to your phone when 
+            you are online.</li>
+            <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
+            <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
+            you have saved online.</li> 
+        </ul>
+        <p>The <a href="#helpMainMenu">Main Menu</a> droplist is on the left and provides more options.
+        <a href="#helpSettings">Menu > Settings</a> is used to set your preferences for the app.</p>
+        <p>More details about the map views and Main Menu follow.
+        <h2 id="helpOnlineMap">Online Map</h2>
+        You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
+        from which you select a trail to view. Your current geolocation on the trail is shown 
+        and you can be alerted if you are off trail. When you are off trail, instructions for returning to the trail
+        are shown. Also automatic tracking can be enabled to determine if you are off trail.
+        <h3>Trails DropList</h3>
+        <p>Select a trail from the web that others have made public and ones
+        that are private to you.</p>
+        <h3>Save Offline Button</h3>
+        <p>Touch the Save Offline button to save a trail you are viewing so that you can
+        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
+        <h3>Find Trails DropList</h3>
+        <p>Select an option from the droplist to search for trails to view.
+        The Trails droplist is filled with the trails found.</p>
+        <ul> 
+            <li>Find Trails > Home Area<br/>
+            Searches for trails that are in your Home Area, which is a geo-rectangle
+            defined in <a href="#helpHomeArea">Menu > Settings > Home Area</a>.
+            All public trails and your private trails are included.</li>
+            <li>Find Trails > On Screen<br/>
+            Searches for trails that are in the area displayed on the screen. 
+            First, pan, zoom, and pinch to select the area you see on the screen.</li>
+            <li>Find Trails > All Trails<br>
+            Searches for all public trails and your private trails.</li>
+            <li>Find Trails > All Mine<br/>
+            Searches for all your trails, both public and private.
+            You must be signed in to search for your trails.</li>
+            <li>Find Trails > My Public<br/>
+            Searches for all of your public trails, trails that anyone can see.</li>
+            <li>Find Trails > My Private<br/>
+            Searches for your private trails, trails that only you can see.</li>
+        </ul>
+        <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
+        These controls let you see your current geolocation, turn automatic tracking on or off,
+        and turn receiving alerts for your phone on or off.
+        <ul>
+            <li>Ctr Trail Button<br/>
+            Pans the map to the center of the selected trail.</li>
+            <li>MyLoc Button<br/>
+            Displays your current location on the map.</li>
+            <li>Track Off | On</br>
+            Switches between geolocation tracking On or Off. If Geo Tracking Allowed is No in
+            <a href="#helpAllowGeoTracking">Menu > Settings > Allow Geo Tracking</a>,
+            Track is not shown.<br/>
+            Note: Track On will run down your battery more quickly.</li>
+            <li>Ph Alert Off | On<br/>
+            Switches between Ph Alert On or Off.
+            A phone alert is given if you are off the trail.</li>
+        </ul>
+        <h2 id="helpOfflineMap">Offline Map</h2>
+        You select a trail you have saved offline when you are viewing the Online Map. 
+        Offline Map works the same as <a href="#helpOnlineMap">Online Map</a>,
+        except that the map is shown from map tiles saved on your phone instead of from the web, 
+        which means that the map is limited and is blank if you pan or zoom beyond the bounds
+        of the saved map.
+        <ul>
+            <li>Trails DropList<br/>  
+            Select a trail from the list you have saved.</li>
+            <li>Map Cache DropList<br/>
+            Shows information about the cache of map tiles.<br/>
+            <ul>
+                <li>Size<br/>Select to see the number of files and the size in MB of all the files.</li>
+                <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
+                the offline trails from the phone.</li>
+            </ul>
+        </ul>
+        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
+        <h2 id="helpDrawTrail">Draw a Trail</h2>
+        <p>Provides a way to create a trail and save it online.</p>
+        <p>You must be signed into Facebook to create a trail.</p>
+        <p>Instructions are shown at the top of the screen to guide you through the process,
+        which is outlined below.</p>
+        <ul>
+            <li>Enter a name for the trail.</li>
+            <li>Share DropList<br/>
+            Select Public for anyone to see the trail.<br/>
+            Select Private for only you to see the trail.</li>
+            <li>Touch on the screen to define the first point on the trail.</li>
+            <li>Soft Cursor Keys<br/>
+            Use the cursor keys 
+            that appear to nudge the point left, right, up, or down to get the point exactly where
+            you want it. Holding down a cursor button causes the point to move faster on the screen.
+            Touch OK to confirm that the point is to be added. Repeat the process to define
+            all the points for your trail.</li>
+            <li>Upload Button<br/>
+            Touch the Upload button to upload (save online) the data for your trail.</li>
+            <li>Cancel Button<br/>
+            Touch the Cancel button if you decide not to create the trail.</li>
+            <li>Pt Action DropList<br/>
+            You can edit an existing point in the trail by selecting Select Pt.
+            Touch on the trail near the point you want to edit.<br/>
+            <ul>
+                <li>Prev, Next Buttons<br/>
+                If the correct point is not highlighted on the trail, use 
+                the Prev and Next buttons to move to the previous or next point on the trail.</li>
+                <li>From the Pt Action droplist select:
+                    <ul>
+                        <li>Move Pt<br/>
+                        When moving a point, touch where the point should go and nudge it with the cursors.
+                        Touch OK to confirm that the point is where you want it.</li>
+                        <li>Insert Pt<br/>
+                        When inserting a point, touch where the inserted point should be and use the cursors to nudge it.
+                        Touch OK to confirm the location is correct. The point is inserted in the
+                        trail before the selected point.</li>
+                        <li>Delete Pt<br/>
+                        When deleting a point, confirm the deletion of the point by Touching OK. Use the Prev and Next buttons
+                        to move to a different point on the trail if the correct point is not selected (highlighted).</li>
+                    </ul>
+                </li>
+            </ul>
+            </li>
+        </ul>
+        <h2 id="helpEditTrail">Edit a Trail</h2>
+        <p> Edit provides a way to edit a trail you have saved online.
+        The procedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
+        except that you select a trail to edit instead of defining a name for the trail.</p>
+        <p>You must be signed in to edit a trail, and you can only edit trails that you have defined.</p>
+        <h2>Creating Trail Maps at Hillmap</h2>
+        <p>An alternative to creating a trail on your phone is to
+        use the site http://www.hillmap.com to create a trail from a laptop or desktop computer.</p>
+        <ul>
+            <li>Use the Path tab to define your trail.</li>
+            <li>Use Tools > Download Gpx to save your path.</li>
+        </ul>
+        <p>Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
+        downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.</p>
+        <h2 id="helpMainMenu">Main Menu</h2>
+        The Main Menu is available from Select Map View, and is the droplist on the left.  
+        <h3>Menu > Terms of Use</h3>
+        <p>Displays the Terms of Use for this app.
+        When the app is first installed or the app is updated, the Terms of Use must be accepted before
+        the app can be used. If you do not accept the Terms of Use, uninstall this app.</p>
+        <h3 id="helpSettings">Menu > Settings</h3>
+        <p>Presents a dialog to set your preferences for the app.</p>  
+        <ul>
+            <li id="helpAllowGeoTracking">Allow Geo Tracking Yes | No<br/> 
+            For No, geolocation is NOT obtained automatically.
+            However, the MyLoc button will still get your geolocation.<br/>
+            MyLoc and Track are on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.
+            However, Track is not on the bar if Allow Geo Tracking is set to No.</li>
+            <li>Geo Tracking Initially On Yes | No<br/>
+            Yes to start with Track On when app loads.</li>
+            <li>Geo Tracking Interval (secs)<br/>
+            Number of seconds to check your geolocation when tracking is allowed.</li>
+            <li>Off Trail Threshold<br/>
+            Number of meters that you need to be off trail for an alert to be given.</li>
+            <li>Allow Phone Alert Yes | No<br/>
+            Determines if alerts (beeps) from you phone are given.<br/> 
+            Ph Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.</li>
+            <li>Phone Alert Initially On Yes | No<br/> 
+            Yes to start with Ph Alert On when app loads.</li>
+            <li>Phone Vibration in Secs<br>
+            Number of seconds phone vibrates for an alert. Set to 0 for no vibration.</li>
+            <li>Phone Beep Count<br/>
+            Number of beeps to give for an alert. Set to 0 for no beepings.</li>
+            <li>Pebble Watch Yes | No<br/>
+            Yes to show messages on a Pebble Watch that is connected to the phone.</li>
+            <li>Pebble Vibration Count<br/>
+            Number of vibrations given on Pebble Watch for message indicating
+            off trail. Count of 0 disables vibrations.<br/>
+            Note that Ph Alert Off does not inhibit vibrations for being off-trail.</li>
+            <li>Prev Geo Loc Thres<br/>
+            Number of meters of current geolocation with respect to previous location 
+            for change in location to be considered valid. (This prevents small variations in the geolocation of
+            the same point to appear to be a change in location.)</li>
+            <li>Show Compass Heading on Map?<br/>Yes | No<br/>
+            An arrow for the compass heading from your current location may be shown on the map.</li>
+            <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>
+            Touching a point on the map simulates getting the geo location for the point on the map.
+            This is just for testing.</li>
+            <li id="helpHomeArea">Set Home Area to Screen<br>
+            Touch the Set button to set your home area to be that shown on the screen<br/>
+            First, pan, zoom, and pinch to display the area you want on the screen.<br/>
+            The trails in the Home Area are found when the app starts.
+            Also, the Home Area can be chosen in Online Map, from the Find Trails droplist.<br/>
+            <li>Done Button<br/>
+            Touch Done to save the changes and close the Settings dialog.
+            <li>Cancel Button<br/>
+            Touch Cancel to close the Setting dialog ignoring any changes that may have been made.<br/>
+            Note: You must touch Done or Cancel for the dialog to close.</li>
+        </ul>
+        <h3>Menu > Start Pebble</h3>
+        <p>Starts the Pebble GeoTrail app on your watch. The Pebble GeoTrail app should be started automatically so it is unlikely
+        you need to do this.</p>
+        <p>However, if you get a message indicating that Pebble is not connected, check the following to try to resolve
+        the problem:
+        <ul>
+            <li>The Pebble app, available from the Google Play Store, needs to be installed on your phone.</li>
+            <li>The Pebble GeoTrail app, available from the Pebble Store, needs to be installed on your Pebble watch.</li>
+            <li>In your phone Settings, check the following:
+                <ul> 
+                    <li>Bluetooth is enabled.</li>
+                    <li>Your Pebble watch is paired through Bluetooth.</li>
+                </ul>
+            </li>
+            <li>The Pebble app on your phone manages your Pebble watch.
+                <ul>
+                    <li>Install Pebble GeoTrail on your Pebble watch from your phone.</li>
+                    <li>Pair your Pebble watch with your phone (select Manage Pebble).</li>
+                </ul>
+            </li>
+            <li>If your Pebble watch is paired with your phone correctly, you can start Pebble GeoTrail
+                from your watch by selecting the Pebble GeoTrail app.</br>
+                Note: This only starts the Pebble GeoTrail app on the your watch and does not 
+                start the GeoTrail app on your phone.
+            </li>
+        </ul>    
+        <h3>Menu > Help - Guide</h3>
+        Displays a guide (which you are viewing) for using this app.
+        <h3>Menu > Help - Back to Trail</h3>
+        Display instructions for returning to the trail when you are off the trail. Explains why the instructions 
+        may be inaccurate and that you need to use your judgement.
+        <h3>Menu > Help - Tracking vs Battery Drain</h3>
+        Explains that automatic tracking causes faster battery drain.
+        <h3>Menu > About</h3>
+        Displays app version number and copyright.
+        <h3>Menu > License</h3>
+        Displays the open licenses for components used in this app.
+        <br/><br/><br/> <!-- Blank line at bottom for fixed close dialog bar to overlay. -->  
     </div>
-    <div id="map-canvas" /> <!-- Note: Do not put div for map inside a section. -->
+    <!-- Help Back To Trail, only shown when selected from mainMenu -->
+    <div id='divHelpBackToTrail' class='wigo_ws_NoShow'>
+        <h1>Help - Back To Trail</h1>
+        <p>The instructions for returning to the trail give the heading 
+        to return to the nearest point on the trail from your
+        current location.</p>
+        <p>There are also suggestions on how to turn from your current traveling direction
+        to return back to the trail. While the heading back to the trail is accurate,
+        suggestions for turning may not be. Since a turning suggestion may be
+        inaccurate, it is prefixed with a "?" mark.</p>
+        <p><b>THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:</b></p>
+        <ul>
+            <li>One kind of suggestion is based on the heading from your previous location.
+            You may not have traveled in a straight line from your previous location.</li>
+            <li>The second kind of suggestion is based on the compass heading that your phone 
+            may be able to provide. The compass heading is the direction your phone indicates 
+            you are traveling and is most accurate when you are holding 
+            your phone level with its top pointing in the direction you are traveling. 
+            The compass may need to be calibrated to show accurately.<br/><br/>
+            To calibrate your compass, rotate it three times or so around each axis:<br/>
+                <ol>
+                    <li>Hold the phone vertically facing you.<br/>
+                    Tilt top of phone down and then back up toward you.</li>
+                    <li>Rotate top of phone phone left and right keeping the face of phone towards you.</li>
+                    <li>Rotate face of phone away and back toward you, keeping the phone vertical.</li>
+                </ol>
+            </li>
+        </ul>        
+        <p>To get an accurate turning suggestion from your previous location:</p>
+        <ol>
+            <li>Touch MyLoc button to get your location.</li>
+            <li>Walk in a straight line more than the previous geolocation threshold, typically 40 meters (44 yards).
+            The Prev Geo Loc Thres is given in Menu > Settings.</li>
+            <li>Touch MyLoc button again to see the off trail distance, return heading, and turning suggestion.</li>
+        </ol>
+        <p>Of course, if you know accurate compass directions yourself, follow the heading back to the trail.
+        The turning suggestions are only an aid if you do not know accurate compass directions.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+    <!-- Help Tracking vs Battery Drain, only shown when selected from mainMenu -->
+    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow'>
+        <h1>Help - Tracking vs Battery Drain</h1>
+        <p>When automatic tracking is on, the battery in the phone is drained more quickly.
+        The shorter the time interval for automatic tracking, the quicker the battery drains.</p>
+        <p>Menu > Settings > Geo Tracking Interval sets the time interval. So make the time interval longer 
+        to reduce the drain on the battery.</p>
+        <p>When automatic tracking is off, the drain on the battery is minimal.</p>
+        <p>Menu > Settings > Allow Geo Tracking can be set to not allow automatic tracking,
+        which minimizes the battery drain. 
+        <p>You can still check your geo location manually by touching
+        the MyLoc button on the bottom of the map.
+        Also, if using a Pebble watch, the Select (middle) button does the same thing.</p>
+        <p>The Track control on the bottom of the map lets you toggle automatic tracking On or Off.</p>
+        When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery.
+        However, if the app is in the background with automatic tracking on, the app is draining the battery.</p>
+        <p>Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled
+        is still occurring, which is draining the battery.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+    <!-- Help License, only shown wehn selected from mainMenu -->
+    <div id='divHelpLicense' class='wigo_ws_NoShow'>
+        <h1>Licenses</h1>
+        <p>The main source code for this app is open source licensed under
+        the MIT License.</p>
+        <p>The open source Cordova / Apache platform is used to build this mobile app. Refer to
+        the Cordova / Apache license.</p>
+        <p>Plugins and modules used by the main code have individual open source licenses
+        and are listed below. Refer to them individually to determine their kind of license.</p>
+        <ul>
+        <li>jquery 1-11.3</li>
+        <li>Leaflet 0.7.3 for maps</li>
+        <li>L.TileLayer.Cordova for caching map tiles</li>
+        <li>com.jetboystudio.pebble.PebblePGPlugin 0.2.6 "Pebble"</li>
+        <li>com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"</li>
+        <li>cordova-plugin-compat 1.0.0 "Compat"</li>
+        <li>cordova-plugin-device-orientation 1.0.3 "Device Orientation"</li>
+        <li>cordova-plugin-dialogs 1.2.1 "Notification"</li>
+        <li>cordova-plugin-file 4.2.0 "File"</li>
+        <li>cordova-plugin-file-transfer 1.5.1 "File Transfer"</li>
+        <li>cordova-plugin-geolocation 2.2.0 "Geolocation"</li>
+        <li>cordova-plugin-vibration 2.2.1-dev "Vibration"</li>
+        <li>cordova-plugin-whitelist 1.2.2 "Whitelist"</li>
+        <li>org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"</li>
+        </ul>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+
+    <!-- Terms of Use, Shown from Help and when installed -->
+    <div id='divTermsOfUse' class='wigo_ws_NoShow'>
+        <h1>TERMS OF USE</h1>
+        <p><b>IF YOU DO NOT AGREE WITH THESE TERMS OF USE, UNINSTALL THIS APP.</b></p>
+        <p>This app is released free of charge in the hope that it will be useful.
+        However, it is provided without any warranty of any kind; without even the implied warranty of
+        usefulness, accuracy, reliability, availability, or free of software defects.</p>
+        <b>ADVICE FOR TURNING TO RETURN TO TRAIL MAYBE WRONG</b></p>
+        <p>The heading back to the trail should be accurate, but the suggestions for turning back to the trail
+        may not be.</p>
+        <p>A suggestion for turning to return to the trail starts to a "?" to indicate it may be inaccurate and 
+        is only a <b>SUGGESTION TO BE VERIFIED BY YOU</b>. The suggestions for turning my be wrong for various reasons:</p>
+        <ul>
+            <li>The heading from your previous geolocation is assumed to be a straight line, 
+            but you may not have traveled in a straight line.</li>
+            <li>The compass may need to be calibrated.</li>
+            <li>The compass heading depends on the orientation of your phone. The compass heading (the direction you are traveling)
+            is most accurate when you are holding the phone level with its top pointing in the direction you want to travel.</li>
+            <li>The geolocation provided by your phone has tolerances for its accuracy.</li>
+        </ul>
+        <h2>DATA AND PRIVACY</h2>
+        <h3>Server Data</h3>
+        <p>For trails that you define, data is stored on a server. The data has latitude and longitude for points
+        defining the trail. Your Facebook public identification (not your name) is associated with your trails.
+        The data is not encrypted. Minimal protection for the database is provided through access controlled by a password.
+        Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
+        <h3>Data on Your Phone</h3>
+        <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
+        It can be deleted by you from your phone by managing the application on your phone.</p>
+        <h3>Making Your Trails Public or Private</h3>
+        <p>When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone
+        using this app. If the trail is marked Private, the trail is only visible by you when using the app.
+        However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.</p>
+        <h2>A FURTHER CAUTION</h2>
+        <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
+        may not be appropriate for your abilities and that the trails could have inaccuracies.</p>
+        <br/> <!-- space for the Close diaglog bar to overlay -->
+    </div>
+
+    <div id="map-canvas" />   
+    <!-- Note: Do not put map-canvas div inside another div or section. -->
 </body>
 </html>
