@@ -458,17 +458,11 @@ label {
     margin-bottom: 0px;
 }
 
-/* pathDescrBar */
-#pathDescrBar {
-    height: 4.0em;
-}
 #labelPathName {
-    height: 50%;
-    width: 10%;
+    font-size: 1.3em;
     float: left;
 }
 #editAction {
-    height: 50%;
     width: auto;
     margin-left: 2em;
     float: left;
@@ -481,7 +475,6 @@ label {
     float: right;
 }
 #divPathName {
-    height: 50%;
     width: 95%;
     clear: both;
     float: left;
@@ -490,7 +483,7 @@ label {
     clear: none;
     float: left;
     margin-right: 10px;
-    height: 50%;
+    font-size: 1.3em;
     width: 100%;
 }
 
@@ -527,10 +520,11 @@ label {
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
     right: 0px;
+    width: 14%;
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;
-    width: 82%;
+    right: 14%;
     margin-left: 2%;
 }
 

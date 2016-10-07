@@ -79,20 +79,25 @@ function wigo_ws_PebbleAdapter(uuid) {
     //                   was already running.
     this.StartApp = function (cbResult) {
         bSendBusy = false; // Clear busy flag just in case.
-        Pebble.startApp(this.uuid,
-            // success
-            function () {
-                console.log('Pebble.startApp', 'OK');
-                if (typeof(cbResult) === 'function')
-                    cbResult(true);
-            },
-            // error
-            function () {
-                console.log('Pebble.startApp', 'FAILED!');
-                if (typeof(cbResult) === 'function')
-                    cbResult(false);
-            }
-        );
+        if (!IsPebblePluginValid()) {
+            if (typeof(cbResult) === 'function')
+                cbResult(false);
+        } else {
+            Pebble.startApp(this.uuid,
+                // success
+                function () {
+                    console.log('Pebble.startApp', 'OK');
+                    if (typeof(cbResult) === 'function')
+                        cbResult(true);
+                },
+                // error
+                function () {
+                    console.log('Pebble.startApp', 'FAILED!');
+                    if (typeof(cbResult) === 'function')
+                        cbResult(false);
+                }
+            );
+        }
     };
 
     // Closes Pebble app. Ok to call if Pebble app is already closed.
@@ -102,20 +107,26 @@ function wigo_ws_PebbleAdapter(uuid) {
     //              bOk: boolean that indicates app successfully closed or 
     //                   was not running.
     this.CloseApp = function(cbResult) {
-        Pebble.closeApp(this.uuid,
-            // success
-            function () {
-                console.log('Pebble.closeApp', 'OK');
-                if (typeof(cbResult) === 'function')
-                    cbResult(true);
-            },
-            // error
-            function () {
-                console.log('Pebble.closeApp', 'FAILED!');
-                if (typeof(cbResult) === 'function')
-                    cbResult(false);
-            }
-        );
+        if (!IsPebblePluginValid()) {
+            if (typeof(cbResult) === 'function')
+                cbResult(false);
+        } else {
+            Pebble.closeApp(this.uuid,
+                // success
+                function () {
+                    console.log('Pebble.closeApp', 'OK');
+                    if (typeof(cbResult) === 'function')
+                        cbResult(true);
+                },
+                // error
+                function () {
+                    console.log('Pebble.closeApp', 'FAILED!');
+                    if (typeof(cbResult) === 'function')
+                        cbResult(false);
+                }
+            );
+        }
+
     }
 
     // Positive integer for number of seconds for timeout when tracking is on.
@@ -169,11 +180,12 @@ function wigo_ws_PebbleAdapter(uuid) {
                     vibes = nVibes.toFixed(0);
 
             var timeout = bCheckTimeOut ? this.secsTimeOut.toFixed(0) : "0";
-            Pebble.sendData(this.uuid, [{ type: 'string', key: 0, value: text, length: nLength },
-                                        { type: 'string', key: 1, value: vibes, length: vibes.length }, 
-                                        { type: 'string', key: 2, value: timeout, length: timeout.length}]);
-
-            bSent = true;
+            if (IsPebblePluginValid()) {
+                Pebble.sendData(this.uuid, [{ type: 'string', key: 0, value: text, length: nLength },
+                                            { type: 'string', key: 1, value: vibes, length: vibes.length }, 
+                                            { type: 'string', key: 2, value: timeout, length: timeout.length}]);
+                bSent = true;
+            }
         } 
         return bSent;
     };
@@ -225,7 +237,14 @@ function wigo_ws_PebbleAdapter(uuid) {
     // boolean that indicates if Pebble supports AppMessage. 
     var pebbleAppMessageSupport = false;
 
+    // Returns true if the Pebble plugin is valid.
+    function IsPebblePluginValid() {
+        var bValid = typeof(Pebble) !== "undefined";
+        return bValid;
+    }
+
     // listeners for Pebble connect, update info
+    if (IsPebblePluginValid())
     document.addEventListener("Pebble.connect", function (e) {
         console.log('Pebble.connect', 'connected');
         bSendBusy = false;
@@ -243,6 +262,7 @@ function wigo_ws_PebbleAdapter(uuid) {
     });
 
     // listeners for Pebble disconnect
+    if (IsPebblePluginValid())
     document.addEventListener("Pebble.disconnect", function (e) {
         console.log('Pebble.disconnect', 'disconnected');
         bSendBusy = false;
@@ -253,6 +273,7 @@ function wigo_ws_PebbleAdapter(uuid) {
 
     // listen for NACK messages from Pebble
     var onAckOrNack = null;
+    if (IsPebblePluginValid())
     document.addEventListener("Pebble.nack", function (e) {
         bSendBusy = false;
         console.log('NACK', e.detail);
@@ -261,6 +282,7 @@ function wigo_ws_PebbleAdapter(uuid) {
     });
 
     // listen for ACK messages from Pebble
+    if (IsPebblePluginValid())
     document.addEventListener("Pebble.ack", function (e) {
         bSendBusy = false;
         console.log('ACK', e.detail);
@@ -269,6 +291,7 @@ function wigo_ws_PebbleAdapter(uuid) {
     });
 
     // listen for data from Pebble
+    if (IsPebblePluginValid())  
     document.addEventListener("Pebble.data", function (e) {
         var data = JSON.parse(e.detail.data);
         console.log('DATA', e.detail);
@@ -311,7 +334,7 @@ function wigo_ws_PebbleAdapter(uuid) {
     // tell java to listen for these:
     // Note: For debugging without Pebble support, check for Pebble before calling Pebble function 
     //       when constructing this object. constructor.
-    if (typeof(Pebble) !== "undefined") {
+    if (IsPebblePluginValid()) {
         Pebble.registerConnect();
         Pebble.registerDisconnect();
         Pebble.registerAck(this.uuid);

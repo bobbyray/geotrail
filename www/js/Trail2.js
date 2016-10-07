@@ -37,7 +37,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.020  09/29/2016"; // Constant string for App version.
+    var sVersion = "1.1.021  10/07/2016"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -658,8 +658,8 @@ function wigo_ws_View() {
         fsm.setPathChanged();   
         fsm.DoEditTransition(fsm.eventEdit.ChangedPathName);
     }, false);
-    var labelPathName = document.getElementById('labelPathName');
 
+    var labelPathName = document.getElementById('labelPathName');
 
     var buUpload = document.getElementById('buUpload');
     buUpload.addEventListener('click', function(event){
@@ -1138,13 +1138,16 @@ function wigo_ws_View() {
                     if (bNew) {
                         ShowOwnerIdDiv(true); // Hidden after signin.
                         ShowElement(onlineOfflineEditBar, false);
-                        ShowElement(pathDescrBar, true);
+                        ShowElement(pathDescrBar, false); // Show after signin.
                         ShowUploadButton(false);  
                         ShowDeleteButton(false);  
                         ShowCancelButton(false);  
                         ShowElement(editDefineBar2, false);
                         ShowElement(editDefineCursorsBar, false);                    
                         txbxPathName.value = "";   
+                        // Initially select public share for drawing a new path. 
+                        // See property property of  wigo_ws_GeoPathsRESTfulApi for sharing enumeration ;
+                        view.setShareOption("public");
                     } else {
                         // Hide path description including textbox and server action buttons.
                         ShowOwnerIdDiv(true); // Hidden after signin.
@@ -1169,6 +1172,7 @@ function wigo_ws_View() {
                     // (Do not allow user to SignIn again or Logout while editing.)
                     ShowSignInCtrl(false);
                     if (bNew) {
+                        ShowElement(pathDescrBar, true);  
                         view.AppendStatus("Enter a name for a new trail.", false);
                     } else {
                         // Load path drop list for select of path to edit.
@@ -2076,14 +2080,14 @@ function wigo_ws_View() {
     }
 
     // ** Controls for Settings
-    var parentEl = document.getElementById('holderAllowGeoTracking');
-    var selectAllowGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Allow Geo Tracking', -1);
+    var holderAllowGeoTracking = document.getElementById('holderAllowGeoTracking');
+    var selectAllowGeoTracking = ctrls.NewYesNoControl(holderAllowGeoTracking, null, 'Allow Geo Tracking', -1);
     
-    parentEl = document.getElementById('holderEnableGeoTracking');
-    var selectEnableGeoTracking = ctrls.NewYesNoControl(parentEl, null, 'Geo Tracking Initially On', -1);
+    var holderEnableGeoTracking = document.getElementById('holderEnableGeoTracking');
+    var selectEnableGeoTracking = ctrls.NewYesNoControl(holderEnableGeoTracking, null, 'Geo Tracking Initially On', -1);
 
-    parentEl = document.getElementById('holderGeoTrackingSecs');
-    var numberGeoTrackingSecs = new ctrls.DropDownControl(parentEl, null, 'Geo Tracking Interval', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var holderGeoTrackingSecs = document.getElementById('holderGeoTrackingSecs');
+    var numberGeoTrackingSecs = new ctrls.DropDownControl(holderGeoTrackingSecs, null, 'Geo Tracking Interval', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     var numberGeoTrackingSecsValues = 
     [
         ['30', '30 secs'],
@@ -2103,7 +2107,7 @@ function wigo_ws_View() {
     ];
     numberGeoTrackingSecs.fill(numberGeoTrackingSecsValues);
 
-    parentEl = document.getElementById('holderOffPathThresMeters');
+    var parentEl = document.getElementById('holderOffPathThresMeters');
     var numberOffPathThresMeters = new ctrls.DropDownControl(parentEl, null, 'Off Trail Threshold', '',  'img/ws.wigo.dropdownhorizontalicon.png');
     var numberOffPathThresMetersValues = 
     [
@@ -2161,11 +2165,11 @@ function wigo_ws_View() {
     ];
     numberPhoneBeepCount.fill(numberPhoneBeepCountValues);
 
-    parentEl = document.getElementById('holderPebbleAlert');
-    var selectPebbleAlert = ctrls.NewYesNoControl(parentEl, null, 'Pebble Watch', -1);
+    var holderPebbleAlert = document.getElementById('holderPebbleAlert');
+    var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch', -1);
 
-    parentEl = document.getElementById('holderPebbleVibleCount');
-    var numberPebbleVibeCount = new ctrls.DropDownControl(parentEl, null, 'Pebble Vibration Count', '',  'img/ws.wigo.dropdownhorizontalicon.png');;
+    var holderPebbleVibeCount = document.getElementById('holderPebbleVibeCount');
+    var numberPebbleVibeCount = new ctrls.DropDownControl(holderPebbleVibeCount, null, 'Pebble Vibration Count', '',  'img/ws.wigo.dropdownhorizontalicon.png');;
     var numberPebbleVibeCountValues = 
     [
         ['0', '0 (no vibe)'],
@@ -2404,6 +2408,15 @@ function wigo_ws_View() {
     // Arg:
     //  bShow: boolean to indicate to show.
     function ShowSettingsDiv(bShow) {
+        if (app.deviceDetails.isiPhone()) { 
+            // Do not show settings for tracking nor Pebble.
+            holderAllowGeoTracking.style.display = 'none';
+            holderEnableGeoTracking.style.display = 'none';
+            holderGeoTrackingSecs.style.display = 'none';
+            holderPebbleAlert.style.display = 'none';
+            holderPebbleVibeCount.style.display = 'none';
+        }
+
         var sShowSettings = bShow ? 'block' : 'none';
         divSettings.style.display = sShowSettings;
         ShowMapCanvas(!bShow); 
@@ -3127,15 +3140,20 @@ function wigo_ws_View() {
     // Fill the main menu drop list.
     parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
-    var mainMenuValues = [['terms_of_use','Terms of Use'],                       // 0
+    var mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
                           ['settings', 'Settings'],                               // 1
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
                           ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
                           ['about', 'About'],                                     // 6
-                          ['license', 'Licenses']                                  // 7
+                          ['license', 'Licenses']                                 // 7
                          ];
+    if (app.deviceDetails.isiPhone()) {  
+        // For iPhone remove start pebble.
+        mainMenuValues.splice(2,1); // Removes index 2.
+    }
+
     mainMenu.fill(mainMenuValues);
     mainMenu.onListElClicked = function (dataValue) {
         divStatus.addLine("Main menu item  dataValue: " + dataValue); 
@@ -3254,7 +3272,7 @@ function wigo_ws_View() {
     selectGeoTrail.onListElClicked = function(dataValue) { 
         var listIx = parseInt(dataValue)
         that.ClearStatus();
-        // Always hide sign-in bar when path is selected to conserver screen space.
+        // Always hide sign-in bar when path is selected to conserve screen space.
         ShowOwnerIdDiv(false); 
         if (listIx < 0) {   
             // No path selected.
@@ -3326,7 +3344,7 @@ function wigo_ws_View() {
             viewFindParams.init(nFindIx);
             if (!sOwnerId) {
                 that.ShowStatus("You must be signed in to find your trails.", true);
-                ShowOwnerIdDiv(true); // Shopw sign-in bar 
+                ShowOwnerIdDiv(true); // Show sign-in bar 
                 bClearPath = false;
             } else {
                 if (that.onFindPaths)
@@ -3658,6 +3676,11 @@ function wigo_ws_Controller() {
     // Returns current settings, a wigo_ws_GeoTrailSettings object.
     view.onGetSettings = function () {
         var settings = model.getSettings();
+        if (app.deviceDetails.isiPhone()) {  
+            // Do no allow automatic geo tracking nor Pebble watch.
+            settings.bAllowGeoTracking = false;
+            settings.bPebbleAlert = false; 
+        }
         return settings;
     };
 
@@ -3952,6 +3975,8 @@ function wigo_ws_Controller() {
 
 // Set global var for the controller and therefore the view and model.
 window.app = {};
+window.app.deviceDetails = new Wigo_Ws_CordovaDeviceDetails();  
+window.app.deviceDetails.setDevice(Wigo_Ws_getDeviceType());    
 window.app.OnDocReady = function (e) {
     // Create the controller and therefore the view and model therein.
     window.app.ctlr = new wigo_ws_Controller();

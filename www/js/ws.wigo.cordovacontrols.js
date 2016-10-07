@@ -39,6 +39,14 @@ Class Names for CSS
     wigo_ws_BackIcon  // Image for back arrow icon.
 */
 'use strict';
+// Function that returns an object of controls.
+// Remarks:
+// Call Wigo_Ws_CordovaControls(), it is NOT an object to be constructed by new.
+// The members in the returned object are functions (object definitions) for controls 
+// that need to be constructed by new. 
+// There is one exception: the NewYesNoControl member of the returned object returns
+// an OnOffControl object that has already been constructed and is tailored for 
+// Yes or No instead of On or Off. 
 function Wigo_Ws_CordovaControls() {
     // Literal object to generate a unique id name.
     // Props:
@@ -484,7 +492,6 @@ function Wigo_Ws_CordovaControls() {
         // Helper to find droplist item given text for an item.
         // Returns ref to Element in droplist that matches text.
         // Return null if text is not found.
-        // Arg:
         //  text: string for text of element in the droplist.
         function FindListElByText(text) {
             var elFound = null;
@@ -962,4 +969,46 @@ function Wigo_Ws_CordovaControls() {
         TitleBar: TitleBar,
         NewYesNoControl: NewYesNoControl,
     }
+}
+
+
+// Object for customization details about a device.
+// Ideally an app will not needed any device customization,
+// but it may be necesssary if some features are not available
+// in a device.
+function Wigo_Ws_CordovaDeviceDetails() {
+
+    // Returns object that enumerations the devices.
+    this.DeviceEnum = function() {
+        return {android: 0, iPhone: 1, unknown: -1};
+    };
+
+    // Sets type of device.
+    // eDevice: enumeration value from a DeviceEnum object.
+    this.setDevice = function(eDevice) {
+        switch(eDevice) {
+            case deviceEnum.android: device = eDevice; break;
+            case deviceEnum.iPhone: device = eDevice; break;
+            default:
+                device = deviceEnum.unknown; break;
+        }
+    }
+
+    // Returns true if device is android.
+    this.isAndroid = function() {
+        var bAndroid = device === deviceEnum.android;
+        return bAndroid;
+    };
+
+    // Returns true if device is iPhone.
+    this.isiPhone = function() {
+        var biPhone = device === deviceEnum.iPhone; 
+        return biPhone;
+    }
+    
+    // Enumeration obj for identifying devices.
+    var deviceEnum = this.DeviceEnum();
+
+    // Kind of device: integer from deviceEnum obj.
+    var device = deviceEnum.android;
 }
