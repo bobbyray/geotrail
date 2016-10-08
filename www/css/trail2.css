@@ -499,7 +499,7 @@ label {
 
 #mainMenu {
     float: left;
-    width: 12%;
+    width: 8%;
     height: 100%;
     margin-right: 2em;
 }
@@ -514,7 +514,7 @@ label {
 
 #selectMode {
     float: left;
-    width: 50%;
+    width: 60%;
     height: 100%;
 }
 #selectMode .wigo_ws_DropDownIcon {
