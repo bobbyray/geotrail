@@ -37,7 +37,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  10/07/2016_1628"; // Constant string for App version.
+    var sVersion = "1.1.021  10/12/2016_1702"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -431,7 +431,7 @@ function wigo_ws_View() {
                 break;
             case this.eMode.online_define:
                 HideAllBars();
-                titleBar.setTitle("Drawing a New Trail");
+                titleBar.setTitle("Drawing a Trail");
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
@@ -1902,7 +1902,11 @@ function wigo_ws_View() {
     };
 
     var titleHolder = document.getElementById('titleHolder');
-    var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
+    ////20161012 var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
+    var spanTitle = document.getElementById('spanTitle');
+    var spanHelp = document.getElementById('spanHelp');
+    var titleBar = new ctrls.TitleBar2(titleHolder, spanTitle, spanHelp);
+    /* ////20161012 
     titleBar.onBackArrowClicked = function(event) {
         // Prompt user to save changes if editing.
         var sPrompt = "Cancel return so you can save your changes first?";
@@ -1918,6 +1922,7 @@ function wigo_ws_View() {
             that.setModeUI(that.eMode.select_mode);
         } 
     };
+    */
 
     titleBar.onHelpClicked = function(event) {
         ShowHelpGuide(true);
@@ -3194,8 +3199,10 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
-    var selectModeValues = [['select_mode', 'Select Map View'],
+    ////20161012 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, null, "img/ws.wigo.dropdownicon.png");
+    
+    var selectModeValues = [['select_mode', 'Sign-in/off'],   ////20161013 Was Select Map View
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
                             ['online_edit',   'Edit a Trail'],        

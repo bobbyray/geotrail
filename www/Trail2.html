@@ -42,7 +42,16 @@
 </head>
 <body>
     <div id="divMode">  
-        <div id="titleHolder"></div> <!-- container for title bar -->
+        <!-- ////20161011 <div id="titleHolder"></div> --> <!-- container for title bar -->
+
+        <div id="titleHolder" class="wigo_ws_Bar">
+            <div id="mainMenu"></div> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
+            <span id="spanTitle" class="wigo_ws_Title"></span>
+            <span id= "spanHelp" class="wigo_ws_TitleBarHelp">?</span>
+            <div id="selectMode"></div><!-- Container for id="" selectMode wigo_ws DropDownControl. -->
+        </div>
+
+
         <div id="divStatus"></div> <!-- container for StatusDiv ctrl. -->  
         <!-- buInitView is commented out except if debugging map view initialization. 
         <button id="buInitView" value="InitView">Init View</button>
@@ -52,12 +61,14 @@
             <input id="txbxOwnerName" type="text" disabled: disabled/>
             <div id='selectSignInHolder'></div>
         </div>
-        <div id="modeBar" class="wigo_ws_Bar">
-            <div id="mainMenu"></div> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
-            <div id="selectMode">
-                <!-- Container for id="" selectMode wigo_ws DropDownControl. -->
-            </div>
 
+        <div id="modeBar" class="wigo_ws_Bar">
+            <!-- ////20161012 <div id="mainMenu"></div> --> <!-- Container for id="mainMenuDropDown" mainMenu  wigo_ws DropDownControl -->
+            <!-- ////20161012
+            <div id="selectMode">
+                -- Container for id="" selectMode wigo_ws DropDownControl. -- 
+            </div>
+            -->
         </div>
 
         <div id="onlineOfflineEditBar" class="wigo_ws_Bar wigo_ws_NoShow">

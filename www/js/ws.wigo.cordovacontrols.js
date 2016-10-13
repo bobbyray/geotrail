@@ -961,12 +961,73 @@ function Wigo_Ws_CordovaControls() {
     TitleBar.prototype = controlBase;
     TitleBar.constructor = TitleBar;
 
+    // Object displaying a title bar. This object is an alternative to TitleBar.
+    // Args:
+    //  holderDiv: HTMLDivElemnt, required. Container for the title bar.
+    //  spanTitle: ref to HTMLElement, required.. Span for title text.
+    //  spanHelp: ref to HTMLElement, optional. HTML element for invoking Help when clicked.
+    // Remarks:
+    // spanHelp is likely a HTML Span Element whose text is a ? with class="wigo_ws_TitleBarHelp"
+    //      Could be any HTML Element for which a click event can be handled. May be null for no Help.
+    // spanTitle is likely a span with class="wigo_ws_Title".
+    function TitleBar2(holderDiv, spanTitle, spanHelp) {
+        var that = this;
+        
+        // Sets the title text.
+        // Arg:
+        //  sTitle: string. Text for the title.
+        this.setTitle = function(sTitle) {
+            spanTitle.innerText = sTitle;
+        }
+
+        // Scrolls this title bar into view.
+        this.scrollIntoView = function() {
+            holderDiv.scrollIntoView();
+        };
+
+        // Shows or hides the title bar.
+        // Arg:
+        //  bShow: boolean. true to show.
+        // Note: Initially title bar is shown. You may not need to hide it.
+        this.show = function(bShow) {
+            TitleBar.prototype.show(holderDiv, bShow);
+        };
+
+       
+        // Event handler called when Help symbol in title bar is clicked.
+        // Signature:
+        //  Arg:
+        //      event: Event object for the click.
+        // Returns nothing.
+        // Remarks: Set to null to disable event handler.
+        this.onHelpClicked = function(event){};
+
+        if (!(holderDiv instanceof HTMLDivElement))  {
+            throw new Error("Container for TitleBar must be a div.");
+        }
+
+        if (!(spanTitle instanceof HTMLElement))  {
+            throw new Error("Title must be a span or some kind of HTMLElement.");
+        }
+
+        if (spanHelp instanceof HTMLElement) {
+            spanHelp.addEventListener('click', function() {
+                if ('function' === typeof that.onHelpClicked)
+                    that.onHelpClicked(event);
+            }, false);
+        }
+    }
+    TitleBar2.prototype = controlBase;
+    TitleBar2.constructor = TitleBar2;
+
+
     return {
         DropDownControl: DropDownControl,
         TabControl: TabControl,
         StatusDiv: StatusDiv,
         OnOffControl: OnOffControl, 
         TitleBar: TitleBar,
+        TitleBar2: TitleBar2,
         NewYesNoControl: NewYesNoControl,
     }
 }
