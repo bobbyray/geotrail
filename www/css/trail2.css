@@ -139,6 +139,7 @@ label {
 
 #titleHolder {
     height: 1.8em;
+    position: relative;
 }
 
 #divOwnerId {
@@ -487,6 +488,7 @@ label {
     width: 100%;
 }
 
+/* ////20161013 
 #modeBar {
     clear: both;
     float: left;
@@ -496,9 +498,12 @@ label {
     margin-bottom: 0.5em;
 
 }
+*/
 
 #mainMenu {
-    float: left;  
+    /* ////20161013 float: left; */
+    position: absolute;
+    left: 0px;  
     width: 8%;
     height: 100%;
     margin-right: 2em;
@@ -512,25 +517,39 @@ label {
     width: 17em;
 }
 
+#spanTitle {
+    position: absolute;
+    left: 9%;
+}
+
 #spanHelp {
-    float: inherit;   
+    /* ////20161013 float: inherit; */
+    position: absolute;
+    right: 3em;   /* ////20161013 was 5em was 22% */
 }
 
 #selectMode {
-    float: right;
-    width: 20%;          
+    /* ////20161013 float: right; */
+    position: absolute;
+    right: 0px;
+    width: 2em; /* ////20161013 was 20% */          
     height: 100%;
-    margin-right: 1.0em; 
+    /* ////20161013 margin-right: 1.0em; */ 
 }
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
     right: 0px;
-    width: 14%;
+    width: 3em;   /* ////20161013 was 14% */
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;
     right: 14%;
     margin-left: 2%;
+}
+#selectMode .wigo_ws_DropDownList { /* ////20161013 added */
+    left: inherit;
+    right: 0.1em;
+    width: 6em;
 }
 
 #onlineOfflineEditBar {

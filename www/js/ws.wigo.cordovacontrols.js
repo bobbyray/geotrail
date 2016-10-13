@@ -1011,7 +1011,7 @@ function Wigo_Ws_CordovaControls() {
         }
 
         if (spanHelp instanceof HTMLElement) {
-            spanHelp.addEventListener('click', function() {
+            spanHelp.addEventListener('click', function(event) {
                 if ('function' === typeof that.onHelpClicked)
                     that.onHelpClicked(event);
             }, false);

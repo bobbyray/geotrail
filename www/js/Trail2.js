@@ -366,7 +366,7 @@ function wigo_ws_View() {
                 ShowElement(onlineAction, false);
                 ShowElement(offlineAction, false);
                 ShowElement(pathDescrBar, false);
-                ShowElement(modeBar, false);
+                ////20161013 ShowElement(modeBar, false);
                 ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false);
                 ShowPathInfoDiv(false);  
@@ -442,7 +442,7 @@ function wigo_ws_View() {
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 ShowOwnerIdDiv(true);
-                ShowElement(modeBar, true);
+                ////20161013 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
@@ -3122,9 +3122,9 @@ function wigo_ws_View() {
     }, false);
 
 
-    // ** Create modeBar
-    var modeBar = document.getElementById('modeBar');
-    // Fill the main menu drop list.
+    ////20161013 // ** Create modeBar
+    ////20161013 var modeBar = document.getElementById('modeBar');
+    // Create mainMenu and fill its drop list.
     parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
     var mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
