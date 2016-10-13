@@ -1902,27 +1902,9 @@ function wigo_ws_View() {
     };
 
     var titleHolder = document.getElementById('titleHolder');
-    ////20161012 var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
     var spanTitle = document.getElementById('spanTitle');
     var spanHelp = document.getElementById('spanHelp');
     var titleBar = new ctrls.TitleBar2(titleHolder, spanTitle, spanHelp);
-    /* ////20161012 
-    titleBar.onBackArrowClicked = function(event) {
-        // Prompt user to save changes if editing.
-        var sPrompt = "Cancel return so you can save your changes first?";
-        if ( fsmEdit.IsPathChanged()) {
-            ConfirmYesNo(sPrompt, function(bYes){
-                if (!bYes) {
-                    fsmEdit.ClearPathChange();
-                    that.setModeUI(that.eMode.select_mode);        
-                }
-            });
-            
-        } else {
-            that.setModeUI(that.eMode.select_mode);
-        } 
-    };
-    */
 
     titleBar.onHelpClicked = function(event) {
         ShowHelpGuide(true);
@@ -3199,10 +3181,9 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    ////20161012 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
     var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, null, "img/ws.wigo.dropdownicon.png");
     
-    var selectModeValues = [['select_mode', 'Sign-in/off'],   ////20161013 Was Select Map View
+    var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
                             ['online_edit',   'Edit a Trail'],        

@@ -513,14 +513,14 @@ label {
 }
 
 #spanHelp {
-    float: inherit;  /* ////20161012 inherit works for no float */ 
+    float: inherit;   
 }
 
 #selectMode {
     float: right;
-    width: 20%;          /* ////20161012 was 60% */
+    width: 20%;          
     height: 100%;
-    margin-right: 1.0em; /* ////20161012 added */
+    margin-right: 1.0em; 
 }
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
