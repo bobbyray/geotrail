@@ -381,6 +381,8 @@ function wigo_ws_View() {
         // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
                 HideAllBars();
                 titleBar.setTitle("Online Map"); 
                 ShowElement(onlineOfflineEditBar, true);
@@ -394,6 +396,8 @@ function wigo_ws_View() {
                 this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
                 HideAllBars();
                 titleBar.setTitle("Offline Map");
                 ShowElement(onlineOfflineEditBar, true);
@@ -412,19 +416,21 @@ function wigo_ws_View() {
                     var sAnswerBtns = "Go Online, Stay Offline";
                     ConfirmYesNo(sMsg, function(bConfirm){
                         if (bConfirm) {
-                            // Save auto selection for selectOnceAfterSetPathList.
-                            var savedPathName = selectOnceAfterSetPathList.sPathName;  
-                            var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
-                            that.setModeUI(that.eMode.select_mode); 
-                            // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
-                            selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
-                            selectOnceAfterSetPathList.sPathName = savedPathName;
+                            ////20161014 // Save auto selection for selectOnceAfterSetPathList.
+                            ////20161014 var savedPathName = selectOnceAfterSetPathList.sPathName;  
+                            ////20161014 var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
+                            ////20161014 that.setModeUI(that.eMode.select_mode); 
+                            ////20161014 // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
+                            ////20161014 selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
+                            ////20161014 selectOnceAfterSetPathList.sPathName = savedPathName;
                             that.setModeUI(that.eMode.online_view);
                         }
                     },"",sAnswerBtns);
                 }
                 break;
             case this.eMode.online_edit:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
                 HideAllBars();
                 titleBar.setTitle("Editing a Trail");
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
@@ -439,8 +445,8 @@ function wigo_ws_View() {
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
                 map.ClearPath();
-                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
-                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
+                ////20161013 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                ////20161013 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 ShowOwnerIdDiv(true);
                 ////20161013 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
@@ -564,12 +570,14 @@ function wigo_ws_View() {
             {
                 case that.eMode.online_view:
                 case that.eMode.offline:
-                    // Note: Do not select on Edit mode because Edit mode must start by user 
+                ////20161013DoesNotWorkToAutoSelect case that.eMode.online_edit:   ////20161013 added 
+                    // Note: Do NOT use "case that.eMode.online_edit:" because Edit mode must start by user 
                     // selecting a trail so that message to append to path is shown.
                     switch(this.nPrevMode) {
                         case that.eMode.online_view:
                         case that.eMode.offline:
                         case that.eMode.online_edit:
+                        case that.eMode.select_mode:  ////20161014 added select_mode
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
                             if (dataValue) 
                                 selectGeoTrail.onListElClicked(dataValue);
