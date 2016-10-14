@@ -366,7 +366,6 @@ function wigo_ws_View() {
                 ShowElement(onlineAction, false);
                 ShowElement(offlineAction, false);
                 ShowElement(pathDescrBar, false);
-                ////20161013 ShowElement(modeBar, false);
                 ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false);
                 ShowPathInfoDiv(false);  
@@ -381,8 +380,8 @@ function wigo_ws_View() {
         // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
-                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
-                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Online Map"); 
                 ShowElement(onlineOfflineEditBar, true);
@@ -396,8 +395,8 @@ function wigo_ws_View() {
                 this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
-                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
-                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Offline Map");
                 ShowElement(onlineOfflineEditBar, true);
@@ -416,21 +415,14 @@ function wigo_ws_View() {
                     var sAnswerBtns = "Go Online, Stay Offline";
                     ConfirmYesNo(sMsg, function(bConfirm){
                         if (bConfirm) {
-                            ////20161014 // Save auto selection for selectOnceAfterSetPathList.
-                            ////20161014 var savedPathName = selectOnceAfterSetPathList.sPathName;  
-                            ////20161014 var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
-                            ////20161014 that.setModeUI(that.eMode.select_mode); 
-                            ////20161014 // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
-                            ////20161014 selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
-                            ////20161014 selectOnceAfterSetPathList.sPathName = savedPathName;
                             that.setModeUI(that.eMode.online_view);
                         }
                     },"",sAnswerBtns);
                 }
                 break;
             case this.eMode.online_edit:
-                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         ////20161013 added
-                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  ////20161013 added
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Editing a Trail");
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
@@ -445,10 +437,7 @@ function wigo_ws_View() {
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
                 map.ClearPath();
-                ////20161013 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
-                ////20161013 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 ShowOwnerIdDiv(true);
-                ////20161013 ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
@@ -570,14 +559,14 @@ function wigo_ws_View() {
             {
                 case that.eMode.online_view:
                 case that.eMode.offline:
-                ////20161013DoesNotWorkToAutoSelect case that.eMode.online_edit:   ////20161013 added 
+                //DoesNotWork case that.eMode.online_edit:   
                     // Note: Do NOT use "case that.eMode.online_edit:" because Edit mode must start by user 
                     // selecting a trail so that message to append to path is shown.
                     switch(this.nPrevMode) {
                         case that.eMode.online_view:
                         case that.eMode.offline:
                         case that.eMode.online_edit:
-                        case that.eMode.select_mode:  ////20161014 added select_mode
+                        case that.eMode.select_mode:  
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
                             if (dataValue) 
                                 selectGeoTrail.onListElClicked(dataValue);
@@ -3129,9 +3118,6 @@ function wigo_ws_View() {
         // did not work for statusDiv.
     }, false);
 
-
-    ////20161013 // ** Create modeBar
-    ////20161013 var modeBar = document.getElementById('modeBar');
     // Create mainMenu and fill its drop list.
     parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
