@@ -511,16 +511,16 @@ label {
 
 #spanHelp {
     position: absolute;
-    right: 4.0em;   /* ////20161015 was 3em */
-    text-align: center;  /* ////20161015 added */
-    font-size: 1.3em;    /* ////20161015 added */
-    background: darkgray; /* ////20161015 added */
+    right: 4.0em;   
+    text-align: center;  
+    font-size: 1.3em;   
+    background: darkgray; 
 }
 
 #selectMode {
     position: absolute;
     right: 0px;
-    width: 4.9em;  /* ////20161015 was 6em was 2em */           
+    width: 4.9em;            
     height: 100%;
 }
 #selectMode .wigo_ws_DropDownLabel {
@@ -531,8 +531,8 @@ label {
 }
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
-    right: 0.5em;     /* ////20161014 was 0px */
-    width: 2.0em;   /* ////20161014 was 3em */
+    right: 0.5em;    
+    width: 2.0em;  
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;
