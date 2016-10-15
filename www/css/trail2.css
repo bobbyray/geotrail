@@ -511,13 +511,16 @@ label {
 
 #spanHelp {
     position: absolute;
-    right: 3.9em;   /* ////20161014 was 3em */
+    right: 4.0em;   /* ////20161015 was 3em */
+    text-align: center;  /* ////20161015 added */
+    font-size: 1.3em;    /* ////20161015 added */
+    background: darkgray; /* ////20161015 added */
 }
 
 #selectMode {
     position: absolute;
     right: 0px;
-    width: 6em;  /* ////20161014 was 2em */           
+    width: 4.9em;  /* ////20161015 was 6em was 2em */           
     height: 100%;
 }
 #selectMode .wigo_ws_DropDownLabel {
