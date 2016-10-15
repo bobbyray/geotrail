@@ -511,19 +511,25 @@ label {
 
 #spanHelp {
     position: absolute;
-    right: 3em;   
+    right: 3.9em;   /* ////20161014 was 3em */
 }
 
 #selectMode {
     position: absolute;
     right: 0px;
-    width: 2em;           
+    width: 6em;  /* ////20161014 was 2em */           
     height: 100%;
+}
+#selectMode .wigo_ws_DropDownLabel {
+    height: 100%;
+    width: auto;
+    right: 2.8em;
+    margin-top: 2.5%;
 }
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
-    right: 0px;
-    width: 3em;   
+    right: 0.5em;     /* ////20161014 was 0px */
+    width: 2.0em;   /* ////20161014 was 3em */
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;

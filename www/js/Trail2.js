@@ -3175,8 +3175,10 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, null, "img/ws.wigo.dropdownicon.png");
-    
+    ////20161014NotSoGood var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, null, "img/ws.wigo.dropdowniconview.png");
+    ////20161014 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
+    ////20161014 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, null, "img/ws.wigo.dropdowniconview.png");
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
