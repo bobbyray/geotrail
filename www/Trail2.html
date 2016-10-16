@@ -197,21 +197,19 @@
     <div id="divHelpGuide" class='wigo_ws_NoShow'>
         <h1>Help - Guide</h1>
         <h2>Title Bar</h2>
-        <p>At the top of the screen is a title describing the currently selected map view.
-        The back arrow on the right of the Title Bar returns to selecting
-        a Map View. (When you are selecting a map view, there is no back arrow.)</p>
-        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p> 
-        <p>The question mark (?) displays this Help Guide. Also displaying Help and closing it
-        resets the screen display, which is useful if the screen is not displaying properly.</p> 
-        <h2>Sign-In</h2>
-        <p>Select Sign-In > Facebook to sign in. Your sign-in id is remembered so 
-        you do not need to sign in again unless you log out. </p>
-        <p>If you do not sign in, you can only view public trails created by others.
-        However, if you sign in, you can create trails and edit your trails, which can be marked
-        as Private for only you to view, or Public for anyone to view.</p>
-        <h2>Select Map View</h2>
-        Select a view from the Select Map View droplist.
+        <p>At the top of the screen is a title describing the currently selected map view.</p>
         <ul>
+            <li>The <a href="#helpMainMenu">Main Menu</a> is on the left and has several items
+            such as Settings and Help.</li>
+            <li>The Help symbol ("?") displays this Help - Guide.</li>
+            <li>The View DropList on the right selects the <a href="#helpSelectMapView">Map View</a>.</li>
+        </ul>    
+        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p> 
+        <p>More details about the map views and Main Menu follow.
+        <h2 id="helpSelectMapView">Select Map View</h2>
+        Select a view from the View droplist on the Title Bar:
+        <ul>
+            <li><a href="#helpSignInOffBar">Sign-in/off</a> presents the Sign in/off Bar.</li>
             <li><a href="#helpOnlineMap">Online</a> lets you select a trail from ones saved on a web server.</li>
             <li><a href="#helpOfflineMap">Offline</a> lets you view trails when you are 
             not connected to the web. You need to select the trails to save to your phone when 
@@ -220,9 +218,23 @@
             <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
             you have saved online.</li> 
         </ul>
-        <p>The <a href="#helpMainMenu">Main Menu</a> droplist is on the left and provides more options.
-        <a href="#helpSettings">Menu > Settings</a> is used to set your preferences for the app.</p>
-        <p>More details about the map views and Main Menu follow.
+        <h2 id="helpSignInOffBar">Sign-in/off Bar</h2>
+        <p>If you do not sign in, you can only view public trails created by others.
+        However, if you sign in, you can create trails and edit your trails, which can be marked
+        as Private for only you to view, or Public for anyone to view.</p>
+        If you are not signed in, but need to be to complete an action such as editing, drawing, or finding
+        your trails, you are automatically shown the Sign in/off Bar.
+        <p>On the left side, the User name is shown when you are signed in. If you are not signed, the User name is blank. 
+        You do not type in the User name box, it is filled in automatically when you sign in.</p>
+        <p>The Sign-in DropList is shown on the right:
+        <ul>
+            <li>Select Facebook to sign in.<br/> 
+            Your sign-in id is remembered so 
+            you do not need to sign in again unless you log out.</li>
+            <li>Select Logout to logout of Facebook.<br/>
+            Note: Facebook can be tenacious about keeping you logged in. You may need to go
+            to Facebook to force a logout.</li> 
+        </ul>
         <h2 id="helpOnlineMap">Online Map</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
         from which you select a trail to view. Your current geolocation on the trail is shown 
@@ -273,7 +285,7 @@
             A phone alert is given if you are off the trail.</li>
         </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
-        You select a trail you have saved offline when you are viewing the Online Map. 
+        You select a trail you have saved when you are viewing the Online Map. 
         Offline Map works the same as <a href="#helpOnlineMap">Online Map</a>,
         except that the map is shown from map tiles saved on your phone instead of from the web, 
         which means that the map is limited and is blank if you pan or zoom beyond the bounds
@@ -350,7 +362,7 @@
         <p>Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
         downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.</p>
         <h2 id="helpMainMenu">Main Menu</h2>
-        The Main Menu is available from Select Map View, and is the droplist on the left.  
+        The Main Menu is available from the Title Bar and is the droplist on the left.  
         <h3>Menu > Terms of Use</h3>
         <p>Displays the Terms of Use for this app.
         When the app is first installed or the app is updated, the Terms of Use must be accepted before
@@ -358,17 +370,15 @@
         <h3 id="helpSettings">Menu > Settings</h3>
         <p>Presents a dialog to set your preferences for the app.</p>  
         <ul>
-            <li id="helpAllowGeoTracking">Allow Geo Tracking Yes | No<br/>
-            <b>Geo Tracking is not available on iPhone.</b><br/> 
+            <li id="helpAllowGeoTracking" class="noIosHelp">Allow Geo Tracking Yes | No<br/>
+            <!-- <b>Geo Tracking is not available on iPhone.</b><br/> --> 
             For No, geolocation is NOT obtained automatically.
             However, the MyLoc button will still get your geolocation.<br/>
             MyLoc and Track are on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.
             However, Track is not on the bar if Allow Geo Tracking is set to No.</li>
-            <li>Geo Tracking Initially On Yes | No<br/>
-            <b>Geo Tracking is not available on iPhone.</b></br> 
+            <li class="noIosHelp">Geo Tracking Initially On Yes | No<br/>
             Yes to start with Track On when app loads.</li>
-            <li>Geo Tracking Interval (secs)<br/>
-            <b>Geo Tracking is not available on iPhone.</b></br> 
+            <li class="noIosHelp">Geo Tracking Interval (secs)<br/>
             Number of seconds to check your geolocation when tracking is allowed.</li>
             <li>Off Trail Threshold<br/>
             Number of meters that you need to be off trail for an alert to be given.</li>
@@ -381,11 +391,9 @@
             Number of seconds phone vibrates for an alert. Set to 0 for no vibration.</li>
             <li>Phone Beep Count<br/>
             Number of beeps to give for an alert. Set to 0 for no beepings.</li>
-            <li>Pebble Watch Yes | No<br/>
-            <b>Pebble watch is not available on iPhone.</b></br>
+            <li class="noIosHelp">Pebble Watch Yes | No<br/>
             Yes to show messages on a Pebble Watch that is connected to the phone.</li>
-            <li>Pebble Vibration Count<br/>
-            <b>Pebble watch is not available on iPhone.</b></br>
+            <li class="noIosHelp">Pebble Vibration Count<br/>
             Number of vibrations given on Pebble Watch for message indicating
             off trail. Count of 0 disables vibrations.<br/>
             Note that Ph Alert Off does not inhibit vibrations for being off-trail.</li>
@@ -409,8 +417,8 @@
             Touch Cancel to close the Setting dialog ignoring any changes that may have been made.<br/>
             Note: You must touch Done or Cancel for the dialog to close.</li>
         </ul>
+        <div class="noIosHelp">
         <h3>Menu > Start Pebble</h3>
-        <b>Pebble watch in not available on iPhone.</b></br> 
         <p>Starts the Pebble GeoTrail app on your watch. The Pebble GeoTrail app should be started automatically so it is unlikely
         you need to do this.</p>
         <p>However, if you get a message indicating that Pebble is not connected, check the following to try to resolve
@@ -435,14 +443,17 @@
                 Note: This only starts the Pebble GeoTrail app on the your watch and does not 
                 start the GeoTrail app on your phone.
             </li>
-        </ul>    
+        </ul>  
+        </div>  
         <h3>Menu > Help - Guide</h3>
         Displays a guide (which you are viewing) for using this app.
         <h3>Menu > Help - Back to Trail</h3>
         Display instructions for returning to the trail when you are off the trail. Explains why the instructions 
         may be inaccurate and that you need to use your judgement.
+        <div class="noIosHelp">
         <h3>Menu > Help - Tracking vs Battery Drain</h3>
         Explains that automatic tracking causes faster battery drain.
+        </div>
         <h3>Menu > About</h3>
         Displays app version number and copyright.
         <h3>Menu > License</h3>
@@ -489,7 +500,7 @@
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
     <!-- Help Tracking vs Battery Drain, only shown when selected from mainMenu -->
-    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow'>
+    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow noIosHelp'>
         <h1>Help - Tracking vs Battery Drain</h1>
         <p>When automatic tracking is on, the battery in the phone is drained more quickly.
         The shorter the time interval for automatic tracking, the quicker the battery drains.</p>

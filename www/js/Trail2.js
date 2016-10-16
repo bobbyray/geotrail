@@ -2394,11 +2394,11 @@ function wigo_ws_View() {
     function ShowSettingsDiv(bShow) {
         if (app.deviceDetails.isiPhone()) { 
             // Do not show settings for tracking nor Pebble.
-            holderAllowGeoTracking.style.display = 'none';
-            holderEnableGeoTracking.style.display = 'none';
-            holderGeoTrackingSecs.style.display = 'none';
-            holderPebbleAlert.style.display = 'none';
-            holderPebbleVibeCount.style.display = 'none';
+            ShowElement(holderAllowGeoTracking, false);
+            ShowElement(holderEnableGeoTracking, false);
+            ShowElement(holderGeoTrackingSecs, false);
+            ShowElement(holderPebbleAlert, false);
+            ShowElement(holderPebbleVibeCount, false);
         }
 
         var sShowSettings = bShow ? 'block' : 'none';
@@ -2501,11 +2501,6 @@ function wigo_ws_View() {
         that.ClearStatus();
         titleBar.scrollIntoView();   
     }
-
-
-
-
-
 
     // ** More function 
 
@@ -3121,7 +3116,25 @@ function wigo_ws_View() {
     // Create mainMenu and fill its drop list.
     parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
-    var mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
+    var mainMenuValues; 
+    if (app.deviceDetails.isiPhone()) {  
+        // For iPhone, no start pebble, no tracking vs battery drain.
+        mainMenuValues = [['terms_of_use','Terms of Use'],                        
+                          ['settings', 'Settings'],                               
+                          // ['start_pebble', 'Start Pebble'],          // No Pebble
+                          ['help', 'Help - Guide'],                                
+                          ['back_to_trail', 'Help - Back To Trail'],              
+                          // ['battery_drain', 'Help - Tracking vs Battery Drain'], // No automatic tracking  
+                          ['about', 'About'],                                     
+                          ['license', 'Licenses']                                 
+                         ];
+        // iPhone, help help for features not available on iPhone.
+        var noHelp = document.getElementsByClassName("noIosHelp");
+        for (var iNoHelp=0; iNoHelp < noHelp.length; iNoHelp++) {
+            ShowElement(noHelp[iNoHelp], false);
+        }
+    } else {
+        mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
                           ['settings', 'Settings'],                               // 1
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
@@ -3130,9 +3143,6 @@ function wigo_ws_View() {
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses']                                 // 7
                          ];
-    if (app.deviceDetails.isiPhone()) {  
-        // For iPhone remove start pebble.
-        mainMenuValues.splice(2,1); // Removes index 2.
     }
 
     mainMenu.fill(mainMenuValues);
