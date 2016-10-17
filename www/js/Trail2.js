@@ -37,7 +37,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  10/16/2016_1533"; // Constant string for App version.
+    var sVersion = "1.1.021  10/17/2016_1248"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3020,7 +3020,7 @@ function wigo_ws_View() {
             var sTurn = 'Right';
             var sTurnCompass = 'Right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Head {0} ({1}&deg; wrt N) to go to trail ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
+            var s = "Off trail {2}m.<br/>Head {0} ({1}&deg; wrt N) to go to trail.<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path based on previous heading.
