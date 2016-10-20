@@ -1,12 +1,7 @@
-/* Over-ride for iPHone in status msg area.
+/* Over-ride for iPhone in status msg area. */
+/* Currently not used. */
+/* 
 .wigo_ws_StatusMsg {
-    background-color: aliceblue;    
-    font-size: 1.0em;
-    width: 100%;
-    top: 0px;
-    left: 0px;
-    cursor: none;
-    position: relative;
-    min-height: 1.6em;
+    font-size: 1.15em;
 }
 */

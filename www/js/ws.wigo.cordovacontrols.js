@@ -177,6 +177,12 @@ function Wigo_Ws_CordovaControls() {
         // Remarks: Set to null to remove a handler function that has been previously assigned.
         this.onListElClicked = function (dataValue) { };
         
+        // Set to event handlerr fuction called when user closes droplist without selecting an element.
+        // Handler Signature:
+        //  No arg.
+        //  Returns: not used.
+        this.onNoSelectionClicked = function() { };
+
         // Fills dropdown list with values.
         // Arg:
         //  values: 2D array of [string, string, boolean]. droplist element shown for each list item when it is dropped.
@@ -542,10 +548,16 @@ function Wigo_Ws_CordovaControls() {
         // Closes the dropdown list that may be shown by any other droplist 
         // except for the dropdown icon that was clicked.
         function OnOutsideDropDownClicked(event) {
+            var bListWasDropped = bDropDownListDropped;
             var bMyDropDownIcon = dropDownIcon.img === event.srcElement ||
                                   value === event.srcElement;
-            if (!bMyDropDownIcon)
+            if (!bMyDropDownIcon) { 
                 that.drop(false); // Ensure dropdown list of other dropdown is closed.
+                // Do call back if dropdown list was closed.
+                if (bListWasDropped && 'function' === typeof that.onNoSelectionClicked) {
+                    that.onNoSelectionClicked();
+                }
+            }
         }
         document.body.addEventListener('click', OnOutsideDropDownClicked, false);
     }

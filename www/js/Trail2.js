@@ -3287,6 +3287,12 @@ function wigo_ws_View() {
         titleBar.scrollIntoView();
     };
 
+    selectGeoTrail.onNoSelectionClicked = function() {
+        // Ensure titlebar is scrolled into view.
+        // Scrolling the dropdown list can cause titlebar to go off screen.
+        titleBar.scrollIntoView();
+    }
+
 
     parentEl = document.getElementById('onlineSelectFind');
     var onlineSelectFind = new ctrls.DropDownControl(parentEl, "onlineSelectFindDropDown", "Find Trails", null, "img/ws.wigo.dropdownicon.png"); 

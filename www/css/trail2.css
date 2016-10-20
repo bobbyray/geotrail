@@ -579,6 +579,8 @@ label {
 }
 #divTrailInfo .wigo_ws_DropDownList {
     width: 20em;
+    max-height: 33em;
+    overflow-y: auto;
 }
 
 #onlineOfflineEditAction {
