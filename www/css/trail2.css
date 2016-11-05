@@ -16,6 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ /*
+ This file has been modified in 2015, 2016 by Robert R Schomburg.
+ This file is licensed under the same terms as specified above 
+ for the original work.  
+ */
 * {
     -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
 }
@@ -655,7 +660,7 @@ label {
 
 #divHelpGuide, #divHelpBackToTrail, 
 #divHelpTrackingVsBattery, #divTermsOfUse,
-#divHelpLicense {
+#divHelpLicense, #divHelpIPhoneLicense {
     position: absolute;
     left: 0px;
     top: 0px;

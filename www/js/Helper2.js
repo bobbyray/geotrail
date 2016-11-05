@@ -1,4 +1,9 @@
-﻿// Standard prototype addition to String to trim leading and trailing spaces.
+﻿/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
+// Standard prototype addition to String to trim leading and trailing spaces.
 String.prototype.trim = function () {
     return this.replace(/^\s+|\s+$/g, "");
 };

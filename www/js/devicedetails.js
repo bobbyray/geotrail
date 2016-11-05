@@ -1,5 +1,9 @@
 'use strict';
-
+/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
 // Returns type of type for a build.
 // Returns integer for type of device.
 // Retmarks:
@@ -11,7 +15,8 @@
 // This devicedetails.js file has the same name for android and iPhone
 // builds, but the content is different.   
 function Wigo_Ws_getDeviceType() {
-    var nDevice = app.deviceDetails.DeviceEnum().android;
-    //var nDevice = app.deviceDetails.DeviceEnum().iPhone;
+    //var nDevice = app.deviceDetails.DeviceEnum().android;
+    ////20161023 Undo iphone
+    var nDevice = app.deviceDetails.DeviceEnum().iPhone;
     return nDevice;
 }

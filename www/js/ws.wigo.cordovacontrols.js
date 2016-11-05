@@ -1,4 +1,10 @@
-﻿/*
+﻿/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
+
+/*
 Module for a few html controls that work in the Apache Cordova framework 
 whose behavior is the same for android or ios platforms. 
 ios native implementation of some of the standard html controls like

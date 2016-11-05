@@ -1,4 +1,9 @@
 ﻿'use strict';
+/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
 // wigo_ws_Model oject is in js/Model.js.
 
 // wigo_GeoPathMap object is in js/GeoPathMapView.js.
@@ -37,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  10/17/2016_1248"; // Constant string for App version.
+    var sVersion = "1.1.021  10/23/2016_1630"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2440,7 +2445,12 @@ function wigo_ws_View() {
     // Shows or hides the divHelpLicense.
     // Arg:
     //  bShow: boolean to indicate to show.
-    var divHelpLicense = document.getElementById('divHelpLicense');
+    ////201610 var divHelpLicense = document.getElementById('divHelpLicense');
+    var divHelpLicense;
+    if (app.deviceDetails.isiPhone())
+        divHelpLicense = document.getElementById('divHelpIPhoneLicense');
+    else
+        divHelpLicense = document.getElementById('divHelpLicense');
     function ShowHelpLicense(bShow) {
         ShowHelpDiv(divHelpLicense, bShow);
     }

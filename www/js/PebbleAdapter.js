@@ -1,4 +1,9 @@
 ﻿'use strict';
+/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
 // Object to access a Pebble watch from Javascript through
 // the cordova-phonegap plugin for Pebble (see 
 // https://github.com/konsumer/phonegap-pebble).
