@@ -1,4 +1,9 @@
 ﻿'use strict';
+/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
 /* Prototype for L.LatLng object in LeafLetJs provided by 
 Gregor the Map Guy Blog
 --------------------------------------------------------------
@@ -1629,6 +1634,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
     // ** More Private members related to caching map tiles.
     var CACHE_ZOOM_MAX = 16;
+    var TILES_TO_DOWNLOAD_MAX = 400; // Maxiumum number of tiles in a download list.
 
     // Creates a new L.TileLayer.Cordova object that can cache map tiles for trails.
     // The object is used for caching map tiles.
@@ -1837,7 +1843,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             zmax = zmin;  
         var bounds = map.getBounds();
         bounds.pad(padPercent);
-        var tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);
+        // Limit zoom if tile_list is too large
+        var bTileListDone = false;
+        var tile_list;
+        do {
+            if (zmax < zmin)  
+                zmax = zmin;  
+            tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);
+            bTileListDone = tile_list.length < TILES_TO_DOWNLOAD_MAX || zmax <= zmin;
+            if (!bTileListDone) {
+                // Reduce zmax for zoom to reduce length of tile_list.
+                zmax--;
+            } 
+        } while (!bTileListDone)
+
+        
         message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
         var ok = confirm(message);
         if (!ok) {
@@ -1858,7 +1878,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
             function (done, total) {
                 var percent = Math.round(100 * done / total);
-                status.sMsg = done + " / " + total + " = " + percent + "%";
+                status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
                 if (onStatusUpdate)
                     onStatusUpdate(status); 
             },

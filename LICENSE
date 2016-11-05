@@ -16,10 +16,10 @@ and are listed below. Refer to them individually to determine their kind of lice
    cordova-plugin-whitelist 1.0.0 "Whitelist"
    org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"
 
-The license for the main source follows:
+The text for the MIT license:
 The MIT License (MIT)
 
-Copyright (c) 2015 Robert R Schomburg
+Copyright (c) 2015, 2016 Robert R Schomburg
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

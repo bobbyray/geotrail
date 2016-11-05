@@ -1,4 +1,9 @@
 ﻿'use strict';
+/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
 // wigo_ws_Model oject is in js/Model.js.
 
 // wigo_GeoPathMap object is in js/GeoPathMapView.js.
@@ -37,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  10/07/2016_1628"; // Constant string for App version.
+    var sVersion = "1.1.021  10/23/2016_1630"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -366,7 +371,6 @@ function wigo_ws_View() {
                 ShowElement(onlineAction, false);
                 ShowElement(offlineAction, false);
                 ShowElement(pathDescrBar, false);
-                ShowElement(modeBar, false);
                 ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false);
                 ShowPathInfoDiv(false);  
@@ -381,6 +385,8 @@ function wigo_ws_View() {
         // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Online Map"); 
                 ShowElement(onlineOfflineEditBar, true);
@@ -394,6 +400,8 @@ function wigo_ws_View() {
                 this.onGetPaths(nMode, that.getOwnerId()); 
                 break;
             case this.eMode.offline:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Offline Map");
                 ShowElement(onlineOfflineEditBar, true);
@@ -412,26 +420,21 @@ function wigo_ws_View() {
                     var sAnswerBtns = "Go Online, Stay Offline";
                     ConfirmYesNo(sMsg, function(bConfirm){
                         if (bConfirm) {
-                            // Save auto selection for selectOnceAfterSetPathList.
-                            var savedPathName = selectOnceAfterSetPathList.sPathName;  
-                            var savedPrevMode = selectOnceAfterSetPathList.nPrevMode;
-                            that.setModeUI(that.eMode.select_mode); 
-                            // Initialize selectOnceAfterSetPathList object again because that.setModeUI(select_mode) has changed it. 
-                            selectOnceAfterSetPathList.nPrevMode = savedPrevMode;
-                            selectOnceAfterSetPathList.sPathName = savedPathName;
                             that.setModeUI(that.eMode.online_view);
                         }
                     },"",sAnswerBtns);
                 }
                 break;
             case this.eMode.online_edit:
+                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
+                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
                 titleBar.setTitle("Editing a Trail");
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
                 break;
             case this.eMode.online_define:
                 HideAllBars();
-                titleBar.setTitle("Drawing a New Trail");
+                titleBar.setTitle("Drawing a Trail");
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
@@ -439,10 +442,7 @@ function wigo_ws_View() {
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
                 map.ClearPath();
-                selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
-                selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 ShowOwnerIdDiv(true);
-                ShowElement(modeBar, true);
                 selectMode.setSelected(this.eMode.toStr(nMode));
                 break;
             case this.eMode.tou_not_accepted: // Terms of Use not accepted. Added 20160609 
@@ -564,12 +564,14 @@ function wigo_ws_View() {
             {
                 case that.eMode.online_view:
                 case that.eMode.offline:
-                    // Note: Do not select on Edit mode because Edit mode must start by user 
+                //DoesNotWork case that.eMode.online_edit:   
+                    // Note: Do NOT use "case that.eMode.online_edit:" because Edit mode must start by user 
                     // selecting a trail so that message to append to path is shown.
                     switch(this.nPrevMode) {
                         case that.eMode.online_view:
                         case that.eMode.offline:
                         case that.eMode.online_edit:
+                        case that.eMode.select_mode:  
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
                             if (dataValue) 
                                 selectGeoTrail.onListElClicked(dataValue);
@@ -1902,22 +1904,9 @@ function wigo_ws_View() {
     };
 
     var titleHolder = document.getElementById('titleHolder');
-    var titleBar = new ctrls.TitleBar(titleHolder, 'img/ws.wigo.backicon.png', '?');
-    titleBar.onBackArrowClicked = function(event) {
-        // Prompt user to save changes if editing.
-        var sPrompt = "Cancel return so you can save your changes first?";
-        if ( fsmEdit.IsPathChanged()) {
-            ConfirmYesNo(sPrompt, function(bYes){
-                if (!bYes) {
-                    fsmEdit.ClearPathChange();
-                    that.setModeUI(that.eMode.select_mode);        
-                }
-            });
-            
-        } else {
-            that.setModeUI(that.eMode.select_mode);
-        } 
-    };
+    var spanTitle = document.getElementById('spanTitle');
+    var spanHelp = document.getElementById('spanHelp');
+    var titleBar = new ctrls.TitleBar2(titleHolder, spanTitle, spanHelp);
 
     titleBar.onHelpClicked = function(event) {
         ShowHelpGuide(true);
@@ -2410,11 +2399,11 @@ function wigo_ws_View() {
     function ShowSettingsDiv(bShow) {
         if (app.deviceDetails.isiPhone()) { 
             // Do not show settings for tracking nor Pebble.
-            holderAllowGeoTracking.style.display = 'none';
-            holderEnableGeoTracking.style.display = 'none';
-            holderGeoTrackingSecs.style.display = 'none';
-            holderPebbleAlert.style.display = 'none';
-            holderPebbleVibeCount.style.display = 'none';
+            ShowElement(holderAllowGeoTracking, false);
+            ShowElement(holderEnableGeoTracking, false);
+            ShowElement(holderGeoTrackingSecs, false);
+            ShowElement(holderPebbleAlert, false);
+            ShowElement(holderPebbleVibeCount, false);
         }
 
         var sShowSettings = bShow ? 'block' : 'none';
@@ -2456,7 +2445,12 @@ function wigo_ws_View() {
     // Shows or hides the divHelpLicense.
     // Arg:
     //  bShow: boolean to indicate to show.
-    var divHelpLicense = document.getElementById('divHelpLicense');
+    ////201610 var divHelpLicense = document.getElementById('divHelpLicense');
+    var divHelpLicense;
+    if (app.deviceDetails.isiPhone())
+        divHelpLicense = document.getElementById('divHelpIPhoneLicense');
+    else
+        divHelpLicense = document.getElementById('divHelpLicense');
     function ShowHelpLicense(bShow) {
         ShowHelpDiv(divHelpLicense, bShow);
     }
@@ -2517,11 +2511,6 @@ function wigo_ws_View() {
         that.ClearStatus();
         titleBar.scrollIntoView();   
     }
-
-
-
-
-
 
     // ** More function 
 
@@ -3041,7 +3030,7 @@ function wigo_ws_View() {
             var sTurn = 'Right';
             var sTurnCompass = 'Right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Head {0} ({1}&deg; wrt N) to go to trail ({2}m).<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
+            var s = "Off trail {2}m.<br/>Head {0} ({1}&deg; wrt N) to go to trail.<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path based on previous heading.
@@ -3134,13 +3123,28 @@ function wigo_ws_View() {
         // did not work for statusDiv.
     }, false);
 
-
-    // ** Create modeBar
-    var modeBar = document.getElementById('modeBar');
-    // Fill the main menu drop list.
+    // Create mainMenu and fill its drop list.
     parentEl = document.getElementById('mainMenu');
     var mainMenu = new ctrls.DropDownControl(parentEl, "mainMenuDropDown", null, null, "img/ws.wigo.menuicon.png"); 
-    var mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
+    var mainMenuValues; 
+    if (app.deviceDetails.isiPhone()) {  
+        // For iPhone, no start pebble, no tracking vs battery drain.
+        mainMenuValues = [['terms_of_use','Terms of Use'],                        
+                          ['settings', 'Settings'],                               
+                          // ['start_pebble', 'Start Pebble'],          // No Pebble
+                          ['help', 'Help - Guide'],                                
+                          ['back_to_trail', 'Help - Back To Trail'],              
+                          // ['battery_drain', 'Help - Tracking vs Battery Drain'], // No automatic tracking  
+                          ['about', 'About'],                                     
+                          ['license', 'Licenses']                                 
+                         ];
+        // iPhone, help help for features not available on iPhone.
+        var noHelp = document.getElementsByClassName("noIosHelp");
+        for (var iNoHelp=0; iNoHelp < noHelp.length; iNoHelp++) {
+            ShowElement(noHelp[iNoHelp], false);
+        }
+    } else {
+        mainMenuValues = [['terms_of_use','Terms of Use'],                        // 0
                           ['settings', 'Settings'],                               // 1
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
@@ -3149,9 +3153,6 @@ function wigo_ws_View() {
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses']                                 // 7
                          ];
-    if (app.deviceDetails.isiPhone()) {  
-        // For iPhone remove start pebble.
-        mainMenuValues.splice(2,1); // Removes index 2.
     }
 
     mainMenu.fill(mainMenuValues);
@@ -3194,8 +3195,8 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", null, "", "img/ws.wigo.dropdownicon.png");
-    var selectModeValues = [['select_mode', 'Select Map View'],
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
+    var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
                             ['online_edit',   'Edit a Trail'],        
@@ -3295,6 +3296,12 @@ function wigo_ws_View() {
         }
         titleBar.scrollIntoView();
     };
+
+    selectGeoTrail.onNoSelectionClicked = function() {
+        // Ensure titlebar is scrolled into view.
+        // Scrolling the dropdown list can cause titlebar to go off screen.
+        titleBar.scrollIntoView();
+    }
 
 
     parentEl = document.getElementById('onlineSelectFind');

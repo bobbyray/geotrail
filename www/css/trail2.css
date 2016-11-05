@@ -16,6 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ /*
+ This file has been modified in 2015, 2016 by Robert R Schomburg.
+ This file is licensed under the same terms as specified above 
+ for the original work.  
+ */
 * {
     -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
 }
@@ -139,6 +144,7 @@ label {
 
 #titleHolder {
     height: 1.8em;
+    position: relative;
 }
 
 #divOwnerId {
@@ -487,18 +493,9 @@ label {
     width: 100%;
 }
 
-#modeBar {
-    clear: both;
-    float: left;
-    font-size: 1.3em; 
-    width: 100%;
-    height: 2.0em;    
-    margin-bottom: 0.5em;
-
-}
-
 #mainMenu {
-    float: left;
+    position: absolute;
+    left: 0px;  
     width: 8%;
     height: 100%;
     margin-right: 2em;
@@ -512,20 +509,45 @@ label {
     width: 17em;
 }
 
+#spanTitle {
+    position: absolute;
+    left: 9%;
+}
+
+#spanHelp {
+    position: absolute;
+    right: 4.0em;   
+    text-align: center;  
+    font-size: 1.3em;   
+    background: darkgray; 
+}
+
 #selectMode {
-    float: left;
-    width: 60%;
+    position: absolute;
+    right: 0px;
+    width: 4.9em;            
     height: 100%;
+}
+#selectMode .wigo_ws_DropDownLabel {
+    height: 100%;
+    width: auto;
+    right: 2.8em;
+    margin-top: 2.5%;
 }
 #selectMode .wigo_ws_DropDownIcon {
     left: inherit;
-    right: 0px;
-    width: 14%;
+    right: 0.5em;    
+    width: 2.0em;  
 }
 #selectMode .wigo_ws_DropDownValue {
     top: 0px;
     right: 14%;
     margin-left: 2%;
+}
+#selectMode .wigo_ws_DropDownList { 
+    left: inherit;
+    right: 0.1em;
+    width: 6em;
 }
 
 #onlineOfflineEditBar {
@@ -562,6 +584,8 @@ label {
 }
 #divTrailInfo .wigo_ws_DropDownList {
     width: 20em;
+    max-height: 33em;
+    overflow-y: auto;
 }
 
 #onlineOfflineEditAction {
@@ -636,7 +660,7 @@ label {
 
 #divHelpGuide, #divHelpBackToTrail, 
 #divHelpTrackingVsBattery, #divTermsOfUse,
-#divHelpLicense {
+#divHelpLicense, #divHelpIPhoneLicense {
     position: absolute;
     left: 0px;
     top: 0px;

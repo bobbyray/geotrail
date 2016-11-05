@@ -1,4 +1,10 @@
-﻿/*
+﻿/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
+
+/*
 Module for a few html controls that work in the Apache Cordova framework 
 whose behavior is the same for android or ios platforms. 
 ios native implementation of some of the standard html controls like
@@ -177,6 +183,12 @@ function Wigo_Ws_CordovaControls() {
         // Remarks: Set to null to remove a handler function that has been previously assigned.
         this.onListElClicked = function (dataValue) { };
         
+        // Set to event handlerr fuction called when user closes droplist without selecting an element.
+        // Handler Signature:
+        //  No arg.
+        //  Returns: not used.
+        this.onNoSelectionClicked = function() { };
+
         // Fills dropdown list with values.
         // Arg:
         //  values: 2D array of [string, string, boolean]. droplist element shown for each list item when it is dropped.
@@ -542,10 +554,16 @@ function Wigo_Ws_CordovaControls() {
         // Closes the dropdown list that may be shown by any other droplist 
         // except for the dropdown icon that was clicked.
         function OnOutsideDropDownClicked(event) {
+            var bListWasDropped = bDropDownListDropped;
             var bMyDropDownIcon = dropDownIcon.img === event.srcElement ||
                                   value === event.srcElement;
-            if (!bMyDropDownIcon)
+            if (!bMyDropDownIcon) { 
                 that.drop(false); // Ensure dropdown list of other dropdown is closed.
+                // Do call back if dropdown list was closed.
+                if (bListWasDropped && 'function' === typeof that.onNoSelectionClicked) {
+                    that.onNoSelectionClicked();
+                }
+            }
         }
         document.body.addEventListener('click', OnOutsideDropDownClicked, false);
     }
@@ -961,12 +979,73 @@ function Wigo_Ws_CordovaControls() {
     TitleBar.prototype = controlBase;
     TitleBar.constructor = TitleBar;
 
+    // Object displaying a title bar. This object is an alternative to TitleBar.
+    // Args:
+    //  holderDiv: HTMLDivElemnt, required. Container for the title bar.
+    //  spanTitle: ref to HTMLElement, required.. Span for title text.
+    //  spanHelp: ref to HTMLElement, optional. HTML element for invoking Help when clicked.
+    // Remarks:
+    // spanHelp is likely a HTML Span Element whose text is a ? with class="wigo_ws_TitleBarHelp"
+    //      Could be any HTML Element for which a click event can be handled. May be null for no Help.
+    // spanTitle is likely a span with class="wigo_ws_Title".
+    function TitleBar2(holderDiv, spanTitle, spanHelp) {
+        var that = this;
+        
+        // Sets the title text.
+        // Arg:
+        //  sTitle: string. Text for the title.
+        this.setTitle = function(sTitle) {
+            spanTitle.innerText = sTitle;
+        }
+
+        // Scrolls this title bar into view.
+        this.scrollIntoView = function() {
+            holderDiv.scrollIntoView();
+        };
+
+        // Shows or hides the title bar.
+        // Arg:
+        //  bShow: boolean. true to show.
+        // Note: Initially title bar is shown. You may not need to hide it.
+        this.show = function(bShow) {
+            TitleBar.prototype.show(holderDiv, bShow);
+        };
+
+       
+        // Event handler called when Help symbol in title bar is clicked.
+        // Signature:
+        //  Arg:
+        //      event: Event object for the click.
+        // Returns nothing.
+        // Remarks: Set to null to disable event handler.
+        this.onHelpClicked = function(event){};
+
+        if (!(holderDiv instanceof HTMLDivElement))  {
+            throw new Error("Container for TitleBar must be a div.");
+        }
+
+        if (!(spanTitle instanceof HTMLElement))  {
+            throw new Error("Title must be a span or some kind of HTMLElement.");
+        }
+
+        if (spanHelp instanceof HTMLElement) {
+            spanHelp.addEventListener('click', function(event) {
+                if ('function' === typeof that.onHelpClicked)
+                    that.onHelpClicked(event);
+            }, false);
+        }
+    }
+    TitleBar2.prototype = controlBase;
+    TitleBar2.constructor = TitleBar2;
+
+
     return {
         DropDownControl: DropDownControl,
         TabControl: TabControl,
         StatusDiv: StatusDiv,
         OnOffControl: OnOffControl, 
         TitleBar: TitleBar,
+        TitleBar2: TitleBar2,
         NewYesNoControl: NewYesNoControl,
     }
 }
