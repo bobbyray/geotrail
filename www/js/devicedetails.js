@@ -4,19 +4,18 @@ Copyright (c) 2015, 2016 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
-// Returns type of type for a build.
-// Returns integer for type of device.
-// Retmarks:
-// The Wigo_Ws_CordovaDeviceDetails object in app.deviceDetails 
-// has the enumeration for devices. Return the appropiate one 
-// for the GeoTrail project being built.
-// For the iPhone, the device type return needs to be iPhone.
-// For Android phone, the device type return needs to be android.
-// This devicedetails.js file has the same name for android and iPhone
-// builds, but the content is different.   
-function Wigo_Ws_getDeviceType() {
-    var nDevice = app.deviceDetails.DeviceEnum().android;
-    ////20161023 Undo iphone
-    // var nDevice = app.deviceDetails.DeviceEnum().iPhone;
-    return nDevice;
+
+// Initialize a Wigo_Ws_CordovaDeviceDetails object for type of device.
+// Arg:
+//  deviceDetails: Wigo_Ws_CordovaDeviceDetails object to initialize.
+// Remarks
+// Set this file for Android or iPhone. The same file name is used
+// to build for android or ios, but the file content is different.
+function Wigo_Ws_InitDeviceDetails(deviceDetails) {
+    // Set type of device, android or iPhone.
+    deviceDetails.setDevice(deviceDetails.DeviceEnum().android);
+    // deviceDetails.setDevice(deviceDetails.DeviceEnum().iPhone); // For testing iPhone  
+    // Set flag to indicate if tracking uses navigator.geolocation.watchtPosition(..)
+    // or a wakeup timer and navigator.geolocation.getCurrentPosition(..).
+    deviceDetails.bUseWatchPositionForTracking = true;
 }

@@ -633,8 +633,15 @@ label {
 #mapTrackToggle, #mapPhAlertToggle {
     height: 100%;
     border: 1px solid black;
-    width: 31%;
+    width: auto;  
     float: right;
+    margin-left: 2px; 
+}
+
+#mapTrackToggle span.wigo_ws_OnCtrl, #mapTrackToggle span.wigo_ws_OffCtrl, 
+#mapPhAlertToggle span.wigo_ws_OnCtrl, #mapPhAlertToggle span.wigo_ws_OffCtrl  { 
+    margin-left: 0.2em;
+    margin-right: 0.2em;  
 }
 
 #closeDialogBar, #confirmDialogBar {

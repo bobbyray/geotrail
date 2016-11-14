@@ -147,15 +147,15 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 }
 .wigo_ws_OnCtrl {
     float: right;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
+    margin-left: 0.5em;  
+    margin-right: 0.5em; 
     margin-top: 0.2em;
     border: 1px solid black;
 }
 .wigo_ws_OffCtrl {
     float: right;
-    margin-left: 0.5em;
-    margin-right: 0.5em;
+    margin-left: 0.5em;  
+    margin-right: 0.5em; 
     margin-top: 0.2em;
     border: 1px solid black;
 }
