@@ -2,3 +2,4 @@
 /*.log
 *.delete
 /SpellCheck
+.gradle

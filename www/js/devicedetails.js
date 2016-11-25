@@ -15,7 +15,4 @@ function Wigo_Ws_InitDeviceDetails(deviceDetails) {
     // Set type of device, android or iPhone.
     deviceDetails.setDevice(deviceDetails.DeviceEnum().android);
     // deviceDetails.setDevice(deviceDetails.DeviceEnum().iPhone); // For testing iPhone  
-    // Set flag to indicate if tracking uses navigator.geolocation.watchtPosition(..)
-    // or a wakeup timer and navigator.geolocation.getCurrentPosition(..).
-    deviceDetails.bUseWatchPositionForTracking = true;
 }

@@ -8,11 +8,20 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 function wigo_ws_GeoTrailSettings() {
     // Boolean indicating geo location tracking is allowed.
     this.bAllowGeoTracking = true;
+
+    // Boolean indicating that navigator.geolocation.watchPosition(...) is used for tracking.
+    // For false, a wakeup timer is used for tracking.
+    // If this.bAllowGeoTracking is false, this property is ignored.
+    this.bUseWatchPositionForTracking = true; 
+
     // Float for period for updating geo tracking location in seconds.
     this.secsGeoTrackingInterval = 3 * 60; // Initially default was 30;
     // Float for distance in meters for threshold beyond which nearest distance to path is 
     // considered to be off-path.
     this.mOffPathThres = 30;
+    // Float for distance in meters from previous tracking geolocation for which
+    // alert is issued if off trail.  
+    this.mOffPathUpdate = 50; 
     // Boolean indicating geo location tracking is initially enabled.
     // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
     //       and tracking is not enabled.
@@ -491,6 +500,13 @@ function wigo_ws_Model() {
                 if (typeof(settings.bCompassHeadingVisible) === 'undefined') // 20160609 added.
                     settings.bCompassHeadingVisible = true; 
                 // **
+                //20161119 added member settings.mOffPathUpdate
+                if (typeof(settings.mOffPathUpdate) === 'undefined')
+                    settings.mOffPathUpdate = 50; // Default if not already defined.
+                
+                //20161121 added member settings.bUseWatchPositionForTracking,
+                if (typeof(settings.bUseWatchPositionForTracking) === 'undefined')
+                    settings.bUseWatchPositionForTracking = true; // Default if not defined.
             }
             return settings;
         };

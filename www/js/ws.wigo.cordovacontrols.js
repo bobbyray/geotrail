@@ -1085,10 +1085,6 @@ function Wigo_Ws_CordovaDeviceDetails() {
         return biPhone;
     }
     
-    // boolean flag to indicate if tracking uses navigator.geolocation.watchtPosition(..)
-    // or a wakeup timer and navigator.geolocation.getCurrentPosition(..).
-    this.bUseWatchPositionForTracking = false;
-   
     // Enumeration obj for identifying devices.
     var deviceEnum = this.DeviceEnum();
 

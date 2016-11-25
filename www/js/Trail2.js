@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  11/14/2016_1521"; // Constant string for App version.
+    var sVersion = "1.1.021  11/23/2016_1314"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2056,7 +2056,7 @@ function wigo_ws_View() {
                                 if (positionError) {
                                     ShowGeoLocPositionError(positionError);
                                 } else if (updResult) {
-                                    ShowGeoLocUpdateStatus(updResult);
+                                    ShowGeoLocUpdateStatus(updResult, true); // true => add notification also when an alert is given for off trail. 
                                 }
                             });
                         }
@@ -2074,7 +2074,42 @@ function wigo_ws_View() {
 
     // ** Controls for Settings
     var holderAllowGeoTracking = document.getElementById('holderAllowGeoTracking');
-    var selectAllowGeoTracking = ctrls.NewYesNoControl(holderAllowGeoTracking, null, 'Allow Geo Tracking', -1);
+    var selectAllowGeoTracking = new ctrls.DropDownControl(holderAllowGeoTracking, null, 'Allow Tracking', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var selectAllowGeoTrackingValues; 
+    if (app.deviceDetails.isAndroid() )
+        selectAllowGeoTrackingValues =  
+            [
+                ['no', 'No'],
+                ['watch', 'Continuous' ], // Use geolocation.watchPosition() for tracking.
+                ['timer', 'Periodic']     // Use wakeup timer for tracking.
+            ];
+    else
+        selectAllowGeoTrackingValues =  
+            [
+                ['no', 'No'],
+                ['watch', 'Continuous'], // Use geolocation.watchPosition() for tracking.
+            ];
+    selectAllowGeoTracking.fill(selectAllowGeoTrackingValues);   
+    // Show or hide other settings related to allow geo tracking selection.        
+    selectAllowGeoTracking.onListElClicked = function(dataValue) {
+        ShowOrHideDependenciesForAllowGeoTrackingItem(dataValue);
+    };
+    // Helper to show or hide dependent settings items for selectAllowGeoTracking droplist item.
+    // Arg:
+    //  dataValue: string for value of selected item for selectAllowGeoTracking droplist control.
+    function ShowOrHideDependenciesForAllowGeoTrackingItem(dataValue) {
+        if (dataValue === 'no') {
+            ShowElement(holderOffPathUpdateMeters, false);
+            ShowElement(holderGeoTrackingSecs, false);
+        } else if (dataValue === 'watch') {
+            ShowElement(holderOffPathUpdateMeters, true);
+            ShowElement(holderGeoTrackingSecs, false);
+        } else if (dataValue === 'timer') {
+            ShowElement(holderOffPathUpdateMeters, false);
+            ShowElement(holderGeoTrackingSecs, true);
+        }
+    } 
+
     
     var holderEnableGeoTracking = document.getElementById('holderEnableGeoTracking');
     var selectEnableGeoTracking = ctrls.NewYesNoControl(holderEnableGeoTracking, null, 'Geo Tracking Initially On', -1);
@@ -2083,6 +2118,8 @@ function wigo_ws_View() {
     var numberGeoTrackingSecs = new ctrls.DropDownControl(holderGeoTrackingSecs, null, 'Geo Tracking Interval', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     var numberGeoTrackingSecsValues = 
     [
+        ['5',   '5 secs'],
+        ['10', '10 secs'],
         ['30', '30 secs'],
         ['40', '40 secs'],
         ['50', '50 secs'],        
@@ -2124,6 +2161,36 @@ function wigo_ws_View() {
         ['1000','1km (1094yds)']
     ];
     numberOffPathThresMeters.fill(numberOffPathThresMetersValues);
+
+    var holderOffPathUpdateMeters = parentEl = document.getElementById('holderOffPathUpdateMeters');
+    var numberOffPathUpdateMeters = new ctrls.DropDownControl(parentEl, null, 'Geo Tracking Update', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberOffPathUpdateMetersValues = 
+    [
+        ['0',   '0m (always)'],
+        ['2',   '2m (2yds)'],
+        ['5',   '5m (5yds)'],
+        ['10',  '10m (11yds)'],
+        ['20', '20m (22yds)'],
+        ['30', '30m (33yds)'],
+        ['40', '40m (44yds)'],
+        ['50', '50m (55yds)'],
+        ['60', '60m (66yds)'],
+        ['60', '60m (66yds)'],
+        ['70', '70m (77yds)'],
+        ['80', '80m (87yds)'],
+        ['90', '90m (98yds)'],
+        ['100', '100m (109yds)'],
+        ['200', '200m (219yds)'],
+        ['300', '300m (328yds)'],
+        ['400', '400m (437yds)'],
+        ['500', '500m (547yds)'],
+        ['600', '600m (656yds)'],
+        ['700', '700m (766yds)'],
+        ['800', '800m (875yds)'],
+        ['900', '900m (984yds)'],
+        ['1000','1km (1094yds)']
+    ];
+    numberOffPathUpdateMeters.fill(numberOffPathUpdateMetersValues);
 
     parentEl = document.getElementById('holderPhoneAlert');
     var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert', -1);
@@ -2259,10 +2326,13 @@ function wigo_ws_View() {
         }
 
         // Check each ctrl for validity one by one.
-        if (!IsYesNoCtrlOk(selectAllowGeoTracking))  
+        if (!IsSelectCtrlOk2(selectAllowGeoTracking))  
             return false;
 
         if (!IsSelectCtrlOk2(numberOffPathThresMeters)) 
+            return false;
+
+        if (!IsSelectCtrlOk2(numberOffPathUpdateMeters))
             return false;
 
         if (!IsSelectCtrlOk2(numberGeoTrackingSecs))
@@ -2302,9 +2372,20 @@ function wigo_ws_View() {
     // Returns settings object wigo_ws_GeoTrailSettings from values in controls.
     function GetSettingsValues() {
         var settings = new wigo_ws_GeoTrailSettings();
-        settings.bAllowGeoTracking = selectAllowGeoTracking.getState() === 1;    
+        var allowGeoTrackingValue = selectAllowGeoTracking.getSelectedValue();
+        if (allowGeoTrackingValue === 'no') {
+            settings.bAllowGeoTracking = false;
+            settings.bUseWatchPositionForTracking = true;
+        } else if (allowGeoTrackingValue === 'timer') {
+            settings.bAllowGeoTracking = true;
+            settings.bUseWatchPositionForTracking = false;
+        } else { // (allowGeoTrackingValue === 'watch') 
+            settings.bAllowGeoTracking = true;
+            settings.bUseWatchPositionForTracking = true;
+        }
         
         settings.mOffPathThres = parseFloat(numberOffPathThresMeters.getSelectedValue());
+        settings.mOffPathUpdate = parseFloat(numberOffPathUpdateMeters.getSelectedValue());   
         settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.getSelectedValue());
         settings.bEnableGeoTracking = selectEnableGeoTracking.getState() === 1;
         settings.bOffPathAlert = selectOffPathAlert.getState() === 1;
@@ -2329,9 +2410,19 @@ function wigo_ws_View() {
     function SetSettingsValues(settings) {
         if (!settings)
             return;
-        selectAllowGeoTracking.setState(settings.bAllowGeoTracking ? 1 : 0);
+        var allowGeoTrackingValue;
+        if (settings.bAllowGeoTracking) {
+            allowGeoTrackingValue = settings.bUseWatchPositionForTracking ? 'watch' : 'timer';
+        } else {
+            allowGeoTrackingValue = 'no';
+        }
+        selectAllowGeoTracking.setSelected(allowGeoTrackingValue);
+
         numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
+        numberOffPathUpdateMeters.setSelected(settings.mOffPathUpdate.toFixed(0)); 
         numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
+        // Show or hide numberOffPathUpdateMeters and numberGeoTrackingSecs depending on selection for selectAllowGeoTracking.
+        ShowOrHideDependenciesForAllowGeoTrackingItem(allowGeoTrackingValue); 
 
         selectEnableGeoTracking.setState(settings.bEnableGeoTracking ? 1 : 0);
         selectOffPathAlert.setState(settings.bOffPathAlert ? 1 : 0);
@@ -2379,7 +2470,17 @@ function wigo_ws_View() {
         if (settings.bPebbleAlert)
             pebbleMsg.StartApp();
 
+        // Clear both trackTimer objs and select watch or timer object for trackTimer.
+        geoTrackTimerBase.ClearTimer(); 
+        geoTrackWatcher.ClearTimer(); 
+        if (settings.bAllowGeoTracking) {
+            trackTimer =  settings.bUseWatchPositionForTracking ? geoTrackWatcher : geoTrackTimerBase; 
+        } else {
+            trackTimer = geoTrackWatcher;
+        }
+
         trackTimer.dCloseToPathThres = settings.mOffPathThres;
+        trackTimer.dOffPathUpdate = settings.mOffPathUpdate;  
         trackTimer.setIntervalSecs(settings.secsGeoTrackingInterval);
         // Clear or start the trackTimer running.
         trackTimer.bOn = IsGeoTrackValueOn();
@@ -2566,6 +2667,10 @@ function wigo_ws_View() {
         // If distance from geolocation to nearest point on the path
         // is > dCloseToPathThres, then geo location is off-path.
         this.dCloseToPathThres = -1;
+
+        // Distance in meters traveling from previous tracking geolocation 
+        // when before issuing an alert again. 
+        this.dOffPathUpdate = 50; 
 
         // Sets period of timer interval.
         // Arg:
@@ -2767,7 +2872,6 @@ function wigo_ws_View() {
                 curPositionError = null;
 
                 curMapUpdateLocation = null;  // L.latLng(..) object defined in Leaflet for current location shown on map.
-                curMapUpdateTimeStamp = null;    // Number for timestamp in milliseconds current location shown on map. 
             }
 
         };
@@ -2810,35 +2914,24 @@ function wigo_ws_View() {
             }
         };
 
-        // Returns true if next location to show on map is needed or if elasped time from previous update
-        // is greater than the tracking interval.
-        // Saves current location and timestamp when an update is needed.
+        // Returns true if next location to show on map is needed.
+        // Saves current location when an update is needed.
         // Arg:
         //  nextMapUpdateLocation: LatLng object from Leaflet for next location to show on map.
         // Remarks:
-        // The map needs to be updated if distances has changed by minimum required amount, or
-        // if time since last update update is greater than the tracking interval specified in settings.
+        // The map needs to be updated if distance from previous location has changed by minimum required amount.
         function IsMapUpdateNeeded(nextMapUpdateLocation) {  
             var bYes = false;
             if (curMapUpdateLocation) {
                 var distance = curMapUpdateLocation.distanceTo(nextMapUpdateLocation)
-                bYes = distance > minMapUpdateDistance;
+                bYes = distance > that.dOffPathUpdate;
             } else {
                 bYes = true;
-            }
-            if (!bYes) {
-                if (curPosition && curMapUpdateTimeStamp) {
-                    var timestampDif =  curPosition.timestamp - curMapUpdateTimeStamp;
-                    bYes = timestampDif > that.getIntervalMilliSecs();
-                } else {
-                    bYes = true;
-                }
             }
 
             if (bYes) {
                 // Update current map position.
                 curMapUpdateLocation = nextMapUpdateLocation;
-                curMapUpdateTimeStamp = curPosition.timestamp;    
             }
             
             return bYes;
@@ -2851,14 +2944,15 @@ function wigo_ws_View() {
 
         var minMapUpdateDistance = 50;    // Minimum distance in meters from previous map update location to update again. 
         var curMapUpdateLocation = null;  // L.latLng(..) object defined in Leaflet for current location shown on map.
-        var curMapUpdateTimeStamp = null; // Number for timestamp in milliseconds current location shown on map. 
     }
 
-    GeoTrackWatcher.prototype = new GeoTrackTimer();
+    
+    var geoTrackTimerBase = new GeoTrackTimer();
+    GeoTrackWatcher.prototype = geoTrackTimerBase;
     GeoTrackWatcher.prototype.constructor = GeoTrackWatcher;
 
-    var trackTimer = app.deviceDetails.bUseWatchPositionForTracking ? new GeoTrackWatcher() : new GeoTrackTimer();
-    
+    var geoTrackWatcher = new GeoTrackWatcher();
+    var trackTimer = geoTrackWatcher;   // Initialize to track by using GeoTrackWatcher obj, switch later to timer obj if settings indicates. 
 
     // Opitons for getting current geolocation.
     // geoLocationOptions.maximumAge is 0 to always get new geolocation, Otherwise it is max time to use cached location in milliseconds.
@@ -2923,6 +3017,10 @@ function wigo_ws_View() {
         ShowElement(divTrailInfo, bShow);
     }
 
+    // Shows or hides an html element.
+    // Args:
+    //  el: HtmlElement to show or hide.
+    //  bShow: boolean indicating show.
     function ShowElement(el, bShow) {
         // var sShow = bShow ? 'block' : 'none';
         // el.style.display = sShow;
@@ -3021,7 +3119,10 @@ function wigo_ws_View() {
         this.countPhoneBeep = 0;
 
         // Issues an alert to devices that are enabled.
-        this.DoAlert = function() {
+        // Arg:
+        //  bNotifyToo boolean, optional. Indicated a notification is added to notification center
+        //             in addition to a beep. Defaults to false. 
+        this.DoAlert = function(bNotifyToo) {
             if (this.bAlertsAllowed) {
                 if (this.bPhoneEnabled) {
                     // Issue phone alert.
@@ -3031,11 +3132,41 @@ function wigo_ws_View() {
                         if (this.countPhoneBeep > 0)
                             navigator.notification.beep(this.countPhoneBeep);
                     }
+                    if (typeof bNotifyToo !== 'boolean')
+                        bNotifyToo = false;
+                    if (bNotifyToo)  
+                        DoNotify();
                 }
             }
         }
 
+
         // ** Private members
+        function DoNotify () {
+            var now   = new Date().getTime(), alertAt = new Date(now + 5*1000);
+            // Note: I think now would work for at property, probably no need to add 5 seconds.
+            var schedule = {
+                    id: 1, // Use same id replacing any previous notification.
+                    title: "GeoTrail Alert",
+                    at: alertAt,
+                    text: FormNotifyText(),
+                    //sound: window.app.deviceDetails.isAndroid() ? 'file://sound.mp3' : 'file://beep.caf'
+                };
+
+            if (cordova.plugins && cordova.plugins.notification && cordova.plugins.notification.local) {
+                cordova.plugins.notification.local.schedule(schedule);           
+            }
+        }
+
+        
+        // Returns a string for the notification text for the current time and date.
+        function FormNotifyText() {
+            var curDate = new Date(Date.now());
+            var sText = "Off Trail at {0}:{1}, {2} {3}".format(curDate.getHours(), curDate.getMinutes(), MonthName[curDate.getMonth()], curDate.getDate());
+            return sText;
+        } 
+
+        var MonthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     }
 
@@ -3144,7 +3275,9 @@ function wigo_ws_View() {
     //          bCompass: bool, bearingCompass: float, compassError: CompassError or null}:
     //    See SetGeoLocationUpdate(..) member of wigo_ws_GeoPathMap for details about upd, which is returned
     //    by the method. 
-    function ShowGeoLocUpdateStatus(upd) {
+    //  bNotifyToo boolean, optional. true to indicate that a notification is given in addition to a beep 
+    //             when an alert is issued because geolocation is off track. Defaults to false.
+    function ShowGeoLocUpdateStatus(upd, bNotifyToo) {
         // Return msg for paths distances from start and to end for phone.
         function PathDistancesMsg(upd) {
             // Set count for number of elements in dFromStart or dToEnd arrays.
@@ -3260,7 +3393,7 @@ function wigo_ws_View() {
             sMsg += PathDistancesMsg(upd);
             that.ShowStatus(sMsg, false);
             // Issue alert to indicated off-path.
-            alerter.DoAlert();
+            alerter.DoAlert(bNotifyToo); 
 
             // Issue alert to Pebble watch.
             sMsg = "Off {0} m\n".format(sDtoPath);
@@ -3355,11 +3488,11 @@ function wigo_ws_View() {
                           // ['start_pebble', 'Start Pebble'],          // No Pebble
                           ['help', 'Help - Guide'],                                
                           ['back_to_trail', 'Help - Back To Trail'],              
-                          // ['battery_drain', 'Help - Tracking vs Battery Drain'], // No automatic tracking  
+                          ['battery_drain', 'Help - Tracking vs Battery Drain'], ////20161122 Automatic tracking ok now // No automatic tracking  
                           ['about', 'About'],                                     
                           ['license', 'Licenses']                                 
                          ];
-        // iPhone, help help for features not available on iPhone.
+        // iPhone. Do not show help features not available on iPhone.
         var noHelp = document.getElementsByClassName("noIosHelp");
         for (var iNoHelp=0; iNoHelp < noHelp.length; iNoHelp++) {
             ShowElement(noHelp[iNoHelp], false);
@@ -3374,6 +3507,11 @@ function wigo_ws_View() {
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses']                                 // 7
                          ];
+        // Android. Do not show help for info about iPhone that does apply for Android.
+        var noHelp = document.getElementsByClassName("noAndroidHelp");
+        for (var iNoHelp=0; iNoHelp < noHelp.length; iNoHelp++) {
+            ShowElement(noHelp[iNoHelp], false);
+        }
     }
 
     mainMenu.fill(mainMenuValues);
