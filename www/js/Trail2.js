@@ -3488,7 +3488,7 @@ function wigo_ws_View() {
                           // ['start_pebble', 'Start Pebble'],          // No Pebble
                           ['help', 'Help - Guide'],                                
                           ['back_to_trail', 'Help - Back To Trail'],              
-                          ['battery_drain', 'Help - Tracking vs Battery Drain'], ////20161122 Automatic tracking ok now // No automatic tracking  
+                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  
                           ['about', 'About'],                                     
                           ['license', 'Licenses']                                 
                          ];

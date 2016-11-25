@@ -378,7 +378,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <h3 id="helpSettings">Menu > Settings</h3>
         <p>Presents a dialog to set your preferences for the app.</p>  
         <ul>
-            <!-- ////20161123 <li id="helpAllowGeoTracking" class="noIosHelp">Allow Geo Tracking Yes | No<br/> -->
             <li id="helpAllowGeoTracking">Allow Geo Tracking No | Continuous<span class="noIosHelp"> | Periodic</span><br/>
             For No, geolocation is NOT obtained automatically.
             However, the MyLoc button will still get your geolocation.<br/>
@@ -399,13 +398,19 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             does NOT occur. The app must must be displayed on the screen for automatic tracking to occurs.            
             </span>
             </li>
-            <li>Geo Tracking Initially On Yes | No<br/>  <!--////20161123 remove class="noIosHelp"  -->
+            <li>Geo Tracking Initially On Yes | No<br/>
             Yes to start with Track On (tracking enabled) when app loads.</li>
             <li>Geo Tracking Update<br/>
             Number of meters to travel before updating the status shown on the phone when Allow Geo Tracking Continuous is selected.
-            <li class="noIosHelp">Geo Tracking Interval (secs)<br/>  <!--////20161123 remove class="noIosHelp"  -->
+            <br/>
+            Geo Tracking Update is only in Settings if Allow Geo Tracking is Continuous.
+            </li>
+            <li class="noIosHelp">Geo Tracking Interval (secs)<br/>
             Number of seconds to check your geolocation when Allow Geo Tracking Period is selected.
-            The geolocation status is shown on the phone periodically after each interval.</li>
+            The geolocation status is shown on the phone periodically after each interval.
+            <br/>
+            Geo Tracking Interval is only in Settings if Allow Geo Tracking is Periodic.
+            </li>
             <li>Off Trail Threshold<br/>
             Number of meters that you need to be off trail for an alert to be given.</li>
             <li>Allow Phone Alert Yes | No<br/>
@@ -534,7 +539,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         The shorter the interval for automatic tracking, the quicker the battery drains. 
         So make the interval longer to reduce the drain on the battery.</p>
         <p>Menu > Settings > Geo Tracking Update sets the distance interval for continuous tracking.</p>
-        <p>Menu > Settings > Geo Tracking Interval sets the time interval for periodic tracking. </p>
+        <p class='noIosHelp'>Menu > Settings > Geo Tracking Interval sets the time interval for periodic tracking. </p>
         <p>Menu > Settings > Allow Geo Tracking No disables automatic tracking,
         which minimizes the battery drain.</p> 
         <p>You can still check your geo location manually by touching
@@ -542,12 +547,15 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <span class="noIosHelp"> Also, if using a Pebble watch, the Select (middle) button does the same thing.</span></p>
         <p>The Track control on the bottom of the map lets you toggle automatic tracking On or Off.</p>
         <span class="noIosHelp">
-        When this app is in the background (not showing) with automatic tracking off, the app is not draining the battery.
-        However, if the app is in the background with automatic tracking on, the app is draining the battery.</p>
-        <p>Note that if the phone is turned off (not powered totally off, just turned off), automatic tracking when enabled
+        When this app is in the background (not showing) with automatic tracking Off, the app is not draining the battery.
+        However, if the app is in the background with automatic tracking On, the app is draining the battery.</p>
+        <p>Note that if the phone screen is turned off (phone not powered totally off, just the screen turned off),
+        automatic tracking when On
         is still occurring, which is draining the battery.</p>
         </span>
-        <p>When automatic tracking is off, the drain on the battery is minimal.</p>
+        <p class='noAndroidHelp'> 
+        Automatic tracking does NOT occur if the app is in the background (not showing).</p>
+        <p>When automatic tracking is Off, the drain on the battery is minimal.</p>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
     <!-- Help License, only shown wehn selected from mainMenu -->
