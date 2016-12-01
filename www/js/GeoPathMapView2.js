@@ -77,7 +77,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // A color value is a string for a color. 
     // The rbg hex notation of '#rrggbb' can be used (rr for red, gg for green, bb for blue).
     this.color = {
-        path: 'red',
+        path: 'red',            // Path 
+        pathStart: '#00FF00', ////11201627???? deeppink   
         locCircle: '#00ff00',  // Current geo location.
         toPath: '#0000ff',     // Line back to path.
         prevLocCircle: '#00ffff',  // Previous location circle
@@ -86,7 +87,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         editCircle: 'yellow',      // Edit point on path.
         editSegment: 'magenta',    // Edit line segment for path.
         eraseSegment: 'white',     // Erase line segment when editing a point in the path.
-        compassHeadingArrow: 'yellow' // Compass heading arrow from current location circle.
+        compassHeadingArrow: 'yellow', // Compass heading arrow from current location circle.
     };
 
     // Initialize to use Open Streets Map once browser has initialized.
@@ -142,7 +143,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var curPathSegs = new PathSegs(); 
 
     var curPath = null; // Ref to current path drawn, a wigo_ws_GpxPath object.
-    // Draws geo path on the Google map object.
+    // Draws geo path on the map object.
     // Args:
     //  path: wigo_ws_GpxPath object for the path.
     this.DrawPath = function (path) {
@@ -161,8 +162,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         curPathSegs.Init(path);
         var pathCoords = curPathSegs.getPathCoords();
 
-        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 1.0 });
+        ////20161127Putback???? mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 1.0 });
+        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
         mapPath.addTo(map);
+
+        ////20161127MoveAfterFit // Draw start of path shape on the path.
+        ////20161127MoveAfterFit SetStartOfPathShape();  ////20161126 added
+
         // Set zoom so that trail fits if there is valid boundary.
         if (IsBoundaryValid(path)) { 
             var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
@@ -179,6 +185,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
         // Save zoom value to restore by this.PanToPathCenter().
         zoomPathBounds = map.getZoom();
+
+        // Draw start of path shape on the path.
+        SetStartOfPathShape();  ////20161126 added
 
         curPath = path; // Save current gpx path object.
         this.PanToPathCenter();
@@ -505,6 +514,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         zoomPathBounds = null; 
         curPath = null;
         curPathSegs.Clear(); 
+        ClearStartOfPathShape(); ////20161126 added
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
@@ -751,6 +761,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return pathCoords.length;
         };
 
+        // Returns numbers segnment is path.
+        this.getSegCount = function() {  ////20161126 add 
+            return pathCoords.length-1; 
+        }
+
         // Returns true stepping thru all segments of array has been completed.
         this.IsCycleDone = function () {
             var bDone = iCurIx === iOrgIx;
@@ -875,6 +890,526 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bYes = map != null;
         return bYes;
     }
+
+    
+    var startOfPathShape = null; // L.Polygon for shape for the start of a path. 
+    // Clears from ap the start of path shape.
+    function ClearStartOfPathShape() {
+        if (startOfPathShape)
+            map.removeLayer(startOfPathShape);
+    }
+
+    // Set (draws) shape for start of path beginning of first segment of the path
+    // given by curPathSegs var.
+    function SetStartOfPathShape() {
+        // Helper to calculate LatLng wrt starting point in pels.
+        // Returns LatLng object for geolocation of the calculated point.
+        // Args:
+        //  ptStart: Leaflet Point obj for start of shape in pels.
+        //  bearing: number. degrees wrt to North for point.
+        //  len: number. length from start to the point.
+        function CalcShapeLL0(ptStart, bearing, pelsLen) {
+            // Note: degTheta = 90.0 - bearingi, angle in degrees for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - bearing) * L.LatLng.DEG_TO_RAD;
+            var x = pelsLen * Math.cos(theta);
+            var y = -pelsLen * Math.sin(theta);
+            var ptAt = L.point(x,y);
+            ptAt = ptAt.add(ptStart);
+            var llAt = map.layerPointToLatLng(ptAt);
+            return llAt;
+        }
+
+
+        // Helper to calculate LatLng wrt starting point in pels.
+        // Returns LatLng object for geolocation of the calculated point.
+        // Args:
+        //  ptStart: Leaflet Point obj for start of shape in pels set by map.project(latlng);
+        //  bearing: number. degrees wrt to North for point.
+        //  len: number. length from start to the point.
+        function CalcShapeLL1(ptStart, bearing, pelsLen) {
+            // Note: degTheta = 90.0 - bearingi, angle in degrees for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - bearing) * L.LatLng.DEG_TO_RAD;
+            var x = pelsLen * Math.cos(theta);
+            var y = -pelsLen * Math.sin(theta);
+            var ptAt = L.point(x,y);
+            ptAt = ptAt.add(ptStart);
+            ////20161129 var llAt = map.layerPointToLatLng(ptAt);
+            var llAt = map.unproject(ptAt);
+            return llAt;
+        }
+
+
+
+
+        // Helper to calculate LatLng wrt starting point in pels.
+        // Returns LatLng object for geolocation of the calculated point.
+        // Args:
+        //  ptStart: Leaflet Point obj for start of shape in pels set by map.latLngToLayerPoint(latlng);
+        //  bearing: number. degrees wrt to North for point.
+        //  len: number. length from start to the point.
+        function CalcShapeLL2(ptStart, bearing, pelsLen) {
+            // Note: degTheta = 90.0 - bearingi, angle in degrees for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - bearing) * L.LatLng.DEG_TO_RAD;
+            var x = pelsLen * Math.cos(theta);
+            var y = -pelsLen * Math.sin(theta);
+            var ptAt = L.point(x,y);
+            ptAt = ptAt.add(ptStart);
+            ////20161129 var llAt = map.layerPointToLatLng(ptAt);
+            ////20161129 var llAt = map.unproject(ptAt);
+            var llAt = map.containerPointToLatLng(ptAt);
+            return llAt;
+        }
+
+
+        // Helper to calculate LatLng wrt starting point in pels.
+        // Returns LatLng object for geolocation of the calculated point.
+        // Args:
+        //  ptStart: Leaflet Point obj for start of shape in pels set by map.project(latlng);
+        //  bearing: number. degrees wrt to North for point.
+        //  len: number. length from start to the point.
+        //  zoom: number. zoom factor.
+        function CalcShapeLL3(ptStart, bearing, pelsLen, zoom) {
+            // Note: degTheta = 90.0 - bearingi, angle in degrees for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - bearing) * L.LatLng.DEG_TO_RAD;
+            var x = pelsLen * Math.cos(theta);
+            var y = -pelsLen * Math.sin(theta);
+            var ptAt = L.point(x,y);
+            ptAt = ptAt.add(ptStart);
+            ////20161129 var llAt = map.layerPointToLatLng(ptAt);
+            var llAt = map.unproject(ptAt, zoom);
+            return llAt;
+        }
+
+
+        // Calculates number of meters per pel for current zoom level.
+        // Returns leaflet Point obj for x and y meters per pel.
+        // Arg:
+        //  llAt: Leaflet LatLng obj for geolocation about which to calculate the result.
+        function MetersPerPel(llAt, ptAt) {
+            if (!ptAt)
+                ptAt = map.latLngToLayerPoint(llAt);
+            // Calc x meters per pel
+            var deltaXLL = L.latLng(llAt.lat, llAt.lng + 0.10); ////20161129 was 1 for delta did not help
+            var mDeltaX = llAt.distanceTo(deltaXLL);
+            var ptDeltaX = map.latLngToLayerPoint(deltaXLL);
+            ptDeltaX = ptDeltaX.subtract(ptAt);
+            var mPerPelX = mDeltaX / ptDeltaX.x;
+            // Calc y meters per pel
+            var deltaYLL = L.latLng(llAt.lat + 0.10, llAt.lng); ////20161129 was 1 for delta did not help
+            var mDeltaY  = llAt.distanceTo(deltaYLL);
+            var ptDeltaY = map.latLngToLayerPoint(deltaYLL);
+            ptDeltaY = ptDeltaY.subtract(ptAt);
+            var mPerPelY = -mDeltaY / ptDeltaY.y;  // Converty to + instead of -. ////20161128????
+            return L.point(mPerPelX, mPerPelY);
+        }
+
+        // Calculates a displacement point in meters returning a Leaflet Point object.
+        // Arg:
+        //  bearing: number. Heading in degrees wrt North, cw.
+        //  mLength: number. Length in meters along the bearing.
+        function CalcDeltaPoint(bearing, mLength) {
+            // Note: degTheta = 90.0 - bearingi, angle in degrees for std trig unit circle.
+            //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
+            var theta = (90.0 - bearing) * L.LatLng.DEG_TO_RAD;
+            var x = mLength * Math.cos(theta);
+            var y = -mLength * Math.sin(theta);
+            var ptAt = L.point(x,y);
+            return ptAt;
+        }
+
+        // Calculates a geolocation for a point in shape.
+        // Returns leaflet LatLng objoct for the resulting geolocation.
+        // Arg:
+        //  ptStart: leaflet Point obj. Starting point in pels for the shape.
+        //  bearing: number. heading in degrees from start point to the point in the shape.
+        //  mLength: number. length in meters from start to the point in the shape.
+        //  ptMperPel: leaflet Point obj, optional. Conversion for meters to pels.
+        //             If not given or null, calls MetersPerPel(ptStart) to get conversion obj.
+        function CalcShapeLL(ptStart, bearing, mLength, ptMperPel) {
+                if (!ptMperPel)
+                    ptMperPel = MetersPerPel(ptStart);
+                var ptDeltaTipPels = CalcDeltaPoint(bearing, mLength); // ptDeltaTipPels is in meters here.
+                ptDeltaTipPels.x = ptDeltaTipPels.x / ptMperPel.x;     // Convert meters to pels for x.
+                ptDeltaTipPels.y = ptDeltaTipPels.y / ptMperPel.y;     // Convert meters to pels for y.
+                var ptTip = ptStart.add(ptDeltaTipPels);
+                var llTip = map.layerPointToLatLng(ptTip);
+                return llTip;
+        }
+
+        function CalcStartTriangleLL1(seg, zoom) {
+                // Method that uses fixed pels to locate start of path shape via
+                // map.project(..) & map.unproject() with a zoom factor
+                var curZoom = map.getZoom();
+                ////20161129 var zoom = 16; //// 15; //// 16; ////20161129Oops 11; ////20161129 map.getZoom();
+                ////20161129 zoom = 16.0 * (zoom / 16.0);
+                var pelsSide = 4; ////20161127 1; ////20161127 Was 4;
+                var pelsTip = 12;  
+                // Starting point in pels is start of seg.
+                ////20161129 var ptStart = map.latLngToLayerPoint(seg.llStart);
+                var ptStart = map.project(seg.llStart, zoom);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+
+                // Right LatLng wrt starting point.
+                var llRight = CalcShapeLL3(ptStart, bearingRt, pelsSide, zoom);        ////20161127 was pelsTip/2
+                ////20161129 arShapes.push(llRight);
+                // Tip of segment.
+                var llTip = CalcShapeLL3(ptStart, bearingSeg, pelsTip, zoom);
+                ////20161129 arShapes.push(llTip);
+                ////20161129TryEndOf1stSeg arShapes.push(seg.llEnd);
+                // Left LatLng wrt starting point.
+                var llLeft = CalcShapeLL3(ptStart, bearingLt, pelsSide, zoom);   ////20161127 was pelsTip/3
+                //// arShapes.push(llLeft);
+
+                var ptLeft = map.latLngToContainerPoint(llLeft);
+                var ptRight = map.latLngToContainerPoint(llRight);
+                var ptDif = ptRight.subtract(ptLeft);
+                var pelsDif = Math.sqrt(ptDif.x*ptDif.x + ptDif.y*ptDif.y);
+                var triangle = {left: llLeft, right: llRight, tip: llTip, mBase: pelsDif};
+                return triangle;
+            
+        }
+
+
+        function CalcStartTriangleLL(seg, zoom, pelsSide, pelsTip) {
+                // Method that uses fixed pels to locate start of path shape via
+                // map.project(..) & map.unproject() with a zoom factor
+                var curZoom = map.getZoom();
+                ////20161129 var zoom = 16; //// 15; //// 16; ////20161129Oops 11; ////20161129 map.getZoom();
+                ////20161129 zoom = 16.0 * (zoom / 16.0);
+                ////20161130 var pelsSide = 4; ////20161127 1; ////20161127 Was 4;
+                ////20161130 var pelsTip = 12;  
+                // Starting point in pels is start of seg.
+                ////20161129 var ptStart = map.latLngToLayerPoint(seg.llStart);
+                var ptStart = map.project(seg.llStart, zoom);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+
+                // Right LatLng wrt starting point.
+                var llRight = CalcShapeLL3(ptStart, bearingRt, pelsSide, zoom);        ////20161127 was pelsTip/2
+                ////20161129 arShapes.push(llRight);
+                // Tip of segment.
+                var llTip = CalcShapeLL3(ptStart, bearingSeg, pelsTip, zoom);
+                ////20161129 arShapes.push(llTip);
+                ////20161129TryEndOf1stSeg arShapes.push(seg.llEnd);
+                // Left LatLng wrt starting point.
+                var llLeft = CalcShapeLL3(ptStart, bearingLt, pelsSide, zoom);   ////20161127 was pelsTip/3
+                //// arShapes.push(llLeft);
+
+                var ptLeft = map.latLngToContainerPoint(llLeft);
+                var ptRight = map.latLngToContainerPoint(llRight);
+                var ptDif = ptRight.subtract(ptLeft);
+                var pelsDif = Math.sqrt(ptDif.x*ptDif.x + ptDif.y*ptDif.y);
+                var triangle = {left: llLeft, right: llRight, tip: llTip, mBase: pelsDif};
+                return triangle;
+            
+        }
+
+
+
+
+        // Helper that calculates and returns array of LatLng points for start path shape.
+        // Returns null if there is no start segment.
+        function CalcStartOfPathShape() {
+            var arShapes;
+            if (curPathSegs.getSegCount() > 0) {
+                arShapes = [];
+                var seg = curPathSegs.GetSegRef(0);
+                ////20161127 var pelsTip = seg.len; // Was 9 Was 8 Was 4 // Pels along the seg.
+
+                /* ////20161127 Method that uses fixed pels to locate start of path shape via 
+                                map.latLngToLayerPoint(..) & map.layerPointToLatLng(..)
+
+                var pelsSide = 0; ////20161127 1; ////20161127 Was 4; 
+                // Starting point in pels is start of seg.
+                var ptStart = map.latLngToLayerPoint(seg.llStart);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+                // Left LatLng wrt starting point.
+                var llAt = CalcShapeLL0(ptStart, bearingLt, pelsSide);   ////20161127 was pelsTip/3
+                arShapes.push(llAt);
+                // Right LatLng wrt starting point.
+                llAt = CalcShapeLL0(ptStart, bearingRt, pelsSide);        ////20161127 was pelsTip/2
+                arShapes.push(llAt);
+                // Tip of segment.
+                ////20161127 llAt = CalcShapeLL0(ptStart, bearingSeg, pelsTip);
+                llAt = seg.llEnd;
+                arShapes.push(llAt);
+                */
+
+                /* ////20161129 
+                // Method that uses fixed pels to locate start of path shape via
+                // map.project(..) & map.unproject().
+
+                var pelsSide = 4; ////20161127 1; ////20161127 Was 4;
+                var pelsTip = 12;  
+                // Starting point in pels is start of seg.
+                ////20161129 var ptStart = map.latLngToLayerPoint(seg.llStart);
+                var ptStart = map.project(seg.llStart);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+                // Right LatLng wrt starting point.
+                var llAt = CalcShapeLL1(ptStart, bearingRt, pelsSide);        ////20161127 was pelsTip/2
+                arShapes.push(llAt);
+                // Tip of segment.
+                llAt = CalcShapeLL1(ptStart, bearingSeg, pelsTip);
+                arShapes.push(llAt);
+                // Left LatLng wrt starting point.
+                llAt = CalcShapeLL1(ptStart, bearingLt, pelsSide);   ////20161127 was pelsTip/3
+                arShapes.push(llAt);
+                */
+
+                /* ////20161129
+                // Method that uses fixed pels to locate start of path shape via
+                // map.project(..) & map.unproject() with a zoom factor
+                var curZoom = map.getZoom();
+                var zoom = 16; //// 15; //// 16; ////20161129Oops 11; ////20161129 map.getZoom();
+                ////20161129 zoom = 16.0 * (zoom / 16.0);
+                var pelsSide = 4; ////20161127 1; ////20161127 Was 4;
+                var pelsTip = 12;  
+                // Starting point in pels is start of seg.
+                ////20161129 var ptStart = map.latLngToLayerPoint(seg.llStart);
+                var ptStart = map.project(seg.llStart, zoom);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+                // Right LatLng wrt starting point.
+                var llRight = CalcShapeLL3(ptStart, bearingRt, pelsSide, zoom);        ////20161127 was pelsTip/2
+                arShapes.push(llRight);
+                // Tip of segment.
+                var llTip = CalcShapeLL3(ptStart, bearingSeg, pelsTip, zoom);
+                arShapes.push(llTip);
+                ////20161129TryEndOf1stSeg arShapes.push(seg.llEnd);
+                // Left LatLng wrt starting point.
+                var llLeft = CalcShapeLL3(ptStart, bearingLt, pelsSide, zoom);   ////20161127 was pelsTip/3
+                arShapes.push(llLeft);
+
+                var ptLeft = map.latLngToContainerPoint(llLeft);
+                var ptRight = map.latLngToContainerPoint(llRight);
+                var ptDif = ptRight.subtract(ptLeft);
+                var pelsDif = Math.sqrt(ptDif.x*ptDif.x + ptDif.y*ptDif.y);
+                */
+                
+                /* ////20161130 
+                var triangle = null;
+                var prevTriangle = null;
+                var zoom = 16;
+                var lowBase = 6;
+                var hiBase = 10;
+                var bDone = false;
+                var eState = {initial: 0, increasing: 1, decreasing: 2, done: 3};
+                var sizeState = eState.initial;
+                for (var i=0; i < 20 && sizeState != eState.done; i++) { // 20 is safety limit for prevent endless looping. Should not be reached.
+                 triangle = CalcStartTriangleLL1(seg, zoom);
+                 if (triangle.mBase > hiBase) {
+                     if (sizeState === eState.increasing) {
+                         // Was increasing size, so stop and use current triangle.
+                         sizeState = eState.done;
+                     } else {
+                        // decrease triangle size by making zoom larger.
+                        zoom++;
+                        prevTriangle = triangle;
+                        sizeState = eState.decreasing;
+                     }
+                 } else if (triangle.mBase < lowBase) {
+                     if (sizeState === eState.decreasing) {
+                         // Was decreasing size, so stop and use previous triangle.
+                         triangle = prevTriangle;
+                         sizeState = eState.done;
+                     } else {
+                        // increase triangle size by making zoom smaller.
+                        zoom--;
+                        prevTriangle = triangle;
+                        sizeState = eState.increasing;
+                     }
+                 } else {
+                     sizeState = eState.done;
+                 }
+
+                };
+                arShapes.push(triangle.right);
+                arShapes.push(triangle.tip);
+                arShapes.push(triangle.left);
+                */
+
+
+                ////$$$$ try different approach
+                var triangle = null;
+                var prevTriangle = null;
+                var zoom = 20; ////20161130???? 16;
+                var pelsSide = 3;
+                var pelsTip = 4 * pelsSide;
+                var lowBase = 6;
+                var hiBase = 10;
+                var bDone = false;
+                var eState = {initial: 0, increasing: 1, decreasing: 2, done: 3};
+                var sizeState = eState.initial;
+                for (var i=0; i < 200 && sizeState != eState.done; i++) { // 20 is safety limit for prevent endless looping. Should not be reached.
+                    triangle = CalcStartTriangleLL(seg, zoom, pelsSide, pelsTip);
+                    if (triangle.mBase > hiBase) {
+                        if (sizeState === eState.increasing) {
+                            // Was increasing size, so stop and use current triangle.
+                            sizeState = eState.done;
+                        } else {
+                            // decrease triangle size.
+                            pelsSide--;
+                            pelsTip = 4*pelsSide;
+                            prevTriangle = triangle;
+                            sizeState = eState.decreasing;
+                        }
+                    } else if (triangle.mBase < lowBase) {
+                        if (sizeState === eState.decreasing) {
+                            // Was decreasing size, so stop and use previous triangle.
+                            triangle = prevTriangle;
+                            sizeState = eState.done;
+                        } else {
+                            // increase triangle size.
+                            pelsSide++;
+                            pelsTip = 4*pelsSide;
+                            prevTriangle = triangle;
+                            sizeState = eState.increasing;
+                        }
+                    } else {
+                        sizeState = eState.done;
+                    }
+                };
+                arShapes.push(triangle.right);
+                arShapes.push(triangle.tip);
+                arShapes.push(triangle.left);
+
+
+
+
+                /* ////20161129 
+                // Method that uses fixed pels to locate start of path shape via
+                // map.containerPointToLatLng(..) & map.latLngToContainerPoint(..).
+
+                var pelsSide = 4; ////20161127 1; ////20161127 Was 4;
+                var pelsTip = 12;  
+                // Starting point in pels is start of seg.
+                ////20161129 var ptStart = map.latLngToLayerPoint(seg.llStart);
+                var ptStart = map.latLngToContainerPoint(seg.llStart);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+                // Right LatLng wrt starting point.
+                var llAt = CalcShapeLL2(ptStart, bearingRt, pelsSide);        ////20161127 was pelsTip/2
+                arShapes.push(llAt);
+                // Tip of segment.
+                llAt = CalcShapeLL2(ptStart, bearingSeg, pelsTip);
+                arShapes.push(llAt);
+                // Left LatLng wrt starting point.
+                llAt = CalcShapeLL2(ptStart, bearingLt, pelsSide);   ////20161127 was pelsTip/3
+                arShapes.push(llAt);
+                */
+
+
+
+                /* ////20161127 simplify
+                var llStart = L.latLng(seg.llStart.lat, seg.llStart.lng);
+                arShapes.push(llStart);
+                var llEnd = L.latLng(seg.llEnd.lat, seg.llEnd.lng);
+                arShapes.push(llEnd);
+                */
+
+                /* ////20161128, worked 
+                arShapes.push(seg.llStart);
+                arShapes.push(seg.llEnd);
+                */
+
+                /* ////20161129 Method that uses meters to locate of start of path shape.
+                // Starting point in pels is start of seg.
+                var ptStart = map.latLngToLayerPoint(seg.llStart);
+                // Calc bearing in degs for segment.
+                var bearingSeg = seg.llStart.bearingTo(seg.llEnd);
+                // Calc bearing to right point. 
+                var bearingRt = bearingSeg + 90.0;
+                // Calc bearing to left point.
+                var bearingLt = bearingSeg - 90.0;  
+
+                var mTip = 10; // length in for tip in m.
+                var mSide = 3; // length in meters for left or right side.
+                // Calc latlng for tip along the segment.
+                var ptMperPel = MetersPerPel(seg.llStart, ptStart);
+                var llTip = CalcShapeLL(ptStart, bearingSeg, mTip, ptMperPel);
+                // Calc latlng for right side.
+                var llRt = CalcShapeLL(ptStart, bearingRt, mSide, ptMperPel);
+                // Calc latlng for left side.
+                var llLt = CalcShapeLL(ptStart, bearingLt, mSide, ptMperPel);
+
+                arShapes.push(seg.llStart);
+                arShapes.push(llRt);
+                arShapes.push(llTip);
+                arShapes.push(llLt);
+
+                var mCheckRt = seg.llStart.distanceTo(llRt);
+                var checkBearingRt = seg.llStart.bearingTo(llRt);
+                var mCheckLt = seg.llStart.distanceTo(llLt);
+                var checkBearingLt = seg.llStart.bearingTo(llLt);
+                var mCheckTip = seg.llStart.distanceTo(llTip);
+                var checkBearingTip = seg.llStart.bearingTo(llTip);
+                */
+
+            } else {
+                arShapes = null;
+            }
+            return arShapes;
+        }
+
+        /* ////20161128 for first line
+        var shapeOptions = {
+            ////20161127 fillColor: that.color.pathStart,  // fill color
+            color: that.color.pathStart,  // stroke (perimiter) color
+            ////20161127 weight: 1,    // stroke width in pels
+            weight: 8, ////20161127???? 10,    // stroke width in pels
+            ////20161127 fill: true,
+            ////20161127 fillOpacity: 1.0,
+            opacity: 1.0
+        };
+        */
+        var shapeOptions = {
+            fillColor: that.color.pathStart,  // fill color
+            color: that.color.pathStart,  // stroke (perimiter) color
+            weight: 1,    // stroke width in pels
+            ////20161128 weight: 8, ////20161127???? 10,    // stroke width in pels for first line segment
+            fill: true,
+            fillOpacity: 1.0,
+            opacity: 1.0
+        };
+        var arLatLng = CalcStartOfPathShape();
+        if (arLatLng) {
+            startOfPathShape = L.polygon(arLatLng, shapeOptions); // for polygon shape at start of path.
+            ////20161128 startOfPathShape = L.polyline(arLatLng, shapeOptions); // first segment of line in different color.
+            startOfPathShape.addTo(map);
+        }
+    }
+    
 
     // Clears from map the geo location circle.
     function ClearGeoLocationCircle() {
@@ -1014,10 +1549,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         function CalcArrowTip(llArrowBase, degPhi, pelsR) {
             // Get map screen point for base of arrow at current geo location circle.
             var ptArrowBase =  map.latLngToLayerPoint(llArrowBase);
-            // Calculate point in pixels on the map for tip from degHeading.
-            // Note: angle for rt triangle for x, y is 90 degree - degHeading.
+            // Calculate point in pixels on the map for tip from degPhi.
+            // Note: angle for rt triangle for x, y is 90 degree - degPhi.
             //       So use sin() to calc x, and cos() to calc y. 
-            // Note: degTheata = 90.0 - degPhi, angle for std trig unit circle.
+            // Note: degTheta = 90.0 - degPhi, angle for std trig unit circle.
             //       yMap = -YTrig, Y axis on map is negative yTrig axis. 
             var theta = (90.0 - degPhi) * L.LatLng.DEG_TO_RAD;
             var x = pelsR * Math.cos(theta);
@@ -1029,7 +1564,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
         
         
-        // Calcuates are returns array of LatLng objs for points in a polygon for the arrow.
+        // Calcuates and returns array of LatLng objs for points in a polygon for the arrow.
         function CalcArrowPolygon() {
             if (! geolocCircle) 
                 return null;
@@ -1053,7 +1588,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             color: that.color.compassHeadingArrow,
             fill: true,
             fillOpacity: 1.0
-        }
+        };
         var arLatLng = CalcArrowPolygon();
         if (arLatLng) {
             compassHeadingArrow = L.polygon(arLatLng, arrowOptions);
@@ -1120,7 +1655,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         touchCircle = L.circle(latlng, r, circleOptions);
         touchCircle.addTo(map);
     }
-
 
     var editSegment = null; // L.PolyLine object for edit segment overlay.
 
