@@ -902,6 +902,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Set (draws) shape for start of path beginning of first segment of the path
     // given by curPathSegs var.
     function SetStartOfPathShape() {
+
+        
         // Helper to calculate LatLng wrt starting point in pels.
         // Returns LatLng object for geolocation of the calculated point.
         // Args:
@@ -1116,8 +1118,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return triangle;
             
         }
-
-
 
 
         // Helper that calculates and returns array of LatLng points for start path shape.
@@ -1381,6 +1381,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             return arShapes;
         }
+        
+
 
         /* ////20161128 for first line
         var shapeOptions = {
@@ -1393,9 +1395,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             opacity: 1.0
         };
         */
+
+        /* ////20161201        
         var shapeOptions = {
             fillColor: that.color.pathStart,  // fill color
-            color: that.color.pathStart,  // stroke (perimiter) color
+            color: that.color.pathStart,  // stroke (perimeter) color
             weight: 1,    // stroke width in pels
             ////20161128 weight: 8, ////20161127???? 10,    // stroke width in pels for first line segment
             fill: true,
@@ -1406,6 +1410,63 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         if (arLatLng) {
             startOfPathShape = L.polygon(arLatLng, shapeOptions); // for polygon shape at start of path.
             ////20161128 startOfPathShape = L.polyline(arLatLng, shapeOptions); // first segment of line in different color.
+            startOfPathShape.addTo(map);
+        }
+        */
+
+        // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
+        // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart, and llTo is end for the part of segment.
+        // Args:
+        //  llStart: LatLng obj for start of segment.
+        //  llEnd: LatLng obj for end of segment.
+        //  fraction: number, optional. portion of segment from llStart to llEnd. If undefined, 
+        //            llStart to llEnd is returned.
+        function CalcAlongSeg(llStart, llEnd, fraction) {
+            var arSeg = [];
+            if (typeof(fraction) === 'undefined') {
+                arSeg.push(llStart);
+                arSeg.push(llEnd);
+            } else {
+                var llDelta = L.latLng(llEnd.lat - llStart.lat, llEnd.lng - llStart.lng);
+                llDelta.lat = fraction * llDelta.lat;
+                llDelta.lng = fraction * llDelta.lng;
+                var llEndPart = L.latLng(llStart.lat + llDelta.lat, llStart.lng + llDelta.lng);
+                arSeg.push(llStart);
+                arSeg.push(llEndPart);
+            }
+            return arSeg;
+        }
+
+        
+        // Helper that calculates a portion of first line segment.
+        // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart of first segment, and 
+        //          llTo is end for the part of first segment.
+        //  Arg:
+        //  mMaxLen: number. maximum number of meters for part returns. if mMaxLen > len of first segment, 
+        //           returns part as complete first segment.
+        function CalcStartOfPathLine(mMaxLen) {
+            var arPart;
+            if (curPathSegs.getSegCount() > 0) {
+                var seg = curPathSegs.GetSegRef(0);
+                if (seg.len > mMaxLen)
+                    arPart = CalcAlongSeg(seg.llStart, seg.llEnd, mMaxLen / seg.len);
+                else
+                    arPart = CalcAlongSeg(seg.llStart, seg.llEnd);
+            } else {
+                arPart = null;
+            }
+            return arPart
+        }
+
+
+        var shapeOptions = {
+            color: that.color.pathStart,  // stroke (perimeter) color
+            weight: 6,    // stroke width in pels for line.
+            opacity: 1.0
+        };
+        var arLatLng = CalcStartOfPathLine(30);
+        if (arLatLng) {
+            startOfPathShape = L.polyline(arLatLng, shapeOptions); // first segment of line in different color.
             startOfPathShape.addTo(map);
         }
     }
