@@ -77,13 +77,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // A color value is a string for a color. 
     // The rbg hex notation of '#rrggbb' can be used (rr for red, gg for green, bb for blue).
     this.color = {
-        path: '#b36b00',        // Sandy ////20161201 Was 'red',            // Path 
+        path: '#331a00',        // dark broun //was '#ff8c1a', //was '#663300', //was #b36b00'  //was brown to sandy ////20161201 remove comment for other colors  
         pathStart: '#00FF00',   // bright green
         pathEnd:    '#ff0000',  // bright red
-        locCircle: '#00ff00',   // Current geo location.
-        toPath: '#0000ff',      // Line back to path.
-        prevLocCircle: '#00ffff',  // Previous location circle
-        refLine: '#000000',        // Ref line from current location to previous location.
+        locCircle: '#00ff00',   // Current geo location, bright green.
+        toPath: '#0000ff',      // Line back to path, bright blue.
+        prevLocCircle: '#00ffff',  // Previous location circle, cyan
+        refLine: '#000000',        // Ref line from current location to previous location, black.
         touchCircle: 'orange',     // Touch point when editing path.
         editCircle: 'yellow',      // Edit point on path.
         editSegment: 'magenta',    // Edit line segment for path.
@@ -163,12 +163,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         curPathSegs.Init(path);
         var pathCoords = curPathSegs.getPathCoords();
 
-        ////20161127Putback???? mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 1.0 });
         mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
         mapPath.addTo(map);
-
-        ////20161127MoveAfterFit // Draw start of path shape on the path.
-        ////20161127MoveAfterFit SetStartEndOfPathShape();  ////20161126 added
 
         // Set zoom so that trail fits if there is valid boundary.
         if (IsBoundaryValid(path)) { 
@@ -188,7 +184,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         zoomPathBounds = map.getZoom();
 
         // Draw start and end of path shape on the path.
-        SetStartEndOfPathShape();  ////20161126 added
+        SetStartEndOfPathShape();  
 
         curPath = path; // Save current gpx path object.
         this.PanToPathCenter();
@@ -515,8 +511,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         zoomPathBounds = null; 
         curPath = null;
         curPathSegs.Clear(); 
-        ClearStartOfPathShape(); ////20161126 added
-        ClearEndOfPathShape();   ////20161201 added
+        ClearStartOfPathShape(); 
+        ClearEndOfPathShape();   
         ClearGeoLocationCircle();
         ClearGeoLocationToPathArrow();
         ClearPrevGeoLocRefLine();
@@ -764,7 +760,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns numbers segnment is path.
-        this.getSegCount = function() {  ////20161126 add 
+        this.getSegCount = function() {   
             return pathCoords.length-1; 
         }
 
@@ -911,6 +907,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
     // Set (draws) shape for start of path beginning of first segment of the path
     // given by curPathSegs var.
+    // Remarks:
+    // At first tried to draw a triangle for start of trail and a square for end trail using
+    // leaflet polygon, but this has problems with scaling because triangle could be way too
+    // large for a trail with a small zoom factor. The solution is to draw a partial line segment 
+    // overlaying the first and last segment (each a different color) of the trail.  
     function SetStartEndOfPathShape() {
 
         // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
@@ -986,14 +987,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             weight: 6,    // stroke width in pels for line.
             opacity: 1.0
         };
-        var arLatLng = CalcStartOfPathLine(30);
+        var arLatLng = CalcStartOfPathLine(30);  
         if (arLatLng) {
             startOfPathShape = L.polyline(arLatLng, shapeOptions); // first segment of line in different color.
             startOfPathShape.addTo(map);
         }
         // Draw end segment shape.
         shapeOptions.color = that.color.pathEnd;
-        arLatLng = CalcEndOfPathLine(30);
+        arLatLng = CalcEndOfPathLine(30);   
         if (arLatLng) {
             endOfPathShape = L.polyline(arLatLng, shapeOptions); // last segment of line in different color.
             endOfPathShape.addTo(map);
