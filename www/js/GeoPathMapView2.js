@@ -77,7 +77,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // A color value is a string for a color. 
     // The rbg hex notation of '#rrggbb' can be used (rr for red, gg for green, bb for blue).
     this.color = {
-        path: '#331a00',        // dark broun //was '#ff8c1a', //was '#663300', //was #b36b00'  //was brown to sandy ////20161201 remove comment for other colors  
+        path: '#331a00',        // dark broun //was '#ff8c1a', //was '#663300', //was #b36b00'  //was brown to sandy  
         pathStart: '#00FF00',   // bright green
         pathEnd:    '#ff0000',  // bright red
         locCircle: '#00ff00',   // Current geo location, bright green.

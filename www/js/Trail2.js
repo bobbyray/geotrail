@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021  11/23/2016_1314"; // Constant string for App version.
+    var sVersion = "1.1.021"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2192,6 +2192,16 @@ function wigo_ws_View() {
     ];
     numberOffPathUpdateMeters.fill(numberOffPathUpdateMetersValues);
 
+    parentEl = document.getElementById('holderDistanceUnits');  
+    var distanceUnits = new ctrls.DropDownControl(parentEl, null, 'Distance Units', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var distanceUnitsValues = 
+    [
+        ['metric', 'Metric'],
+        ['english', 'English']
+    ];
+    distanceUnits.fill(distanceUnitsValues);
+
+
     parentEl = document.getElementById('holderPhoneAlert');
     var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert', -1);
 
@@ -2335,6 +2345,9 @@ function wigo_ws_View() {
         if (!IsSelectCtrlOk2(numberOffPathUpdateMeters))
             return false;
 
+        if (!IsSelectCtrlOk2(distanceUnits))  
+            return false;
+
         if (!IsSelectCtrlOk2(numberGeoTrackingSecs))
             return false;
 
@@ -2386,6 +2399,7 @@ function wigo_ws_View() {
         
         settings.mOffPathThres = parseFloat(numberOffPathThresMeters.getSelectedValue());
         settings.mOffPathUpdate = parseFloat(numberOffPathUpdateMeters.getSelectedValue());   
+        settings.distanceUnits = distanceUnits.getSelectedValue();   
         settings.secsGeoTrackingInterval = parseFloat(numberGeoTrackingSecs.getSelectedValue());
         settings.bEnableGeoTracking = selectEnableGeoTracking.getState() === 1;
         settings.bOffPathAlert = selectOffPathAlert.getState() === 1;
@@ -2420,6 +2434,7 @@ function wigo_ws_View() {
 
         numberOffPathThresMeters.setSelected(settings.mOffPathThres.toFixed(0));
         numberOffPathUpdateMeters.setSelected(settings.mOffPathUpdate.toFixed(0)); 
+        distanceUnits.setSelected(settings.distanceUnits);  
         numberGeoTrackingSecs.setSelected(settings.secsGeoTrackingInterval.toFixed(0));
         // Show or hide numberOffPathUpdateMeters and numberGeoTrackingSecs depending on selection for selectAllowGeoTracking.
         ShowOrHideDependenciesForAllowGeoTrackingItem(allowGeoTrackingValue); 
@@ -2469,6 +2484,9 @@ function wigo_ws_View() {
         // Start Pebble app if it is enabled.
         if (settings.bPebbleAlert)
             pebbleMsg.StartApp();
+
+        // Set distanceUnits for english or metric.
+        lc.bMetric = settings.distanceUnits === 'metric';  
 
         // Clear both trackTimer objs and select watch or timer object for trackTimer.
         geoTrackTimerBase.ClearTimer(); 
@@ -3170,6 +3188,76 @@ function wigo_ws_View() {
 
     }
 
+    // Object for converting meters to English units, or to use meters.
+    function LengthConverter() {
+        // boolean. true to use metric for lenths. false for English units.
+        this.bMetric = false;
+
+        // number. Limit in feet at or below which a length in meters is converted to feet and
+        //         above which length is converted to miles.
+        //         Only relevant for English units.
+        this.feetLimit = 500;  
+
+        // number. Limit in meters below which a length is meters and
+        //         above which length is converted to kilometers.
+        //         Only relevant for Metric units.
+        this.meterLimit = 1000;
+
+        // number. Number of fixed point decimal places for miles.
+        this.mileFixedPoint = 2;
+
+        // number. Number of fixed point decimal places for kilometers.
+        this.kmeterFixedPoint = 2;
+
+        // Return length in metric or English units based this.bMetric.
+        // Returns: {n: number, unit: string}, where
+        //  n is number for the length.
+        //  unit: is string specifying kind of unit:
+        //        m for meter
+        //        ft for foot
+        //        mi for mile
+        // Arg:
+        //  mLen: number. Length in meters to be converted.
+        this.toNum = function(mLen) {
+            var result = { n: 0, unit: 'm'};
+            if (this.bMetric) {
+                result.n = mLen; 
+                if (Math.abs(result.n) >= this.meterLimit) {
+                    result.n = result.n / 1000.0;
+                    result.unit = 'km';
+                }
+            } else {
+                // 1 m = 3.2808399 ft
+                // 1 foot =  0.3048 meters
+                result.n = mLen / 0.3048;
+                if (Math.abs(result.n) > this.feetLimit) {
+                    // 1 mile = 5280 feet
+                    result.n = result.n / 5280;
+                    result.unit = 'mi';
+                } else {
+                    result.unit = 'ft';
+                }
+            }
+            return result;            
+        };
+        
+        // Returns a string for conversion of a length in meters.
+        // The string has a suffix for the kind of unit.
+        // Arg:
+        //  mLen: number. length in meters to be converted.
+        this.to = function(mLen) {
+            var result = this.toNum(mLen);
+            var nFixed = 0;
+            if (result.unit === 'mi') 
+                nFixed = this.mileFixedPoint;
+            else if (result.unit === 'km')
+                nFixed = this.kmeterFixedPoint;
+            var s = result.n.toFixed(nFixed) + result.unit;
+            return s; 
+        };
+    }
+    var lc = new LengthConverter(); // Length converter object for displaying status to phone or pebble.
+
     // Object to access Pebble message api.
     function PebbleMessage() {
         var that = this;
@@ -3269,6 +3357,7 @@ function wigo_ws_View() {
         };
     }
 
+
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
     // Arg:
     //  upd is {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: float, bearingRefLine: float,
@@ -3292,16 +3381,16 @@ function wigo_ws_View() {
                 if (i === 0)
                     dTotal += upd.dFromStart[i];
                 sMore = count > 1 && i < count - 1 ? "/" : "";
-                s += "Fr Beg: {0}m{1}<br/>".format(upd.dFromStart[i].toFixed(0), sMore);
+                s += "Fr Beg: {0}{1}<br/>".format(lc.to(upd.dFromStart[i]), sMore);
             }
 
             for (i = 0; i < count; i++) {
                 if (i === 0)
                     dTotal += upd.dToEnd[i];
                 sMore = count > 1 && i < count - 1 ? "/" : "";
-                s += "To End: {0}m{1}<br/>".format(upd.dToEnd[i].toFixed(0), sMore);
+                s += "To End: {0}{1}<br/>".format(lc.to(upd.dToEnd[i]), sMore);
             }
-            s += "Total: {0}m<br/>".format(dTotal.toFixed(0));
+            s += "Total: {0}<br/>".format(lc.to(dTotal));
             return s;
         }
 
@@ -3319,16 +3408,16 @@ function wigo_ws_View() {
                 if (i === 0)
                     dTotal += upd.dFromStart[i];
                 sMore = count > 1 && i < count - 1 ? "/" : "";
-                s += "<- {0}m{1}<br/>".format(upd.dFromStart[i].toFixed(0), sMore);
+                s += "<- {0}{1}<br/>".format(lc.to(upd.dFromStart[i]), sMore);
             }
 
             for (i = 0; i < count; i++) {
                 if (i === 0)
                     dTotal += upd.dToEnd[i];
                 sMore = count > 1 && i < count - 1 ? "/" : "";
-                s += "-> {0}m{1}<br/>".format(upd.dToEnd[i].toFixed(0), sMore);
+                s += "-> {0}{1}<br/>".format(lc.to(upd.dToEnd[i]), sMore);
             }
-            s += "Tot {0}m<br/>".format(dTotal.toFixed(0));
+            s += "Tot {0}<br/>".format(lc.to(dTotal));
             return s;
         }
 
@@ -3357,14 +3446,14 @@ function wigo_ws_View() {
         } else {
             // vars for off-path messages.
             var sBearingToPath = upd.bearingToPath.toFixed(0);
-            var sDtoPath = upd.dToPath.toFixed(0);
+            var sDtoPath = lc.to(upd.dToPath);
             var sToPathDir = map.BearingWordTo(upd.bearingToPath);
             var phi = upd.bearingToPath - upd.bearingRefLine;
             var phiCompass = upd.bearingToPath -  upd.bearingCompass;
             var sTurn = 'Right';
             var sTurnCompass = 'Right';
             // Show distance and heading from off-path to on-path location.
-            var s = "Off trail {2}m.<br/>Head {0} ({1}&deg; wrt N) to go to trail.<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
+            var s = "Off trail {2}.<br/>Head {0} ({1}&deg; wrt N) to go to trail.<br/>".format(sToPathDir, sBearingToPath, sDtoPath);
             var sMsg = s;
             if (upd.bRefLine) {
                 // Calculate angle to turn to return to path based on previous heading.
@@ -3396,7 +3485,7 @@ function wigo_ws_View() {
             alerter.DoAlert(bNotifyToo); 
 
             // Issue alert to Pebble watch.
-            sMsg = "Off {0} m\n".format(sDtoPath);
+            sMsg = "Off {0}\n".format(sDtoPath);
             // sMsg += "Head {0} ({1}{2})\n".format(sCompassDir,sBearingToPath, sDegree);
             // Decided not to show compass degrees, just direction: N, NE, etc.
             sMsg += "Head {0}\n".format(sToPathDir);

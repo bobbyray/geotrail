@@ -159,6 +159,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         </div>
         <div id='holderOffPathThresMeters' class='settingItem'>
         </div>
+        <div id='holderDistanceUnits' class='settingItem'>
+        </div>
         <div id='holderPhoneAlert' class='settingItem'>
         </div>
         <div id='holderOffPathAlert' class='settingItem'> 
@@ -247,7 +249,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
         from which you select a trail to view. Your current geolocation on the trail is shown 
         and you can be alerted if you are off trail. When you are off trail, instructions for returning to the trail
-        are shown. Also automatic tracking can be enabled to determine if you are off trail.
+        are shown. The beginning of the trail is indicated by a short green line and the end by a short red line. 
+        Also automatic tracking can be enabled to determine if you are off trail.
         <h3>Trails DropList</h3>
         <p>Select a trail from the web that others have made public and ones
         that are private to you.</p>
@@ -413,6 +416,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </li>
             <li>Off Trail Threshold<br/>
             Number of meters that you need to be off trail for an alert to be given.</li>
+            <li>Distance Units Metric | English<br/></li>
+            For Metric, distances are displayed in metric units, e.g. 57m for meters
+            or 3.15km for kilometers.<br/>
+            For English, distances are displayed in English units, e.g 43ft for feet
+            or 1.35mi for miles.
             <li>Allow Phone Alert Yes | No<br/>
             Determines if alerts (beeps) from you phone are given.<br/> 
             Ph Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.<br/>
@@ -498,15 +506,15 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <p>The instructions for returning to the trail give the heading 
         to return to the nearest point on the trail from your
         current location.</p>
-        <p>There are also suggestions on how to turn from your current traveling direction
-        to return back to the trail. While the heading back to the trail is accurate,
+        <p>There are also suggestions to turn from your current traveling direction
+        to go back to the trail. While the heading back to the trail is accurate,
         suggestions for turning may not be. Since a turning suggestion may be
         inaccurate, it is prefixed with a "?" mark.</p>
         <p><b>THE TURNS ARE ONLY SUGGESTIONS AND MAYBE WRONG:</b></p>
         <ul>
-            <li>One kind of suggestion is based on the heading from your previous location.
+            <li>One kind of suggestion (?P) is based on the heading from your previous location.
             You may not have traveled in a straight line from your previous location.</li>
-            <li>The second kind of suggestion is based on the compass heading that your phone 
+            <li>The second kind of suggestion (?C) is based on the compass heading that your phone 
             may be able to provide. The compass heading is the direction your phone indicates 
             you are traveling and is most accurate when you are holding 
             your phone level with its top pointing in the direction you are traveling. 

@@ -26,6 +26,9 @@ function wigo_ws_GeoTrailSettings() {
     // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
     //       and tracking is not enabled.
     this.bEnableGeoTracking = false;
+    // String whose value is english or metric to indicete units displayed for distances.
+    // Note: Internally distances are in meters and converted to english or metric on display.
+    this.distanceUnits = 'english'; 
     // Boolean to indicate phone alert is initially enabled.
     // Note: bOffPathAlert is misnamed. Still using the misleading name 
     //       so that localData storage key is not changed. 
@@ -503,10 +506,12 @@ function wigo_ws_Model() {
                 //20161119 added member settings.mOffPathUpdate
                 if (typeof(settings.mOffPathUpdate) === 'undefined')
                     settings.mOffPathUpdate = 50; // Default if not already defined.
-                
                 //20161121 added member settings.bUseWatchPositionForTracking,
                 if (typeof(settings.bUseWatchPositionForTracking) === 'undefined')
                     settings.bUseWatchPositionForTracking = true; // Default if not defined.
+                //20161203 added member settings.distanceUnits 
+                if (typeof(settings.distanceUnits) === 'undefined')  
+                    settings.distanceUnits = 'english';  // Default if not defined.
             }
             return settings;
         };
