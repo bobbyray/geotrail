@@ -2480,7 +2480,19 @@ function wigo_ws_View() {
         // Enable using Pebble and allowing vibration.
         pebbleMsg.Enable(settings.bPebbleAlert); // Enable using pebble.
         pebbleMsg.countVibe = settings.countPebbleVibe;
-        pebbleMsg.SetTimeOut(settings.secsGeoTrackingInterval);
+        
+        ////20161204 pebbleMsg.SetTimeOut(settings.secsGeoTrackingInterval);
+        ////20161204 var pebbleMsgTimeOut = settings.bUseWatchPositionForTracking ? 0 : settings.secsGeoTrackingInterval;
+        ////20161204 pebbleMsg.SetTimeOut(pebbleMsgTimeOut);
+
+        // For period tracking given by time interval, set pebble message timeout to the time interval.
+        // For continuous trracking, set pebble messaage timeout to 0, which means there is no timeout
+        // check by pebble for the next message.
+        if (settings.bUseWatchPositionForTracking) 
+            pebbleMsg.ClearTimeOut();  // Continuous tracking
+        else 
+            pebbleMsg.SetTimeOut(settings.secsGeoTrackingInterval); // Periodic tracking
+
         // Start Pebble app if it is enabled.
         if (settings.bPebbleAlert)
             pebbleMsg.StartApp();
@@ -3290,6 +3302,12 @@ function wigo_ws_View() {
         //  is set to slightly longer than secsTrackingPeriod.
         this.SetTimeOut = function(secsTrackingPeriod) {
             pebble.secsTimeOut = secsTrackingPeriod + 10.0;
+        }
+
+        
+        // Clear time out used when tracking.
+        this.ClearTimeOut = function() {  ////20161204 added
+            pebble.secsTimeOut = 0.0;
         }
 
         // Starts the Pebble app.
