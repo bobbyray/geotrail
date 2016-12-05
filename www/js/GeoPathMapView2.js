@@ -1139,7 +1139,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //       constant pelsCompassHeadingArrowLength.
         function CalcArrowTip(llArrowBase, degPhi, pelsR) {
             // Get map screen point for base of arrow at current geo location circle.
-            var ptArrowBase =  map.latLngToLayerPoint(llArrowBase);
+            var ptArrowBase =  map.project(llArrowBase);
+            
             // Calculate point in pixels on the map for tip from degPhi.
             // Note: angle for rt triangle for x, y is 90 degree - degPhi.
             //       So use sin() to calc x, and cos() to calc y. 
@@ -1150,7 +1151,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var y = - pelsR * Math.sin(theta);
             var ptTip = L.point(x, y);
             var ptArrowTip = ptTip.add(ptArrowBase);
-            var llArrowTip = map.layerPointToLatLng(ptArrowTip);
+            var llArrowTip = map.unproject(ptArrowTip);
             return llArrowTip;
         }
         

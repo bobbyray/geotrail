@@ -3736,24 +3736,21 @@ function wigo_ws_View() {
         that.ClearStatus();
         // Always hide sign-in bar when path is selected to conserve screen space.
         ShowOwnerIdDiv(false); 
+        // Ensure tracking is off and do not show compass for current geolocation
+        // because the compass arrow may be way out of scale. It seems the compass
+        // must be drawn after this thread has ocmpleted in order for scaling to be 
+        // correct for the drawing polygons on the map.
+        // Also, it makes sense to ensure tracking is off when selecting a different trail.
+        pebbleMsg.Send("GeoTrail", false, false); // Clear pebble message, no vibration, no timeout.
+        mapTrackingCtrl.setState(0);
+        trackTimer.ClearTimer();
+        that.ShowStatus("Geo tracking off.", false); // false => not an error.
         if (listIx < 0) {   
             // No path selected.
             map.ClearPath();
         } else {
             // Path is selected
             that.onPathSelected(that.curMode(), listIx);
-            // Update status for track timer unless editing.
-            if (that.curMode() === that.eMode.online_view ||
-                that.curMode() === that.eMode.offline) {
-                if (trackTimer.bOn) {
-                    if (map.IsPathDefined()) {
-                        // Tracking timer is on so show current geo location right away.
-                        DoGeoLocation();
-                    }
-                } else {
-                    that.ShowStatus("Geo tracking off.", false); // false => not an error.
-                }
-            }
         }
         titleBar.scrollIntoView();
     };
