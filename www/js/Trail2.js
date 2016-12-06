@@ -3869,7 +3869,7 @@ function wigo_ws_View() {
         // Set Track control to Off when app is initially loaded.
         // Otherwise leave of Track control as is.
         // Note: settings.bEnableGeoTracking, which used to indicate Track On initially, is no longer used.
-        if (bInitial)   ////20161205 Add if condition, then body existed before.
+        if (bInitial)  
             mapTrackingCtrl.setState(0);
         var nState = bAllowPhoneAlert && bEnablePhoneAlert ? 1 : 0;
         mapAlertCtrl.setState(nState);
