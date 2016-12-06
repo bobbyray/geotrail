@@ -25,6 +25,7 @@ function wigo_ws_GeoTrailSettings() {
     // Boolean indicating geo location tracking is initially enabled.
     // Note: If this.bAllowGeoTracking is false, this.bEnableAbleTracking is ignored
     //       and tracking is not enabled.
+    // Note 20161205: this.this.bEnableGeoTracking is no longer used.
     this.bEnableGeoTracking = false;
     // String whose value is english or metric to indicete units displayed for distances.
     // Note: Internally distances are in meters and converted to english or metric on display.
@@ -482,6 +483,7 @@ function wigo_ws_Model() {
                 // Check for new members of GeoTrailSettings that could be missing from old data.
                 if (!settings.dPrevGeoLocThres)
                     settings.dPrevGeoLocThres = 10.0;
+                //12052016 settings.bEnableGeoTracking is no longer used. 
                 if (!settings.bEnableGeoTracking)
                     settings.bEnableGeoTracking = false;
                 if (!settings.secsPhoneVibe)
