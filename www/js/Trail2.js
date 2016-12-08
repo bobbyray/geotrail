@@ -2045,10 +2045,10 @@ function wigo_ws_View() {
             trackTimer.SetTimer(function (result) {
                 if (result.bError) {
                     trackTimer.ClearTimer();
-                    var sError = 'Timer for automatic geo-tracking failed.<br/>';
+                    var sError = 'Tracking failed.<br/>';
                     ShowGeoTrackingOff(sError);
                     alerter.DoAlert();
-                    pebbleMsg.Send("Tracking timer failed", true, false); // vibrate, no timeout.
+                    pebbleMsg.Send(sError, true, false); // vibrate, no timeout.
                 } else {
                     if (result.bRepeating) {
                         if (map.IsPathDefined()) {
@@ -2253,6 +2253,10 @@ function wigo_ws_View() {
     var numberPrevGeoLocThresMeters = new ctrls.DropDownControl(parentEl, null, 'Prev Geo Loc Thres', '',  'img/ws.wigo.dropdownhorizontalicon.png'); 
     var numberPrevGeoLocThresMetersValues =
     [
+        ['0', '0 m (none)'],
+        ['5', '5 m (5 yds)'],
+        ['10', '10 m (11 yds)'],
+        ['20', '20 m (22 yds)'],
         ['30', '30 m (33 yds)'],
         ['40', '40 m (44 yds)'],
         ['50', '50 m (55 yds)'],

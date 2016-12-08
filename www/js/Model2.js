@@ -46,7 +46,7 @@ function wigo_ws_GeoTrailSettings() {
     this.countPebbleVibe = 1;
     // Float for distance in meters for threshold for minimum change in distance
     // for previous geolocation to be updated wrt to current geolocation.
-    this.dPrevGeoLocThres = 40.0;
+    this.dPrevGeoLocThres =5.0; //20161205 was 40.0;
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
@@ -64,6 +64,11 @@ function wigo_ws_GeoTrailSettings() {
     this.gptHomeAreaSW.lon = -122.00729370117188;
     this.gptHomeAreaNE.lat = 45.622682153628226;
     this.gptHomeAreaNE.lon = -121.51290893554688;
+
+    // Schema level (version) for this object.
+    // Remarks:
+    // Always constructed to 0. Set to schema level when object is persisted (saved to localStorage).
+    this.nSchema = 0;  ////20161207 added
     // ** 
 }
 
@@ -456,7 +461,7 @@ function wigo_ws_Model() {
     // Array of offline parameters for geo paths.
     var arOfflineParams = new OfflineParamsAry();
 
-    // Object for the My Trail Settings.
+    // Object for the Geo Trail Settings persisted to localStorage.
     function GeoTrailSettings() {
         // Returns the current settings, a wigo_ws_GeoTrailSettings object.
         // Note: The current settings are the same as those in localStorage.
@@ -469,9 +474,10 @@ function wigo_ws_Model() {
 
         // Saves settings for My Geo Trail to local storage.
         // Arg
-        //  settings: wigo_ws_GeoTrailSettings object giving the settings.
+        //  oSettings: wigo_ws_GeoTrailSettings object giving the settings.
         this.SaveToLocalStorage = function (oSettings) {
             settings = oSettings; // Save to local var.
+            settings.nSchema = nSchemaSaved;
             if (localStorage)
                 localStorage[sGeoTrailSettingsKey] = JSON.stringify(settings);
         };
@@ -480,9 +486,12 @@ function wigo_ws_Model() {
         this.LoadFromLocalStorage = function() {
             if (localStorage && localStorage[sGeoTrailSettingsKey]) {
                 settings = JSON.parse(localStorage[sGeoTrailSettingsKey]);
+                if (typeof(settings.nSchema) === 'undefined')
+                    settings.nSchema = 0;
+                /* ////20161207 
                 // Check for new members of GeoTrailSettings that could be missing from old data.
                 if (!settings.dPrevGeoLocThres)
-                    settings.dPrevGeoLocThres = 10.0;
+                    settings.dPrevGeoLocThres = 5.0; 
                 //12052016 settings.bEnableGeoTracking is no longer used. 
                 if (!settings.bEnableGeoTracking)
                     settings.bEnableGeoTracking = false;
@@ -514,11 +523,75 @@ function wigo_ws_Model() {
                 //20161203 added member settings.distanceUnits 
                 if (typeof(settings.distanceUnits) === 'undefined')  
                     settings.distanceUnits = 'english';  // Default if not defined.
+                */
+
+
+
+            } else {
+                    settings.nSchema = 0;
+            }
+            
+            // If settings loaded from localStorage is downlevel, update and save it.
+            if (settings.nSchema < nSchemaSaved) {
+                // ** changes for nSchema 1
+                UpdateIfNeeded('secsPhoneVibe', 1, 0.0);
+                UpdateIfNeeded('countPhoneBeep', 1, 1);
+                UpdateIfNeeded('countPebbleVibe', 1, 1);
+                UpdateIfNeeded('bPebbleAlert', 1, false);
+                //20151294 Members added for home area rectangle.
+                // Default to area around Oregon.
+                var gptHomeAreaSW = new wigo_ws_GeoPt();
+                gptHomeAreaSW.lat = 38.03078569382296;
+                gptHomeAreaSW.lon = -123.8818359375;
+                UpdateIfNeeded('gptHomeAreaSW', 1, gptHomeAreaSW);
+                var gptHomeAreaNE = new wigo_ws_GeoPt();
+                gptHomeAreaNE.lat = 47.88688085106898;
+                gptHomeAreaNE.lon = -115.97167968750001;
+                UpdateIfNeeded('gptHomeAreaNE', 1, gptHomeAreaNE);
+                // member added for compass heading visible on map.
+                UpdateIfNeeded('bCompassHeadingVisible', 1, true);
+                // **
+
+                // ** Changes for nSchema 2.
+                // Check for new members of GeoTrailSettings that could be missing from old data.
+                UpdateIfNeeded('dPrevGeoLocThres', 2, 5.0);  // Was 40 meters.
+                //12052016 settings.bEnableGeoTracking is no longer used. Ensure set to false for safety.
+                UpdateIfNeeded('bEnableGeoTracking', 2, false);
+                //20161119 added member settings.mOffPathUpdate
+                UpdateIfNeeded('mOffPathUpdate', 2, 50);
+                //20161121 added member settings.bUseWatchPositionForTracking,
+                UpdateIfNeeded('bUseWatchPositionForTracking', 2, true);
+                //20161203 added member settings.distanceUnits 
+                UpdateIfNeeded('distanceUnits', 2, 'english');
+                // **
+
+                // ** Changes for next nSchemax goes here.
+                // **** BE SURE to set nSchemaSaved below to x. 
+                
+                this.SaveToLocalStorage(settings);
             }
             return settings;
         };
+        // Schema number for settings.nSchema when saving settings.
+        // Increase nSchemaSaved when adding new settings property or 
+        // changing default for a settings property. 
+        var nSchemaSaved = 2;  // Must be set to next number when next nSchema change is added. 
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
+
+        // Updates settings if settings.nSchema is down level.
+        // Args:
+        //  propertyName: string. Name of property to update in settings.
+        //  nSchema: integer. property is updated if nSchema > settings.nSchema.
+        //  value: any type. value assigned to property if updated.
+        function UpdateIfNeeded(propertyName, nSchema, value) { ////20161207 added
+            if (typeof(settings[propertyName]) === 'undefined') {
+                settings[propertyName] = value;
+            } else if (nSchema > settings.nSchema) {
+                settings[propertyName] = value;
+            }
+        }
+
     }
 
     

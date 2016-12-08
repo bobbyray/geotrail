@@ -297,6 +297,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (prevGeoLocCircle === null)
                 prevGeoLocCircle = L.circle(location, 1);
             var bCurGeoLocBeyondPrevGeoLoc = (location.distanceTo(prevGeoLoc) > this.dPrevGeoLocThres);
+            ////20161206 var bCurGeoLocBeyondPrevGeoLoc = true; // Decided not use this.dPrevGeoLocThres. Alway update previous location from current location.
 
             var atPath = FindNearestPointOnGeoPath(location, dOffPath);
             result.dFromStart = atPath.dFromStart;
