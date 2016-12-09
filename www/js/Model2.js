@@ -68,7 +68,7 @@ function wigo_ws_GeoTrailSettings() {
     // Schema level (version) for this object.
     // Remarks:
     // Always constructed to 0. Set to schema level when object is persisted (saved to localStorage).
-    this.nSchema = 0;  ////20161207 added
+    this.nSchema = 0;  
     // ** 
 }
 
@@ -475,6 +475,9 @@ function wigo_ws_Model() {
         // Saves settings for My Geo Trail to local storage.
         // Arg
         //  oSettings: wigo_ws_GeoTrailSettings object giving the settings.
+        // Remarks:
+        // The local var nSchemaSaved is assigned by this.SaveToLocalStorage() to the nSchema property of settings
+        // so that nSchema is correct when saved.
         this.SaveToLocalStorage = function (oSettings) {
             settings = oSettings; // Save to local var.
             settings.nSchema = nSchemaSaved;
@@ -483,50 +486,19 @@ function wigo_ws_Model() {
         };
 
         // Loads this object from local storage. 
+        // Remarks:
+        // The defaults for the underlying wigo_ws_GeoTrailSettings object can be changed
+        // for a new release of code. The property nSchema of wigo_ws_GeoTrailSettings
+        // provides a way to determine if defaults for settings are updated for a new release.
+        // If defaults need to be updated when loading from local storage, the updates 
+        // are applied and then saved to local storage.
+        // The local var nSchemaSaved is assigned by this.SaveToLocalStorage() to the nSchema property of settings.
+        // var nSchemaSaved needs to be incremented when defaults for a new release are changed.
         this.LoadFromLocalStorage = function() {
             if (localStorage && localStorage[sGeoTrailSettingsKey]) {
                 settings = JSON.parse(localStorage[sGeoTrailSettingsKey]);
                 if (typeof(settings.nSchema) === 'undefined')
                     settings.nSchema = 0;
-                /* ////20161207 
-                // Check for new members of GeoTrailSettings that could be missing from old data.
-                if (!settings.dPrevGeoLocThres)
-                    settings.dPrevGeoLocThres = 5.0; 
-                //12052016 settings.bEnableGeoTracking is no longer used. 
-                if (!settings.bEnableGeoTracking)
-                    settings.bEnableGeoTracking = false;
-                if (!settings.secsPhoneVibe)
-                    settings.secsPhoneVibe = 0.0;
-                if (!settings.countPhoneBeep)
-                    settings.countPhoneBeep = 1;
-                if (!settings.countPebbleVibe)
-                    settings.countPebbleVibe = 1;
-                // ** 20151294 Members added for home area rectangle.
-                if (!settings.gptHomeAreaSW || !settings.gptHomeAreaNE) {
-                    // Default to area around Oregon.
-                    settings.gptHomeAreaSW = new wigo_ws_GeoPt();
-                    settings.gptHomeAreaSW.lat = 38.03078569382296;
-                    settings.gptHomeAreaSW.lon = -123.8818359375;
-                    settings.gptHomeAreaNE = new wigo_ws_GeoPt();
-                    settings.gptHomeAreaNE.lat = 47.88688085106898;
-                    settings.gptHomeAreaNE.lon = -115.97167968750001;
-                }
-                if (typeof(settings.bCompassHeadingVisible) === 'undefined') // 20160609 added.
-                    settings.bCompassHeadingVisible = true; 
-                // **
-                //20161119 added member settings.mOffPathUpdate
-                if (typeof(settings.mOffPathUpdate) === 'undefined')
-                    settings.mOffPathUpdate = 50; // Default if not already defined.
-                //20161121 added member settings.bUseWatchPositionForTracking,
-                if (typeof(settings.bUseWatchPositionForTracking) === 'undefined')
-                    settings.bUseWatchPositionForTracking = true; // Default if not defined.
-                //20161203 added member settings.distanceUnits 
-                if (typeof(settings.distanceUnits) === 'undefined')  
-                    settings.distanceUnits = 'english';  // Default if not defined.
-                */
-
-
-
             } else {
                     settings.nSchema = 0;
             }
@@ -565,7 +537,7 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('distanceUnits', 2, 'english');
                 // **
 
-                // ** Changes for next nSchemax goes here.
+                // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
                 this.SaveToLocalStorage(settings);
@@ -584,7 +556,7 @@ function wigo_ws_Model() {
         //  propertyName: string. Name of property to update in settings.
         //  nSchema: integer. property is updated if nSchema > settings.nSchema.
         //  value: any type. value assigned to property if updated.
-        function UpdateIfNeeded(propertyName, nSchema, value) { ////20161207 added
+        function UpdateIfNeeded(propertyName, nSchema, value) { 
             if (typeof(settings[propertyName]) === 'undefined') {
                 settings[propertyName] = value;
             } else if (nSchema > settings.nSchema) {
