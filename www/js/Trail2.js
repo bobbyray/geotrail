@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.021"; // Constant string for App version.
+    var sVersion = "1.1.022_20161215"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3599,7 +3599,9 @@ function wigo_ws_View() {
                           ['back_to_trail', 'Help - Back To Trail'],              
                           ['battery_drain', 'Help - Tracking vs Battery Drain'],  
                           ['about', 'About'],                                     
-                          ['license', 'Licenses']                                 
+                          ['license', 'Licenses'],
+                          // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
+                          ['crash', 'Crash Test']
                          ];
         // iPhone. Do not show help features not available on iPhone.
         var noHelp = document.getElementsByClassName("noIosHelp");
@@ -3614,7 +3616,9 @@ function wigo_ws_View() {
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
                           ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
                           ['about', 'About'],                                     // 6
-                          ['license', 'Licenses']                                 // 7
+                          ['license', 'Licenses'],                                // 7
+                          // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      
+                          // ['crash', 'Crash Test']                              //20161215 Not available for Android.
                          ];
         // Android. Do not show help for info about iPhone that does apply for Android.
         var noHelp = document.getElementsByClassName("noAndroidHelp");
@@ -3657,6 +3661,43 @@ function wigo_ws_View() {
         } else if (dataValue === 'battery_drain') {
             ShowHelpTrackingVsBattery(true);
             this.selectedIndex = 0;
+        } else if (dataValue === 'crash') {
+            ConfirmYesNo("Is it ok to CRASH and end this app in order to test generating a crash report? ", 
+            function(bYes) {
+                if (bYes) {
+                    if (typeof(hockeyapp) !== 'undefined') {
+                        hockeyapp.addMetaData(null, null, {CrashTest: 'Testing forced crash.'});
+                        hockeyapp.forceCrash();
+                    }
+                } else {
+                    AlertMsg("OK, no crash -- continuing as usual.");
+                }
+            })
+
+        } else if (dataValue === 'screenshot') {
+            ConfirmYesNo("Is it ok to send a screen shot to report a problem?", 
+            function(bYes) {
+                if (bYes) {
+                    if (typeof(hockeyapp) !== 'undefined') {
+                        /* //20161214 Does not work currently. Maybe some day plugin will be fixed.
+                           //         Disable by removing Crash Test item for mainMenu. 
+                        hockeyapp.composeFeedback(function(){
+                            // Success.
+                            AlertMsg('A screen shot has been sent.');
+                        }, 
+                        function(){
+                            // Error.
+                            AlertMsg('Failed to send screen shot!');
+                        }, 
+                        true, 
+                        {ScreenShot: 'Screen Shot'});
+                        */
+                        // hockeyapp.feedback(); // Does not take screen shot. Kind of works, but crashes if user selects Add Image.
+                    }
+                } else {
+                    AlertMsg("No screen shot sent.");
+                }
+            });
         }
         that.ClearStatus();
     };
@@ -4450,6 +4491,38 @@ function wigo_ws_Controller() {
 window.app = {};
 window.app.deviceDetails = new Wigo_Ws_CordovaDeviceDetails();  
 Wigo_Ws_InitDeviceDetails(window.app.deviceDetails);
+
+
+// Windows.app.OnDocReady() handler was not initializing HockeyApp for reporting.
+// Try deviceready() handler instead.
+// Note: It seems HockeyApp works for distribution even if Cordova plugin 
+// for hockeyapp is not used. 
+document.addEventListener("deviceready", function() {
+    //20161210 Initialize hockeyapp for distruction of app for ios.
+    if (typeof(hockeyapp) !== 'undefined') {
+        // hockeyapp.start(null, null, "296f229a3907490abd795f3a70760dea");
+        hockeyapp.start(function(){
+            // Success.
+            var sMsg = 'Successfully started HockeyApp.';
+            //debug alert(sMsg);
+            console.log(sMsg);
+        }, 
+        function(){
+            // Failure.
+            var sMsg = 'Failed to initialize HockeyApp!';
+            //debug alert(sMsg);
+            console.log(sMsg);
+        }, 
+        "296f229a3907490abd795f3a70760dea",
+        true); // true => autoSend crash report if one exists on start.
+    } else {
+        //debug alert('Device is ready.');
+        console.log('Device is ready.');
+    }
+}, 
+false);
+
+
 
 window.app.OnDocReady = function (e) {
     // Create the controller and therefore the view and model therein.
