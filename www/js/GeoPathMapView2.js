@@ -183,11 +183,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var bounds = L.latLngBounds(sw, ne);
             map.fitBounds(bounds);
         } else {
-            // Set zoom around last point of path.
-            if (pathCoords.length > 0) {
-                var zoom = map.getZoom();
-                var iLast = pathCoords.length - 1;
-                map.setZoomAround(pathCoords[iLast], zoom); 
+            // Set zoom around last point of path.            
+            var iLast = path.arGeoPt.length -1;
+            if (iLast >= 0) {
+                var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
+                var zoom = map.getZoom();                
+                map.setZoomAround(path.arGeoPt[iLast], zoom); 
             }
         }
     }
