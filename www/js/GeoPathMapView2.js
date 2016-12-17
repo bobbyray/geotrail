@@ -69,7 +69,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var map = null;     // Underlying map object.
     var mapPath = null; // Map overlay for current path.
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
-    var zoomPathBounds = null; // Zoom value to fit trail to bounds of view.
     
     // Colors to use for drawing. 
     // Default values are set initially.
@@ -166,6 +165,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
         mapPath.addTo(map);
 
+        // Draw start and end of path shape on the path.
+        SetStartEndOfPathShape();  
+
+        curPath = path; // Save current gpx path object.
+        this.PanToPathCenter();
+    };
+
+    // Fits map to bounds of path.
+    // Arg:
+    //  path: wigo_ws_GpxPath object for the path.
+    function FitToPathBounds(path) {
         // Set zoom so that trail fits if there is valid boundary.
         if (IsBoundaryValid(path)) { 
             var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
@@ -180,15 +190,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 map.setZoomAround(pathCoords[iLast], zoom); 
             }
         }
-        // Save zoom value to restore by this.PanToPathCenter().
-        zoomPathBounds = map.getZoom();
-
-        // Draw start and end of path shape on the path.
-        SetStartEndOfPathShape();  
-
-        curPath = path; // Save current gpx path object.
-        this.PanToPathCenter();
-    };
+    }
 
     // Sets geo location update figures on map for shortest distance to geo path, 
     // but only if current location is off the geo path by a specified amount.
@@ -489,12 +491,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.PanToPathCenter = function () {
         var bOk = true;
         if (curPath) {
-            var gpt = curPath.gptCenter();
-            this.PanTo(gpt);
-            // Zoom to bounds that was saved when path was drawn.
-            if (zoomPathBounds !== null) {
-                map.setZoom(zoomPathBounds);
-            }
+            // Note: Use to pan to center of path and zoom. This did not work well
+            // because saved zoom factor could represent zoom of previous trail rather
+            // than zoom of current trail. Seems that zoom does not change
+            // immediately when a path is drawn.
+            FitToPathBounds(curPath);
         } else
             bOk = false;
         return bOk;
@@ -508,7 +509,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             map.removeLayer(mapPath);
             mapPath = null;
         }
-        zoomPathBounds = null; 
         curPath = null;
         curPathSegs.Clear(); 
         ClearStartOfPathShape(); 
