@@ -392,6 +392,15 @@ function Wigo_Ws_CordovaControls() {
             }
         };
 
+        // Sets text for the label.
+        // Arg:
+        //  sLabel: string. text shown for the label.
+        this.setLabel = function(sLabel) {  ////20161209 added 
+            if (label) {
+                label.innerText = sLabel;
+            }
+        };
+
         // Returns length of dropdown list.
         this.getListLength = function() {
             var length = list.children.length;
@@ -403,7 +412,7 @@ function Wigo_Ws_CordovaControls() {
         // A touchmove event is considered to initiate scrolling.
         this.isDropDownListScrolling = function() {
             return bDropDownListDropped; 
-        }
+        };
 
         // Shows the dropdown list or hide it.
         // Arg:

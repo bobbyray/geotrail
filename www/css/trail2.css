@@ -465,14 +465,39 @@ label {
 }
 
 #labelPathName {
-    font-size: 1.3em;
+    width: 25%; /* ////20170101 added */
+    font-size: 1.2em; /* ////2017010 was 1.3em */
     float: left;
 }
 #editAction {
-    width: auto;
-    margin-left: 2em;
+    width: 74%;  /* ////20170101 was auto */
+    /* ////20170101UseBoxSizingOnParent margin-left: 2em;  */
     float: left;
 }
+#recordShare .wigo_ws_DropDownValue {
+    left: inherit;
+    right: 0.2em;
+    width: 5.0em;  
+}
+#recordShare .wigo_ws_DropDownIcon {
+    left: inherit;
+    right: 5.3em;
+    width: 3.0em;
+    height: 1.2em;
+}
+#recordShare .wigo_ws_DropDownLabel {
+    right: 8.1em;
+    width: 4em;
+    padding-right: 0.3em;
+}
+
+#recordShare .wigo_ws_DropDownList {
+    left: inherit;
+    right: 0.0em;
+    top: 1.2em;
+    width: 8.0em;
+}
+
 #pathDescrBarBackIcon {
     height: 50%;
     width: auto;
@@ -615,6 +640,25 @@ label {
 #onlineSelectFind .wigo_ws_DropDownLabel {
     left: 0px;
     width: 75%;
+}
+
+#onlineRecord {
+    height: 100%;
+    width: 10%; 
+    float: left;
+    margin-left: 0.3em;
+}
+#onlineRecord .wigo_ws_DropDownIcon {
+    height: 50%;
+    left: 0%;   
+}
+#onlineRecord .wigo_ws_DropDownLabel {
+    top: 50%;
+    left: 30%;
+    width: auto;    
+}
+#onlineRecord .wigo_ws_DropDownList {
+    width: 4em;
 }
 
 #mapBar {
