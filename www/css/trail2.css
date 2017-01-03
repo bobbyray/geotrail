@@ -465,13 +465,12 @@ label {
 }
 
 #labelPathName {
-    width: 25%; /* ////20170101 added */
-    font-size: 1.2em; /* ////2017010 was 1.3em */
+    width: 25%; 
+    font-size: 1.2em; 
     float: left;
 }
 #editAction {
-    width: 74%;  /* ////20170101 was auto */
-    /* ////20170101UseBoxSizingOnParent margin-left: 2em;  */
+    width: 74%;  
     float: left;
 }
 #recordShare .wigo_ws_DropDownValue {

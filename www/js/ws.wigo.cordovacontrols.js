@@ -395,7 +395,7 @@ function Wigo_Ws_CordovaControls() {
         // Sets text for the label.
         // Arg:
         //  sLabel: string. text shown for the label.
-        this.setLabel = function(sLabel) {  ////20161209 added 
+        this.setLabel = function(sLabel) {  
             if (label) {
                 label.innerText = sLabel;
             }

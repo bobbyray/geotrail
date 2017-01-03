@@ -189,27 +189,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (iLast >= 0) {
                 var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
                 var zoom = map.getZoom();                
-                ////20161226Ooops map.setZoomAround(path.arGeoPt[iLast], zoom); 
                 map.setZoomAround(llEnd, zoom); 
             }
         }
     }
-
-    /* ////20161226 do not refactor
-    // Set zoom around last point of path.
-    // Arg: 
-    // Arg:
-    //  path: wigo_ws_GpxPath object for the path.
-    function SetZoomAroundLastGeoPt(path) {  ////20161226 added 
-        // Set zoom around last point of path.            
-        var iLast = path.arGeoPt.length -1;
-        if (iLast >= 0) {
-            var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
-            var zoom = map.getZoom();                
-            map.setZoomAround(path.arGeoPt[iLast], zoom); 
-        }
-    }
-    */ 
 
     // Sets geo location update figures on map for shortest distance to geo path, 
     // but only if current location is off the geo path by a specified amount.
@@ -840,27 +823,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var dTotal = 0; // Total distance of all segments.
         var pathCoords = new Array(); // Array of L.LatLng objs.
         var segs = new Array();  // Array of Seg objs.
-
-
-        /* ////20161229 not needed
-        // Appends a segment.
-        // Args:
-        //  llNext: L.LatLng obj. next point in the path.
-        //  msTimeStamp: number. timestamp for llNext in milliseconds.
-        this.appendSeg = function(llNext, msTimeStanp) {
-            var iLastCoord  = pathCoords.length-1; // Index in array of segment being appended.
-            if (iLastCord >= 0) {
-                var llPrev = pathCoords[iLastCoord];
-                var len = llPrev.distanceTo(llNext);
-                var seg = new Seg(llPrev, llNext, len);
-                seg.dFromStart = segs[iLast].dFromStart + len;
-                // Append to the end of the segments.
-                segs.push(seg);
-            } 
-            // Append path coordinate.
-            pathCoords.push(llNext);
-        };
-        */
 
         // Advances current index to segment array by 1 (increments).
         function AdvanceIx() {
@@ -2090,9 +2052,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //  geoPathMap: wigo_ws_GeoPathMap obj. ref to parent object. 
     function RecordPathMgr(geoPathMap) {
         var that = this;
-        ////20161226 var curRecordPath = null; // Ref to current path drawn, a wigo_ws_GpxPath object.
-        ////20161229 var gptStart = null; // wigo_ws_GpxPath object for first point recording path. 
-        ////20161229 var curRecordPathSegs = new PathSegs(); 
         var mapRecordPath = null; // Map overlay for current path.
 
         var pathCoords = []; // Array of L.LatLng objs for path coordinates.
@@ -2180,8 +2139,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.clear();
 
             // Draw the record path on the map.
-            ////20161229 var pathCoords = curRecordPathSegs.getPathCoords();
-            ////$$$$ fix map is not correct. 
             mapRecordPath = L.polyline(pathCoords, { color: geoPathMap.color.recordPath, opacity: 0.5 });
             mapRecordPath.addTo(map);
 
@@ -2239,18 +2196,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 map.removeLayer(mapRecordPath);
                 mapRecordPath = null;
             }
-            ////curRecordPath = null;
-            ////curPathSegs.Clear(); 
-            ////ClearStartOfPathShape(); 
-            ////ClearEndOfPathShape();   
-            //// ClearGeoLocationCircle();
-            //// ClearGeoLocationToPathArrow();
-            //// ClearPrevGeoLocRefLine();
-            //// ClearTouchCircle(); 
-            //// ClearEditCircle();
-            //// ClearEditSegment();  
-            //// ClearEraseSegment(); 
-            //// ClearCompassHeadingArrow();
         };
 
         // Clears the record path from the map and
