@@ -635,7 +635,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     };
 
-    // Returns a reference to underlaying Google map object.
+    // Returns a reference to underlaying Leaflet map object.
     this.getMap = function () { return map; };
 
     // Returns word abbreviation for bearing to other destination.
@@ -2224,6 +2224,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.isEmpty = function() {
             var bReset = pathCoords.length <= 0;
             return bReset;
+        };
+
+        // Returns number of coords in the record path.
+        this.getLength = function() { ////20170106 added
+            return pathCoords.length;
         };
     }
     
