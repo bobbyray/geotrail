@@ -566,8 +566,6 @@ function wigo_ws_View() {
         } else if (nMode === this.eMode.online_edit || nMode === this.eMode.online_define ) {
             // Fire event to initialize fsm reload path list when 
             // nMode indicates online_edit or online_define.
-            ////20170105 var fsm = this.fsmEdit();
-            ////20170105 fsm.DoEditTransition(fsm.eventEdit.Init);
             this.ShowStatus(sStatusMsg, !bOk);
             fsmEdit.DoEditTransition(fsmEdit.eventEdit.Init);
         }
@@ -2172,12 +2170,6 @@ function wigo_ws_View() {
                 recordWatcher.clear(); // Ensure watching for location change is stopped.
                 recordCtrl.setLabel("Stopped");
                 recordCtrl.empty();
-                /* ////20170106 redo slightly
-                recordCtrl.appendItem("save_trail", "Save Trail");
-                if (uploader.isAppendPathValid()) {
-                    recordCtrl.appendItem('append_trail', "Append Trail");
-                }
-                */
                 var bSavePathValid = uploader.isSavePathValid();
                 if (bSavePathValid)
                     recordCtrl.appendItem("save_trail", "Save Trail");
@@ -2214,7 +2206,7 @@ function wigo_ws_View() {
                         }
                         break;
                     case that.event.append_trail:
-                        if (uploader.isUploadInProgress() ) { ////20170106 added if cond and body, else body already existed.
+                        if (uploader.isUploadInProgress() ) { 
                             view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
                         } else {
                             // Upload recorded trail appended to main trail.
@@ -2379,7 +2371,7 @@ function wigo_ws_View() {
                 this.uploadPath.sPathName = "";
                 this.uploadPath.Share = 'private';
                 this.uploadPath.arGeoPt.length = 0;
-                mainUploadPath = null; ////20170106 added.
+                mainUploadPath = null; 
             };
 
             // Indicates the upload has completed.
@@ -2411,7 +2403,6 @@ function wigo_ws_View() {
             //       Also, mainUploadPath is saved when first appending to main trail. The saved
             //       path is used after the first time, until this.clear() is called.
             this.uploadMainPath = function() {
-                ////20170106 var mainUploadPath = GetValidMainUploadPath();
                 if (!mainUploadPath)
                     mainUploadPath = GetValidMainUploadPath();
                 var bOk = mainUploadPath !== null;
@@ -2425,7 +2416,6 @@ function wigo_ws_View() {
                     // Assign coords for the recorded trail to this.uploadPath.arGeoPt. 
                     this.setArGeoPt(); 
                     // Prepend main path coords to recorded trail coords.
-                    ////20170105 this.uploadPath.arGeoPt.splice(0, 0, mainUploadPath.arGeoPt);
                     this.uploadPath.arGeoPt = mainUploadPath.arGeoPt.concat(this.uploadPath.arGeoPt);
                     // Upload to server.
                     bUploadInProgress = true;
@@ -2457,30 +2447,11 @@ function wigo_ws_View() {
 
             // Returns true if record path can be appended to the main path.
             this.isAppendPathValid = function() {
-                ////20170106 // check if an upload is already in progress.
-                ////20170106 if (bUploadInProgress)
-                ////20170106     return false;
                 // check if recorded path has coords.
-                ////20170105 var bYes = this.uploadPath.arGeoPt.length > 1; 
                 var bYes = !map.recordPath.isEmpty();
                 if (!bYes)
                     return false;
                 // Check if a main trail is selected.
-                ////20170104 var dataIx = selectGeoTrail.getSelectedValue();
-                ////20170104 bYes = dataIx > -1; 
-                ////20170104 if (!bYes)
-                ////20170104     return false;
-                ////20170104 var mainUploadPath = view.onGetUploadPath(view.curMode(), dataIx);
-                ////20170104 if (!mainUploadPath)
-                ////20170104     return false;
-                ////20170104 // Check if user id matches math owener id.
-                ////20170104 if ( mainUploadPath.nId < 1) 
-                ////20170104     return false; // main path id is not valid. not expected to happen.
-                ////20170104 var sOwnerId = view.getOwnerId();
-                ////20170104 bYes = mainUploadPath.sOwnerId == sOwnerId;
-
-                ////20170106 var mainUploadPath = GetValidMainUploadPath();
-                ////20170106 bYes = mainUploadPath !== null;
                 if (mainUploadPath) {
                     bYes = true;
                 } else {
@@ -4730,7 +4701,7 @@ function wigo_ws_Controller() {
     //  nIx: integer for data index from item in selection list control. 
     //  Returned object: NewUploadPathObj().
     //                   null if nIx is out of range.
-    view.onGetUploadPath = function (nMode, nIx) { ////20170105 Added 20161231
+    view.onGetUploadPath = function (nMode, nIx) { 
         var uploadPath = null; 
         if (nMode === view.eMode.online_view) {
             if (gpxArray && nIx >= 0 && nIx < gpxArray.length) {
@@ -4816,35 +4787,6 @@ function wigo_ws_Controller() {
             var bOk = model.putGpx(gpx,
                 // Async callback upon storing record at server.
                 function (bOk, sStatus) {
-                    /* ////20170105 redo. pretty much the same, but clarify.
-                    if (bOk) {
-                        var oStatus = JSON.parse(sStatus);
-                        var eDuplicate = model.eDuplicate();
-                        if (oStatus.eDup === eDuplicate.Renamed) {
-                            // Show message about renaming path.
-                            view.ShowStatus(oStatus.sMsg, true); // true shows message hightlighted.
-                        } else if (oStatus.eDup === eDuplicate.Match) {
-                            // gpx obj has same name as its record in database so there is no name change.
-                            // No need to reload the list of paths.
-                            view.ShowStatus("Successfully uploaded GPX trail.", false);
-                        } else if (oStatus.eDup === eDuplicate.NotDup) {
-                            view.ShowStatus("Successfully uploaded GPX trail.", false);
-                        } else {
-                            view.ShowStatus("Error occurred uploading GPX trail.");
-                        }
-                    } else {
-                        // Show error message.
-                        view.ShowStatus(sStatus, !bOk)
-                    }
-
-                    if (nMode !== view.eMode.online_view) {
-                        // Fire event to initialize fsm reload path list when 
-                        // nMode indicates online_edit or online_define.
-                        var fsm = view.fsmEdit();
-                        fsm.DoEditTransition(fsm.eventEdit.Init);
-                    }
-                    */
-
                     var nId = 0;
                     var sStatusMsg;
                     if (bOk) {
@@ -4872,7 +4814,6 @@ function wigo_ws_Controller() {
                 });
             if (!bOk) {
                 var sError = "Cannot upload GPX trail to server because another transfer is already in progress.";
-                ////20170105 view.ShowStatus(sError, !bOk);
                 view.uploadPathCompleted(nMode, bOk, sError, 0);
             }
         }

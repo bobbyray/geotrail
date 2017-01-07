@@ -2227,7 +2227,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns number of coords in the record path.
-        this.getLength = function() { ////20170106 added
+        this.getLength = function() { 
             return pathCoords.length;
         };
     }
