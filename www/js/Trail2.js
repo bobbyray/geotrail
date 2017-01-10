@@ -2118,7 +2118,6 @@ function wigo_ws_View() {
             this.prepare = function() {
                 recordCtrl.setLabel("On");
                 recordCtrl.empty();
-                ////20170107 recordCtrl.appendItem("pause", "Pause");
                 recordCtrl.appendItem("stop", "Stop");
                 // Start watching for location change.
                 recordWatcher.watch();
@@ -2126,12 +2125,6 @@ function wigo_ws_View() {
 
             this.nextState = function(event) {
                 switch (event) {
-                    /* ////20170107 
-                    case that.event.pause:
-                        statePaused.prepare();
-                        curState = statePaused;
-                        break;
-                    */
                     case that.event.stop:
                         stateStopped.prepare();
                         curState = stateStopped;
@@ -2140,33 +2133,6 @@ function wigo_ws_View() {
 
         }
         var stateOn = new StateOn();
-
-        /* ////20170107 
-        // Record is paused.
-        function StatePaused() {
-            this.prepare = function() {
-                recordCtrl.setLabel("Paused");
-                recordCtrl.empty();
-                recordCtrl.appendItem("resume", "Resume");
-                recordCtrl.appendItem("stop", "Stop");
-                recordWatcher.clear();
-            };
-
-            this.nextState = function(event){
-                switch(event){
-                    case that.event.resume:
-                        stateOn.prepare();
-                        curState = stateOn;
-                        break;
-                    case that.event.stop:
-                        stateStopped.prepare(); 
-                        curState = stateStopped;
-                        break;
-                }
-            };
-        }
-        var statePaused = new StatePaused();
-        */
 
         // Record trail is completed.
         function StateStopped() {
@@ -2250,14 +2216,12 @@ function wigo_ws_View() {
                         // Get trail name and upload 
                         var ok = UploadNewPath();
                         if (ok.empty) {
-                            ////20170107 statePaused.prepare();
-                            ////20170107 curState = statePaused;
                             ShowPathDescrBar(false); 
                             stateStopped.prepare();
                             curState = stateStopped;
                             view.ShowStatus("The recorded trail is empty.");
                         } else if (ok.upload) {
-                            ShowPathDescrBar(false);  ////20170107 added
+                            ShowPathDescrBar(false);  
                             stateStopped.prepare();
                             curState = stateStopped;
                         }
@@ -2265,7 +2229,7 @@ function wigo_ws_View() {
                         break;
                     case that.event.cancel:
                         stateStopped.prepare();
-                        view.ClearStatus();    ////20170107 addd 
+                        view.ClearStatus();    
                         curState = stateStopped;
                         break;
                 }
@@ -2305,7 +2269,7 @@ function wigo_ws_View() {
             }
         }
         var stateDefineTrailName = new StateDefineTrailName();
-        var bNewUploadPath = false; // Indicates a new path for trail has been uploaded to server. ////20170107 added
+        var bNewUploadPath = false; // Indicates a new path for trail has been uploaded to server.
         
 
         // Shows path description bar, which has textbox for trail name.
@@ -2384,8 +2348,8 @@ function wigo_ws_View() {
                 this.uploadPath.Share = 'private';
                 this.uploadPath.arGeoPt.length = 0;
                 mainUploadPath = null; 
-                bNewUploadPath = false;  ////20170107 added
-                txbxPathName.value = ""; ////20170107 added
+                bNewUploadPath = false;  
+                txbxPathName.value = ""; 
             };
 
             // Indicates the upload has completed.
@@ -2409,7 +2373,7 @@ function wigo_ws_View() {
             //       Call this.uploadMainPath() instead if prepending a main trail.
             this.upload = function() {
                 bUploadInProgress = true;
-                bNewUploadPath = true;      ////20170107 added
+                bNewUploadPath = true;      
                 view.onUpload(view.curMode(), this.uploadPath);
                 view.ShowStatus("Uploading recorded trail.", false);
             };
@@ -2466,7 +2430,7 @@ function wigo_ws_View() {
             // Note: returns false if a recorded trail without a main trail prepended has been uploaded.
             this.isAppendPathValid = function() {
                 // Check if a recorded path with a main trail prepended has been uploaded.
-                var bYes = !bNewUploadPath;   ////20170107 added.
+                var bYes = !bNewUploadPath;   
                 if (!bYes)
                     return false;
 
@@ -2526,7 +2490,6 @@ function wigo_ws_View() {
             }
 
             var bUploadInProgress = false;
-            ////$$$$ more here 
         }
         var uploader = new Uploader();
         // **
