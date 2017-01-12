@@ -1939,6 +1939,7 @@ function wigo_ws_View() {
             append_trail: 8,
             upload: 9,       
             cancel: 10,
+            show_stats: 11, 
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2126,6 +2127,8 @@ function wigo_ws_View() {
             this.nextState = function(event) {
                 switch (event) {
                     case that.event.stop:
+                        var msTimeStamp = Date.now();
+                        map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.PAUSE); 
                         stateStopped.prepare();
                         curState = stateStopped;
                 }
@@ -2147,6 +2150,7 @@ function wigo_ws_View() {
                 if (bAppendPathValid)
                     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("resume", "Resume");
+                recordCtrl.appendItem("show_stats", "Show Stats");
                 recordCtrl.appendItem("clear", "Clear");
                 // Ensure signin ctrl is hidden.
                 ShowSignInCtrl(false);
@@ -2183,7 +2187,14 @@ function wigo_ws_View() {
                             curState = stateStopped; 
                         }
                         break;
+                    case that.event.show_stats:
+                        ShowStats();
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
                     case that.event.resume: 
+                        var msTimeStamp = Date.now();
+                        map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.RESUME); 
                         stateOn.prepare();
                         curState = stateOn;
                         break;
@@ -2192,11 +2203,44 @@ function wigo_ws_View() {
                         curState = stateInitial;
                         break;
                 }
-
             };
-
+            
+            // Shows current stats. 
+            function ShowStats() {
+                // Helper that returns minutes and seconds for a time interval.
+                // Returns string for minutes and  seconds.
+                // Arg: 
+                //  msInterval: number of milliseconds in the interval.
+                function TimeInterval(msInterval) {
+                    var nSecs = msInterval / 1000;
+                    var nMins = Math.floor(nSecs/60);
+                    var nSecs = nSecs % 60;
+                    var sSecs = "{0}:{1}".format(nMins, nSecs.toFixed(0));
+                    return sSecs;
+                }
+                var stats = map.recordPath.getStats();
+                var sMsg = "";
+                if (stats.bOk) {
+                    var sStartDate = stats.tStart.toLocaleDateString();
+                    var sStartTime = stats.tStart.toLocaleTimeString();
+                    var s = "Stats for {0} {1}<br/>".format(sStartDate, sStartTime);
+                    sMsg += s;
+                    var lc = new LengthConverter();
+                    var sLen = lc.to(stats.dTotal); 
+                    s = "Distance: {0}<br/>".format(sLen);
+                    sMsg += s;
+                    s = "Run Time: {0}<br/>".format(TimeInterval(stats.msRecordTime));
+                    sMsg += s;
+                    s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
+                    sMsg += s;
+                    view.ShowStatus(sMsg, false);
+                } else {
+                    view.ShowStatus("Failed to calculate stats!");
+                }
+            }
         }
         var stateStopped = new StateStopped();
+
 
         // Define name of the trail.
         function StateDefineTrailName() {
@@ -3830,7 +3874,7 @@ function wigo_ws_View() {
         // number. Number of fixed point decimal places for kilometers.
         this.kmeterFixedPoint = 2;
 
-        // Return length in metric or English units based this.bMetric.
+        // Return length in metric or English units based on this.bMetric.
         // Returns: {n: number, unit: string}, where
         //  n is number for the length.
         //  unit: is string specifying kind of unit:

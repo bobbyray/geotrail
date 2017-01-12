@@ -2067,26 +2067,25 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  Note: this.kind defaults to eRecordPt.RECORD. Need to set for other than default.
         function RecordPt(ll, msTimeStamp, previousRecordPt) {
             this.kind = that.eRecordPt.RECORD;   // Kind of point. 
-            this.ll = ll;                   // Lattitude and longitude for the point.
+            this.ll = ll;  // Lattitude and longitude for the point. null or don't care for this.kind == eRecordPt.PAUSE or RESUME.
             this.msTimeStamp = msTimeStamp; // timestamp for the point.
             this.previous = previousRecordPt; // Ref to previous RecordPt object in a list.
             
             // Returns distance in meters from previous RecordPt.
             // Returns 0 if this.previous is null.
-            // Arg:
-            //  prevRecordPt: RecordPt. previous RecordPt.
             // Note: Skips over PAUSE or RESUME points, which were saved
             //       to record timestamps.
             this.d = function() {
                 var d = 0;
                 var curPt = this;
-                var prevPt = null;
+                var prevPt = null; 
                 // Calc distance from previous point skipping over PAUSE and RESUME point,
                 // where were saved to record timestamps.
                 while (curPt) {
                     prevPt = curPt.previous;
                     if (prevPt && prevPt.kind === that.eRecordPt.RECORD) {
-                        d = prevPt.ll.distanceTo(curPt.ll);
+                        if (this.kind === that.eRecordPt.RECORD)    
+                            d = prevPt.ll.distanceTo(this.ll);  
                         break;
                     } 
                     curPt = prevPt;
@@ -2094,6 +2093,47 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
                 return d;
             };
+
+            // Returns deltas for distance and time to previous point of kind RECORD.
+            // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
+            //  d: distance delta in meters.
+            //  msElapsedDelta: elpased time delta in millisconds, including pauses.
+            //  msRecordDelta: time delta in millisconds, excluding pauses. 
+            this.dt = function() {
+                var d = 0;
+                var curPt = this;
+                var prevPt = null;
+                var msDelta = 0;         // Time from current point to previous point.
+                var msElapsedDelta = 0;  // Elapased time from this point of kind RECORD to previous RECORD point, inlcuding PAUSE.
+                var msRecordDelta = 0;   // Record time from this point of kind RECORD to previous RECORD point, excluding PAUSE.
+                // Calc distance from previous point skipping over PAUSE and RESUME point,
+                // where were saved to record timestamps.
+                while (curPt) {
+                    prevPt = curPt.previous;
+                    if (prevPt) {
+                        msDelta = curPt.msTimeStamp - prevPt.msTimeStamp;
+                        msElapsedDelta += msDelta; 
+                        if (prevPt.kind === that.eRecordPt.RECORD) {
+                            if (this.kind === that.eRecordPt.RECORD)
+                                d = prevPt.ll.distanceTo(this.ll);
+                            if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
+                                msRecordDelta += msDelta;
+                            // Quit when previous point of RECORD kind is found.
+                            break;
+                        } else if (prevPt.kind === that.eRecordPt.RESUME) {
+                            if (curPt.Kind === that.eRecordPt.RECORD)
+                                msRecordDelta += msDelta; 
+                        } else if (prevPt.kind === that.eRecordPt.PAUSE) {
+                            if (curPt.kind === that.eRecordPt.RECORD) 
+                                msRecordDelta += msDelta;  // Should not happen.
+                        }
+                    } 
+                    curPt = prevPt;
+                }
+                var result = {d: d, msElapsedDelta: msElapsedDelta, msRecordDelta: msRecordDelta};
+                return result;
+
+            }
 
             // Returns velocity in meters/sec from previous RecordPt.
             // Returns 0 if previous RecordPt is null or time difference is 0.
@@ -2151,6 +2191,48 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
         };
 
+        // Returns stats for the record path.
+        // Returns Obj: {bOk: boolean, dTotal: number, msRunTime: number, msTotalTime: number, tStart: Date}
+        //  bOk: boolean. true for success (stats are valid).
+        //  dTotal: number. total distance of record path in meters.
+        //  msRecordTime: number. number of milliseconds for the RECORD time of the record path (PAUSE excluded).
+        //  msElapsedTime: number. number of milliseconds for total elapsed time for the record path (PAUSE included).
+        //  tStart: Date obj. Date and time for start of the record path. 
+        //          null if there is no valid RecordPt of kind eRecordPt.RECORD in the record path.
+        //          bOk is false if tStart is null.
+        this.getStats = function() {
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null};
+            if (!IsMapLoaded())
+                return result; // Quit if map has not been loaded.
+            
+            var d=0; // Distance to previous RECORD point.
+            var dt;  // Distance and time to previous record point.
+            var pt;  // Current point in arRecordPt while looping thru arRecordPt.
+            for (var i=0; i < arRecordPt.length; i++) {
+                pt = arRecordPt[i]; 
+                switch (pt.kind) {
+                    case this.eRecordPt.RECORD:
+                        // Get distance and time deltas to previous RECORD point.
+                        dt = pt.dt();
+                        result.dTotal += dt.d;
+                        result.msRecordTime += dt.msRecordDelta;
+                        result.msElapsedTime += dt.msElapsedDelta;
+                        // Set date and time for start of the recording.
+                        if (result.tStart === null) 
+                            result.tStart = new Date(pt.msTimeStamp);
+                        break;
+                    case this.eRecordPt.PAUSE:
+                        break;
+                    case this.eRecordPt.RESUME:
+                        break;
+                }
+            }
+            // Note: PAUSE and RESUME points after last RECORD point are ignored.
+
+            result.bOk = result.tStart !== null ? true : false;
+            return result;
+        };
+        
         // Appends the location point to the path of points.
         // Arg:
         //  llNext: L.LatLng object. The point to append to the path.
