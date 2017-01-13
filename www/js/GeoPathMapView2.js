@@ -88,7 +88,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         editSegment: 'magenta',    // Edit line segment for path.
         eraseSegment: 'white',     // Erase line segment when editing a point in the path.
         compassHeadingArrow: 'yellow', // Compass heading arrow from current location circle.
-        recordPath: '#ff9900'     // Sandy 
+        recordPath: '#ff9900',     // Sandy 
+        recordPathEnd: '#ff4000'   // Redish
     };
 
     // Initialize to use Open Streets Map once browser has initialized.
@@ -915,6 +916,29 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
 
 
+    // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
+    // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart, and llTo is end for the part of segment.
+    // Args:
+    //  llStart: LatLng obj for start of segment.
+    //  llEnd: LatLng obj for end of segment.
+    //  fraction: number, optional. portion of segment from llStart to llEnd. If undefined, 
+    //            llStart to llEnd is returned.
+    function CalcAlongSeg(llStart, llEnd, fraction) {
+        var arSeg = [];
+        if (typeof(fraction) === 'undefined') {
+            arSeg.push(llStart);
+            arSeg.push(llEnd);
+        } else {
+            var llDelta = L.latLng(llEnd.lat - llStart.lat, llEnd.lng - llStart.lng);
+            llDelta.lat = fraction * llDelta.lat;
+            llDelta.lng = fraction * llDelta.lng;
+            var llEndPart = L.latLng(llStart.lat + llDelta.lat, llStart.lng + llDelta.lng);
+            arSeg.push(llStart);
+            arSeg.push(llEndPart);
+        }
+        return arSeg;
+    }
+
     // Set (draws) shape for start of path beginning of first segment of the path
     // given by curPathSegs var.
     // Remarks:
@@ -924,30 +948,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // overlaying the first and last segment (each a different color) of the trail.  
     function SetStartEndOfPathShape() {
 
-        // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
-        // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart, and llTo is end for the part of segment.
-        // Args:
-        //  llStart: LatLng obj for start of segment.
-        //  llEnd: LatLng obj for end of segment.
-        //  fraction: number, optional. portion of segment from llStart to llEnd. If undefined, 
-        //            llStart to llEnd is returned.
-        function CalcAlongSeg(llStart, llEnd, fraction) {
-            var arSeg = [];
-            if (typeof(fraction) === 'undefined') {
-                arSeg.push(llStart);
-                arSeg.push(llEnd);
-            } else {
-                var llDelta = L.latLng(llEnd.lat - llStart.lat, llEnd.lng - llStart.lng);
-                llDelta.lat = fraction * llDelta.lat;
-                llDelta.lng = fraction * llDelta.lng;
-                var llEndPart = L.latLng(llStart.lat + llDelta.lat, llStart.lng + llDelta.lng);
-                arSeg.push(llStart);
-                arSeg.push(llEndPart);
-            }
-            return arSeg;
-        }
-
-        
         // Helper that calculates a portion of first line segment.
         // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart of first segment, and 
         //          llTo is end for the part of first segment.
@@ -967,7 +967,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             return arPart
         }
-
 
         // Helper that calculates a portion of last line segment.
         // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llEnd of last segment, and 
@@ -989,7 +988,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             return arPart
         }
-
 
         // Draw start segment shape.
         var shapeOptions = {
@@ -2053,6 +2051,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     function RecordPathMgr(geoPathMap) {
         var that = this;
         var mapRecordPath = null; // Map overlay for current path.
+        var mapRecordEndOfPathShape = null; // Map overlay for current path end of path shape. 
 
         var pathCoords = []; // Array of L.LatLng objs for path coordinates.
         var arRecordPt = []; // Array of RecordPt objs for the path. 
@@ -2172,6 +2171,33 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Draws path for recording on the map object.
         // Note: pathCoords has points that are drawn.
         this.draw = function(){
+
+            // Helper that calculates a portion of last line segment.
+            // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llEnd of last segment, and 
+            //          llTo is end for the part of last segment.
+            //  Arg:
+            //  mMaxLen: number. maximum number of meters for part returned. if mMaxLen > len of last segment, 
+            //           returns part as complete last segment.
+            function CalcEndOfPathLine(mMaxLen) {
+                var arPart = null;
+                var iLast = pathCoords.length - 1; 
+                var llEnd = iLast >= 0 ? pathCoords[iLast] : null;
+                var llStart = iLast > 0 ? pathCoords[iLast-1] : null;
+                if (llEnd && llStart) {
+                    var llEnd = pathCoords[iLast];
+                    var llStart = pathCoords[iLast-1];
+                    var len = llStart.distanceTo(llEnd);
+                    if (len > mMaxLen)
+                        arPart = CalcAlongSeg(llEnd, llStart, mMaxLen / len);
+                    else
+                        arPart = CalcAlongSeg(llEnd, seg.llStart);
+                } else if (llEnd) {
+                    arPart = CalcAlongSeg(llEnd, llEnd);
+                }
+                return arPart
+            }
+
+
             if (!IsMapLoaded())
                 return; // Quit if map has not been loaded.
             
@@ -2179,8 +2205,23 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.clear();
 
             // Draw the record path on the map.
-            mapRecordPath = L.polyline(pathCoords, { color: geoPathMap.color.recordPath, opacity: 0.5 });
-            mapRecordPath.addTo(map);
+            if (pathCoords.length > 1) { 
+                mapRecordPath = L.polyline(pathCoords, { color: geoPathMap.color.recordPath, opacity: 0.5 });
+                mapRecordPath.addTo(map);
+            }
+
+            // Draw end of path shape 
+            var arLatLng = CalcEndOfPathLine(30);
+            if (arLatLng) {
+                // Draw start segment shape.
+                var shapeOptions = {
+                    color: geoPathMap.color.recordPathEnd,  // stroke (perimeter) color
+                    weight: 6,    // stroke width in pels for line.
+                    opacity: 1.0
+                };
+                mapRecordEndOfPathShape = L.polyline(arLatLng, shapeOptions);
+                mapRecordEndOfPathShape.addTo(map);
+            }
 
             // Zoom to last point of recordPath.
             var iLast = pathCoords.length - 1;
@@ -2277,6 +2318,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (mapRecordPath) {
                 map.removeLayer(mapRecordPath);
                 mapRecordPath = null;
+            }
+            if (mapRecordEndOfPathShape) {
+                map.removeLayer(mapRecordEndOfPathShape);
+                mapRecordEndOfPathShape = null;
             }
         };
 
