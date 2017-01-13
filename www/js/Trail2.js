@@ -2229,10 +2229,11 @@ function wigo_ws_View() {
                     var sLen = lc.to(stats.dTotal); 
                     s = "Distance: {0}<br/>".format(sLen);
                     sMsg += s;
-                    s = "Run Time: {0}<br/>".format(TimeInterval(stats.msRecordTime));
+                    s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
                     sMsg += s;
-                    s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
-                    sMsg += s;
+                    // Elapsed time does not seem useful, probably confusing.
+                    // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
+                    // sMsg += s;
                     view.ShowStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
