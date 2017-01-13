@@ -282,6 +282,72 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Find Trails > My Private<br/>
             Searches for your private trails, trails that only you can see.</li>
         </ul>
+        <h3>Record DropList</h3>
+        You can record your travel on the map along with your travel time.
+        This is useful to keep track of the time and distance for a run.
+        Also recording can be helpful if you are trying to return to a trail.<br/>
+        Basically you can start, stop, and resume recording a trail. The droplist shows
+        the current recording state. Touching the droplist presents options
+        to control recording:
+        <ul>
+            <li>Off State
+                <ul>
+                    <li>Record > Start<br/>
+                    Starts recording and enters On State.
+                    </li>
+                    <li>Record > Unclear<br/>
+                    Restores the recorded trail on the map that has just been cleared.
+                    If there is no recorded trail to restore, Unclear is not shown.
+                    </li>
+                </ul>
+            </li>
+            <li>On State
+                <ul>
+                    <li>Stop<br/>
+                    Stops recording and enters Stopped State.
+                    </li>
+                </ul>
+            </li>
+            <li>Stopped State
+                <ul>
+                    <li>Save Trail<br/>
+                    Saves the recorded trail to the web server. If the recorded trail is 
+                    new, enters the TrName State for you to enter a trail name. Otherwise
+                    uploads the recorded trail to the web server and remains in the Stopped State.
+                    </li>
+                    <li>Append Trail<br/>
+                    Append Trail is only available if you can append the recorded trail
+                    to the main trail currently shown. If the main trail shown is not
+                    one of your trails, or if there is no main trail shown, 
+                    you cannot append the recorded trail.<br/>
+                    When Append Trail is available, appends the recorded trail to the
+                    main trail, uploads to the server, and remains in the Stopped State.
+                    </li>
+                    <li>Show Stats<br/>
+                    Shows the distance and run time for the recorded trail. 
+                    Remains in the Stopped State.
+                    </li>
+                    <li>Resume<br/>
+                    Resumes recording and enters the On State.
+                    </li>
+                    <li>Clear<br/>
+                    Clears the recorded trail fromn the map and enters the Off State.
+                    </li>
+                </ul>
+            </li>
+            <li>TrName State<br/>
+            Enter the name for a new trail in the textbox shown. 
+            Also select Public or Private from the Share DropList.
+            <ul>
+                <li>Upload<br/>
+                Uploads the recorded trail to the web server and returns to the Stopped State.
+                </li>
+                <li>Cancel<br/>
+                Does not upload to the server. Returns to the Stopped State.
+                </li>
+            </ul>
+            </li>
+        </ul>
         <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
         These controls let you see your current geolocation, turn automatic tracking on or off,
         and turn receiving alerts for your phone on or off.

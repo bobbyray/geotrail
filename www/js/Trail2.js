@@ -2149,8 +2149,8 @@ function wigo_ws_View() {
                 var bAppendPathValid = uploader.isAppendPathValid();
                 if (bAppendPathValid)
                     recordCtrl.appendItem('append_trail', "Append Trail");
-                recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("show_stats", "Show Stats");
+                recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
                 // Ensure signin ctrl is hidden.
                 ShowSignInCtrl(false);
