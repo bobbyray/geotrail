@@ -74,6 +74,12 @@ body {
     }
 }
 
+/* ////20170114 added
+* {  
+        box-sizing: border-box;
+}
+*/
+
 h1 {
     font-size:24px;
     font-weight:normal;
@@ -579,6 +585,7 @@ label {
     float: left;
     height: 5.0em;
     width: 100%;
+    box-sizing: border-box;  /* ////20170114 added */
 }
 
 #divTrailInfo {
@@ -586,7 +593,8 @@ label {
     height: 50%;
     clear: both;  
     float: left;  
-    margin-right: 0.5em;
+    /* ////20170114 margin-right: 0.5em; */
+    padding-right: 0.5em;
 }
 #divTrailInfo .wigo_ws_DropDownLabel {
     left: 0px;
@@ -619,7 +627,8 @@ label {
 }
 #onlineAction, #offlineAction {
     height: 100%;
-    width: 100%
+    width: 100%;
+    /* ////$$$$ fix ???? */
 }
 #onlineMyLoc {
     float: left;
@@ -645,7 +654,8 @@ label {
     height: 100%; 
     width: 10%; 
     float: left;
-    margin-left: 0.3em;
+    /* ////20140114 margin-left: 0.3em; */
+    padding-left: 0.3em;
 }
 #onlineRecord .wigo_ws_DropDownIcon, #offlineRecord .wigo_ws_DropDownIcon   { 
     height: 50%;

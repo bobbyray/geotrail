@@ -2190,7 +2190,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     if (len > mMaxLen)
                         arPart = CalcAlongSeg(llEnd, llStart, mMaxLen / len);
                     else
-                        arPart = CalcAlongSeg(llEnd, seg.llStart);
+                        arPart = CalcAlongSeg(llEnd, llStart);
                 } else if (llEnd) {
                     arPart = CalcAlongSeg(llEnd, llEnd);
                 }
