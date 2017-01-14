@@ -641,22 +641,22 @@ label {
     width: 75%;
 }
 
-#onlineRecord {
-    height: 100%;
+#onlineRecord, #offlineRecord { 
+    height: 100%; 
     width: 10%; 
     float: left;
     margin-left: 0.3em;
 }
-#onlineRecord .wigo_ws_DropDownIcon {
+#onlineRecord .wigo_ws_DropDownIcon, #offlineRecord .wigo_ws_DropDownIcon   { 
     height: 50%;
     left: 0%;   
 }
-#onlineRecord .wigo_ws_DropDownLabel {
+#onlineRecord .wigo_ws_DropDownLabel,  #offlineRecord .wigo_ws_DropDownLabel { 
     top: 50%;
     left: 30%;
     width: auto;    
 }
-#onlineRecord .wigo_ws_DropDownList {
+#onlineRecord .wigo_ws_DropDownList, #offlineRecord .wigo_ws_DropDownList  { 
     width: 4em;
 }
 

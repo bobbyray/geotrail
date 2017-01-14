@@ -86,6 +86,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     <div id="selectMapCache">
                         <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
                     </div>
+                    <div id="offlineRecord">
+                        <!-- Container for dropdown list control with id="offlineRecordDropDown" -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,7 +285,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Find Trails > My Private<br/>
             Searches for your private trails, trails that only you can see.</li>
         </ul>
-        <h3>Record DropList</h3>
+        <h3 id="helpOnlineRecord">Record DropList</h3>
         You can record your travel on the map along with your travel time.
         This is useful to keep track of the time and distance for a run.
         Also recording can be helpful if you are trying to return to a trail.<br/>
@@ -292,10 +295,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <ul>
             <li>Off State
                 <ul>
-                    <li>Record > Start<br/>
+                    <li>Start<br/>
                     Starts recording and enters On State.
                     </li>
-                    <li>Record > Unclear<br/>
+                    <li>Unclear<br/>
                     Restores the recorded trail on the map that has just been cleared.
                     If there is no recorded trail to restore, Unclear is not shown.
                     </li>
@@ -331,7 +334,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     Resumes recording and enters the On State.
                     </li>
                     <li>Clear<br/>
-                    Clears the recorded trail fromn the map and enters the Off State.
+                    Clears the recorded trail from the map and enters the Off State.
                     </li>
                 </ul>
             </li>
@@ -381,6 +384,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
                 the offline trails from the phone.</li>
             </ul>
+            <li>Record DropList<br/>
+            Records a trail as you travel. This works the same as described in 
+            <a href="#helpOnlineRecord">Online Record DropList</a>, except 
+            the options to save a trail to the web server are not available while offline.
+            </li>
         </ul>
         <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
         <h2 id="helpDrawTrail">Draw a Trail</h2>

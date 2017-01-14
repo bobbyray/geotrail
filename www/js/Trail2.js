@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.022_20170103"; // Constant string for App version.
+    var sVersion = "1.1.022_20170113"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -437,6 +437,7 @@ function wigo_ws_View() {
                         }
                     },"",sAnswerBtns);
                 }
+                recordFSM.initialize(offlineRecord);  
                 break;
             case this.eMode.online_edit:
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
@@ -1949,10 +1950,13 @@ function wigo_ws_View() {
         //       as RecordFSM object changees states.
         this.initialize = function(recordCtrlRef) {
             recordCtrl = recordCtrlRef;
+            bOnline = view.curMode() === view.eMode.online_view;  
+            stateInitial.reset();  
             stateInitial.prepare();
             curState = stateInitial;
         };
         var recordCtrl = null;
+        var bOnline = true; 
 
         // Transitions this FSM to its next state given an event.
         // Arg:
@@ -2078,6 +2082,17 @@ function wigo_ws_View() {
         // ** State objects
         // Record is off. Ready to start.
         function StateInitial() {
+            // Reset for StateInitial.
+            // Note: Call if unclear is not available before calling this.prepare().
+            this.reset = function() {
+                // Set default for recordShare droplist.
+                selectRecordShareDropDown.setSelected('private');
+                // Reset the uploader for the recorded trail.
+                uploader.clear();
+                // Reset the captured points for trail.
+                map.recordPath.reset();
+            };
+
             this.prepare = function() {
                 recordCtrl.setLabel("Off")
                 recordCtrl.empty();
@@ -2094,12 +2109,7 @@ function wigo_ws_View() {
             this.nextState = function(event) {
                 switch (event) {
                     case that.event.start: 
-                        // Set default for recordShare droplist.
-                        selectRecordShareDropDown.setSelected('private');
-                        // Reset the uploader for the recorded trail.
-                        uploader.clear();
-                        // Reset the captured points for trail.
-                        map.recordPath.reset();
+                        this.reset(); 
                         stateOn.prepare();
                         curState = stateOn;
                         break;
@@ -2143,10 +2153,10 @@ function wigo_ws_View() {
                 recordWatcher.clear(); // Ensure watching for location change is stopped.
                 recordCtrl.setLabel("Stopped");
                 recordCtrl.empty();
-                var bSavePathValid = uploader.isSavePathValid();
+                var bSavePathValid = bOnline && uploader.isSavePathValid(); 
                 if (bSavePathValid)
                     recordCtrl.appendItem("save_trail", "Save Trail");
-                var bAppendPathValid = uploader.isAppendPathValid();
+                var bAppendPathValid = bOnline && uploader.isAppendPathValid();
                 if (bAppendPathValid)
                     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("show_stats", "Show Stats");
@@ -2155,7 +2165,7 @@ function wigo_ws_View() {
                 // Ensure signin ctrl is hidden.
                 ShowSignInCtrl(false);
                 ShowPathDescrBar(false); 
-                if (!bSavePathValid && !bAppendPathValid) {
+                if (bOnline && !bSavePathValid && !bAppendPathValid) {  
                     view.ShowAlert("There is no recorded trail to save.");
                 }
             };
@@ -4529,8 +4539,13 @@ function wigo_ws_View() {
 
     parentEl = document.getElementById('onlineRecord'); 
     var onlineRecord = new ctrls.DropDownControl(parentEl, "onlineRecordDropDown", "Off", null, "img/recordicon.png");
-    onlineRecord.fill([['start', 'Start'], ['append', 'Append To Trail']]);
     onlineRecord.onListElClicked = function(dataValue) {
+        recordFSM.nextState(recordFSM.eventValue(dataValue));
+    };
+
+    parentEl = document.getElementById('offlineRecord');  
+    var offlineRecord = new ctrls.DropDownControl(parentEl, "offlineRecordDropDown", "Off", null, "img/recordicon.png");
+    offlineRecord.onListElClicked = function(dataValue) {
         recordFSM.nextState(recordFSM.eventValue(dataValue));
     };
 
