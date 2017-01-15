@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.022_20170114_1220"; // Constant string for App version.
+    var sVersion = "1.1.022_20170114_1618"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -329,6 +329,7 @@ function wigo_ws_View() {
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     this.ShowStatus = function (sStatus, bError) {
         divStatus.set(sStatus, bError);
+        titleBar.scrollIntoView(); 
     };
 
     // Appends a status messages starting on a new line to current status message and
@@ -342,6 +343,7 @@ function wigo_ws_View() {
         }
 
         divStatus.add(sStatus, bError);
+        titleBar.scrollIntoView(); 
     };
 
     // Displays an Alert message box which user must dismiss.
@@ -369,6 +371,7 @@ function wigo_ws_View() {
     // Clears the status message.
     this.ClearStatus = function () {
         divStatus.clear();
+        titleBar.scrollIntoView(); 
     };
 
     // Set the user interface for a new mode.
@@ -440,6 +443,7 @@ function wigo_ws_View() {
                 recordFSM.initialize(offlineRecord);  
                 break;
             case this.eMode.online_edit:
+                recordFSM.clear(); 
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
@@ -447,11 +451,14 @@ function wigo_ws_View() {
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
                 break;
             case this.eMode.online_define:
+                recordFSM.clear(); 
                 HideAllBars();
                 titleBar.setTitle("Drawing a Trail");
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
+                // Note: view show sign-on bar.
+                recordFSM.clear(); 
                 HideAllBars();
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
@@ -1957,6 +1964,12 @@ function wigo_ws_View() {
         };
         var recordCtrl = null;
         var bOnline = true; 
+
+        // Clears the recorded path from the map.
+        // Note: Does not reset. The record path can be uncleared.
+        this.clear = function() { 
+            map.recordPath.clear();
+        }
 
         // Transitions this FSM to its next state given an event.
         // Arg:
