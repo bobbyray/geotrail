@@ -443,7 +443,6 @@ function wigo_ws_View() {
                 recordFSM.initialize(offlineRecord);  
                 break;
             case this.eMode.online_edit:
-                ////20170115 recordFSM.clear(); 
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
@@ -451,14 +450,12 @@ function wigo_ws_View() {
                 fsmEdit.Initialize(false); // false => not new, ie edit existing path.
                 break;
             case this.eMode.online_define:
-                ////20170115 recordFSM.clear(); 
                 HideAllBars();
                 titleBar.setTitle("Drawing a Trail");
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
                 // Note: view show sign-on bar.
-                ////20170115 recordFSM.clear(); 
                 HideAllBars();
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
@@ -692,7 +689,7 @@ function wigo_ws_View() {
 
     var txbxPathName = document.getElementById('txbxPathName');
     txbxPathName.addEventListener('change', function(event){
-        if (that.curMode() === that.eMode.online_edit ||    ////20170115 add if cond. $$$$
+        if (that.curMode() === that.eMode.online_edit ||    
             that.curMode() === that.eMode.online_define) {
             // Note: Only do for editing or defining a trail.
             var fsm = that.fsmEdit();
@@ -1961,8 +1958,7 @@ function wigo_ws_View() {
         // Note: var recordCtrl is updated for the current state
         //       as RecordFSM object changees states.
         this.initialize = function(recordCtrlRef) {
-            ////20170115 recordCtrl = recordCtrlRef;
-            if (recordCtrlRef)   ////20170115 added if cond.
+            if (recordCtrlRef)   
                 recordCtrl = recordCtrlRef;
             bOnline = view.curMode() === view.eMode.online_view;  
             stateInitial.reset();  
@@ -1971,12 +1967,6 @@ function wigo_ws_View() {
         };
         var recordCtrl = null;
         var bOnline = true; 
-
-        ////20170115 // Clears the recorded path from the map.
-        ////20170115 // Note: Does not reset. The record path can be uncleared.
-        ////20170115 this.clear = function() { 
-        ////20170115     map.recordPath.clear();
-        ////20170115 }
 
         // Transitions this FSM to its next state given an event.
         // Arg:
@@ -2013,7 +2003,7 @@ function wigo_ws_View() {
 
         // Returns true if recording is off.
         // Note: When recording is off, the the current state is Initial.
-        this.isOff = function() { ////20170115 added 
+        this.isOff = function() { 
             var bYes = curState === stateInitial;
             return bYes;
         }
@@ -2143,8 +2133,6 @@ function wigo_ws_View() {
                     case that.event.unclear:
                         // Display the trail that has been restored.
                         map.recordPath.draw();
-                        ////20170115 stateOn.prepare();
-                        ////20170115 curState = stateOn;
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
@@ -2376,7 +2364,7 @@ function wigo_ws_View() {
             var bOk = sOwnerId.length > 0;
             if (!bOk) {
                 view.ShowStatus("Sign-in to upload the recorded trail.", false);
-                viewFindParams.nFindIx = view.eFindIx.no_change; ////20170115 added.
+                viewFindParams.nFindIx = view.eFindIx.no_change; 
                 ShowSignInCtrl(true);
             }
             return sOwnerId;
@@ -2631,7 +2619,7 @@ function wigo_ws_View() {
     //      If corners are invalid, returns null.
     //      (For some kinds of search, the rectangle is not used, ie is invalid.)
     var viewFindParams = {
-        nFindIx: that.eFindIx.home_area, gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt(),  ////20170115 that was this
+        nFindIx: that.eFindIx.home_area, gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt(),  
         setRect: function (nFindIx, gptSW, gptNE) {
             this.nFindIx = nFindIx;
             this.gptSW.lat = gptSW.lat;
@@ -4434,7 +4422,7 @@ function wigo_ws_View() {
                     selectMode.selectedIndex = that.curMode();
                 }
             });
-        } else if (!recordFSM.isOff()) { ////20170115 added
+        } else if (!recordFSM.isOff()) { 
             ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.initialize(); // Reset recording.
@@ -5059,9 +5047,6 @@ function wigo_ws_Controller() {
     //  sPathOwnerId: string for owner id for the list.
     function GetGeoPaths(nMode, sPathOwnerId) {
         // Get list of geo paths from the server.
-        ////201170115 gpxArray = new Array(); // Clear existing gpxArray.
-        ////20170115NotUsed var arPath = new Array(); // List of path names to show in view.
-
         if (nMode === view.eMode.online_view) {
             // Use FindGeoPaths(..), which finds paths within a geo rectangle as well 
             // as by user id.
@@ -5230,9 +5215,6 @@ function wigo_ws_Controller() {
                     SetPathList(bOk);
                 });
                 break;
-            ////20170115 case view.eFindIx.no_change: ////20170115 added
-            ////20170115     // No change to current list of geo paths.
-            ////20170115     break;
             default:
                 view.ShowStatus("Unknown search type for finding trails.");
                 break;
