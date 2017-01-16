@@ -194,9 +194,16 @@ label {
 {
     width: 100%;
     float: left;
+    /* ////20170115
     margin-top: 5px;
     margin-left: 5px;
     margin-bottom: 0px;
+    */
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    box-sizing: border-box;
 }
 
 #buSaveOffline {
