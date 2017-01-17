@@ -579,9 +579,10 @@ label {
 #onlineOfflineEditBar {
     clear: both;
     float: left;
-    height: 5.0em;
+    height: 5.5em;
     width: 100%;
     box-sizing: border-box;  
+    padding-top: 4px;
 }
 
 #divTrailInfo {
