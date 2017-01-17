@@ -413,9 +413,7 @@ function wigo_ws_View() {
                 map.ClearPath();
                 selectGeoTrail.clearValueDisplay(); 
                 recordFSM.initialize(onlineRecord); 
-                ////20170106 // Note: recordFSM.initialize() restored viewFindParams.nFindIx in case nFindIx was currently no_change.  
                 this.onGetPaths(nMode, that.getOwnerId()); 
-                ////20170115MovedUp recordFSM.initialize(onlineRecord);  
                 break;
             case this.eMode.offline:
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
@@ -1976,9 +1974,6 @@ function wigo_ws_View() {
             if (recordCtrlRef)   
                 recordCtrl = recordCtrlRef;
             bOnline = view.curMode() === view.eMode.online_view;  
-            ////20170117 // Restore previous viewFindParams.nFindIx if set to no change. 
-            ////20170117 if (viewFindParams.nFindIx === view.eFindIx.no_change)   ////20170115 added.
-            ////20170117     viewFindParams.nFindIx = prevFindIx;                 ////20170115 added.
             stateInitial.reset();  
             stateInitial.prepare();
             curState = stateInitial;
@@ -2020,7 +2015,7 @@ function wigo_ws_View() {
         };
 
         // Reeturns true if in state for defining a trail name.
-        this.isDefiningTrailName = function() { ////20170117 added
+        this.isDefiningTrailName = function() { 
             var bYes = curState === stateDefineTrailName;
             return bYes;
         }
@@ -2388,14 +2383,10 @@ function wigo_ws_View() {
             var bOk = sOwnerId.length > 0;
             if (!bOk) {
                 view.ShowStatus("Sign-in to upload the recorded trail.", false);
-                ////20170117 // Save previous view.eFindIx value for viewFindParams.nFindIx is set to no_change. 
-                ////20170117 prevFindIx = viewFindParams.nFindIx;
-                ////20170117 viewFindParams.nFindIx = view.eFindIx.no_change; 
                 ShowSignInCtrl(true);
             }
             return sOwnerId;
         }
-        ////20170117 var prevFindIx = view.eFindIx.no_change; // Saved previous viewFindParams.nFindIx. ////20170115 added
 
         // ** Object to upload a record trail.
         function Uploader() {
@@ -2457,16 +2448,6 @@ function wigo_ws_View() {
             //  bOk: boolean. true for upload successful.
             //  nId: number. database id for the uploaded path. Ignored if bOk is false.
             this.uploadCompleted = function(bOk, nId) {
-                /* ////20170117 redo 
-                if (bOk) {
-                    // Note: 20170105 nId may be undefined because server does not return the 
-                    //       the record id for the uploaded path upon completion.
-                    //       However, this should be fixed later.
-                    if (typeof(nId) === 'number')
-                        this.uploadPath.nId = nId;
-                }
-                bUploadInProgress = false;
-                */
                 if (bOk) {
                     // Note: 20170105 nId may be undefined because server does not return the 
                     //       the record id for the uploaded path upon completion.
@@ -4910,17 +4891,14 @@ function wigo_ws_Controller() {
                         var eDuplicate = model.eDuplicate();
                         if (oStatus.eDup === eDuplicate.Renamed) {
                             // Set message about renaming path.
-                            ////20170117 sStatusMsg = oStatus.sMsg;
                             sStatusMsg = sUploadOkMsg;
                             sStatusMsg += "<br/>";
                             sStatusMsg += oStatus.sMsg;
                         } else if (oStatus.eDup === eDuplicate.Match) {
                             // gpx obj has same name as its record in database so there is no name change.
                             // No need to reload the list of paths.
-                            ////20170117 sStatusMsg = "Successfully uploaded GPX trail.";
                             sStatusMsg = sUploadOkMsg;
                         } else if (oStatus.eDup === eDuplicate.NotDup) {
-                            ////20170117 sStatusMsg = "Successfully uploaded GPX trail.";
                             sStatusMsg = sUploadOkMsg;
                         } else {
                             sStatusMsg = "Error occurred uploading GPX trail.";
@@ -5019,19 +4997,13 @@ function wigo_ws_Controller() {
                     view.ShowStatus("User successfully logged in.", false);
                     var nMode = view.curMode();
                     if (nMode === view.eMode.online_view) {
-                        ////20170117 // Note: Might want to check if logon is due to Record, in which case may not 
-                        ////20170117 //       want to call view.onGetPaths(..) next.
-                        ////20170117 //       However, I think it is better to always call view.onGetPaths() here.
-                        ////20170117 // Cause geo paths to be displayed for user.
-                        ////20170117 view.onGetPaths(view.curMode(), view.getOwnerId());
-                        ////20170117 
                         // Check if logon is due to recording a trail, in which case 
                         // do not call view.onGetPaths(..) because the download from server
                         // takes time and the upload for the recorded trail fails if another transfer
                         // request is in already in progress. Always calling view.onGetPaths() works
                         // fairly well, but can be confusing to user if it causes uploading a new trail to fail,
                         // in which case the user would need to retry uploading the trail.
-                        if (!view.isRecordingDefiningTrailName())   ////20170117 added if cond only.
+                        if (!view.isRecordingDefiningTrailName())   
                             view.onGetPaths(view.curMode(), view.getOwnerId());
                     } else if (nMode === view.eMode.online_edit ||
                                nMode === view.eMode.online_define) {
@@ -5141,11 +5113,6 @@ function wigo_ws_Controller() {
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
     //  bQuiet: boolean. No longer used.
     function FindGeoPaths(sPathOwnerId, nFindIx, gptSW, gptNE) {
-        ////20170117 // Return immediately for no change in list of current paths found.
-        ////20170117 // Note: Return here so that gpxArray, the list current path data, is not changed.
-        ////20170117 if (nFindIx === view.eFindIx.no_change)
-        ////20170117     return; 
-
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
