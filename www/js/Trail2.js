@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.022_20170117_1523"; // Constant string for App version.
+    var sVersion = "1.1.022_20170117_1737"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -564,10 +564,11 @@ function wigo_ws_View() {
     //  bOk: boolean. true for upload successful.
     //  sStatusMsg: string. status msg to show.
     //  nId: number. record id at server for uploated path.
-    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId) {
+    //  sPathName: string. name of the path. (server rename path to avoid duplicate name.)
+    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId, sPathName) {  
         if (nMode === this.eMode.online_view) {
             this.ShowStatus(sStatusMsg, !bOk);
-            recordFSM.uploadPathCompleted(bOk, nId); 
+            recordFSM.uploadPathCompleted(bOk, nId, sPathName); 
         } else if (nMode === this.eMode.online_edit || nMode === this.eMode.online_define ) {
             // Fire event to initialize fsm reload path list when 
             // nMode indicates online_edit or online_define.
@@ -1993,8 +1994,9 @@ function wigo_ws_View() {
         // Args:
         //  bOk: boolean. true indicates success.
         //  nId: number. record id at server for the uploaded path.
-        this.uploadPathCompleted = function(bOk, nId) {
-            uploader.uploadCompleted(bOk, nId);    
+        //  sPathName: string. name of the path. (server might rename path to avoid duplicates.)
+        this.uploadPathCompleted = function(bOk, nId, sPathName) { 
+            uploader.uploadCompleted(bOk, nId, sPathName);    
         };
 
         // Returns value for an eventName.
@@ -2447,13 +2449,15 @@ function wigo_ws_View() {
             // Arg:
             //  bOk: boolean. true for upload successful.
             //  nId: number. database id for the uploaded path. Ignored if bOk is false.
-            this.uploadCompleted = function(bOk, nId) {
+            //  sPathName: string. path name (server might rename to avoid duplicate name in database).
+            this.uploadCompleted = function(bOk, nId, sPathName) {  
                 if (bOk) {
                     // Note: 20170105 nId may be undefined because server does not return the 
                     //       the record id for the uploaded path upon completion.
                     //       However, this should be fixed later.
                     if (typeof(nId) === 'number')
                         this.uploadPath.nId = nId;
+                        this.uploadPath.sPathName = sPathName; 
                 } else {
                     view.ShowAlert("Upload failed. Another transfer may be in progress. Please wait and try again.");
                 }
@@ -4883,11 +4887,13 @@ function wigo_ws_Controller() {
                 // Async callback upon storing record at server.
                 function (bOk, sStatus) {
                     var nId = 0;
+                    var sPathName = ""; 
                     var sStatusMsg;
                     var sUploadOkMsg = "Successfully uploaded GPX trail:<br/>{0}.".format(gpx.sName);
                     if (bOk) {
                         var oStatus = JSON.parse(sStatus);
                         nId = oStatus.nId;
+                        sPathName = oStatus.sName;  
                         var eDuplicate = model.eDuplicate();
                         if (oStatus.eDup === eDuplicate.Renamed) {
                             // Set message about renaming path.
@@ -4908,11 +4914,11 @@ function wigo_ws_Controller() {
                         sStatusMsg = sStatus;
                     }
 
-                    view.uploadPathCompleted(nMode, bOk, sStatusMsg, nId);
+                    view.uploadPathCompleted(nMode, bOk, sStatusMsg, nId, sPathName); 
                 });
             if (!bOk) {
                 var sError = "Cannot upload GPX trail to server because another transfer is already in progress.";
-                view.uploadPathCompleted(nMode, bOk, sError, 0);
+                view.uploadPathCompleted(nMode, bOk, sError, 0, ""); 
             }
         }
     };
