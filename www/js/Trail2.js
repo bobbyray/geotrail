@@ -349,7 +349,7 @@ function wigo_ws_View() {
     // Shows the signin control bar. 
     // Arg:
     //  bShow: boolean. true to show. 
-    this.ShowSignInCtrl = function(bShow) { ////20170121 added function.
+    this.ShowSignInCtrl = function(bShow) { 
         ShowSignInCtrl(bShow);
     }
 
@@ -360,10 +360,10 @@ function wigo_ws_View() {
     //  sMsg: string. message to display.
     //  onDone: function, optional, defaults to null. callback after user dismisses the dialog. callback has no arg.
     // Note: ShowAlert(..) returns immediately. callback after dialog is dismissed is asynchronous.
-    this.ShowAlert = function (sMsg, onDone) {  ////20170124 added onDone.
+    this.ShowAlert = function (sMsg, onDone) {  
         var reBreak = new RegExp('<br/>', 'g'); // Pattern to replace <br/>.
         var s = sMsg.replace(reBreak, '\n');    // Replace <br/> with \n.
-        AlertMsg(s, onDone);  ////20170124 added onDone.
+        AlertMsg(s, onDone);  
     };
 
     // Display confirmation dialog with Yes, No as default for buttons.
@@ -577,16 +577,12 @@ function wigo_ws_View() {
     //  nId: number. record id at server for uploated path.
     //  sPathName: string. name of the path. (server rename path to avoid duplicate name.)
     //  bUpload: boolean. true for uploaded, false for deleted.
-    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId, sPathName, bDelete) {   ////20170123 
+    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId, sPathName, bDelete) {   
         if (nMode === this.eMode.online_view) {
             this.ShowStatus(sStatusMsg, !bOk);
             recordFSM.uploadPathCompleted(bOk, nId, sPathName); 
         } else if (nMode === this.eMode.online_edit || nMode === this.eMode.online_define ) {
             this.ShowStatus(sStatusMsg, !bOk);
-            ////20170123 if (bOk)  ////20170121 added if cond, body existed.
-            ////20170123     fsmEdit.DoEditTransition(fsmEdit.eventEdit.Init);   ////20170123 Init changes to Completed_Ok
-            ////20170123 else  ////20170121 added else body.
-            ////20170123     fsmEdit.DoEditTransition(fsmEdit.eventEdit.Error);
             fsmEdit.uploadPathCompleted(bOk, sStatusMsg);
         }
     };
@@ -921,8 +917,8 @@ function wigo_ws_View() {
             PathIxPrev: 16,
             DeletePtDo: 17,
             ChangedShare: 18,
-            Error: 19, ////20170121 added
-            Completed_Ok: 20, // Upload or Delete completed successfully. /////20170123 added $$$$ use this instead of Init 
+            Error: 19, 
+            Completed_Ok: 20, // Upload or Delete completed successfully. 
         };
 
         this.Initialize = function(bNewArg) {
@@ -957,7 +953,7 @@ function wigo_ws_View() {
         // Arg:
         //  bOk: boolean. true for success. 
         //  sMsg: string. messages showing the result.
-        this.uploadPathCompleted = function(bOk, sMsg) {  ////20170123 added $$$$
+        this.uploadPathCompleted = function(bOk, sMsg) {  
             view.ShowAlert(sMsg);
             // Note: ShowAlert(sMsg) presents dialog box with Ok button, but code flow
             //       continues immediately. Therefore dialog box is shown rather 
@@ -1398,7 +1394,6 @@ function wigo_ws_View() {
         // Waiting for upload to be completed.
         function stUploadPending(event) { 
             switch(event) {
-                ////20170123 case that.eventEdit.Init:
                 case that.eventEdit.Completed_Ok:
                     // Fire  init event to re-initialize.
                     curEditState = stEditInit;
@@ -1408,7 +1403,7 @@ function wigo_ws_View() {
                     CancelIfUserOks("Quit waiting for acknowlegement from server of upload?");
                     // Goes to stEditInit if user oks.
                     break;
-                case that.eventEdit.Error:  ////20170121 added 
+                case that.eventEdit.Error:  
                     // stay in same state. 
                     ShowSignInCtrl(true);
                     view.ShowAlert("Upload failed. You may need to sign-in. Please try again.");
@@ -1421,7 +1416,6 @@ function wigo_ws_View() {
         // Waiting for delete to be completed
         function stDeletePending(event) {
             switch (event) {
-                ////20170123 case that.eventEdit.Init:  $$$$
                 case that.eventEdit.Completed_Ok:
                     // Deletion was successful.
                     // Fire  init event to re-initialize.
@@ -1433,7 +1427,7 @@ function wigo_ws_View() {
                     CancelIfUserOks("Quit waiting for acknowlegement from server of delete?");
                     // Goes to stEditInit if user oks.
                     break;
-                case that.eventEdit.Error:  ////20170121 added 
+                case that.eventEdit.Error:  
                     // stay in same state. 
                     ShowSignInCtrl(true);
                     view.ShowAlert("Delete failed. You may need to sign-in. Please try again.");
@@ -1966,8 +1960,6 @@ function wigo_ws_View() {
         // If paths can not be uploaded returns false.
         function DoUpload() {
             var bOk = false;
-            ////20170124 // Always go to stUploadPending even if error so that user can cancel or an error event can be handled.
-            ////20170124 curEditState = stUploadPending; 
             if (that.gpxPath) { // Ignore if gpxPath obj does not exists.
                 if (that.gpxPath.arGeoPt.length > 1) {
                     var path = NewUploadPathObj();
@@ -1980,7 +1972,6 @@ function wigo_ws_View() {
                     view.onUpload(view.curMode(), path);
                     view.ShowStatus("Uploading trail to server.", false);
                     bOk = true;
-                    ////20170124 curEditState = stUploadPending;
                 } else {
                     var sMsg = "Cannot upload the geo trail because it must have more than one point.";
                     AlertMsg(sMsg);
@@ -2011,7 +2002,6 @@ function wigo_ws_View() {
             upload: 9,       
             cancel: 10,
             show_stats: 11, 
-            ////20170119 signin: 12,   ////20170118 added
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2067,8 +2057,7 @@ function wigo_ws_View() {
 
         // Reeturns true if in state for defining a trail name.
         this.isDefiningTrailName = function() { 
-            ////20170119 var bYes = curState === stateDefineTrailName;
-            return signin.isSignInActive();  ////20170119
+            return signin.isSignInActive();  
         }
 
         // Returns true if recording is off.
@@ -2248,10 +2237,8 @@ function wigo_ws_View() {
                     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("show_stats", "Show Stats");
                 recordCtrl.appendItem("resume", "Resume");
-                ////20170119 recordCtrl.appendItem("signin", "Sign-in"); ////20170118 added.
                 recordCtrl.appendItem("clear", "Clear");
                 // Ensure signin ctrl is hidden.
-                ////20170119 ShowSignInCtrl(false);
                 signin.hide();
                 ShowPathDescrBar(false); 
                 if (bOnline && !bSavePathValid && !bAppendPathValid) {  
@@ -2280,7 +2267,6 @@ function wigo_ws_View() {
                         if (uploader.isUploadInProgress() ) { 
                             view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
                         } else {
-                            ////20170122 Check if ok to append recorded trail to currently selected main trail.
                             // Upload recorded trail appended to main trail.
                             uploader.uploadMainPath();
                             stateStopped.prepare();
@@ -2292,10 +2278,6 @@ function wigo_ws_View() {
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
-                    ////20170119 case that.event.signin: ////20170118 added
-                    ////20170119     ShowSignInCtrl(true);
-                    ////20170119     // State in same state.
-                    ////20170119     break;
                     case that.event.resume: 
                         var msTimeStamp = Date.now();
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.RESUME); 
@@ -2319,7 +2301,6 @@ function wigo_ws_View() {
                     var nSecs = msInterval / 1000;
                     var nMins = Math.floor(nSecs/60);
                     var nSecs = nSecs % 60;
-                    ////20170122 var sSecs = "{0}:{1}".format(nMins, nSecs.toFixed(0));
                     var sSecs = nSecs < 10 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0);
                     var sSecs = "{0}:{1}".format(nMins, sSecs);
                     return sSecs;
@@ -2357,11 +2338,8 @@ function wigo_ws_View() {
                 view.ShowStatus("Enter a name for the trail", false);
                 recordCtrl.appendItem("upload", "Upload");
                 recordCtrl.appendItem("cancel", "Cancel");
-                ////20170119 recordCtrl.appendItem("signin", "Sign-in"); ////20170118 added.
                 ShowPathDescrBar(true); 
-                ////20170119 ShowSignInCtrl(false); ////20170118 added
-                ////20170119 ShowSignInIfNeedBe(); 
-                signin.showIfNeedBe(); ////20170119 
+                signin.showIfNeedBe(); 
             };
 
             this.nextState = function(event) {
@@ -2386,10 +2364,6 @@ function wigo_ws_View() {
                         view.ClearStatus();    
                         curState = stateStopped;
                         break;
-                    ////20170119 case that.event.signin: ////20170118 added
-                    ////20170119     ShowSignInCtrl(true);
-                    ////20170119     // State in same state.
-                    ////20170119     break;
                 }
             };
             // Helper to upload new recorded trail. Shows a status message for the result.
@@ -2441,22 +2415,6 @@ function wigo_ws_View() {
             ShowCancelButton(false);  
             ShowDeleteButton(false);
         }
-
-
-        /* ////20170119 redo to use RecordSignIn object.
-        // Helper to get owner id and show signin ctrl if owner id is empty.
-        // Returns owner id string.
-        function ShowSignInIfNeedBe() {
-            var sOwnerId = view.getOwnerId();
-            var bOk = sOwnerId.length > 0;
-            if (!bOk) {
-                view.ShowStatus("Sign-in to upload the recorded trail.", false);
-                ShowSignInCtrl(true);
-            }
-            return sOwnerId;
-        }
-        */
-
 
         // Object for managing sign-in control bar for Record.
         function RecordSignIn() {
@@ -2522,8 +2480,7 @@ function wigo_ws_View() {
             // If not ok, shows a status message and the signin control.
             // Returns true for ok.
             this.setOwnerId = function() {
-                ////20170119 this.uploadPath.sOwnerId = ShowSignInIfNeedBe();
-                this.uploadPath.sOwnerId = signin.showIfNeedBe(); ////20170119 
+                this.uploadPath.sOwnerId = signin.showIfNeedBe(); 
                 var bOk = this.uploadPath.sOwnerId.length > 0;
                 return bOk;
             };
@@ -2571,11 +2528,8 @@ function wigo_ws_View() {
                         this.uploadPath.nId = nId;
                         this.uploadPath.sPathName = sPathName; 
                 } else {
-                    ////20170118 view.ShowAlert("Upload failed. Another transfer may be in progress. Please wait and try again.");
-                    ////20170119 ShowSignInCtrl(true); ////20170119 added
-                    ////20170124 signin.show(); ////20170119 added
                     view.ShowAlert("Upload failed. You may need to sign-in. Please try again.",
-                        function() {  ////20170124 added
+                        function() {  
                             signin.show(); 
                         }
                     );
@@ -2814,11 +2768,11 @@ function wigo_ws_View() {
     //  onDone: function. callback after user dismisses the dialog. callback has no arg.
     // Note: AlertMsg(..) returns immediately. callback after dialog is dismissed is asynchronous.
     function AlertMsg(sMsg, onDone) {
-        if (typeof(onDone) !== 'function')  ////20170124 added
-            onDone = null;                 ////20170124 added
+        if (typeof(onDone) !== 'function')  
+            onDone = null;                 
         var sTitle = document.title;
         if (navigator.notification)
-            navigator.notification.alert(sMsg, onDone, sTitle); ////20170124 onDone was null.
+            navigator.notification.alert(sMsg, onDone, sTitle); 
         else
             alert(sMsg);
 
@@ -4562,7 +4516,7 @@ function wigo_ws_View() {
         }
 
         // Signin is no longer a mode change. Instead show the signin control bar.
-        if (that.eMode[dataValue] === that.eMode.select_mode) {  ////20170121 added if body.
+        if (that.eMode[dataValue] === that.eMode.select_mode) {  
             ShowSignInCtrl(true);
             return;
         }
@@ -4578,7 +4532,7 @@ function wigo_ws_View() {
                 }
             });
         } else if (!recordFSM.isOff()) { 
-            ConfirmYesNo("Recording a trail is in progress. OK to continue and delete the recording?", function(bConfirm){   ////20170121 clear changed to delete in message.
+            ConfirmYesNo("Recording a trail is in progress. OK to continue and delete the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.initialize(); // Reset recording.
                     AcceptModeChange();
@@ -5045,19 +4999,15 @@ function wigo_ws_Controller() {
                             sStatus = "Error trying to upload GPX trail to server.";
                         sStatusMsg = sStatus;
                     }
-                    view.uploadPathCompleted(nMode, bOk, sStatusMsg, nId, sPathName, true); // true => upload. ////20170123
+                    view.uploadPathCompleted(nMode, bOk, sStatusMsg, nId, sPathName, true); // true => upload. 
                 });
             if (!bOk) {
                 var sError = "Cannot upload GPX trail to server because another transfer is already in progress.";
-                view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload. ////20170123
+                view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload. 
             }
-        } else { ////20170124 added else body
-            ////20170123 ShowStatus("Owner must be signed in to delete GPX trail at server.");
-            ////20170123 fsm.DoEditTransition(fsm.eventEdit.Init);
-            ////20170123 fsm.DoEditTransition(fsm.eventEdit.Error);
+        } else { 
             var sError = "Owner must be signed in to upload GPX trail to server.";
             view.ShowStatus(sError);
-            ////20170123 fsm.UploadCompleted(false, sError);
             view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload.
         }        
     };
@@ -5077,29 +5027,16 @@ function wigo_ws_Controller() {
                         sStatus = "Error trying to delete GPX trail at server.";
                     var sMsg = bOk ? "Successfully deleted GPX trail at server." : sStatus;
                     view.ShowStatus(sMsg, !bOk);
-                    ////20170121 fsm.DoEditTransition(fsm.eventEdit.Init);
-                    ////20170121 if (bOk  ) ////20170121 added if cond body exist.
-                    ////20170121     fsm.DoEditTransition(fsm.eventEdit.Init);
-                    ////20170121 else  ////20170121 added else body
-                    ////20170121     fsm.DoEditTransition(fsm.eventEdit.Error);
-                    ////20170123 fsm.uploadCompleted(bOk, sMsg);
                     view.uploadPathCompleted(nMode, bOk, sMsg, gpxId.nId, "", false); // Note: empty string for path name means not known. false => delete.
                 });
             if (!bOk) {
                 var sError = "Cannot delete GPX trail at server because another transfer is already in progress.";
                 view.ShowStatus(sError, !bOk);
-                ////20170123 fsm.DoEditTransition(fsm.eventEdit.Init);
-                ////20170123 fsm.DoEditTransition(fsm.eventEdit.Error);
-                ////20170123 fsm.UploadCompleted(bOk, sError);
                 view.uploadPathCompleted(nMode, bOk, sError, gpxId.nId, "", false); // Note: empty string for path name means not known. false => delete.
             }
         } else {
-            ////20170123 ShowStatus("Owner must be signed in to delete GPX trail at server.");
-            ////20170123 fsm.DoEditTransition(fsm.eventEdit.Init);
-            ////20170123 fsm.DoEditTransition(fsm.eventEdit.Error);
             var sError = "Owner must be signed in to delete GPX trail at server.";
             view.ShowStatus(sError);
-            ////20170123 fsm.UploadCompleted(false, sError);
             view.uploadPathCompleted(nMode, bOk, sError, gpxId.nId, "", false); // Note: empty string for path name means not known. false => delete.
         }
     };
@@ -5280,7 +5217,7 @@ function wigo_ws_Controller() {
         // Appends to path list and shows status message.
         function AppendToPathList (bOk, gpxList, sStatus) {
             if (bOk) {
-                for (var i = 0; gpxList && i < gpxList.length; i++) { ////20170121 added gpxList in case it is null.
+                for (var i = 0; gpxList && i < gpxList.length; i++) { 
                     arPath.push(gpxList[i].sName);
                     gpxArray.push(gpxList[i]);
                 }
@@ -5328,8 +5265,8 @@ function wigo_ws_Controller() {
                 view.ShowStatus(StatusOkMsg(arPath.length), false); 
                 // Ensure signin control bar is hidden in case it was shown
                 // due to an authentication failure.
-                view.ShowSignInCtrl(false); ////20170121 added  
-            } else { ////20170121 added else body
+                view.ShowSignInCtrl(false); 
+            } else { 
                 // The error is typically due to authentication failure. 
                 // Show signin controll bar so that user can signin.
                 view.ShowSignInCtrl(true);  
@@ -5374,7 +5311,7 @@ function wigo_ws_Controller() {
                         SetPathList(bOk);
                     }
                     */
-                    SetPathList(bOk); ////20170121 slight redo
+                    SetPathList(bOk); 
                 });
                 break;
             case view.eFindIx.all_mine:
