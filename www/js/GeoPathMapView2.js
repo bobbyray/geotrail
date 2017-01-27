@@ -1,6 +1,6 @@
 ﻿'use strict';
 /* 
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015 - 2017 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -88,6 +88,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         editSegment: 'magenta',    // Edit line segment for path.
         eraseSegment: 'white',     // Erase line segment when editing a point in the path.
         compassHeadingArrow: 'yellow', // Compass heading arrow from current location circle.
+        recordPath: '#ff9900',     // Sandy 
+        recordPathEnd: '#ff4000'   // Redish
     };
 
     // Initialize to use Open Streets Map once browser has initialized.
@@ -188,7 +190,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (iLast >= 0) {
                 var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
                 var zoom = map.getZoom();                
-                map.setZoomAround(path.arGeoPt[iLast], zoom); 
+                map.setZoomAround(llEnd, zoom); 
             }
         }
     }
@@ -634,7 +636,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     };
 
-    // Returns a reference to underlaying Google map object.
+    // Returns a reference to underlaying Leaflet map object.
     this.getMap = function () { return map; };
 
     // Returns word abbreviation for bearing to other destination.
@@ -659,6 +661,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Note: Parameter for updating prevGeoLocCircle when current location changes.
     this.dPrevGeoLocThres = 10.0;
 
+
+    // Object for drawing and managing a path for recording separately and independently
+    // of the main path on the map.
+    // Note: See RecordPath function below for properties of this.recordPath object.
+    this.recordPath = new RecordPathMgr(this);
+
     // For debug, a mouse click (touch) on the map can simulate a geolocation.
     // Boolean to indicate mouse clicks are ignored so that this.onMapClick(llAt) 
     // is not called.  this.onMapClick2(e) is always called regardless of state of
@@ -681,6 +689,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Note: Addition of this.onMapClick2(e) is backward compatible with earlier code that only
     // had onMapClick(llAt) available.
     this.onMapClick2 = function (e) { };
+
+
 
     // Event handler for LeafLet click on map.
     function onMapClick(e) {
@@ -760,7 +770,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return pathCoords.length;
         };
 
-        // Returns numbers segnment is path.
+        // Returns numbers segnment in path.
         this.getSegCount = function() {   
             return pathCoords.length-1; 
         }
@@ -906,6 +916,29 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
 
 
+    // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
+    // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart, and llTo is end for the part of segment.
+    // Args:
+    //  llStart: LatLng obj for start of segment.
+    //  llEnd: LatLng obj for end of segment.
+    //  fraction: number, optional. portion of segment from llStart to llEnd. If undefined, 
+    //            llStart to llEnd is returned.
+    function CalcAlongSeg(llStart, llEnd, fraction) {
+        var arSeg = [];
+        if (typeof(fraction) === 'undefined') {
+            arSeg.push(llStart);
+            arSeg.push(llEnd);
+        } else {
+            var llDelta = L.latLng(llEnd.lat - llStart.lat, llEnd.lng - llStart.lng);
+            llDelta.lat = fraction * llDelta.lat;
+            llDelta.lng = fraction * llDelta.lng;
+            var llEndPart = L.latLng(llStart.lat + llDelta.lat, llStart.lng + llDelta.lng);
+            arSeg.push(llStart);
+            arSeg.push(llEndPart);
+        }
+        return arSeg;
+    }
+
     // Set (draws) shape for start of path beginning of first segment of the path
     // given by curPathSegs var.
     // Remarks:
@@ -915,30 +948,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // overlaying the first and last segment (each a different color) of the trail.  
     function SetStartEndOfPathShape() {
 
-        // Helper that calculates and returns array of LatLng objects for line that is a part of a segment.
-        // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart, and llTo is end for the part of segment.
-        // Args:
-        //  llStart: LatLng obj for start of segment.
-        //  llEnd: LatLng obj for end of segment.
-        //  fraction: number, optional. portion of segment from llStart to llEnd. If undefined, 
-        //            llStart to llEnd is returned.
-        function CalcAlongSeg(llStart, llEnd, fraction) {
-            var arSeg = [];
-            if (typeof(fraction) === 'undefined') {
-                arSeg.push(llStart);
-                arSeg.push(llEnd);
-            } else {
-                var llDelta = L.latLng(llEnd.lat - llStart.lat, llEnd.lng - llStart.lng);
-                llDelta.lat = fraction * llDelta.lat;
-                llDelta.lng = fraction * llDelta.lng;
-                var llEndPart = L.latLng(llStart.lat + llDelta.lat, llStart.lng + llDelta.lng);
-                arSeg.push(llStart);
-                arSeg.push(llEndPart);
-            }
-            return arSeg;
-        }
-
-        
         // Helper that calculates a portion of first line segment.
         // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llStart of first segment, and 
         //          llTo is end for the part of first segment.
@@ -958,7 +967,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             return arPart
         }
-
 
         // Helper that calculates a portion of last line segment.
         // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llEnd of last segment, and 
@@ -980,7 +988,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             return arPart
         }
-
 
         // Draw start segment shape.
         var shapeOptions = {
@@ -2036,5 +2043,321 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             onStatusUpdate(status);
         return true;
     }
+
+    // Object for drawing and managing a path for recording. 
+    // The path for the recording is separate and indepedent of the path drawn for the map.
+    // Constructor arg:
+    //  geoPathMap: wigo_ws_GeoPathMap obj. ref to parent object. 
+    function RecordPathMgr(geoPathMap) {
+        var that = this;
+        var mapRecordPath = null; // Map overlay for current path.
+        var mapRecordEndOfPathShape = null; // Map overlay for current path end of path shape. 
+
+        var pathCoords = []; // Array of L.LatLng objs for path coordinates.
+        var arRecordPt = []; // Array of RecordPt objs for the path. 
+
+        // Object for a point in the path.
+        // Enumeration for kind of RecordPt obj.
+        this.eRecordPt = {RECORD: 0, PAUSE: 1, RESUME: 2}; 
+        // Constructor args:
+        //  ll: L.LatLng obj. lattitude and longiture for the point.
+        //  msTimeStamp: number for timestamp in milliseconds.
+        //  previousRecordPt: RecordPt obj. ref to previous RecordPt or null for no previous RecordPt.
+        //  Note: this.kind defaults to eRecordPt.RECORD. Need to set for other than default.
+        function RecordPt(ll, msTimeStamp, previousRecordPt) {
+            this.kind = that.eRecordPt.RECORD;   // Kind of point. 
+            this.ll = ll;  // Lattitude and longitude for the point. null or don't care for this.kind == eRecordPt.PAUSE or RESUME.
+            this.msTimeStamp = msTimeStamp; // timestamp for the point.
+            this.previous = previousRecordPt; // Ref to previous RecordPt object in a list.
+            
+            // Returns distance in meters from previous RecordPt.
+            // Returns 0 if this.previous is null.
+            // Note: Skips over PAUSE or RESUME points, which were saved
+            //       to record timestamps.
+            this.d = function() {
+                var d = 0;
+                var curPt = this;
+                var prevPt = null; 
+                // Calc distance from previous point skipping over PAUSE and RESUME point,
+                // where were saved to record timestamps.
+                while (curPt) {
+                    prevPt = curPt.previous;
+                    if (prevPt && prevPt.kind === that.eRecordPt.RECORD) {
+                        if (this.kind === that.eRecordPt.RECORD)    
+                            d = prevPt.ll.distanceTo(this.ll);  
+                        break;
+                    } 
+                    curPt = prevPt;
+                }
+
+                return d;
+            };
+
+            // Returns deltas for distance and time to previous point of kind RECORD.
+            // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
+            //  d: distance delta in meters.
+            //  msElapsedDelta: elpased time delta in millisconds, including pauses.
+            //  msRecordDelta: time delta in millisconds, excluding pauses. 
+            this.dt = function() {
+                var d = 0;
+                var curPt = this;
+                var prevPt = null;
+                var msDelta = 0;         // Time from current point to previous point.
+                var msElapsedDelta = 0;  // Elapased time from this point of kind RECORD to previous RECORD point, inlcuding PAUSE.
+                var msRecordDelta = 0;   // Record time from this point of kind RECORD to previous RECORD point, excluding PAUSE.
+                // Calc distance from previous point skipping over PAUSE and RESUME point,
+                // where were saved to record timestamps.
+                while (curPt) {
+                    prevPt = curPt.previous;
+                    if (prevPt) {
+                        msDelta = curPt.msTimeStamp - prevPt.msTimeStamp;
+                        msElapsedDelta += msDelta; 
+                        if (prevPt.kind === that.eRecordPt.RECORD) {
+                            if (this.kind === that.eRecordPt.RECORD)
+                                d = prevPt.ll.distanceTo(this.ll);
+                            if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
+                                msRecordDelta += msDelta;
+                            // Quit when previous point of RECORD kind is found.
+                            break;
+                        } else if (prevPt.kind === that.eRecordPt.RESUME) {
+                            if (curPt.Kind === that.eRecordPt.RECORD)
+                                msRecordDelta += msDelta; 
+                        } else if (prevPt.kind === that.eRecordPt.PAUSE) {
+                            if (curPt.kind === that.eRecordPt.RECORD) 
+                                msRecordDelta += msDelta;  // Should not happen.
+                        }
+                    } 
+                    curPt = prevPt;
+                }
+                var result = {d: d, msElapsedDelta: msElapsedDelta, msRecordDelta: msRecordDelta};
+                return result;
+
+            }
+
+            // Returns velocity in meters/sec from previous RecordPt.
+            // Returns 0 if previous RecordPt is null or time difference is 0.
+            // Arg:
+            //  prevRecordPt: RecordPt. previous RecordPt.
+            // Note: Skips over PAUSE or RESUME points, which were saved
+            //       to record timestamps.
+            this.v = function(prevRecordPt) {
+                var v = 0;
+                var d = 0;
+                var msT = 0;
+
+                var curPt = this;
+                var prevPt = null;
+                while (curPt) {
+                    prevPt = curPt.previous;
+                    if (prevPt) {
+                        if (prevPt.kind === that.eRecordPt.RECORD ) {
+                            msT += curPt.msTimeStamp - prevPt.msTimeStamp;
+                            break;
+                        } else if (prevPt.kind === that.eRecordPt.RESUME ) {
+                            msT += curPt.msTimeStamp - prevPt.msTimeStamp;
+                        }
+                        curPt = prevPt;
+                    }
+                }
+
+                var d = this.d(prevRecordPt);
+                if (msT > 0.0001) 
+                        v = d / (msT/1000.0);
+                return v;
+            }
+
+        }
+        
+        // Draws path for recording on the map object.
+        // Note: pathCoords has points that are drawn.
+        this.draw = function(){
+
+            // Helper that calculates a portion of last line segment.
+            // Returns: array of LatLng obj, [llFrom, llTo] where llFrom is llEnd of last segment, and 
+            //          llTo is end for the part of last segment.
+            //  Arg:
+            //  mMaxLen: number. maximum number of meters for part returned. if mMaxLen > len of last segment, 
+            //           returns part as complete last segment.
+            function CalcEndOfPathLine(mMaxLen) {
+                var arPart = null;
+                var iLast = pathCoords.length - 1; 
+                var llEnd = iLast >= 0 ? pathCoords[iLast] : null;
+                var llStart = iLast > 0 ? pathCoords[iLast-1] : null;
+                if (llEnd && llStart) {
+                    var llEnd = pathCoords[iLast];
+                    var llStart = pathCoords[iLast-1];
+                    var len = llStart.distanceTo(llEnd);
+                    if (len > mMaxLen)
+                        arPart = CalcAlongSeg(llEnd, llStart, mMaxLen / len);
+                    else
+                        arPart = CalcAlongSeg(llEnd, llStart);
+                } else if (llEnd) {
+                    arPart = CalcAlongSeg(llEnd, llEnd);
+                }
+                return arPart
+            }
+
+
+            if (!IsMapLoaded())
+                return; // Quit if map has not been loaded.
+            
+            // Clear any current record path before drawing another path.
+            this.clear();
+
+            // Draw the record path on the map.
+            if (pathCoords.length > 1) { 
+                mapRecordPath = L.polyline(pathCoords, { color: geoPathMap.color.recordPath, opacity: 0.5 });
+                mapRecordPath.addTo(map);
+            }
+
+            // Draw end of path shape 
+            var arLatLng = CalcEndOfPathLine(30);
+            if (arLatLng) {
+                // Draw start segment shape.
+                var shapeOptions = {
+                    color: geoPathMap.color.recordPathEnd,  // stroke (perimeter) color
+                    weight: 6,    // stroke width in pels for line.
+                    opacity: 1.0
+                };
+                mapRecordEndOfPathShape = L.polyline(arLatLng, shapeOptions);
+                mapRecordEndOfPathShape.addTo(map);
+            }
+
+            // Zoom to last point of recordPath.
+            var iLast = pathCoords.length - 1;
+            if (iLast >= 0) {
+                var llEnd = pathCoords[iLast];
+                var zoom = map.getZoom();                
+                map.setZoomAround(llEnd, zoom); 
+            }
+        };
+
+        // Returns stats for the record path.
+        // Returns Obj: {bOk: boolean, dTotal: number, msRunTime: number, msTotalTime: number, tStart: Date}
+        //  bOk: boolean. true for success (stats are valid).
+        //  dTotal: number. total distance of record path in meters.
+        //  msRecordTime: number. number of milliseconds for the RECORD time of the record path (PAUSE excluded).
+        //  msElapsedTime: number. number of milliseconds for total elapsed time for the record path (PAUSE included).
+        //  tStart: Date obj. Date and time for start of the record path. 
+        //          null if there is no valid RecordPt of kind eRecordPt.RECORD in the record path.
+        //          bOk is false if tStart is null.
+        this.getStats = function() {
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null};
+            if (!IsMapLoaded())
+                return result; // Quit if map has not been loaded.
+            
+            var d=0; // Distance to previous RECORD point.
+            var dt;  // Distance and time to previous record point.
+            var pt;  // Current point in arRecordPt while looping thru arRecordPt.
+            for (var i=0; i < arRecordPt.length; i++) {
+                pt = arRecordPt[i]; 
+                switch (pt.kind) {
+                    case this.eRecordPt.RECORD:
+                        // Get distance and time deltas to previous RECORD point.
+                        dt = pt.dt();
+                        result.dTotal += dt.d;
+                        result.msRecordTime += dt.msRecordDelta;
+                        result.msElapsedTime += dt.msElapsedDelta;
+                        // Set date and time for start of the recording.
+                        if (result.tStart === null) 
+                            result.tStart = new Date(pt.msTimeStamp);
+                        break;
+                    case this.eRecordPt.PAUSE:
+                        break;
+                    case this.eRecordPt.RESUME:
+                        break;
+                }
+            }
+            // Note: PAUSE and RESUME points after last RECORD point are ignored.
+
+            result.bOk = result.tStart !== null ? true : false;
+            return result;
+        };
+        
+        // Appends the location point to the path of points.
+        // Arg:
+        //  llNext: L.LatLng object. The point to append to the path.
+        //  msTimeStamp: number. timestamp for llNext in milliseconds.
+        //  kind: eRecordPt enumeration value, optional. defaults to eRecordPt.RECORD.
+        //        eRecordPt.PAUSE and eRecordPt.RESUME are used to save timestamp.
+        this.appendPt = function(ll, msTimeStamp, kind) { 
+            var dThres = 2.0; // Threshold for a change in distance. (5.0 seems too large, 1.0 might be ok)
+            var iLast = arRecordPt.length - 1;
+            var prevPt = iLast < 0 ? null : arRecordPt[iLast];
+            var pt = new RecordPt(ll, msTimeStamp, prevPt);
+            if (typeof(kind) !== 'undefined') {
+                pt.kind = kind;
+            } 
+            
+            if (pathCoords.length === 0) {
+                // Ensure first point if for RECORD and not PAUSE or RESTORE.
+                if (pt.kind === this.eRecordPt.RECORD) {
+                    arRecordPt.push(pt);
+                    pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                }
+            } else {
+                if (pt.kind === this.eRecordPt.RECORD) {
+                    // Save record point distance if greater than threshold.
+                    var d = pt.d();
+                    if (d > dThres) {
+                        arRecordPt.push(pt);
+                        pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                    }
+                } else {
+                    arRecordPt.push(pt);
+                }
+            }
+
+            return pt;
+        };
+
+        // Clears the record path from the map.
+        this.clear = function() {
+            if (!IsMapLoaded())
+                return; // Quit if map has not been loaded.
+            if (mapRecordPath) {
+                map.removeLayer(mapRecordPath);
+                mapRecordPath = null;
+            }
+            if (mapRecordEndOfPathShape) {
+                map.removeLayer(mapRecordEndOfPathShape);
+                mapRecordEndOfPathShape = null;
+            }
+        };
+
+        // Clears the record path from the map and
+        // empties the list of record path points.
+        this.reset = function() {
+            this.clear();
+            pathCoords.length = 0;
+            arRecordPt.length = 0;
+        };
+
+        // Returns array of wigo_ws_GeoPt objs for pathCoords.
+        // If pathCoords is empty (lenght 0), returned array has length of 0. 
+        this.getGeoPtArray = function() {
+            var arGeoPt = [];
+            var geoPt;
+            for (var i=0; i < pathCoords.length; i++) {
+                geoPt = new wigo_ws_GeoPt();
+                geoPt.lat = pathCoords[i].lat;
+                geoPt.lon = pathCoords[i].lng;
+                arGeoPt.push(geoPt);
+            }
+            return arGeoPt;
+        }
+        
+        // Returns true if record trail is empty.
+        this.isEmpty = function() {
+            var bReset = pathCoords.length <= 0;
+            return bReset;
+        };
+
+        // Returns number of coords in the record path.
+        this.getLength = function() { 
+            return pathCoords.length;
+        };
+    }
+    
 }
 

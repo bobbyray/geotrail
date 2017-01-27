@@ -17,7 +17,7 @@
  * under the License.
  */
  /*
- This file has been modified in 2015, 2016 by Robert R Schomburg.
+ This file has been modified in 2015 - 2017 by Robert R Schomburg.
  This file is licensed under the same terms as specified above 
  for the original work.  
  */
@@ -194,9 +194,11 @@ label {
 {
     width: 100%;
     float: left;
-    margin-top: 5px;
-    margin-left: 5px;
-    margin-bottom: 0px;
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    box-sizing: border-box;
 }
 
 #buSaveOffline {
@@ -465,14 +467,38 @@ label {
 }
 
 #labelPathName {
-    font-size: 1.3em;
+    width: 25%; 
+    font-size: 1.2em; 
     float: left;
 }
 #editAction {
-    width: auto;
-    margin-left: 2em;
+    width: 74%;  
     float: left;
 }
+#recordShare .wigo_ws_DropDownValue {
+    left: inherit;
+    right: 0.2em;
+    width: 5.0em;  
+}
+#recordShare .wigo_ws_DropDownIcon {
+    left: inherit;
+    right: 5.3em;
+    width: 3.0em;
+    height: 1.2em;
+}
+#recordShare .wigo_ws_DropDownLabel {
+    right: 8.1em;
+    width: 4em;
+    padding-right: 0.3em;
+}
+
+#recordShare .wigo_ws_DropDownList {
+    left: inherit;
+    right: 0.0em;
+    top: 1.2em;
+    width: 8.0em;
+}
+
 #pathDescrBarBackIcon {
     height: 50%;
     width: auto;
@@ -553,8 +579,10 @@ label {
 #onlineOfflineEditBar {
     clear: both;
     float: left;
-    height: 5.0em;
+    height: 5.5em;
     width: 100%;
+    box-sizing: border-box;  
+    padding-top: 4px;
 }
 
 #divTrailInfo {
@@ -562,7 +590,8 @@ label {
     height: 50%;
     clear: both;  
     float: left;  
-    margin-right: 0.5em;
+    padding-right: 0.5em;
+    box-sizing: border-box;    
 }
 #divTrailInfo .wigo_ws_DropDownLabel {
     left: 0px;
@@ -592,21 +621,25 @@ label {
     height: 50%;
     width: 70%;
     float: left; 
+    box-sizing: border-box; 
 }
 #onlineAction, #offlineAction {
     height: 100%;
-    width: 100%
+    width: 100%;
+    box-sizing: border-box; 
 }
 #onlineMyLoc {
     float: left;
 }
 #onlineSaveOffline {
-    float: left
+    float: left;
+    box-sizing: border-box; 
 }
 #onlineSelectFind {
     height: 100%;
     width: 50%; 
     float: left;
+    box-sizing: border-box; 
 }
 #onlineSelectFind .wigo_ws_DropDownIcon {
     left: inherit;
@@ -615,6 +648,26 @@ label {
 #onlineSelectFind .wigo_ws_DropDownLabel {
     left: 0px;
     width: 75%;
+}
+
+#onlineRecord, #offlineRecord { 
+    height: 100%; 
+    width: 10%; 
+    float: left;
+    padding-left: 0.3em;
+    box-sizing: border-box; 
+}
+#onlineRecord .wigo_ws_DropDownIcon, #offlineRecord .wigo_ws_DropDownIcon   { 
+    height: 50%;
+    left: 0%;   
+}
+#onlineRecord .wigo_ws_DropDownLabel,  #offlineRecord .wigo_ws_DropDownLabel { 
+    top: 50%;
+    left: 30%;
+    width: auto;    
+}
+#onlineRecord .wigo_ws_DropDownList, #offlineRecord .wigo_ws_DropDownList  { 
+    width: 4em;
 }
 
 #mapBar {
@@ -672,7 +725,10 @@ label {
     left: 0px;
     top: 0px;
     font-size: 120%;
-    margin-left: 0.4em;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+    width: 100%;
+    box-sizing: border-box; 
 }
 
 
