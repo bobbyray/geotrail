@@ -1,6 +1,6 @@
 ﻿'use strict';
 /* 
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015 - 2017 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -41,8 +41,8 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-    // Release buld for Google Play on 09/20/2016 16:03
-    var sVersion = "1.1.022_20170117_1737"; // Constant string for App version.
+    // Release build for Google Play on 01/26/2017 16:44
+    var sVersion = "1.1.022"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -592,8 +592,8 @@ function wigo_ws_View() {
     //       to see if a list of trails should be loaded. If the login is for recording
     //       a new trail, the list of trails should not be reloaded because such 
     //       a download from the server server interfers with uploading a new trail.
-    this.isRecordingDefiningTrailName = function() {
-        return recordFSM.isDefiningTrailName();
+    this.IsRecordingSignInActive = function() {
+        return recordFSM.isSignInActive();
     }
 
     // ** Private members for html elements
@@ -1998,7 +1998,7 @@ function wigo_ws_View() {
             resume: 5,
             clear: 6,
             save_trail: 7,
-            append_trail: 8,
+            append_trail: 8, // No longer used
             upload: 9,       
             cancel: 10,
             show_stats: 11, 
@@ -2056,7 +2056,7 @@ function wigo_ws_View() {
         };
 
         // Reeturns true if in state for defining a trail name.
-        this.isDefiningTrailName = function() { 
+        this.isSignInActive = function() { 
             return signin.isSignInActive();  
         }
 
@@ -2232,9 +2232,10 @@ function wigo_ws_View() {
                 var bSavePathValid = bOnline && uploader.isSavePathValid(); 
                 if (bSavePathValid)
                     recordCtrl.appendItem("save_trail", "Save Trail");
-                var bAppendPathValid = bOnline && uploader.isAppendPathValid();
-                if (bAppendPathValid)
-                    recordCtrl.appendItem('append_trail', "Append Trail");
+                // Decided not use append_trail. Instead use Edit mode to insert another trail.
+                // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
+                // if (bAppendPathValid)
+                //     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("show_stats", "Show Stats");
                 recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
@@ -2263,16 +2264,17 @@ function wigo_ws_View() {
                             curState = stateDefineTrailName;
                         }
                         break;
-                    case that.event.append_trail:
-                        if (uploader.isUploadInProgress() ) { 
-                            view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
-                        } else {
-                            // Upload recorded trail appended to main trail.
-                            uploader.uploadMainPath();
-                            stateStopped.prepare();
-                            curState = stateStopped; 
-                        }
-                        break;
+                    // case that.event.append_trail: // Note: this case is no longer used.
+                    //     if (uploader.isUploadInProgress() ) { 
+                    //         view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
+                    //     } else {
+                    //         // Upload recorded trail appended to main trail.
+                    //         // Note: If later decide to use append_trail, change to present confirm dialog, view.ShowConfirm(..).
+                    //         uploader.uploadMainPath();
+                    //         stateStopped.prepare();
+                    //         curState = stateStopped; 
+                    //     }
+                    //     break;
                     case that.event.show_stats:
                         ShowStats();
                         stateStopped.prepare();
@@ -2756,7 +2758,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sCopyright = "2015, 2016";
+        var sCopyright = "2015 - 2017";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
         return sMsg;
@@ -5100,7 +5102,7 @@ function wigo_ws_Controller() {
                         // request is in already in progress. Always calling view.onGetPaths() works
                         // fairly well, but can be confusing to user if it causes uploading a new trail to fail,
                         // in which case the user would need to retry uploading the trail.
-                        if (!view.isRecordingDefiningTrailName())   
+                        if (!view.IsRecordingSignInActive())   
                             view.onGetPaths(view.curMode(), view.getOwnerId());
                     } else if (nMode === view.eMode.online_edit ||
                                nMode === view.eMode.online_define) {
