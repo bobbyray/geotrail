@@ -41,11 +41,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-<<<<<<< HEAD
-    // Release buld for Google Play on 09/20/2016 16:03
-=======
     // Release build for Google Play on 01/26/2017 16:44
->>>>>>> origin/master
     var sVersion = "1.1.022"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
