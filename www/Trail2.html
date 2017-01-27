@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <!--  
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015 - 2017 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 -->
@@ -75,6 +75,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     <div id="onlineSelectFind">
                         <!-- Container for dropdown list control with id="onlineSelectFindDropDown" for Find trails -->
                     </div>
+                    <div id="onlineRecord">
+                        <!-- Container for dropdown list control with id="onlineRecordDropDown" -->
+                    </div>
                 </div>
                 <div id="offlineAction" class="wigo_ws_NoShow"> 
                     <!-- moved to mapBar 
@@ -82,6 +85,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     -->
                     <div id="selectMapCache">
                         <!-- Container for id="selectMapCacheDropDown" wigo_ws DropDownControl. -->
+                    </div>
+                    <div id="offlineRecord">
+                        <!-- Container for dropdown list control with id="offlineRecordDropDown" -->
                     </div>
                 </div>
             </div>
@@ -93,6 +99,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <input id="buUpload" type="button" value="Upload"/> 
                 <input id="buDelete" type="button" value="Delete"/> 
                 <input id="buCancel" type="button" value="Cancel"/> 
+                <div id="recordShare" class="wigo_ws_NoShow"> 
+                    <!-- container for dropdown list for record trail share options, selectRecordShareDropDown -->
+                </div>
             </div>
             <div id="divPathName">
                 <input id="txbxPathName" type="text"/>  
@@ -276,6 +285,74 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Find Trails > My Private<br/>
             Searches for your private trails, trails that only you can see.</li>
         </ul>
+        <h3 id="helpOnlineRecord">Record DropList</h3>
+        You can record your travel on the map along with your travel time.
+        This is useful to keep track of the time and distance for a run.
+        Also recording can be helpful if you are trying to return to a trail.<br/>
+        Basically you can start, stop, and resume recording a trail. The droplist shows
+        the current recording state. Touching the droplist presents options
+        to control recording:
+        <ul>
+            <li>Off State
+                <ul>
+                    <li>Start<br/>
+                    Starts recording and enters On State.
+                    </li>
+                    <li>Unclear<br/>
+                    Restores the recorded trail on the map that has just been cleared.
+                    If there is no recorded trail to restore, Unclear is not shown.
+                    </li>
+                </ul>
+            </li>
+            <li>On State
+                <ul>
+                    <li>Stop<br/>
+                    Stops recording and enters Stopped State.
+                    </li>
+                </ul>
+            </li>
+            <li>Stopped State
+                <ul>
+                    <li>Save Trail<br/>
+                    Saves the recorded trail to the web server. If the recorded trail is 
+                    new, enters the TrName State for you to enter a trail name. Otherwise
+                    uploads the recorded trail to the web server and remains in the Stopped State.
+                    </li>
+                    <!-- Append Trail no longer used. There is insert trail in Edit mode instead
+                    <li>Append Trail<br/>
+                    Append Trail is only available if you can append the recorded trail
+                    to the main trail currently shown. If the main trail shown is not
+                    one of your trails, or if there is no main trail shown, 
+                    you cannot append the recorded trail.<br/>
+                    When Append Trail is available, appends the recorded trail to the
+                    main trail, uploads to the server, and remains in the Stopped State.
+                    -->
+                    </li>
+                    <li>Show Stats<br/>
+                    Shows the distance and run time for the recorded trail. 
+                    Remains in the Stopped State.
+                    </li>
+                    <li>Resume<br/>
+                    Resumes recording and enters the On State.
+                    </li>
+                    <li>Clear<br/>
+                    Clears the recorded trail from the map and enters the Off State.
+                    </li>
+                </ul>
+            </li>
+            <li>TrName State<br/>
+            Enter the name for a new trail in the textbox shown. 
+            Also select Public or Private from the Share DropList.
+            <ul>
+                <li>Upload<br/>
+                Uploads the recorded trail to the web server and returns to the Stopped State.
+                </li>
+                <li>Cancel<br/>
+                Does not upload to the server. Returns to the Stopped State.
+                </li>
+            </ul>
+            </li>
+        </ul>
         <h3 id="helpControlsAtBottom">Controls at Bottom of Map</h3>
         These controls let you see your current geolocation, turn automatic tracking on or off,
         and turn receiving alerts for your phone on or off.
@@ -309,6 +386,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
                 the offline trails from the phone.</li>
             </ul>
+            <li>Record DropList<br/>
+            Records a trail as you travel. This works the same as described in 
+            <a href="#helpOnlineRecord">Online Record DropList</a>, except 
+            the option to save a trail to the web server is not available while offline.
+            </li>
         </ul>
         <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
         <h2 id="helpDrawTrail">Draw a Trail</h2>
@@ -366,15 +448,17 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         The procedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
         except that you select a trail to edit instead of defining a name for the trail.</p>
         <p>You must be signed in to edit a trail, and you can only edit trails that you have defined.</p>
-        <h2>Creating Trail Maps at Hillmap</h2>
-        <p>An alternative to creating a trail on your phone is to
-        use the site http://www.hillmap.com to create a trail from a laptop or desktop computer.</p>
+        <h2>Getting Trail Maps from Websites</h2>
+        <p>Websites such as <a href="https://www.mtbproject.com/">Mountain Bike Project</a> and
+        <a href="http://www.hillmap.com">Hillmap</a> allow you to download a gpx file from the site for a trail. 
+        </p>
+        <p>At http://www.hillmap.com you can create a trail from a laptop or desktop computer:</p>
         <ul>
             <li>Use the Path tab to define your trail.</li>
-            <li>Use Tools > Download Gpx to save your path.</li>
+            <li>Use Tools > Download Gpx to download your path.</li>
         </ul>
-        <p>Use the site http://wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
-        downloaded from hillmap.com so that you can access the path (aka trail) online from this phone app.</p>
+        <p>Use the site http://www.wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
+        downloaded so that you can access the path (aka trail) online from this phone app.</p>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
         <h3>Menu > Terms of Use</h3>
