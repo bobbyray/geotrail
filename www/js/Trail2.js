@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Release build for Google Play on 01/26/2017 16:44
-    var sVersion = "1.1.022"; // Constant string for App version.
+    var sVersion = "1.1.023"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2242,8 +2242,8 @@ function wigo_ws_View() {
                 // Ensure signin ctrl is hidden.
                 signin.hide();
                 ShowPathDescrBar(false); 
-                if (bOnline && !bSavePathValid && !bAppendPathValid) {  
-                    view.ShowAlert("There is no recorded trail to save.");
+                if (bOnline && !bSavePathValid) {  // Removed && !bAppendPathValid
+                    view.ShowAlert("There is no recorded trail.");
                 }
             };
 
