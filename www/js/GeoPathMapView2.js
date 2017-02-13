@@ -2094,7 +2094,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return d;
             };
 
-            // Returns deltas for distance and time to previous point of kind RECORD.
+            // Returns deltas for distance and time to previous point of kind eRecordPt.RECORD.
             // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
             //  d: distance delta in meters.
             //  msElapsedDelta: elpased time delta in millisconds, including pauses.
@@ -2108,9 +2108,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var msRecordDelta = 0;   // Record time from this point of kind RECORD to previous RECORD point, excluding PAUSE.
                 // Calc distance from previous point skipping over PAUSE and RESUME point,
                 // where were saved to record timestamps.
-                while (curPt) {
+                while (curPt) {   
                     prevPt = curPt.previous;
                     if (prevPt) {
+                        // Skip a deleted previous point.
+                        if (prevPt.bDeleted) {            ////20170209 added if and body.
+                            curPt = prevPt;
+                            continue;
+                        } 
                         msDelta = curPt.msTimeStamp - prevPt.msTimeStamp;
                         msElapsedDelta += msDelta; 
                         if (prevPt.kind === that.eRecordPt.RECORD) {
@@ -2118,6 +2123,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                                 d = prevPt.ll.distanceTo(this.ll);
                             if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
                                 msRecordDelta += msDelta;
+                            if (curPt.kind === that.eRecordPt.RESUME)               ////20170210 added
+                                msRecordDelta += msDelta;  // Should not happen.  ////20170210 added
                             // Quit when previous point of RECORD kind is found.
                             break;
                         } else if (prevPt.kind === that.eRecordPt.RESUME) {
@@ -2136,13 +2143,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
 
             // Returns velocity in meters/sec from previous RecordPt.
-            // Returns 0 if previous RecordPt is null or time difference is 0.
+            // Returns -1 if previous RecordPt is null or is not kind of eRecord.RECORD.
             // Arg:
             //  prevRecordPt: RecordPt. previous RecordPt.
-            // Note: Skips over PAUSE or RESUME points, which were saved
-            //       to record timestamps.
+            // Note: Does NOT skip over PAUSE or RESUME points, which were saved
+            //       to record timestamps. prevRecordPt may be first or earlier
+            //       previous RecordPt wrt this RecordPt. The time between this 
+            //       RecordPt and prevRecordPt is total difference without
+            //       any time for pausing substracted.
             this.v = function(prevRecordPt) {
-                var v = 0;
+                var v = -1;
+                /* ////20170211
                 var d = 0;
                 var msT = 0;
 
@@ -2150,11 +2161,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var prevPt = null;
                 while (curPt) {
                     prevPt = curPt.previous;
+                    
                     if (prevPt) {
-                        if (prevPt.kind === that.eRecordPt.RECORD ) {
+                        // Skip over deleted previous point.
+                        if (prevPt.bDeleted) {  ////20170210 added if and body.
+                            curPt = prevPt;
+                            continue; 
+                        }
+                        if (prevPt.kind === that.eRecordPt.RECORD) {
                             msT += curPt.msTimeStamp - prevPt.msTimeStamp;
                             break;
-                        } else if (prevPt.kind === that.eRecordPt.RESUME ) {
+                        } else if (prevPt.kind === that.eRecordPt.RESUME) {
                             msT += curPt.msTimeStamp - prevPt.msTimeStamp;
                         }
                         curPt = prevPt;
@@ -2162,6 +2179,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
 
                 var d = this.d(prevRecordPt);
+                */
+                if (!prevRecordPt)
+                    return -1;
+                if (prevRecordPt.kind !== that.eRecordPt.RECORD)
+                    return -1;
+
+                var d = prevRecordPt.ll.distanceTo(this.ll); 
+                var msT = this.msTimeStamp - prevRecordPt.msTimeStamp;
+
                 ////20170206 if (msT > 0.0001) 
                 ////20170206         v = d / (msT/1000.0);
                 if (msT < 0.0001)  // Ensure msT is not too small to avoid divide by zero.
@@ -2256,6 +2282,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var pt;  // Current point in arRecordPt while looping thru arRecordPt.
             for (var i=0; i < arRecordPt.length; i++) {
                 pt = arRecordPt[i]; 
+                if (pt.bDeleted) // Ignore points marked as deleted. ////20170209 added if and continue.
+                    continue;
                 switch (pt.kind) {
                     case this.eRecordPt.RECORD:
                         // Get distance and time deltas to previous RECORD point.
@@ -2294,7 +2322,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
             // delete the array of spurious cluster indices.
             // Note: ok to call if spurious cluster is empty.
-            function DeleteSpuriousCluster() {
+            //       Also for deletion of spurious cluster, if valid cluster is only one point, 
+            //       the valid cluster is deleted because it was suspected to be spurious. 
+            function DeleteSpuriousCluster(curPt) {    ////20170210 added curPt arg
+                /* ////20170210 redo 
                 // Delete any points in spurious cluster and empty spurious cluster.
                 for (var i=0; i < arSpuriousClusterIx.length; i++) {
                     arRecordPt[arSpuriousClusterIx[i]].bDeleted = true; // Indicate filter has been applied.
@@ -2302,12 +2333,71 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     result.nDeleted++;  ////20170208 added
                 }
                 arSpuriousClusterIx = [];
+                */
+                
+                /* ////20170210 added, but not correct. rethink.
+                var bClusterDeleted = arSpuriousClusterIx.length > 0;   ////20170210 Redo rest of function.
+                if (bClusterDeleted) { 
+                    arSpuriousClusterIx = [];
+                    
+                    // Check that last point in valid cluster is valid for 
+                    if (arValidClusterIx.length > 0) {    
+                        // arValidClusterIx with only one element is suspect because it was added from 
+                        // first element of a spurious continuous cluster that reached a max count. 
+                        var iLastValidClusterIx = arValidClusterIx[arValidClusterIx.length-1];
+                        var iLastValidClusterPt = arValidClusterIx[iLastValidClusterIx];
+                        var lastValidClusterPt = arRecordPt[iLastValidClusterPt];
+                        var v = prevPt.v(lastValidClusterPt);   // prevPt is function arg. removed right now.
+                        if ( v >= vLimit) {
+                            // Suspect first element of valid cluster is indeed invalid.
+                            arRecordPt[arValidClusterIx[0]].bDeleted = true;
+                            arValidClusterIx = [];
+                        }
+                    }
+                }
+                */
+
+                ////$$$$ fix in progress. Double check.
+                if (arSpuriousClusterIx.length > 0) {
+                    // Delete any points in spurious cluster and empty spurious cluster.
+                    var ptSpurious, v;
+                    for (var i=0; curPt && i < arSpuriousClusterIx.length; i++) {
+                        ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
+                        v = curPt.v(ptSpurious);
+                        if ( v >= vLimit) {
+                            ////20170208 arRecordPt[arSpuriousClusterIx[i]].bDeleted = true; // Indicate filter has been applied.
+                            ptSpurious.bDeleted = true;
+                            ////20170208 result.bApplied = true;
+                            result.nDeleted++;  ////20170208 added
+                        }
+                    }
+                    // Check if valid cluster has suspect points that need to be deleted.
+                    if (arValidClusterIx.length <= minValidClusterCt) {
+                        var ptValid;
+                        for (var i=0; i < arValidClusterIx.length; i++) {
+                            ptValid = arRecordPt[arValidClusterIx[i]];
+                            v = curPt.v(ptValid);
+                            if (v >= vLimit) {
+                                // Point in the valid cluster needs to be marked deleted.
+                                ptValid.bDeleted = true;
+                                result.nDeleted++;  ////20170211 added
+                                // Remove the element from the valid cluster.
+                                arValidClusterIx.splice(i, 1); // Backup up loop index to account for removed element.
+                                i--; 
+                            }
+                        }
+                    }
+
+                    // Empty the  spurious cluster.
+                    arSpuriousClusterIx = [];
+                }
             }
 
             var result = {bValid: false, nDeleted: 0}; 
             if (!this.isFilterEnabled())  ////20170208 added.   
                 return result;            ////20170209 added
             var pt, v; // current point in loop and its velocity.   
+            var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD. /////20170210 added
             ////20170208Moved var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
             var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. ////20170207 was 5
             var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
@@ -2325,12 +2415,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     continue;
                 }
                 if (pt.bDeleted) {
-                    // Ignore a point that is deleted and set result for filter applied.
+                    // Ignore a point that is deleted.
                     result.bValid = true;
-                    result.bApplied = true;
+                    ////20170210 result.bApplied = true;
+                    result.nDeleted++;
                     continue;
                 }
                 result.bValid = true; // Indicate path can be filtered.
+                curRecordPt = pt;     // current RecordPt of kind == eRecordPt.RECORD.
                 v = pt.v(prevPt);
                 if (v < vLimit)  { 
                     // pt is valid, not spurious.
@@ -2343,7 +2435,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     }
                     arSpuriousClusterIx = [];
                     */
-                    DeleteSpuriousCluster(); 
+                    DeleteSpuriousCluster(curRecordPt);    ////20170210 added curRecordPt
                     // Append valid point to valid cluster.
                     arValidClusterIx.push(iPt);
                     // Set previous valid point to current point.
@@ -2385,7 +2477,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }           
             }
             // Delete any points in spurious cluster and empty spurious cluster. 
-            DeleteSpuriousCluster(); ////20170208 added
+            DeleteSpuriousCluster(curRecordPt); ////20170208 added curRecordPt
 
             // Set pathCoords to match RECORD points that are not deleted.
             if (result.bValid && result.nDeleted > 0) {
