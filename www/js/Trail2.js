@@ -2002,8 +2002,8 @@ function wigo_ws_View() {
             upload: 9,       
             cancel: 10,
             show_stats: 11, 
-            filter: 12,     ////20170206 added
-            unfilter: 13,   ////20170206 added
+            filter: 12,     
+            unfilter: 13,   
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2242,13 +2242,6 @@ function wigo_ws_View() {
                 recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
 
-                ////20170208 ////$$$$ fix showing filter/unfilter option. map.recordPath.isFilterable() may not be correct. 
-                ////20170208 if (map.recordPath.isFilterable()) {  ////20170206 add if and body.
-                ////20170208     if (bFilterApplied) 
-                ////20170208         recordCtrl.appendItem("unfilter", "Unfilter");
-                ////20170208     else
-                ////20170208         recordCtrl.appendItem("filter", "Filter");
-                ////20170208 }
                 if (map.recordPath.isFilterEnabled()) {
                         recordCtrl.appendItem("filter", "Filter");
                 } else if (map.recordPath.isUnfilterEnabled()) {
@@ -2305,7 +2298,7 @@ function wigo_ws_View() {
                         stateInitial.prepare();
                         curState = stateInitial;
                         break;
-                    case that.event.filter: ////20170206 added
+                    case that.event.filter: 
                         var filterResult = map.recordPath.filter();
                         var sMsg;
                         if (filterResult.nDeleted <= 0)
@@ -2315,13 +2308,11 @@ function wigo_ws_View() {
                         else 
                             sMsg = "{0} points filtered out.".format(filterResult.nDeleted);
                         view.ShowStatus(sMsg, false);
-                        ////20170208 bFilterApplied = filterResult.bApplied;
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
-                    case that.event.unfilter: ////20170206 added
+                    case that.event.unfilter: 
                         map.recordPath.unfilter();
-                        ////20170208 bFilterApplied = false;
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
@@ -2364,7 +2355,6 @@ function wigo_ws_View() {
                 }
             }
 
-            ////20170208 var bFilterApplied = false;  // Indicates filter has been applied tor record path. ////201702016 added
         }
         var stateStopped = new StateStopped();
 
