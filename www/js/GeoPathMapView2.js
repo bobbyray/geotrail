@@ -2539,6 +2539,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return pathCoords.length;
         };
 
+        // Sets velocity limit for filtering spurious points.
+        // Arg:
+        //  limit: number. velocity limit in meters / sec.
+        this.setVLimit = function(limit) { ////20170215 added.
+            vLimit = limit;
+        };
+
+        // Returns the velocity limit for filtering spurious points from recorded path.
+        // Returns: number. the velocity limit in meters/sec.
+        this.getVLimit = function() {
+            return vLimit;
+        };
+
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
         function SetPathCoords() {
             // Set pathCoords to match RECORD points that are not deleted.
