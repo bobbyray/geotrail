@@ -48,7 +48,7 @@ function wigo_ws_GeoTrailSettings() {
     // for previous geolocation to be updated wrt to current geolocation.
     this.dPrevGeoLocThres =5.0; //20161205 was 40.0;
     // Float for velocity in meters/sec for velocity limit used in filtering spurious record points.
-    this.dSpuriousVLimit = 5.0; ////20170216 added
+    this.dSpuriousVLimit = 5.0; 
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
@@ -554,7 +554,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 3;  // Must be set to next number when next nSchema change is added.  ////2017016 was 2.
+        var nSchemaSaved = 3;  // Must be set to next number when next nSchema change is added. 
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 

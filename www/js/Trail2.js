@@ -2004,18 +2004,6 @@ function wigo_ws_View() {
             show_stats: 11, 
             filter: 12,     
             unfilter: 13,   
-            ////20170216 setVLimit: 14,   ////20170215 added
-            ////20170216 vLimit02: 15,    ////20170215 added vLimitnn
-            ////20170216 vLimit05: 16,
-            ////20170216 vLimit10: 17,
-            ////20170216 vLimit15: 18,
-            ////20170216 vLimit20: 19,
-            ////20170216 vLimit25: 20,
-            ////20170216 vLimit30: 21,
-            ////20170216 vLimit35: 22,
-            ////20170216 vLimit40: 23,
-            ////20170216 vLimit45: 24,
-            ////20170216 vLimit50: 25,
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2256,7 +2244,6 @@ function wigo_ws_View() {
 
                 if (map.recordPath.isFilterEnabled()) {
                         recordCtrl.appendItem("filter", "Filter");
-                        ////20170216 recordCtrl.appendItem("setVLimit", "Filter Thres");
                 } else if (map.recordPath.isUnfilterEnabled()) {
                         recordCtrl.appendItem("unfilter", "Unfilter");
                 }
@@ -2329,10 +2316,6 @@ function wigo_ws_View() {
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
-                    ////20170216 case that.event.setVLimit: ////20170215 added
-                    ////20170216     stateSetVelocityLimit.prepare();
-                    ////20170216     curState = stateSetVelocityLimit;
-                    ////20170216     break;
                 }
             };
             
@@ -2448,57 +2431,6 @@ function wigo_ws_View() {
         }
         var stateDefineTrailName = new StateDefineTrailName();
         var bNewUploadPath = false; // Indicates a new path for trail has been uploaded to server.
-        
-        /* ////20170216 
-        // Set velocity limit.
-        function StateSetVelocityLimit() {
-            this.prepare = function() {
-                var sCurVLimit = "{0}m/sec".format(map.recordPath.getVLimit().toFixed(0));
-                recordCtrl.setLabel(sCurVLimit);
-                recordCtrl.empty();
-                recordCtrl.appendItem("vLimit02", " 2 m/sec");
-                recordCtrl.appendItem("vLimit05", " 5 m/sec");
-                recordCtrl.appendItem("vLimit10", "10 m/sec");
-                recordCtrl.appendItem("vLimit15", "15 m/sec");
-                recordCtrl.appendItem("vLimit20", "20 m/sec");
-                recordCtrl.appendItem("vLimit25", "25 m/sec");
-                recordCtrl.appendItem("vLimit30", "30 m/sec");
-                recordCtrl.appendItem("vLimit35", "35 m/sec");
-                recordCtrl.appendItem("vLimit40", "40 m/sec");
-                recordCtrl.appendItem("vLimit45", "45 m/sec");
-                recordCtrl.appendItem("vLimit50", "50 m/sec");
-                recordCtrl.drop(true); // Show the droplist right away.
-
-                view.ShowStatus("Select velocity limit for filtering.", false);
-            };
-
-            this.nextState = function(event) {
-                switch(event) {
-                    case that.event.vLimit02: toStoppedState(2.0); break;
-                    case that.event.vLimit05: toStoppedState(5.0); break;
-                    case that.event.vLimit10: toStoppedState(10.0); break;
-                    case that.event.vLimit15: toStoppedState(15.0); break;
-                    case that.event.vLimit20: toStoppedState(20.0); break;
-                    case that.event.vLimit25: toStoppedState(25.0); break;
-                    case that.event.vLimit30: toStoppedState(30.0); break;
-                    case that.event.vLimit35: toStoppedState(35.0); break;
-                    case that.event.vLimit40: toStoppedState(40.0); break;
-                    case that.event.vLimit45: toStoppedState(45.0); break;
-                    case that.event.vLimit50: toStoppedState(50.0); break;
-                }
-            };
-
-            // Helper to transition to stopped state.
-            // Arg:
-            //  limit: number. limit to which vLimit is set.
-            function toStoppedState(limit) {
-                map.recordPath.setVLimit(limit);
-                stateStopped.prepare();
-                curState = stateStopped;
-            }
-        }
-        var stateSetVelocityLimit = new StateSetVelocityLimit();
-        */
 
         // Shows path description bar, which has textbox for trail name.
         // Always hides upload, cancel, and delete button.
@@ -3140,8 +3072,7 @@ function wigo_ws_View() {
     ];
     numberPrevGeoLocThresMeters.fill(numberPrevGeoLocThresMetersValues);
 
-    ////20170216 add numberSpuriousVLimit fror filter threshold
-    parentEl = document.getElementById('holderSpuriouVLimit'); ////20170216 added
+    parentEl = document.getElementById('holderSpuriouVLimit'); 
     var numberSpuriousVLimit = new ctrls.DropDownControl(parentEl, null, 'Spurious V Limit', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     var numberSpuriousVLimitValues = 
     [
@@ -3268,7 +3199,7 @@ function wigo_ws_View() {
             return false;
         if (!IsSelectCtrlOk2(numberPrevGeoLocThresMeters))
             return false;
-        if (!IsSelectCtrlOk2(numberSpuriousVLimit))  ////20170216 added
+        if (!IsSelectCtrlOk2(numberSpuriousVLimit)) 
             return false;
         if (!IsYesNoCtrlOk(selectClickForGeoLoc))  
             return false;
@@ -3312,7 +3243,7 @@ function wigo_ws_View() {
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
-        settings.dSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue());  ////20170216 
+        settings.dSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue()); 
         settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
@@ -3350,7 +3281,7 @@ function wigo_ws_View() {
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
-        numberSpuriousVLimit.setSelected(settings.dSpuriousVLimit.toFixed(0));            ////20170216 added
+        numberSpuriousVLimit.setSelected(settings.dSpuriousVLimit.toFixed(0)); 
         selectCompassHeadingVisible.setState(settings.bCompassHeadingVisible ? 1 : 0); 
         selectClickForGeoLoc.setState(settings.bClickForGeoLoc ? 1 : 0);
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
@@ -3371,7 +3302,7 @@ function wigo_ws_View() {
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Set VLimit for filtering spurious points in recorded trail.
-        map.recordPath.setVLimit(settings.dSpuriousVLimit);   ////20170216 added.
+        map.recordPath.setVLimit(settings.dSpuriousVLimit); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
 

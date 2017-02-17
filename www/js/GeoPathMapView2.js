@@ -2542,7 +2542,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Sets velocity limit for filtering spurious points.
         // Arg:
         //  limit: number. velocity limit in meters / sec.
-        this.setVLimit = function(limit) { ////20170215 added.
+        this.setVLimit = function(limit) { 
             vLimit = limit;
         };
 
