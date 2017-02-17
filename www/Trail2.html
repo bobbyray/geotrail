@@ -542,6 +542,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Number of meters of current geolocation with respect to previous location 
             for change in location to be considered valid. (This prevents small variations in the geolocation of
             the same point to appear to be a change in location.)</li>
+            <li>Spurious V Limit<br/>
+            The velocity limit in meters/second for a recorded point to be spurious. 
+            A point in a recorded trail may be spurious (invalid). If the velocity of point from a previous point
+            is too great, the point cannot actually be in the recorded trail and can be filtered out.</li>
             <li>Show Compass Heading on Map?<br/>Yes | No<br/>
             An arrow for the compass heading from your current location may be shown on the map.</li>
             <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>
