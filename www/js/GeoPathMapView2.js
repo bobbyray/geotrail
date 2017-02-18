@@ -2245,15 +2245,23 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  tStart: Date obj. Date and time for start of the record path. 
         //          null if there is no valid RecordPt of kind eRecordPt.RECORD in the record path.
         //          bOk is false if tStart is null.
+        //  kJoules: number. kinetic engery for body traveling for the recorded path. 
+        //            Note: var kgMass is body mass.
+        //  calories: number. food calories on a product label corresponding to kJoules. 
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null};
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0};
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
             var d=0; // Distance to previous RECORD point.
             var dt;  // Distance and time to previous record point.
             var pt;  // Current point in arRecordPt while looping thru arRecordPt.
-            for (var i=0; i < arRecordPt.length; i++) {
+            var vCur = 0;  // Current velocity in m/sec;  ////20170217 added 
+            var vv = 0; // Change in velocity squared from previous point to current point.
+            var vvPrev = 0; // Previous velocity squared in m/sec. ////20170217 added
+            var vvSum = 0; // sum of velocity squared for points over recorded path. ////20170217 
+            var epsilon = 0.0001; // Small value to avoid divide by 0.
+            for (var i=0; i < arRecordPt.length; i++) { 
                 pt = arRecordPt[i]; 
                 if (pt.bDeleted) // Ignore points marked as deleted. 
                     continue;
@@ -2267,6 +2275,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         // Set date and time for start of the recording.
                         if (result.tStart === null) 
                             result.tStart = new Date(pt.msTimeStamp);
+                        // Calc v*2 for kinetic energy.
+                        if (dt.msRecordDelta > epsilon) {
+                            vCur = dt.d / (dt.msRecordDelta/1000);
+                            vv = vCur*vCur - vvPrev;
+                            if (vv < 0)
+                                vv = -vv;
+                            vvSum +=vv;
+                            vvPrev = vv;
+                        }
                         break;
                     case this.eRecordPt.PAUSE:
                         break;
@@ -2275,6 +2292,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
             }
             // Note: PAUSE and RESUME points after last RECORD point are ignored.
+            // Set result for total kinetic energy for body traveling the recorded path. ////20170218 added
+            result.kJoules = (vvSum*kgMass/2.0)/1000.0;
+            // Set result for food calories corresponding to result.kJoules.   ////20170218 added
+            result.calories = KJoulesToLabelCalories(result.kJoules);
 
             result.bOk = result.tStart !== null ? true : false;
             return result;
@@ -2571,9 +2592,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return vLimit > 0;  
         }
 
+        // Returns float for number of food calories listed on a product label for 
+        // metabolized energy due to respiration.
+        // Arg:
+        //  kJoules: float. number of kilojoules of engery to be produced from food.
+        // Note: Assumes metabolized efficieny of 0.85.
+        function KJoulesToLabelCalories(kJoules) {
+            var cals = 4.184 * kJoules;
+            return cals / 0.85; 
+        }
+
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
+        var kgMass = 77.0; // Body mass in kilograms.
+        
     }
     
 }

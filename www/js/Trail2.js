@@ -2349,6 +2349,8 @@ function wigo_ws_View() {
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
+                    s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
+                    sMsg += s;
                     view.ShowStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
