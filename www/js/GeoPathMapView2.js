@@ -2256,10 +2256,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var d=0; // Distance to previous RECORD point.
             var dt;  // Distance and time to previous record point.
             var pt;  // Current point in arRecordPt while looping thru arRecordPt.
-            var vCur = 0;  // Current velocity in m/sec;  ////20170217 added 
+            var vCur = 0;  // Current velocity in m/sec;  
             var vv = 0; // Change in velocity squared from previous point to current point.
-            var vvPrev = 0; // Previous velocity squared in m/sec. ////20170217 added
-            var vvSum = 0; // sum of velocity squared for points over recorded path. ////20170217 
+            var vvPrev = 0; // Previous velocity squared in m/sec. 
+            var vvSum = 0; // sum of velocity squared for points over recorded path. 
             var epsilon = 0.0001; // Small value to avoid divide by 0.
             for (var i=0; i < arRecordPt.length; i++) { 
                 pt = arRecordPt[i]; 
@@ -2292,9 +2292,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
             }
             // Note: PAUSE and RESUME points after last RECORD point are ignored.
-            // Set result for total kinetic energy for body traveling the recorded path. ////20170218 added
+            // Set result for total kinetic energy for body traveling the recorded path. 
             result.kJoules = (vvSum*kgMass/2.0)/1000.0;
-            // Set result for food calories corresponding to result.kJoules.   ////20170218 added
+            // Set result for food calories corresponding to result.kJoules.   
             result.calories = KJoulesToLabelCalories(result.kJoules);
 
             result.bOk = result.tStart !== null ? true : false;
@@ -2596,10 +2596,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // metabolized energy due to respiration.
         // Arg:
         //  kJoules: float. number of kilojoules of engery to be produced from food.
-        // Note: Assumes metabolized efficieny of 0.85.
         function KJoulesToLabelCalories(kJoules) {
             var cals = 4.184 * kJoules;
-            return cals / 0.85; 
+            // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
+            // therefore cals is not divided by 0.85. 
+            return cals; 
         }
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
