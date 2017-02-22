@@ -649,6 +649,10 @@ function wigo_ws_View() {
     var divMode = document.getElementById('divMode');
 
     var divSettings = $('#divSettings')[0];
+    var divSettingsTitle = $('#divSettingsTitle')[0];   ////20170221 Added
+    var divSettingsScroll = $('#divSettingsScroll')[0]; ////20170221 Added
+    var divSettingsDoneCancel = $('#divSettingsDoneCancel')[0]; ////20170221 Added
+
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
     var numberHomeAreaNELat = $('#numberHomeAreaNELat')[0];
@@ -812,12 +816,27 @@ function wigo_ws_View() {
 
     $(buSettingsDone).bind('click', function (e) {
         if (CheckSettingsValues()) { 
-            ShowSettingsDiv(false);
+            ////20170219 map.saveViewState(); ////20170219 added
+            ////20170219MoveBelow ShowSettingsDiv(false);
+            ShowSettingsDiv(false); ////20170220 put back
             that.ClearStatus();
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
-            titleBar.scrollIntoView();   
+            ////20170219MovedBelow titleBar.scrollIntoView();   
+            ////20170219 map.restoreViewState(); ////20170219 added
+            ////20170219 ShowSettingsDiv(false);
+            ////20170220NoHelp window.setTimeout(function(){
+            ////20170220NoHelp    ////20170219 alert("Hide Settings");
+            ////20170220NoHelp    ShowSettingsDiv(false);
+            ////20170220NoHelp    titleBar.scrollIntoView();   
+            ////20170220NoHelp}, 2000);
+            titleBar.scrollIntoView();   ////20170220 put back
+            ////20170220NoHelp map.Redraw(); ////20170220 added
+            ////20170220NoHelp window.setTimeout(function(){ ////20170220 added, try
+            ////20170220NoHelp     var mapCanvas = getMapCanvas();
+            ////20170220NoHelp     map.Redraw(); ////20170220 added
+            ////20170220NoHelp }, 2000);
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
@@ -3102,6 +3121,13 @@ function wigo_ws_View() {
     parentEl = document.getElementById('holderClickForGeoLoc');
     var selectClickForGeoLoc = ctrls.NewYesNoControl(parentEl, null, 'Touch for Loc Testing?', -1);
 
+    var numberBodyMass = document.getElementById('numberBodyMass'); ////20170219 added
+    numberBodyMass.addEventListener('change', function(event){
+        var sMsg = "BodyMass: ";
+        sMsg += numberBodyMass.value;
+        alert(sMsg);
+    }, false);
+
     // ** Helper for Settings
 
     // Checks that the control values for settings are valid.
@@ -3377,16 +3403,22 @@ function wigo_ws_View() {
     function ShowSettingsDiv(bShow) {
         if (app.deviceDetails.isiPhone()) { 
             // Do not show settings for tracking nor Pebble.
-            //???? ShowElement(holderAllowGeoTracking, false);
-            //???? ShowElement(holderEnableGeoTracking, false);
-            //???? ShowElement(holderGeoTrackingSecs, false);
             ShowElement(holderPebbleAlert, false);
             ShowElement(holderPebbleVibeCount, false);
         }
 
         var sShowSettings = bShow ? 'block' : 'none';
         divSettings.style.display = sShowSettings;
-        ShowMapCanvas(!bShow); 
+        ////20170220 ShowMapCanvas(!bShow);  ////20170220 try again not hiding map-canvass.
+
+        if (bShow) { ////20170221 add if and body.
+            // Set height of divSettingsScroll to fill available space.
+            var yBody = document.body.offsetHeight;
+            var yScrollTitle = divSettingsTitle.offsetHeight;
+            var yDoneCancel = divSettingsDoneCancel.offsetHeight;
+            var yScroll =  yBody - yScrollTitle - yDoneCancel;
+            divSettingsScroll.style.height = yScroll.toFixed(0) + 'px';
+        }
     }
 
     function ShowHelpDiv(div, bShow) {
@@ -4550,7 +4582,8 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
+    ////20170221 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
@@ -5275,7 +5308,7 @@ function wigo_ws_Controller() {
         // Appends to path list and shows status message.
         function AppendToPathList (bOk, gpxList, sStatus) {
             if (bOk) {
-                for (var i = 0; gpxList && i < gpxList.length; i++) { 
+                for (var i = 0; gpxArray && gpxList && i < gpxList.length; i++) { // Added check for gpxArray not null. Saw it happen in debug once.
                     arPath.push(gpxList[i].sName);
                     gpxArray.push(gpxList[i]);
                 }

@@ -174,6 +174,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.PanToPathCenter();
     };
 
+    // Redraw the map.
+    this.Redraw = function() { ////20170220 added
+        if (tileLayer) {
+            tileLayer.redraw(); 
+        }
+    };
+
     // Fits map to bounds of path.
     // Arg:
     //  path: wigo_ws_GpxPath object for the path.
@@ -660,7 +667,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Distance in meters for changing previous geolocation wrt current geolocation.
     // Note: Parameter for updating prevGeoLocCircle when current location changes.
     this.dPrevGeoLocThres = 10.0;
-
 
     // Object for drawing and managing a path for recording separately and independently
     // of the main path on the map.
