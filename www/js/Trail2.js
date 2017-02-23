@@ -649,9 +649,9 @@ function wigo_ws_View() {
     var divMode = document.getElementById('divMode');
 
     var divSettings = $('#divSettings')[0];
-    var divSettingsTitle = $('#divSettingsTitle')[0];   ////20170221 Added
-    var divSettingsScroll = $('#divSettingsScroll')[0]; ////20170221 Added
-    var divSettingsDoneCancel = $('#divSettingsDoneCancel')[0]; ////20170221 Added
+    var divSettingsTitle = $('#divSettingsTitle')[0];   
+    var divSettingsScroll = $('#divSettingsScroll')[0]; 
+    var divSettingsDoneCancel = $('#divSettingsDoneCancel')[0]; 
 
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
@@ -816,27 +816,12 @@ function wigo_ws_View() {
 
     $(buSettingsDone).bind('click', function (e) {
         if (CheckSettingsValues()) { 
-            ////20170219 map.saveViewState(); ////20170219 added
-            ////20170219MoveBelow ShowSettingsDiv(false);
-            ShowSettingsDiv(false); ////20170220 put back
+            ShowSettingsDiv(false); 
             that.ClearStatus();
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
-            ////20170219MovedBelow titleBar.scrollIntoView();   
-            ////20170219 map.restoreViewState(); ////20170219 added
-            ////20170219 ShowSettingsDiv(false);
-            ////20170220NoHelp window.setTimeout(function(){
-            ////20170220NoHelp    ////20170219 alert("Hide Settings");
-            ////20170220NoHelp    ShowSettingsDiv(false);
-            ////20170220NoHelp    titleBar.scrollIntoView();   
-            ////20170220NoHelp}, 2000);
-            titleBar.scrollIntoView();   ////20170220 put back
-            ////20170220NoHelp map.Redraw(); ////20170220 added
-            ////20170220NoHelp window.setTimeout(function(){ ////20170220 added, try
-            ////20170220NoHelp     var mapCanvas = getMapCanvas();
-            ////20170220NoHelp     map.Redraw(); ////20170220 added
-            ////20170220NoHelp }, 2000);
+            titleBar.scrollIntoView();   
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
@@ -3121,7 +3106,7 @@ function wigo_ws_View() {
     parentEl = document.getElementById('holderClickForGeoLoc');
     var selectClickForGeoLoc = ctrls.NewYesNoControl(parentEl, null, 'Touch for Loc Testing?', -1);
 
-    var numberBodyMass = document.getElementById('numberBodyMass'); ////20170219 added
+    var numberBodyMass = document.getElementById('numberBodyMass'); 
     numberBodyMass.addEventListener('change', function(event){
         var sMsg = "BodyMass: ";
         sMsg += numberBodyMass.value;
@@ -3409,9 +3394,8 @@ function wigo_ws_View() {
 
         var sShowSettings = bShow ? 'block' : 'none';
         divSettings.style.display = sShowSettings;
-        ////20170220 ShowMapCanvas(!bShow);  ////20170220 try again not hiding map-canvass.
 
-        if (bShow) { ////20170221 add if and body.
+        if (bShow) { 
             // Set height of divSettingsScroll to fill available space.
             var yBody = document.body.offsetHeight;
             var yScrollTitle = divSettingsTitle.offsetHeight;
@@ -4582,7 +4566,6 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    ////20170221 var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
