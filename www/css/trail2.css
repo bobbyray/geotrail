@@ -366,10 +366,9 @@ label {
 
 /* Settings home area */
 #divSettings {
-    position: absolute;  /* ////20170219 was absolute // was fixed */
+    position: absolute;  
     left: 0px;
-    top: 0px;  ////20170221 put back
-    ////20170221 bottom: 0px; /* ////20170219 added */
+    top: 0px;  
     display: none;
     background-color: #fff;
     padding: 5px;
@@ -379,7 +378,7 @@ label {
     width: 97%;
 }
 #divSettingsTitle {
-    height: 1.3em; /* ////20170221 added */
+    height: 1.3em; 
 }
 
 #spanSettingsTitle {
@@ -389,16 +388,15 @@ label {
 
 #divSettingsScroll {
     overflow-y: scroll;
-    height: 20em; /* ////20170221 was 30em */
+    height: 20em; 
 }
 
 /* Settings items */
 .settingItem {
-    /* ////20170221 margin-bottom: 0.35em; */
-    padding-bottom: 0.35em; /* ////20170221 was margin-bottom */
+    padding-bottom: 0.35em; 
     height: 2.0em;
     border: black 2px solid;
-    width: 98%;  /* ////20170221 was 100% */
+    width: 98%;  
 }
 
 #divSettings input {
@@ -470,9 +468,8 @@ label {
 
 #divSettingsDoneCancel {
     border: none;
-    /* ////20170221 margin-top: 0.85em; */
-    height: 1.5em;  /* ////20170221 added */
-    padding-top: 0.6em;  /* ////20170221 added */
+    height: 1.5em; 
+    padding-top: 0.6em;  
 }
 #buSettingsDone {
     margin-left: 25%;

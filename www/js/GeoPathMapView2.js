@@ -174,12 +174,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.PanToPathCenter();
     };
 
-    // Redraw the map.
-    this.Redraw = function() { ////20170220 added
-        if (tileLayer) {
-            tileLayer.redraw(); 
-        }
-    };
+    // Not Used. Does not seem to be useful.
+    // // Redraw the map.
+    // this.Redraw = function() { 
+    //     if (tileLayer) {
+    //         tileLayer.redraw(); 
+    //     }
+    // };
 
     // Fits map to bounds of path.
     // Arg:
