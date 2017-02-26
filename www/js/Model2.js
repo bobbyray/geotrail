@@ -48,7 +48,7 @@ function wigo_ws_GeoTrailSettings() {
     // for previous geolocation to be updated wrt to current geolocation.
     this.dPrevGeoLocThres =5.0; //20161205 was 40.0;
     // Float for velocity in meters/sec for velocity limit used in filtering spurious record points.
-    this.dSpuriousVLimit = 5.0; 
+    this.vSpuriousVLimit = 5.0; 
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
@@ -540,8 +540,10 @@ function wigo_ws_Model() {
                 // **
 
                 // ** Changes for nSchema 3.
-                // 20170216 Added setting.dSpuriousVLimit
-                UpdateIfNeeded('dSpuriousVLimit', 3, 5.0); 
+                // 20170216 Added setting.vSpuriousVLimit
+                UpdateIfNeeded('vSpuriousVLimit', 3, 5.0); 
+                // 20170223 Added setting.kgBodyMass.
+                UpdateIfNeeded('kgBodyMass', 3, 75.0)
                 // ** 
 
                 // ** Changes for next nSchema x goes here.

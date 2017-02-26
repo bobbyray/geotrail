@@ -2270,8 +2270,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var epsilon = 0.0001; // Small value to avoid divide by 0.
             for (var i=0; i < arRecordPt.length; i++) { 
                 pt = arRecordPt[i]; 
-                if (pt.bDeleted) // Ignore points marked as deleted. 
+                if (pt.bDeleted) { // Ignore points marked as deleted. 
                     continue;
+                }
                 switch (pt.kind) {
                     case this.eRecordPt.RECORD:
                         // Get distance and time deltas to previous RECORD point.
@@ -2325,17 +2326,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Note: ok to call if spurious cluster is empty.
             //       Also for deletion of spurious cluster, if valid cluster is only one point, 
             //       the valid cluster is deleted because it was suspected to be spurious. 
-            function DeleteSpuriousCluster(curPt) { 
+            function DeleteSpuriousCluster() { 
                 if (arSpuriousClusterIx.length > 0) {
                     // Delete any points in spurious cluster and empty spurious cluster.
                     var ptSpurious, v;
-                    for (var i=0; curPt && i < arSpuriousClusterIx.length; i++) {
+                    for (var i=0; i < arSpuriousClusterIx.length; i++) {
                         ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
-                        v = curPt.v(ptSpurious);
-                        if ( v >= vLimit) {
-                            ptSpurious.bDeleted = true;
-                            result.nDeleted++; 
-                        }
+                        // Note: do not check for velocity limit from curPt to ptSpurious.
+                        ptSpurious.bDeleted = true;
+                        result.nDeleted++; 
                     }
                     // Check if small valid cluster has suspect points that need to be deleted.
                     if (arValidClusterIx.length <= minValidClusterCt) {
@@ -2363,7 +2362,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (!this.isFilterEnabled())  
                 return result;            
             var pt, v; // current point in loop and its velocity.   
-            var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD. 
             var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
             var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
             var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid.
@@ -2387,12 +2385,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     continue;
                 }
                 result.bValid = true; // Indicate path can be filtered.
-                curRecordPt = pt;     // current RecordPt of kind == eRecordPt.RECORD.
                 v = pt.v(prevPt);
                 if (v < vLimit)  { 
                     // pt is valid, not spurious.
                     // Delete any points in spurious cluster and empty spurious cluster.
-                    DeleteSpuriousCluster(curRecordPt);   
+                    DeleteSpuriousCluster();   
                     // Append valid point to valid cluster.
                     arValidClusterIx.push(iPt);
                     // Set previous valid point to current point.
@@ -2433,7 +2430,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }           
             }
             // Delete any points in spurious cluster and empty spurious cluster. 
-            DeleteSpuriousCluster(curRecordPt); 
+            DeleteSpuriousCluster(); 
 
             // Set pathCoords to match RECORD points that are not deleted.
             if (result.bValid && result.nDeleted > 0) {
@@ -2578,6 +2575,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Returns: number. the velocity limit in meters/sec.
         this.getVLimit = function() {
             return vLimit;
+        };
+
+        // Sets body mass in kilograms.
+        // Arg: 
+        //  mass: number. body mass in kilograms.
+        this.setBodyMass = function(mass) {  
+            kgMass = mass;
         };
 
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
