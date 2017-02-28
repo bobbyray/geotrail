@@ -2323,35 +2323,38 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
             // delete the array of spurious cluster indices.
+            ////20170228 // Arg:
+            ////20170228 //  curPt: RecordPt of kind == eRecordPt.RECORD. current RecordPt in arRecordPt.
             // Note: ok to call if spurious cluster is empty.
             //       Also for deletion of spurious cluster, if valid cluster is only one point, 
             //       the valid cluster is deleted because it was suspected to be spurious. 
+            ////20170228 function DeleteSpuriousCluster(curPt) { 
             function DeleteSpuriousCluster() { 
                 if (arSpuriousClusterIx.length > 0) {
                     // Delete any points in spurious cluster and empty spurious cluster.
                     var ptSpurious, v;
                     for (var i=0; i < arSpuriousClusterIx.length; i++) {
                         ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
-                        // Note: do not check for velocity limit from curPt to ptSpurious.
+                        ////20170228 // Note: do not check for velocity limit from curPt to ptSpurious.
                         ptSpurious.bDeleted = true;
                         result.nDeleted++; 
                     }
-                    // Check if small valid cluster has suspect points that need to be deleted.
-                    if (arValidClusterIx.length <= minValidClusterCt) {
-                        var ptValid;
-                        for (var i=0; i < arValidClusterIx.length; i++) {
-                            ptValid = arRecordPt[arValidClusterIx[i]];
-                            v = curPt.v(ptValid);
-                            if (v >= vLimit) {
-                                // Point in the valid cluster needs to be marked deleted.
-                                ptValid.bDeleted = true;
-                                result.nDeleted++; 
-                                // Remove the element from the valid cluster.
-                                arValidClusterIx.splice(i, 1); // Backup up loop index to account for removed element.
-                                i--; 
-                            }
-                        }
-                    }
+                    ////20170228 // Check if small valid cluster has suspect points that need to be deleted.
+                    ////20170228 if (arValidClusterIx.length <= minValidClusterCt) {
+                    ////20170228     var ptValid;
+                    ////20170228     for (var i=0; curPt && i < arValidClusterIx.length; i++) {
+                    ////20170228         ptValid = arRecordPt[arValidClusterIx[i]];
+                    ////20170228         v = curPt.v(ptValid);
+                    ////20170228         if (v >= vLimit) {
+                    ////20170228             // Point in the valid cluster needs to be marked deleted.
+                    ////20170228             ptValid.bDeleted = true;
+                    ////20170228             result.nDeleted++; 
+                    ////20170228             // Remove the element from the valid cluster.
+                    ////20170228             arValidClusterIx.splice(i, 1); // Backup up loop index to account for removed element.
+                    ////20170228             i--; 
+                    ////20170228         }
+                    ////20170228     }
+                    ////20170228 }
 
                     // Empty the  spurious cluster.
                     arSpuriousClusterIx = [];
@@ -2362,6 +2365,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (!this.isFilterEnabled())  
                 return result;            
             var pt, v; // current point in loop and its velocity.   
+            ////20170228 var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD.             
             var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
             var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
             var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid.
@@ -2385,10 +2389,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     continue;
                 }
                 result.bValid = true; // Indicate path can be filtered.
+                ////20170228 curRecordPt = pt;     // current RecordPt of kind == eRecordPt.RECORD.
                 v = pt.v(prevPt);
                 if (v < vLimit)  { 
                     // pt is valid, not spurious.
                     // Delete any points in spurious cluster and empty spurious cluster.
+                    ////20170228 DeleteSpuriousCluster(curRecordPt);   
                     DeleteSpuriousCluster();   
                     // Append valid point to valid cluster.
                     arValidClusterIx.push(iPt);
@@ -2430,6 +2436,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }           
             }
             // Delete any points in spurious cluster and empty spurious cluster. 
+            ////20170228 DeleteSpuriousCluster(curRecordPt); 
             DeleteSpuriousCluster(); 
 
             // Set pathCoords to match RECORD points that are not deleted.

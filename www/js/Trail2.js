@@ -2112,12 +2112,19 @@ function wigo_ws_View() {
 
             // Start watching changes in location for recording.
             this.watch = function() {
+                var prevPosition = null;  ////20170228 added
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
                         // Success.
                         if (!bTesting) {
-                            var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
-                            AppendAndDrawPt(llNext, position.timestamp);
+                            ////20170228 var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
+                            ////20170228 AppendAndDrawPt(llNext, position.timestamp);
+                            // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
+                            if (!prevPosition || prevPosition.timestamp < position.timestamp) { ////20170228 added if cond, body existed.
+                                prevPosition = position;                                        ////20170228 added
+                                var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
+                                AppendAndDrawPt(llNext, position.timestamp);
+                            }
                         }
                     },
                     function (positionError) {
@@ -2344,8 +2351,7 @@ function wigo_ws_View() {
                     var sStartTime = stats.tStart.toLocaleTimeString();
                     var s = "Stats for {0} {1}<br/>".format(sStartDate, sStartTime);
                     sMsg += s;
-                    var lc = new LengthConverter();
-                    var sLen = lc.to(stats.dTotal); 
+                    var sLen = lc.to(stats.dTotal); // lc is LengthConvert() object in view.
                     s = "Distance: {0}<br/>".format(sLen);
                     sMsg += s;
                     s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
