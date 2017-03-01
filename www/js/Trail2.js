@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.024"; // Constant string for App version.
+    var sVersion = "1.1.024_20170228_1437"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2253,11 +2253,19 @@ function wigo_ws_View() {
                 recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
 
+                /* ////20170228 always filter
                 if (map.recordPath.isFilterEnabled()) {
                         recordCtrl.appendItem("filter", "Filter");
                 } else if (map.recordPath.isUnfilterEnabled()) {
                         recordCtrl.appendItem("unfilter", "Unfilter");
                 }
+                */
+
+                recordCtrl.appendItem("filter", "Filter");
+                if (map.recordPath.isUnfilterEnabled()) {
+                        recordCtrl.appendItem("unfilter", "Unfilter");
+                }
+
                 // Ensure signin ctrl is hidden.
                 signin.hide();
                 ShowPathDescrBar(false); 
