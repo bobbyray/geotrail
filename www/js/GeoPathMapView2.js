@@ -2362,8 +2362,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
 
             var result = {bValid: false, nDeleted: 0}; 
-            if (!this.isFilterEnabled())  
-                return result;            
+            ////20170228 if (!this.isFilterEnabled())  
+            ////20170228     return result;            
             var pt, v; // current point in loop and its velocity.   
             ////20170228 var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD.             
             var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
