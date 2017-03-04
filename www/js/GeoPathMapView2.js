@@ -2105,7 +2105,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
             //  d: distance delta in meters.
             //  msElapsedDelta: elpased time delta in millisconds, including pauses.
-            //  msRecordDelta: time delta in millisconds, excluding pauses. 
+            //  msRecordDelta: time delta in millisconds, excluding pauses and previous deleted points.
             this.dt = function() {
                 var d = 0;
                 var curPt = this;
@@ -2255,8 +2255,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  kJoules: number. kinetic engery for body traveling for the recorded path. 
         //            Note: var kgMass is body mass.
         //  calories: number. food calories on a product label corresponding to kJoules. 
+        //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. ////20170301 added
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0};
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; ////20170301 added nExcessiveV.
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
@@ -2286,6 +2287,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         // Calc v*2 for kinetic energy.
                         if (dt.msRecordDelta > epsilon) {
                             vCur = dt.d / (dt.msRecordDelta/1000);
+                            if (vCur >= vLimit) { // Ignore points with excessive velocity. /////20170301 added if cond and body. 
+                                result.nExcessiveV++;
+                                continue;       
+                            } 
                             vv = vCur*vCur - vvPrev;
                             if (vv < 0)
                                 vv = -vv;
@@ -2320,7 +2325,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // number of spurious consecutive points is less than the nMaxSpurious;
         // otherwise the consecutive points remain.
         this.filter = function () { 
-
+            /* ///--20170302 try different alogorithm. 
             // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
             // delete the array of spurious cluster indices.
             ////20170228 // Arg:
@@ -2366,9 +2371,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             ////20170228     return result;            
             var pt, v; // current point in loop and its velocity.   
             ////20170228 var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD.             
-            var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
+            ////20170301Moved var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
+            ////20170301Moved var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid.
             var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
-            var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid.
             var arValidClusterIx = [];     // Array of indices in a valid cluster.
             var prevPt = arRecordPt.length > 0 ? arRecordPt[0] : null; // Previous point for determining if a current point is spurious or not.
             if (prevPt)                    // Append prevPt (first point) to valid cluster.  
@@ -2449,6 +2454,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
             bFilterEnabled = false;
 
+            return result;
+            */
+
+            var result = filterFSM.doIt();
+            var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   ////20170303 added 
+            if (result.bValid && nTotalDeleted > 0) {  ////20170303 result.nDeleted replaced by nTotalDeleted.
+                SetPathCoords();
+                this.draw(); 
+                bUnfilterEnabled = true; 
+            } else {
+                bUnfilterEnabled = false;
+            }
+            bFilterEnabled = false;
             return result;
         };
 
@@ -2621,7 +2639,178 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return cals; 
         }
 
+        // Object for filtering arRecordPt. 
+        // Constructor arg: eRecordPt enumeration defined in RecordPathMgr object.
+        //                  Enumeration for kind of RecordPt objects.
+        function FilterFSM(eRecordPt) { 
+            
+            // Filters arRecordPt for invalid (spurious) points.
+            // Returns {bValid: boolean, nDeleted: number, nAlreadyDeleted: number} 
+            //  bValid: true indicated filtering was applied.
+            //  nDeleted: number of RecordPt elements marked as deleted in arRecordPt.
+            //            Indicates number deleted by filtering for this call.
+            //            Does not count points deleted by previous call.
+            //  nAlreadyDeleted: number of RecordPt elements already deleted before filtering again.
+            this.doIt = function() {
+                Init();
+                var event = GenNextEvent();
+                while (event != eEvent.done) {
+                    curState.nextState(event);
+
+                    event = GenNextEvent();
+                } 
+
+                var bOk = curPt !== null && prevPt !== null;
+                var result = {bValid: bOk, nDeleted: nDeleted, nAlreadyDeleted: nAlreadyDeleted}; 
+                return result;
+            }; 
+            
+            var eEvent = {validPt: 0, invalidPt: 1, done: 2}; // Events for filtering.
+
+            // Object for run of valid points.
+            function StateValidRun() {
+                this.nextState = function(event){
+                    switch (event) {
+                        case eEvent.validPt:
+                            break;
+                        case eEvent.invalidPt:
+                            if (prevPt) {
+                                nDeleted++; // increment count of deleted points.
+                                // Mark previous point as deleted.
+                                prevPt.bDeleted = true;
+                                // Save first deletion for start of invalid (spurious) run.
+                                // prevDeletedPt is checked later to see if it can be undeleted.
+                                prevDeletedPt = prevPt;
+                                ////20170303 nDeleted++; // Increment count of deleted points.
+                            }
+                            curState = stateInvalidRun;
+                            break;
+                    }
+
+                };
+            }
+            var stateValidRun = new StateValidRun();
+
+            // Object for run of invalid (spurious) points.
+            function StateInvalidRun() {
+                this.nextState = function(event) {
+                    switch (event) {
+                        case eEvent.validPt:
+                            // Check if saved first deletion in invalid (spurious) run
+                            // is not spurious wrt current point.
+                            if (prevDeletedPt) {
+                                var v = prevDeletedPt.v(prevPt)
+                                if (v < vLimit) {
+                                    // The first deletion within invalid (spurious) run is now valid.
+                                    nDeleted--; // Decrement count of deleted points because deleted point has been restored.
+                                    prevDeletedPt.bDeleted = false;
+                                }
+                            }
+                            curState = stateValidRun;
+                            break;
+                        case eEvent.invalidPt:
+                            // mark previous point as deleted.
+                            if (prevPt) {
+                                nDeleted++; // increment count of deleted points.
+                                prevPt.bDeleted = true;
+                                ////20170303 nDeleted++; // increment count of deleted points.
+                            }
+                            break;
+                    }
+                };
+
+            }
+            var stateInvalidRun = new StateInvalidRun();
+
+
+            // Initialize previous point, current point, and current state. 
+            //  eEvent.validPt for success.
+            //  eEvent.done for no RecordPt of kind RECORD or a single such point in arRecordPt..
+            function Init() {
+                iCurPt = -1;
+                prevDeletedPt = null;
+                curPt = null;
+                prevPt = null;
+                nDeleted = 0; 
+                nAlreadyDeleted = 0;
+                curState = stateValidRun;
+            }
+
+            // Advances through arRecordPt by one point detecting if its 
+            // velocity is valid wrt to previous point.
+            // Advances prevPt and curPt for next point. 
+            // Returns eEvent value: validPt, invalidPt, or done.
+            function GenNextEvent() {
+                iCurPt++;
+                if (iCurPt >= arRecordPt.length) 
+                    return eEvent.done;
+                
+                // Advance to next RecordPt in arRecordPt.
+                prevPt = curPt;   // Note: Here curPt should always be of kind RECORD and !bDeleted, or null.  ////20170303 added, moved to here. 
+                var bCheckNext = true;
+                while (bCheckNext) {
+                    /* ////20170303 redo, not correct
+                    if (curPt && (curPt.bDeleted || curPt.kind != eRecordPt.RECORD)) { 
+                        if (iCurPt >= arRecordPt.length) 
+                            return eEvent.done;
+                        iCurPt++;
+                        curPt = arRecordPt[iPt]
+                    } else {
+                        prevPt = curPt;
+                        curPt = arRecordPt[iCurPt];
+                        bCheckNext = false;
+                    }
+                    */
+
+                    ////20170303 prevPt = curPt;
+                    curPt = arRecordPt[iCurPt];
+                    if (curPt.bDeleted)  // Count points that are already deleted. ////20170303 added.
+                        nAlreadyDeleted++; 
+                    if (curPt.bDeleted || curPt.kind !== eRecordPt.RECORD) { 
+                        // Skip over points of that are deleted, or pts that are not of kind RECORD.
+                        iCurPt++;
+                        if (iCurPt >= arRecordPt.length) 
+                            return eEvent.done;
+                    } else {
+                        bCheckNext = false;
+                    }
+                }
+
+                var event;
+                if (curPt && prevPt) {
+                    // Normal case.
+                    var v = curPt.v(prevPt);
+                    if (v < vLimit) {
+                        event = eEvent.validPt;
+                    } else {
+                        event = eEvent.invalidPt;
+                    }
+                } else if (curPt && !prevPt) {
+                    // First point, no previous point so valid.
+                    event = eEvent.validPt;
+                } else {
+                    // No current point. Should not happen, except if there is single point.
+                    event = eEvent.done;
+                }
+                return event;
+            }
+
+            var nAlreadyDeleted = 0;  // Number of points already deleted before filter is applied.
+            var nDeleted = 0;         // Number of points deleted by filtering.
+            var iCurPt = 0;           // Index for stepping thru arRecordPt.
+            var prevDeletedPt = null; // Saved deleted point when starting a run of deleted points.
+            var curPt = null;         // ref to current RecordPt in arRecordPt.
+            var prevPt = null;        // ref to previous RecordPt in arRecordPt.
+
+            var curState = stateValidRun; // Current state.
+
+
+        }
+        var filterFSM = new FilterFSM(this.eRecordPt); ////20170302 added
+
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
+        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             ////20170301 moved to here.
+        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. ////20170301 moved to here.
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.

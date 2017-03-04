@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.024_20170228_1437"; // Constant string for App version.
+    var sVersion = "1.1.024_20170304_1019"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2369,6 +2369,11 @@ function wigo_ws_View() {
                     // sMsg += s;
                     s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
                     sMsg += s;
+                    if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. ////20170301 added if and body.
+                        s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
+                        sMsg += s;
+                    }
+                        
                     view.ShowStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
@@ -3117,6 +3122,27 @@ function wigo_ws_View() {
     ];
     numberSpuriousVLimit.fill(numberSpuriousVLimitValues);
 
+    /* ////20170302 decided not to funish. changing filtering alogorithm.
+    parentEl = document.getElementById('holderMaxSpuriousClusterCt'); ////20170301 added
+    var numberMaxSpuriousClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberSpuriousCtValues = [
+        ["1",  " 1"],
+        ["2",  " 2"],
+        ["3",  " 3"],
+        ["4",  " 4"],
+        ["5",  " 5"],
+        ["6",  " 6"],
+        ["7",  " 7"],
+        ["8",  " 8"],
+        ["9",  " 9"],
+        ["10", "10"],
+    ];
+    numberMaxSpuriousClusterCt.fill(numberSpuriousCtValues);
+
+    parentEl = document.getElementById('holderMinValidClusterCt');  ////20170301 added
+    var numberMinValidClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    holderMinValidClusterCt.fill(numberSpuriousCtValues);
+    */
 
     parentEl = document.getElementById('holderCompassHeadingVisible');
     var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass on Map?', -1);
