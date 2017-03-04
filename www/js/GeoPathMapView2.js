@@ -2255,9 +2255,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  kJoules: number. kinetic engery for body traveling for the recorded path. 
         //            Note: var kgMass is body mass.
         //  calories: number. food calories on a product label corresponding to kJoules. 
-        //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. ////20170301 added
+        //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. 
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; ////20170301 added nExcessiveV.
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; 
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
@@ -2287,7 +2287,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         // Calc v*2 for kinetic energy.
                         if (dt.msRecordDelta > epsilon) {
                             vCur = dt.d / (dt.msRecordDelta/1000);
-                            if (vCur >= vLimit) { // Ignore points with excessive velocity. /////20170301 added if cond and body. 
+                            if (vCur >= vLimit) { // Ignore points with excessive velocity. 
                                 result.nExcessiveV++;
                                 continue;       
                             } 
@@ -2328,51 +2328,25 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             /* ///--20170302 try different alogorithm. 
             // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
             // delete the array of spurious cluster indices.
-            ////20170228 // Arg:
-            ////20170228 //  curPt: RecordPt of kind == eRecordPt.RECORD. current RecordPt in arRecordPt.
             // Note: ok to call if spurious cluster is empty.
             //       Also for deletion of spurious cluster, if valid cluster is only one point, 
             //       the valid cluster is deleted because it was suspected to be spurious. 
-            ////20170228 function DeleteSpuriousCluster(curPt) { 
             function DeleteSpuriousCluster() { 
                 if (arSpuriousClusterIx.length > 0) {
                     // Delete any points in spurious cluster and empty spurious cluster.
                     var ptSpurious, v;
                     for (var i=0; i < arSpuriousClusterIx.length; i++) {
                         ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
-                        ////20170228 // Note: do not check for velocity limit from curPt to ptSpurious.
                         ptSpurious.bDeleted = true;
                         result.nDeleted++; 
                     }
-                    ////20170228 // Check if small valid cluster has suspect points that need to be deleted.
-                    ////20170228 if (arValidClusterIx.length <= minValidClusterCt) {
-                    ////20170228     var ptValid;
-                    ////20170228     for (var i=0; curPt && i < arValidClusterIx.length; i++) {
-                    ////20170228         ptValid = arRecordPt[arValidClusterIx[i]];
-                    ////20170228         v = curPt.v(ptValid);
-                    ////20170228         if (v >= vLimit) {
-                    ////20170228             // Point in the valid cluster needs to be marked deleted.
-                    ////20170228             ptValid.bDeleted = true;
-                    ////20170228             result.nDeleted++; 
-                    ////20170228             // Remove the element from the valid cluster.
-                    ////20170228             arValidClusterIx.splice(i, 1); // Backup up loop index to account for removed element.
-                    ////20170228             i--; 
-                    ////20170228         }
-                    ////20170228     }
-                    ////20170228 }
-
                     // Empty the  spurious cluster.
                     arSpuriousClusterIx = [];
                 }
             }
 
             var result = {bValid: false, nDeleted: 0}; 
-            ////20170228 if (!this.isFilterEnabled())  
-            ////20170228     return result;            
             var pt, v; // current point in loop and its velocity.   
-            ////20170228 var curRecordPt = null; // current RecordPt of kind = eRecordPt.RECRORD.             
-            ////20170301Moved var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster. 
-            ////20170301Moved var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid.
             var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
             var arValidClusterIx = [];     // Array of indices in a valid cluster.
             var prevPt = arRecordPt.length > 0 ? arRecordPt[0] : null; // Previous point for determining if a current point is spurious or not.
@@ -2394,12 +2368,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     continue;
                 }
                 result.bValid = true; // Indicate path can be filtered.
-                ////20170228 curRecordPt = pt;     // current RecordPt of kind == eRecordPt.RECORD.
                 v = pt.v(prevPt);
                 if (v < vLimit)  { 
                     // pt is valid, not spurious.
                     // Delete any points in spurious cluster and empty spurious cluster.
-                    ////20170228 DeleteSpuriousCluster(curRecordPt);   
                     DeleteSpuriousCluster();   
                     // Append valid point to valid cluster.
                     arValidClusterIx.push(iPt);
@@ -2441,7 +2413,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }           
             }
             // Delete any points in spurious cluster and empty spurious cluster. 
-            ////20170228 DeleteSpuriousCluster(curRecordPt); 
             DeleteSpuriousCluster(); 
 
             // Set pathCoords to match RECORD points that are not deleted.
@@ -2458,8 +2429,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             */
 
             var result = filterFSM.doIt();
-            var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   ////20170303 added 
-            if (result.bValid && nTotalDeleted > 0) {  ////20170303 result.nDeleted replaced by nTotalDeleted.
+            var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
+            if (result.bValid && nTotalDeleted > 0) {  
                 SetPathCoords();
                 this.draw(); 
                 bUnfilterEnabled = true; 
@@ -2681,7 +2652,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                                 // Save first deletion for start of invalid (spurious) run.
                                 // prevDeletedPt is checked later to see if it can be undeleted.
                                 prevDeletedPt = prevPt;
-                                ////20170303 nDeleted++; // Increment count of deleted points.
                             }
                             curState = stateInvalidRun;
                             break;
@@ -2713,7 +2683,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                             if (prevPt) {
                                 nDeleted++; // increment count of deleted points.
                                 prevPt.bDeleted = true;
-                                ////20170303 nDeleted++; // increment count of deleted points.
                             }
                             break;
                     }
@@ -2746,25 +2715,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     return eEvent.done;
                 
                 // Advance to next RecordPt in arRecordPt.
-                prevPt = curPt;   // Note: Here curPt should always be of kind RECORD and !bDeleted, or null.  ////20170303 added, moved to here. 
+                prevPt = curPt;   // Note: Here curPt should always be of kind RECORD and !bDeleted, or null. 
                 var bCheckNext = true;
                 while (bCheckNext) {
-                    /* ////20170303 redo, not correct
-                    if (curPt && (curPt.bDeleted || curPt.kind != eRecordPt.RECORD)) { 
-                        if (iCurPt >= arRecordPt.length) 
-                            return eEvent.done;
-                        iCurPt++;
-                        curPt = arRecordPt[iPt]
-                    } else {
-                        prevPt = curPt;
-                        curPt = arRecordPt[iCurPt];
-                        bCheckNext = false;
-                    }
-                    */
-
-                    ////20170303 prevPt = curPt;
                     curPt = arRecordPt[iCurPt];
-                    if (curPt.bDeleted)  // Count points that are already deleted. ////20170303 added.
+                    if (curPt.bDeleted)  // Count points that are already deleted. 
                         nAlreadyDeleted++; 
                     if (curPt.bDeleted || curPt.kind !== eRecordPt.RECORD) { 
                         // Skip over points of that are deleted, or pts that are not of kind RECORD.
@@ -2806,11 +2761,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
 
         }
-        var filterFSM = new FilterFSM(this.eRecordPt); ////20170302 added
+        var filterFSM = new FilterFSM(this.eRecordPt); 
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
-        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             ////20170301 moved to here.
-        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. ////20170301 moved to here.
+        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             
+        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. 
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.

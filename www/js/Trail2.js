@@ -2112,16 +2112,14 @@ function wigo_ws_View() {
 
             // Start watching changes in location for recording.
             this.watch = function() {
-                var prevPosition = null;  ////20170228 added
+                var prevPosition = null;  
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
                         // Success.
                         if (!bTesting) {
-                            ////20170228 var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
-                            ////20170228 AppendAndDrawPt(llNext, position.timestamp);
                             // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
-                            if (!prevPosition || prevPosition.timestamp < position.timestamp) { ////20170228 added if cond, body existed.
-                                prevPosition = position;                                        ////20170228 added
+                            if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
+                                prevPosition = position;                                        
                                 var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
                                 AppendAndDrawPt(llNext, position.timestamp);
                             }
@@ -2247,20 +2245,9 @@ function wigo_ws_View() {
                     recordCtrl.appendItem("save_trail", "Save Trail");
                 // Decided not use append_trail. Instead use Edit mode to insert another trail.
                 // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
-                // if (bAppendPathValid)
-                //     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("show_stats", "Show Stats");
                 recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
-
-                /* ////20170228 always filter
-                if (map.recordPath.isFilterEnabled()) {
-                        recordCtrl.appendItem("filter", "Filter");
-                } else if (map.recordPath.isUnfilterEnabled()) {
-                        recordCtrl.appendItem("unfilter", "Unfilter");
-                }
-                */
-
                 recordCtrl.appendItem("filter", "Filter");
                 if (map.recordPath.isUnfilterEnabled()) {
                         recordCtrl.appendItem("unfilter", "Unfilter");
@@ -2369,7 +2356,7 @@ function wigo_ws_View() {
                     // sMsg += s;
                     s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
                     sMsg += s;
-                    if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. ////20170301 added if and body.
+                    if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
@@ -3122,8 +3109,8 @@ function wigo_ws_View() {
     ];
     numberSpuriousVLimit.fill(numberSpuriousVLimitValues);
 
-    /* ////20170302 decided not to funish. changing filtering alogorithm.
-    parentEl = document.getElementById('holderMaxSpuriousClusterCt'); ////20170301 added
+    /* ///--20170302 decided not to funish. changing filtering alogorithm.
+    parentEl = document.getElementById('holderMaxSpuriousClusterCt'); 
     var numberMaxSpuriousClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     var numberSpuriousCtValues = [
         ["1",  " 1"],
@@ -3139,7 +3126,7 @@ function wigo_ws_View() {
     ];
     numberMaxSpuriousClusterCt.fill(numberSpuriousCtValues);
 
-    parentEl = document.getElementById('holderMinValidClusterCt');  ////20170301 added
+    parentEl = document.getElementById('holderMinValidClusterCt');  
     var numberMinValidClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     holderMinValidClusterCt.fill(numberSpuriousCtValues);
     */
