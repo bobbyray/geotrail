@@ -366,24 +366,37 @@ label {
 
 /* Settings home area */
 #divSettings {
-    position: absolute;
+    position: absolute;  
     left: 0px;
-    top: 0px;
+    top: 0px;  
     display: none;
     background-color: #fff;
     padding: 5px;
     border: 1px solid #999;
     z-index: 2;
     font-size: 120%;
-    width: 95%;
+    width: 97%;
+}
+#divSettingsTitle {
+    height: 1.3em; 
+}
+
+#spanSettingsTitle {
+    font-size: 1.2em;
+    font-weight: bolder;
+}
+
+#divSettingsScroll {
+    overflow-y: scroll;
+    height: 20em; 
 }
 
 /* Settings items */
 .settingItem {
-    margin-bottom: 0.35em;
+    padding-bottom: 0.35em; 
     height: 2.0em;
     border: black 2px solid;
-    width: 100%;
+    width: 98%;  
 }
 
 #divSettings input {
@@ -413,6 +426,16 @@ label {
     top: 10%;
     left: inherit;
     right: 0px;
+}
+
+#divSettings #labelBodyMass {
+    padding-top: 0.4em;
+}
+#divSettings #numberBodyMass {
+    float: right;
+    background-color: lightgray;
+    width: 3em;
+    font-size: 120%;
 }
 
 #divHomeArea  {
@@ -445,8 +468,8 @@ label {
 
 #divSettingsDoneCancel {
     border: none;
-    margin-top: 0.85em;
-
+    height: 1.5em; 
+    padding-top: 0.6em;  
 }
 #buSettingsDone {
     margin-left: 25%;

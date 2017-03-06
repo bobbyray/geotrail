@@ -41,8 +41,8 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 
 // Object for View present by page.
 function wigo_ws_View() {
-    // Release build for Google Play on 01/26/2017 16:44
-    var sVersion = "1.1.023"; // Constant string for App version.
+    // Work on RecordingTrail2 branch. Filter spurious record points.
+    var sVersion = "1.1.024_20170304_1019"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -649,6 +649,10 @@ function wigo_ws_View() {
     var divMode = document.getElementById('divMode');
 
     var divSettings = $('#divSettings')[0];
+    var divSettingsTitle = $('#divSettingsTitle')[0];   
+    var divSettingsScroll = $('#divSettingsScroll')[0]; 
+    var divSettingsDoneCancel = $('#divSettingsDoneCancel')[0]; 
+
     var numberHomeAreaSWLat = $('#numberHomeAreaSWLat')[0];
     var numberHomeAreaSWLon = $('#numberHomeAreaSWLon')[0];
     var numberHomeAreaNELat = $('#numberHomeAreaNELat')[0];
@@ -812,7 +816,7 @@ function wigo_ws_View() {
 
     $(buSettingsDone).bind('click', function (e) {
         if (CheckSettingsValues()) { 
-            ShowSettingsDiv(false);
+            ShowSettingsDiv(false); 
             that.ClearStatus();
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
@@ -2002,6 +2006,8 @@ function wigo_ws_View() {
             upload: 9,       
             cancel: 10,
             show_stats: 11, 
+            filter: 12,     
+            unfilter: 13,   
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2106,12 +2112,17 @@ function wigo_ws_View() {
 
             // Start watching changes in location for recording.
             this.watch = function() {
+                var prevPosition = null;  
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
                         // Success.
                         if (!bTesting) {
-                            var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
-                            AppendAndDrawPt(llNext, position.timestamp);
+                            // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
+                            if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
+                                prevPosition = position;                                        
+                                var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
+                                AppendAndDrawPt(llNext, position.timestamp);
+                            }
                         }
                     },
                     function (positionError) {
@@ -2234,11 +2245,14 @@ function wigo_ws_View() {
                     recordCtrl.appendItem("save_trail", "Save Trail");
                 // Decided not use append_trail. Instead use Edit mode to insert another trail.
                 // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
-                // if (bAppendPathValid)
-                //     recordCtrl.appendItem('append_trail', "Append Trail");
                 recordCtrl.appendItem("show_stats", "Show Stats");
                 recordCtrl.appendItem("resume", "Resume");
                 recordCtrl.appendItem("clear", "Clear");
+                recordCtrl.appendItem("filter", "Filter");
+                if (map.recordPath.isUnfilterEnabled()) {
+                        recordCtrl.appendItem("unfilter", "Unfilter");
+                }
+
                 // Ensure signin ctrl is hidden.
                 signin.hide();
                 ShowPathDescrBar(false); 
@@ -2290,6 +2304,24 @@ function wigo_ws_View() {
                         stateInitial.prepare();
                         curState = stateInitial;
                         break;
+                    case that.event.filter: 
+                        var filterResult = map.recordPath.filter();
+                        var sMsg;
+                        if (filterResult.nDeleted <= 0)
+                            sMsg = "No points filtered out."
+                        else if (filterResult.nDeleted === 1)
+                            sMsg = "1 point filtered out."; 
+                        else 
+                            sMsg = "{0} points filtered out.".format(filterResult.nDeleted);
+                        view.ShowStatus(sMsg, false);
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
+                    case that.event.unfilter: 
+                        map.recordPath.unfilter();
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
                 }
             };
             
@@ -2314,8 +2346,7 @@ function wigo_ws_View() {
                     var sStartTime = stats.tStart.toLocaleTimeString();
                     var s = "Stats for {0} {1}<br/>".format(sStartDate, sStartTime);
                     sMsg += s;
-                    var lc = new LengthConverter();
-                    var sLen = lc.to(stats.dTotal); 
+                    var sLen = lc.to(stats.dTotal); // lc is LengthConvert() object in view.
                     s = "Distance: {0}<br/>".format(sLen);
                     sMsg += s;
                     s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
@@ -2323,11 +2354,19 @@ function wigo_ws_View() {
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
+                    s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
+                    sMsg += s;
+                    if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
+                        s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
+                        sMsg += s;
+                    }
+                        
                     view.ShowStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
                 }
             }
+
         }
         var stateStopped = new StateStopped();
 
@@ -2404,7 +2443,6 @@ function wigo_ws_View() {
         }
         var stateDefineTrailName = new StateDefineTrailName();
         var bNewUploadPath = false; // Indicates a new path for trail has been uploaded to server.
-        
 
         // Shows path description bar, which has textbox for trail name.
         // Always hides upload, cancel, and delete button.
@@ -2973,13 +3011,17 @@ function wigo_ws_View() {
     numberOffPathUpdateMeters.fill(numberOffPathUpdateMetersValues);
 
     parentEl = document.getElementById('holderDistanceUnits');  
-    var distanceUnits = new ctrls.DropDownControl(parentEl, null, 'Distance Units', '',  'img/ws.wigo.dropdownhorizontalicon.png');
+    var distanceUnits = new ctrls.DropDownControl(parentEl, null, 'Measuring System', '',  'img/ws.wigo.dropdownhorizontalicon.png');
     var distanceUnitsValues = 
     [
         ['metric', 'Metric'],
         ['english', 'English']
     ];
     distanceUnits.fill(distanceUnitsValues);
+    distanceUnits.onListElClicked = function(dataValue) { 
+        bodyMass.bMetric = dataValue === 'metric';
+        bodyMass.show();
+    }
 
 
     parentEl = document.getElementById('holderPhoneAlert');
@@ -3046,11 +3088,146 @@ function wigo_ws_View() {
     ];
     numberPrevGeoLocThresMeters.fill(numberPrevGeoLocThresMetersValues);
 
+    parentEl = document.getElementById('holderSpuriousVLimit'); 
+    var numberSpuriousVLimit = new ctrls.DropDownControl(parentEl, null, 'Spurious V Limit', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberSpuriousVLimitValues = 
+    [
+        ["1",  " 1 meter/sec  (  2.2 mph)"],
+        ["2",  " 2 meters/sec (  4.5 mph)"],
+        ["3",  " 3 meters/sec (  6.7 mph)"],
+        ["4",  " 4 meters/sec (  8.9 mph)"],
+        ["5",  " 5 meters/sec ( 11.2 mph)"],
+        ["10", "10 meters/sec ( 22.4 mph)"],
+        ["15", "15 meters/sec ( 33.6 mph)"],
+        ["20", "20 meters/sec ( 44.7 mph)"],
+        ["25", "25 meters/sec ( 55.9 mph)"],
+        ["30", "30 meters/sec ( 67.1 mph)"],
+        ["35", "35 meters/sec ( 78.2 mph)"],
+        ["40", "40 meters/sec ( 89.5 mph)"],
+        ["45", "45 meters/sec (100.7 mph)"],
+        ["50", "50 meters/sec (111.8 mph)"],
+    ];
+    numberSpuriousVLimit.fill(numberSpuriousVLimitValues);
+
+    /* ///--20170302 decided not to funish. changing filtering alogorithm.
+    parentEl = document.getElementById('holderMaxSpuriousClusterCt'); 
+    var numberMaxSpuriousClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var numberSpuriousCtValues = [
+        ["1",  " 1"],
+        ["2",  " 2"],
+        ["3",  " 3"],
+        ["4",  " 4"],
+        ["5",  " 5"],
+        ["6",  " 6"],
+        ["7",  " 7"],
+        ["8",  " 8"],
+        ["9",  " 9"],
+        ["10", "10"],
+    ];
+    numberMaxSpuriousClusterCt.fill(numberSpuriousCtValues);
+
+    parentEl = document.getElementById('holderMinValidClusterCt');  
+    var numberMinValidClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    holderMinValidClusterCt.fill(numberSpuriousCtValues);
+    */
+
     parentEl = document.getElementById('holderCompassHeadingVisible');
     var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass on Map?', -1);
 
     parentEl = document.getElementById('holderClickForGeoLoc');
     var selectClickForGeoLoc = ctrls.NewYesNoControl(parentEl, null, 'Touch for Loc Testing?', -1);
+
+    var numberBodyMass = document.getElementById('numberBodyMass'); 
+    var labelBodyMass = document.getElementById('labelBodyMass');
+    
+    // Composite control for Body Mass.
+    var bodyMass = new BodyMassCtrl(labelBodyMass, numberBodyMass);
+    // Object for composite HMTLElemeent control for UI to enter body mass.
+    // Constructor args:
+    //  labelMass: ref to html Element. Control for label indicating kilograms or pound.
+    //  numberMass: ref to HTMLInputElement of type='number'. UI for entering a number. 
+    function BodyMassCtrl(labelMass, numberMass) {
+        var that = this; // ref to this for private functions to use.
+        // boolean Indicates if metric or english units are displayed.
+        // For true, displayed value is in kilograms. For false displayed value in pounds.
+        this.bMetric = false; 
+
+        // Sets data-mass attribute.
+        // Arg:
+        //  kgMass: number. data-mass attribute value in kilograms.
+        this.setMass = function(kgMass) {
+            numberMass.setAttribute('data-mass', kgMass);
+        };
+
+        // Returns the data-mass attribute as a number in kgs.
+        // Returns Number.NaN if data-mass attribute is invalid.
+        this.getMass = function() {
+            var sMass = numberMass.getAttribute('data-mass');
+            var nMass = Number(sMass);
+            return nMass; 
+        }
+
+        // Show number value and label text.
+        // For this.bMetric is true:
+        //  label is: Body Mass (kgs).
+        //  number is: data-mass in kgs.
+        // For this.bMetric false:
+        //  label is: Body Weight (lbs).
+        //  number is: data-mass in lbs.
+        // Returns true if data-mass is valid, in which case 
+        //  the number value and label text are updated.
+        //  If false is return, display is not changed. 
+        this.show = function() {
+            var sMass = numberMass.getAttribute('data-mass');
+            var nMass = Number(sMass);
+            var bOk = nMass != Number.NaN;
+            if (bOk) {
+                if (this.bMetric) {
+                    sMass = nMass.toFixed(1);
+                    labelMass.innerHTML = this.labelTextKgs;
+                } else {
+                    // Convert kgs to lbs.
+                    var nLbs = nMass * 2.2046;
+                    sMass = nLbs.toFixed(1);
+                    labelMass.innerHTML = this.labelTextLbs;
+                }
+                numberMass.value = sMass;
+            }
+            return bOk;
+        };
+
+        // Text for label when showing mass in kilograms.
+        this.labelTextKgs = 'Body Mass (kgs)';
+
+        // Text for label when showing mass in pounds.
+        this.labelTextLbs = 'Body Weight (lbs)'; 
+
+        // Event handler for change of value numberBodyMass control.
+        numberBodyMass.addEventListener('change', function(event){
+            SetMassFromValue();
+            that.show();  // Show to see decimal point.
+        }, false);
+
+        // Sets data-mass attribute based on value of numberMass and this.bMetric.
+        // For this.bMetric false converts displayed numberMass value from pounds to kilograms.
+        // For this.bMetric true, uses displayed numberMass value as is since it is in kilograms.
+        // Returns true if value of numberMass control is a valid number.
+        // Note: Does not change numberMass value of labelMass text (does change display).
+        function SetMassFromValue() {
+            var nValue = Number(numberMass.value);
+            var bOk = nValue !== Number.NaN;
+            if (bOk) {
+                if (!that.bMetric) {
+                    // Convert pounds to kilograms.
+                    nValue = nValue / 2.2046; 
+                }
+                var sMass = nValue.toFixed(4);
+                numberMass.setAttribute('data-mass', sMass)
+            }
+            return bOk;
+        };
+    }
+
 
     // ** Helper for Settings
 
@@ -3151,6 +3328,8 @@ function wigo_ws_View() {
             return false;
         if (!IsSelectCtrlOk2(numberPrevGeoLocThresMeters))
             return false;
+        if (!IsSelectCtrlOk2(numberSpuriousVLimit)) 
+            return false;
         if (!IsYesNoCtrlOk(selectClickForGeoLoc))  
             return false;
 
@@ -3193,6 +3372,8 @@ function wigo_ws_View() {
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
+        settings.vSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue()); 
+        settings.kgBodyMass = bodyMass.getMass(); 
         settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
@@ -3230,6 +3411,12 @@ function wigo_ws_View() {
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
+        numberSpuriousVLimit.setSelected(settings.vSpuriousVLimit.toFixed(0)); 
+        
+        bodyMass.bMetric = settings.distanceUnits == 'metric'; 
+        bodyMass.setMass(settings.kgBodyMass); 
+        bodyMass.show();
+
         selectCompassHeadingVisible.setState(settings.bCompassHeadingVisible ? 1 : 0); 
         selectClickForGeoLoc.setState(settings.bClickForGeoLoc ? 1 : 0);
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
@@ -3249,6 +3436,10 @@ function wigo_ws_View() {
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
+        // Set VLimit for filtering spurious points in recorded trail.
+        map.recordPath.setVLimit(settings.vSpuriousVLimit); 
+        // Set body mass. (Used to calculate calories for a recorded path.)
+        map.recordPath.setBodyMass(settings.kgBodyMass);  
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
 
@@ -3321,16 +3512,21 @@ function wigo_ws_View() {
     function ShowSettingsDiv(bShow) {
         if (app.deviceDetails.isiPhone()) { 
             // Do not show settings for tracking nor Pebble.
-            //???? ShowElement(holderAllowGeoTracking, false);
-            //???? ShowElement(holderEnableGeoTracking, false);
-            //???? ShowElement(holderGeoTrackingSecs, false);
             ShowElement(holderPebbleAlert, false);
             ShowElement(holderPebbleVibeCount, false);
         }
 
         var sShowSettings = bShow ? 'block' : 'none';
         divSettings.style.display = sShowSettings;
-        ShowMapCanvas(!bShow); 
+
+        if (bShow) { 
+            // Set height of divSettingsScroll to fill available space.
+            var yBody = document.body.offsetHeight;
+            var yScrollTitle = divSettingsTitle.offsetHeight;
+            var yDoneCancel = divSettingsDoneCancel.offsetHeight;
+            var yScroll =  yBody - yScrollTitle - yDoneCancel;
+            divSettingsScroll.style.height = yScroll.toFixed(0) + 'px';
+        }
     }
 
     function ShowHelpDiv(div, bShow) {
@@ -4494,7 +4690,7 @@ function wigo_ws_View() {
 
     // ** Select Mode dropdown ctrl.
     parentEl = document.getElementById('selectMode');
-    var selectMode = new ctrls.DropDownControl(parentEl, "selectMenuDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
+    var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
                             ['online_view',   'Online'],        
                             ['offline',       'Offline'],       
@@ -5219,7 +5415,7 @@ function wigo_ws_Controller() {
         // Appends to path list and shows status message.
         function AppendToPathList (bOk, gpxList, sStatus) {
             if (bOk) {
-                for (var i = 0; gpxList && i < gpxList.length; i++) { 
+                for (var i = 0; gpxArray && gpxList && i < gpxList.length; i++) { // Added check for gpxArray not null. Saw it happen in debug once.
                     arPath.push(gpxList[i].sName);
                     gpxArray.push(gpxList[i]);
                 }

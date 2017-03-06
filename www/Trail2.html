@@ -67,7 +67,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 
         <div id="onlineOfflineEditBar" class="wigo_ws_Bar wigo_ws_NoShow">
             <div id="divTrailInfo">
-                <!-- Container for id="selectGeoTrailDropDown" selectGeoTrail wigo_ws DropDownControl. -->
+                <!-- Container for id="selectGeoTrailDropDown" selectGeoTrail, a wigo_ws DropDownControl. -->
             </div>
             <div id="onlineOfflineEditAction">
                 <div id="onlineAction" class="wigo_ws_NoShow"> <!-- Show onlineAction, or offlineAction exclusively -->
@@ -157,50 +157,67 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 
     <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
-        <h2>Settings for GeoTrail</h2> 
-        <div id='holderAllowGeoTracking' class='settingItem'>
+        <div id='divSettingsTitle'>
+           <span id='spanSettingsTitle'>Settings for GeoTrail</span>
+           <span> ...scroll...</span>
         </div>
-        <div id='holderOffPathUpdateMeters' class='settingItem'>
-        </div>
-        <div id='holderGeoTrackingSecs' class='settingItem'>
-        </div>
-        <div id='holderOffPathThresMeters' class='settingItem'>
-        </div>
-        <div id='holderDistanceUnits' class='settingItem'>
-        </div>
-        <div id='holderPhoneAlert' class='settingItem'>
-        </div>
-        <div id='holderOffPathAlert' class='settingItem'> 
-        </div>
-        <div id='holderPhoneVibeSecs' class='settingItem'>
-        </div>
-        <div id='holderPhoneBeepCount' class='settingItem'>
-        </div>
-        <div id='holderPebbleAlert' class='settingItem'>
-        </div>
-        <div id='holderPebbleVibeCount' class='settingItem'>
-        </div>    
-        <div id='holderPrevGeoLocThresMeters' class='settingItem'>
-        </div>
-        <div id='holderCompassHeadingVisible' class='settingItem'> 
-        </div>
-        <div id='holderClickForGeoLoc' class='settingItem'>
-        </div>
-        <!-- Settings for home area -->
-        <div id='divHomeArea' class='settingItem'>
-            <div id='divHomeAreaSW' class='settingItem'>
-                <label id="labelHomeAreaSW"  for="numberHomeAreaSWLat">Home Area SW Corner</label>
-                <input id="numberHomeAreaSWLat"  type="number" disabled="disabled" />
-                <input id="numberHomeAreaSWLon"  type="number" disabled="disabled" /><br />
+        <div id='divSettingsScroll'>
+            <div id='holderAllowGeoTracking' class='settingItem'>
             </div>
-            <div id='divHomeAreaNE' class='settingItem'>
-                <label id="labelHomeAreaNE"  for="numberHomeAreaNELat">Home Area NE Corner</label>
-                <input id="numberHomeAreaNELat"  type="number" disabled="disabled" />
-                <input id="numberHomeAreaNELon"  type="number" disabled="disabled" /><br />
+            <div id='holderOffPathUpdateMeters' class='settingItem'>
             </div>
-            <div id='divSetHomeArea' class='settingItem'>
-                <label id="labelSetHomeArea"  for="buSetHomeArea">Set Home Area to Screen</label>
-                <input id="buSetHomeArea"  type="button" value="Set" />
+            <div id='holderGeoTrackingSecs' class='settingItem'>
+            </div>
+            <div id='holderOffPathThresMeters' class='settingItem'>
+            </div>
+            <div id='holderDistanceUnits' class='settingItem'>
+            </div>
+            <div id='holderPhoneAlert' class='settingItem'>
+            </div>
+            <div id='holderOffPathAlert' class='settingItem'> 
+            </div>
+            <div id='holderPhoneVibeSecs' class='settingItem'>
+            </div>
+            <div id='holderPhoneBeepCount' class='settingItem'>
+            </div>
+            <div id='holderPebbleAlert' class='settingItem'>
+            </div>
+            <div id='holderPebbleVibeCount' class='settingItem'>
+            </div>    
+            <div id='holderPrevGeoLocThresMeters' class='settingItem'>
+            </div>
+            <div id='holderSpuriousVLimit' class='settingItem'>
+            </div>
+            <!-- ///-- 20170302 did not finish, changing filtering algorithm 
+            <div id='holderMaxSpuriousClusterCt' class='settingItem'>
+            </div>
+            <div id='holderMinValidClusterCt' class='settingItem'>
+            </div>
+            -->
+            <div id='holderBodyMass' class='settingItem'>
+                <label id='labelBodyMass'>Body Weight (lbs)</label>
+                <input id='numberBodyMass' type='number' step='5' min='100' max='250' value='150'>
+            </div>
+            <div id='holderCompassHeadingVisible' class='settingItem'> 
+            </div>
+            <div id='holderClickForGeoLoc' class='settingItem'>
+            </div>
+            <!-- Settings for home area -->
+            <div id='divHomeArea' class='settingItem'>
+                <div id='divHomeAreaSW' class='settingItem'>
+                    <label id="labelHomeAreaSW"  for="numberHomeAreaSWLat">Home Area SW Corner</label>
+                    <input id="numberHomeAreaSWLat"  type="number" disabled="disabled" />
+                    <input id="numberHomeAreaSWLon"  type="number" disabled="disabled" /><br />
+                </div>
+                <div id='divHomeAreaNE' class='settingItem'>
+                    <label id="labelHomeAreaNE"  for="numberHomeAreaNELat">Home Area NE Corner</label>
+                    <input id="numberHomeAreaNELat"  type="number" disabled="disabled" />
+                    <input id="numberHomeAreaNELon"  type="number" disabled="disabled" /><br />
+                </div>
+                <div id='divSetHomeArea' class='settingItem'>
+                    <label id="labelSetHomeArea"  for="buSetHomeArea">Set Home Area to Screen</label>
+                    <input id="buSetHomeArea"  type="button" value="Set" />
+                </div>
             </div>
         </div>
         <!-- end of home area -->
@@ -337,6 +354,15 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     </li>
                     <li>Clear<br/>
                     Clears the recorded trail from the map and enters the Off State.
+                    </li>
+                    <li>Filter<br/>
+                    Filters out spurious points for the recorded trail. Sometimes a location
+                    can be wildly inaccurate.<br/>
+                    Option not present after filtering has been done.
+                    </li>
+                    <li>Unfilter<br/>
+                    Puts back any points that have been removed by filtering.<br/>
+                    Option not present if filtering has not been done.
                     </li>
                 </ul>
             </li>
@@ -531,6 +557,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Number of meters of current geolocation with respect to previous location 
             for change in location to be considered valid. (This prevents small variations in the geolocation of
             the same point to appear to be a change in location.)</li>
+            <li>Spurious V Limit<br/>
+            The velocity limit in meters/second for a recorded point to be spurious. 
+            A point in a recorded trail may be spurious (invalid). If the velocity of point from a previous point
+            is too great, the point cannot actually be in the recorded trail and can be filtered out.</li>
             <li>Show Compass Heading on Map?<br/>Yes | No<br/>
             An arrow for the compass heading from your current location may be shown on the map.</li>
             <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>

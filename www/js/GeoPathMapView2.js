@@ -174,6 +174,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.PanToPathCenter();
     };
 
+    // Not Used. Does not seem to be useful.
+    // // Redraw the map.
+    // this.Redraw = function() { 
+    //     if (tileLayer) {
+    //         tileLayer.redraw(); 
+    //     }
+    // };
+
     // Fits map to bounds of path.
     // Arg:
     //  path: wigo_ws_GpxPath object for the path.
@@ -660,7 +668,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Distance in meters for changing previous geolocation wrt current geolocation.
     // Note: Parameter for updating prevGeoLocCircle when current location changes.
     this.dPrevGeoLocThres = 10.0;
-
 
     // Object for drawing and managing a path for recording separately and independently
     // of the main path on the map.
@@ -2069,6 +2076,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.ll = ll;  // Lattitude and longitude for the point. null or don't care for this.kind == eRecordPt.PAUSE or RESUME.
             this.msTimeStamp = msTimeStamp; // timestamp for the point.
             this.previous = previousRecordPt; // Ref to previous RecordPt object in a list.
+            this.bDeleted = false;  // true indicates this RecordPt is deleted. Used for filtering points. 
             
             // Returns distance in meters from previous RecordPt.
             // Returns 0 if this.previous is null.
@@ -2093,11 +2101,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return d;
             };
 
-            // Returns deltas for distance and time to previous point of kind RECORD.
+            // Returns deltas for distance and time to previous point of kind eRecordPt.RECORD.
             // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
             //  d: distance delta in meters.
             //  msElapsedDelta: elpased time delta in millisconds, including pauses.
-            //  msRecordDelta: time delta in millisconds, excluding pauses. 
+            //  msRecordDelta: time delta in millisconds, excluding pauses and previous deleted points.
             this.dt = function() {
                 var d = 0;
                 var curPt = this;
@@ -2107,9 +2115,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var msRecordDelta = 0;   // Record time from this point of kind RECORD to previous RECORD point, excluding PAUSE.
                 // Calc distance from previous point skipping over PAUSE and RESUME point,
                 // where were saved to record timestamps.
-                while (curPt) {
+                while (curPt) {   
                     prevPt = curPt.previous;
                     if (prevPt) {
+                        // Skip a deleted previous point.
+                        if (prevPt.bDeleted) {
+                            curPt = prevPt;
+                            continue;
+                        } 
                         msDelta = curPt.msTimeStamp - prevPt.msTimeStamp;
                         msElapsedDelta += msDelta; 
                         if (prevPt.kind === that.eRecordPt.RECORD) {
@@ -2117,6 +2130,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                                 d = prevPt.ll.distanceTo(this.ll);
                             if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
                                 msRecordDelta += msDelta;
+                            if (curPt.kind === that.eRecordPt.RESUME) 
+                                msRecordDelta += msDelta;  // Should not happen.  
                             // Quit when previous point of RECORD kind is found.
                             break;
                         } else if (prevPt.kind === that.eRecordPt.RESUME) {
@@ -2134,35 +2149,31 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             }
 
-            // Returns velocity in meters/sec from previous RecordPt.
-            // Returns 0 if previous RecordPt is null or time difference is 0.
+            // Returns velocity in meters/sec from other RecordPt.
+            // Returns -1 if other RecordPt is null or is not kind of eRecord.RECORD.
             // Arg:
-            //  prevRecordPt: RecordPt. previous RecordPt.
-            // Note: Skips over PAUSE or RESUME points, which were saved
-            //       to record timestamps.
-            this.v = function(prevRecordPt) {
-                var v = 0;
-                var d = 0;
-                var msT = 0;
+            //  otherRecordPt: RecordPt. other RecordPt.
+            // Note: Does NOT skip over PAUSE or RESUME points, which were saved
+            //       to record timestamps. The time between this 
+            //       RecordPt and otherRecordPt is total difference without
+            //       any time for pausing substracted.
+            //       The time difference is absolute value and velocity is always >= 0.
+            this.v = function(otherRecordPt) {
+                var v = -1;
+                if (!otherRecordPt)
+                    return -1;
+                if (otherRecordPt.kind !== that.eRecordPt.RECORD)
+                    return -1;
 
-                var curPt = this;
-                var prevPt = null;
-                while (curPt) {
-                    prevPt = curPt.previous;
-                    if (prevPt) {
-                        if (prevPt.kind === that.eRecordPt.RECORD ) {
-                            msT += curPt.msTimeStamp - prevPt.msTimeStamp;
-                            break;
-                        } else if (prevPt.kind === that.eRecordPt.RESUME ) {
-                            msT += curPt.msTimeStamp - prevPt.msTimeStamp;
-                        }
-                        curPt = prevPt;
-                    }
-                }
+                var d = otherRecordPt.ll.distanceTo(this.ll); 
+                var msT = this.msTimeStamp - otherRecordPt.msTimeStamp;
+                if (msT < 0)        // Use absolute value for time difference.
+                    msT = -msT; 
 
-                var d = this.d(prevRecordPt);
-                if (msT > 0.0001) 
-                        v = d / (msT/1000.0);
+                if (msT < 0.0001)  // Ensure msT is not too small to avoid divide by zero.
+                    msT = 0.0001;
+                v = d / (msT/1000.0);
+
                 return v;
             }
 
@@ -2241,16 +2252,28 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  tStart: Date obj. Date and time for start of the record path. 
         //          null if there is no valid RecordPt of kind eRecordPt.RECORD in the record path.
         //          bOk is false if tStart is null.
+        //  kJoules: number. kinetic engery for body traveling for the recorded path. 
+        //            Note: var kgMass is body mass.
+        //  calories: number. food calories on a product label corresponding to kJoules. 
+        //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. 
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null};
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; 
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
             var d=0; // Distance to previous RECORD point.
             var dt;  // Distance and time to previous record point.
             var pt;  // Current point in arRecordPt while looping thru arRecordPt.
-            for (var i=0; i < arRecordPt.length; i++) {
+            var vCur = 0;  // Current velocity in m/sec;  
+            var vv = 0; // Change in velocity squared from previous point to current point.
+            var vvPrev = 0; // Previous velocity squared in m/sec. 
+            var vvSum = 0; // sum of velocity squared for points over recorded path. 
+            var epsilon = 0.0001; // Small value to avoid divide by 0.
+            for (var i=0; i < arRecordPt.length; i++) { 
                 pt = arRecordPt[i]; 
+                if (pt.bDeleted) { // Ignore points marked as deleted. 
+                    continue;
+                }
                 switch (pt.kind) {
                     case this.eRecordPt.RECORD:
                         // Get distance and time deltas to previous RECORD point.
@@ -2261,6 +2284,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         // Set date and time for start of the recording.
                         if (result.tStart === null) 
                             result.tStart = new Date(pt.msTimeStamp);
+                        // Calc v*2 for kinetic energy.
+                        if (dt.msRecordDelta > epsilon) {
+                            vCur = dt.d / (dt.msRecordDelta/1000);
+                            if (vCur >= vLimit) { // Ignore points with excessive velocity. 
+                                result.nExcessiveV++;
+                                continue;       
+                            } 
+                            vv = vCur*vCur - vvPrev;
+                            if (vv < 0)
+                                vv = -vv;
+                            vvSum +=vv;
+                            vvPrev = vv;
+                        }
                         break;
                     case this.eRecordPt.PAUSE:
                         break;
@@ -2269,15 +2305,178 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
             }
             // Note: PAUSE and RESUME points after last RECORD point are ignored.
+            // Set result for total kinetic energy for body traveling the recorded path. 
+            result.kJoules = (vvSum*kgMass/2.0)/1000.0;
+            // Set result for food calories corresponding to result.kJoules.   
+            result.calories = KJoulesToLabelCalories(result.kJoules);
 
             result.bOk = result.tStart !== null ? true : false;
             return result;
         };
+
+        // Filters arRecordPts marking spurious items as deleted and redraws the record trail.
+        // Returns {bValid: boolean, bApplied: boolean}:
+        //  bValid is true if there are points to filter,
+        //  nDeleted  is number of points marked deleted., ie the filter was applied. 
+        // Note: 
+        // The velocity of each point is calculated wrt to its previous point.
+        // If the velocity of point is too greater it is considered spurious.
+        // Consecutive spurious points are marked as deleted provided the 
+        // number of spurious consecutive points is less than the nMaxSpurious;
+        // otherwise the consecutive points remain.
+        this.filter = function () { 
+            /* ///--20170302 try different alogorithm. 
+            // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
+            // delete the array of spurious cluster indices.
+            // Note: ok to call if spurious cluster is empty.
+            //       Also for deletion of spurious cluster, if valid cluster is only one point, 
+            //       the valid cluster is deleted because it was suspected to be spurious. 
+            function DeleteSpuriousCluster() { 
+                if (arSpuriousClusterIx.length > 0) {
+                    // Delete any points in spurious cluster and empty spurious cluster.
+                    var ptSpurious, v;
+                    for (var i=0; i < arSpuriousClusterIx.length; i++) {
+                        ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
+                        ptSpurious.bDeleted = true;
+                        result.nDeleted++; 
+                    }
+                    // Empty the  spurious cluster.
+                    arSpuriousClusterIx = [];
+                }
+            }
+
+            var result = {bValid: false, nDeleted: 0}; 
+            var pt, v; // current point in loop and its velocity.   
+            var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
+            var arValidClusterIx = [];     // Array of indices in a valid cluster.
+            var prevPt = arRecordPt.length > 0 ? arRecordPt[0] : null; // Previous point for determining if a current point is spurious or not.
+            if (prevPt)                    // Append prevPt (first point) to valid cluster.  
+                arValidClusterIx.push(0);  
+            for (var iPt=1; iPt < arRecordPt.length;) {
+                pt = arRecordPt[iPt];
+                
+                if (pt.kind !== this.eRecordPt.RECORD) {
+                    // Ignore a point that is not a RECORD point.
+                    iPt++;
+                    continue;
+                }
+                if (pt.bDeleted) {
+                    // Ignore a point that is deleted.
+                    result.bValid = true;
+                    result.nDeleted++;
+                    iPt++;
+                    continue;
+                }
+                result.bValid = true; // Indicate path can be filtered.
+                v = pt.v(prevPt);
+                if (v < vLimit)  { 
+                    // pt is valid, not spurious.
+                    // Delete any points in spurious cluster and empty spurious cluster.
+                    DeleteSpuriousCluster();   
+                    // Append valid point to valid cluster.
+                    arValidClusterIx.push(iPt);
+                    // Set previous valid point to current point.
+                    prevPt = pt;
+                    // Advance loop index for next point.
+                    iPt++;
+                }  else {
+                    // pt is spurious.
+                    if (arSpuriousClusterIx.length < maxSpuriousClusterCt) {
+                        //  Append point to the consecutive points in the  spurious cluster.
+                        arSpuriousClusterIx.push(iPt);
+                        // Advance loop index for next point.
+                        iPt++;
+                    } else {
+                        // Limit for consecutive spurious pts reaached. 
+                        // Set previous valid point to first point in spurious cluster.
+                        prevPt = arRecordPt[arSpuriousClusterIx[0]];
+                        // Set loop index for next point to previous valid point index plus 1.
+                        iPt = arSpuriousClusterIx[0] + 1;
+
+                        if (arValidClusterIx.length <= minValidClusterCt) {
+                            // Delete the small cluster of valid points.
+                            for (var i=0; i < arValidClusterIx.length; i++) {
+                                arRecordPt[arValidClusterIx[i]].bDeleted = true; // Indicate filter has been applied.
+                                result.nDeleted++; 
+                            }
+                        }
+
+                        // Empty valid points cluster and append first point in current spurious cluseter
+                        // as the first valid point.
+                        arValidClusterIx = [];
+                        arValidClusterIx.push(arSpuriousClusterIx[0]);
+
+                        // Empty the spurious points cluster because the current spurious custer
+                        // is no longer considered surpious.
+                        arSpuriousClusterIx = [];
+                    }
+                }           
+            }
+            // Delete any points in spurious cluster and empty spurious cluster. 
+            DeleteSpuriousCluster(); 
+
+            // Set pathCoords to match RECORD points that are not deleted.
+            if (result.bValid && result.nDeleted > 0) {
+                SetPathCoords();
+                this.draw(); 
+                bUnfilterEnabled = true; 
+            } else {
+                bUnfilterEnabled = false;
+            }
+            bFilterEnabled = false;
+
+            return result;
+            */
+
+            var result = filterFSM.doIt();
+            var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
+            if (result.bValid && nTotalDeleted > 0) {  
+                SetPathCoords();
+                this.draw(); 
+                bUnfilterEnabled = true; 
+            } else {
+                bUnfilterEnabled = false;
+            }
+            bFilterEnabled = false;
+            return result;
+        };
+
+
+        // Removes a filter that was applied by this.filter() and redraws the record trail.
+        this.unfilter = function() {
+            if (!this.isUnfilterEnabled())  
+                return;                    
+            var pt; // RecordPt obj.
+            for (var i=0; i < arRecordPt.length; i++) {
+                pt = arRecordPt[i];
+                if (pt.kind === this.eRecordPt.RECORD) {
+                    pt.bDeleted = false;
+                }
+            }
+            // Set pathCoords to match RECORD points that are not deleted.
+            SetPathCoords();
+            this.draw();
+            // Indicate record path can be filtered again.
+            bFilterEnabled = true;  
+            bUnfilterEnabled = false;
+        };
+
+        // Returns true if this.filter() can run.
+        this.isFilterEnabled = function() {
+            var bYes = IsFilterAllowed() && bFilterEnabled;
+            return bYes;
+        };
+
+        // Returns true if this.unfilter() can run.
+        this.isUnfilterEnabled = function() {
+            var bYes = IsFilterAllowed() && bUnfilterEnabled;
+            return bYes;
+        }
         
         // Appends the location point to the path of points.
         // Arg:
-        //  llNext: L.LatLng object. The point to append to the path.
-        //  msTimeStamp: number. timestamp for llNext in milliseconds.
+        //  ll: L.LatLng object. The point to append to the path.
+        //  msTimeStamp: number. timestamp for ll in milliseconds.
         //  kind: eRecordPt enumeration value, optional. defaults to eRecordPt.RECORD.
         //        eRecordPt.PAUSE and eRecordPt.RESUME are used to save timestamp.
         this.appendPt = function(ll, msTimeStamp, kind) { 
@@ -2288,6 +2487,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (typeof(kind) !== 'undefined') {
                 pt.kind = kind;
             } 
+
+            // Indicate filtering is enabled because a point has been appended.
+            bFilterEnabled = true; 
             
             if (pathCoords.length === 0) {
                 // Ensure first point if for RECORD and not PAUSE or RESTORE.
@@ -2357,6 +2559,217 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.getLength = function() { 
             return pathCoords.length;
         };
+
+        // Sets velocity limit for filtering spurious points.
+        // Arg:
+        //  limit: number. velocity limit in meters / sec.
+        this.setVLimit = function(limit) { 
+            vLimit = limit;
+        };
+
+        // Returns the velocity limit for filtering spurious points from recorded path.
+        // Returns: number. the velocity limit in meters/sec.
+        this.getVLimit = function() {
+            return vLimit;
+        };
+
+        // Sets body mass in kilograms.
+        // Arg: 
+        //  mass: number. body mass in kilograms.
+        this.setBodyMass = function(mass) {  
+            kgMass = mass;
+        };
+
+        // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
+        function SetPathCoords() {
+            // Set pathCoords to match RECORD points that are not deleted.
+            var pt;
+            var ll;
+            pathCoords = [];
+            for (var iPt = 0; iPt < arRecordPt.length; iPt++) {
+                pt = arRecordPt[iPt];
+                if (!pt.bDeleted && pt.kind === that.eRecordPt.RECORD) {
+                    pathCoords.push(pt.ll);
+                }
+            }
+        }
+
+        // Returns true if filter() is allowed to run.
+        function IsFilterAllowed() {
+            return vLimit > 0;  
+        }
+
+        // Returns float for number of food calories listed on a product label for 
+        // metabolized energy due to respiration.
+        // Arg:
+        //  kJoules: float. number of kilojoules of engery to be produced from food.
+        function KJoulesToLabelCalories(kJoules) {
+            var cals = 4.184 * kJoules;
+            // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
+            // therefore cals is not divided by 0.85. 
+            return cals; 
+        }
+
+        // Object for filtering arRecordPt. 
+        // Constructor arg: eRecordPt enumeration defined in RecordPathMgr object.
+        //                  Enumeration for kind of RecordPt objects.
+        function FilterFSM(eRecordPt) { 
+            
+            // Filters arRecordPt for invalid (spurious) points.
+            // Returns {bValid: boolean, nDeleted: number, nAlreadyDeleted: number} 
+            //  bValid: true indicated filtering was applied.
+            //  nDeleted: number of RecordPt elements marked as deleted in arRecordPt.
+            //            Indicates number deleted by filtering for this call.
+            //            Does not count points deleted by previous call.
+            //  nAlreadyDeleted: number of RecordPt elements already deleted before filtering again.
+            this.doIt = function() {
+                Init();
+                var event = GenNextEvent();
+                while (event != eEvent.done) {
+                    curState.nextState(event);
+
+                    event = GenNextEvent();
+                } 
+
+                var bOk = curPt !== null && prevPt !== null;
+                var result = {bValid: bOk, nDeleted: nDeleted, nAlreadyDeleted: nAlreadyDeleted}; 
+                return result;
+            }; 
+            
+            var eEvent = {validPt: 0, invalidPt: 1, done: 2}; // Events for filtering.
+
+            // Object for run of valid points.
+            function StateValidRun() {
+                this.nextState = function(event){
+                    switch (event) {
+                        case eEvent.validPt:
+                            break;
+                        case eEvent.invalidPt:
+                            if (prevPt) {
+                                nDeleted++; // increment count of deleted points.
+                                // Mark previous point as deleted.
+                                prevPt.bDeleted = true;
+                                // Save first deletion for start of invalid (spurious) run.
+                                // prevDeletedPt is checked later to see if it can be undeleted.
+                                prevDeletedPt = prevPt;
+                            }
+                            curState = stateInvalidRun;
+                            break;
+                    }
+
+                };
+            }
+            var stateValidRun = new StateValidRun();
+
+            // Object for run of invalid (spurious) points.
+            function StateInvalidRun() {
+                this.nextState = function(event) {
+                    switch (event) {
+                        case eEvent.validPt:
+                            // Check if saved first deletion in invalid (spurious) run
+                            // is not spurious wrt current point.
+                            if (prevDeletedPt) {
+                                var v = prevDeletedPt.v(prevPt)
+                                if (v < vLimit) {
+                                    // The first deletion within invalid (spurious) run is now valid.
+                                    nDeleted--; // Decrement count of deleted points because deleted point has been restored.
+                                    prevDeletedPt.bDeleted = false;
+                                }
+                            }
+                            curState = stateValidRun;
+                            break;
+                        case eEvent.invalidPt:
+                            // mark previous point as deleted.
+                            if (prevPt) {
+                                nDeleted++; // increment count of deleted points.
+                                prevPt.bDeleted = true;
+                            }
+                            break;
+                    }
+                };
+
+            }
+            var stateInvalidRun = new StateInvalidRun();
+
+
+            // Initialize previous point, current point, and current state. 
+            //  eEvent.validPt for success.
+            //  eEvent.done for no RecordPt of kind RECORD or a single such point in arRecordPt..
+            function Init() {
+                iCurPt = -1;
+                prevDeletedPt = null;
+                curPt = null;
+                prevPt = null;
+                nDeleted = 0; 
+                nAlreadyDeleted = 0;
+                curState = stateValidRun;
+            }
+
+            // Advances through arRecordPt by one point detecting if its 
+            // velocity is valid wrt to previous point.
+            // Advances prevPt and curPt for next point. 
+            // Returns eEvent value: validPt, invalidPt, or done.
+            function GenNextEvent() {
+                iCurPt++;
+                if (iCurPt >= arRecordPt.length) 
+                    return eEvent.done;
+                
+                // Advance to next RecordPt in arRecordPt.
+                prevPt = curPt;   // Note: Here curPt should always be of kind RECORD and !bDeleted, or null. 
+                var bCheckNext = true;
+                while (bCheckNext) {
+                    curPt = arRecordPt[iCurPt];
+                    if (curPt.bDeleted)  // Count points that are already deleted. 
+                        nAlreadyDeleted++; 
+                    if (curPt.bDeleted || curPt.kind !== eRecordPt.RECORD) { 
+                        // Skip over points of that are deleted, or pts that are not of kind RECORD.
+                        iCurPt++;
+                        if (iCurPt >= arRecordPt.length) 
+                            return eEvent.done;
+                    } else {
+                        bCheckNext = false;
+                    }
+                }
+
+                var event;
+                if (curPt && prevPt) {
+                    // Normal case.
+                    var v = curPt.v(prevPt);
+                    if (v < vLimit) {
+                        event = eEvent.validPt;
+                    } else {
+                        event = eEvent.invalidPt;
+                    }
+                } else if (curPt && !prevPt) {
+                    // First point, no previous point so valid.
+                    event = eEvent.validPt;
+                } else {
+                    // No current point. Should not happen, except if there is single point.
+                    event = eEvent.done;
+                }
+                return event;
+            }
+
+            var nAlreadyDeleted = 0;  // Number of points already deleted before filter is applied.
+            var nDeleted = 0;         // Number of points deleted by filtering.
+            var iCurPt = 0;           // Index for stepping thru arRecordPt.
+            var prevDeletedPt = null; // Saved deleted point when starting a run of deleted points.
+            var curPt = null;         // ref to current RecordPt in arRecordPt.
+            var prevPt = null;        // ref to previous RecordPt in arRecordPt.
+
+            var curState = stateValidRun; // Current state.
+
+
+        }
+        var filterFSM = new FilterFSM(this.eRecordPt); 
+
+        var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
+        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             
+        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. 
+        var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
+        var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
+        var kgMass = 77.0; // Body mass in kilograms.
+        
     }
     
 }
