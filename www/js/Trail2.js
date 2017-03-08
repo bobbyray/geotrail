@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.024_20170304_1019"; // Constant string for App version.
+    var sVersion = "1.1.025_20170308_1502"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -725,6 +725,7 @@ function wigo_ws_View() {
             // Note: This happens because of Record trail.
             // Ensure soft keyboard is removed after the change.
             txbxPathName.blur();
+            that.ShowStatus("Select Record > Upload to complete saving.", false);
         }
     }, false);
 
@@ -2307,18 +2308,20 @@ function wigo_ws_View() {
                     case that.event.filter: 
                         var filterResult = map.recordPath.filter();
                         var sMsg;
+                        var sAdditional = filterResult.nAlreadyDeleted > 0 ? "additional " : "";
                         if (filterResult.nDeleted <= 0)
-                            sMsg = "No points filtered out."
+                            sMsg = "No {0}points filtered out.".format(sAdditional);    
                         else if (filterResult.nDeleted === 1)
-                            sMsg = "1 point filtered out."; 
+                            sMsg = "1 {0}point filtered out.".format(sAdditional);      
                         else 
-                            sMsg = "{0} points filtered out.".format(filterResult.nDeleted);
+                            sMsg = "{0} {1}points filtered out.".format(filterResult.nDeleted, sAdditional); 
                         view.ShowStatus(sMsg, false);
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
                     case that.event.unfilter: 
                         map.recordPath.unfilter();
+                        view.ShowStatus("Filter removed.", false);  
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
@@ -2470,7 +2473,7 @@ function wigo_ws_View() {
                 var sOwnerId = view.getOwnerId();
                 var bOk = sOwnerId.length > 0;
                 if (!bOk) {
-                    view.ShowStatus("Sign-in to upload the recorded trail.", false);
+                    view.ShowStatus("Sign-in to upload the recorded trail.<br/>Then enter a name for the trail.", false); 
                     this.show();
                 }
                 return sOwnerId;
@@ -2507,7 +2510,7 @@ function wigo_ws_View() {
             // If not ok shows a status message.
             // Returns true for ok.
             this.setPathName = function() {
-                this.uploadPath.sPathName = txbxPathName.value;
+                this.uploadPath.sPathName = txbxPathName.value.trim(); 
                 var bOk = this.uploadPath.sPathName.length > 0;
                 if (!bOk) {
                     view.ShowStatus("Enter a name for the trail.");
@@ -3203,9 +3206,25 @@ function wigo_ws_View() {
         this.labelTextLbs = 'Body Weight (lbs)'; 
 
         // Event handler for change of value numberBodyMass control.
-        numberBodyMass.addEventListener('change', function(event){
+        numberMass.addEventListener('change', function(event){
             SetMassFromValue();
             that.show();  // Show to see decimal point.
+        }, false);
+
+
+        // Event handler for numberMass control getting focus: 
+        // Handler function selects text (digits) in the numberMass control.
+        numberMass.addEventListener('focus', function(event){ 
+            var iLast = this.value.length;
+            var el = this;
+            if (iLast >= 0) { 
+                // Select all the text (digits) for edition.
+                // Set selection after this ui thread ends, otherwise the selection is removed when soft keyboard appears.
+                window.setTimeout(function(){
+                    el.setSelectionRange(0, iLast); 
+                }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
+                this.setSelectionRange(0, iLast);
+            }
         }, false);
 
         // Sets data-mass attribute based on value of numberMass and this.bMetric.
