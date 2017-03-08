@@ -3112,28 +3112,6 @@ function wigo_ws_View() {
     ];
     numberSpuriousVLimit.fill(numberSpuriousVLimitValues);
 
-    /* ///--20170302 decided not to funish. changing filtering alogorithm.
-    parentEl = document.getElementById('holderMaxSpuriousClusterCt'); 
-    var numberMaxSpuriousClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
-    var numberSpuriousCtValues = [
-        ["1",  " 1"],
-        ["2",  " 2"],
-        ["3",  " 3"],
-        ["4",  " 4"],
-        ["5",  " 5"],
-        ["6",  " 6"],
-        ["7",  " 7"],
-        ["8",  " 8"],
-        ["9",  " 9"],
-        ["10", "10"],
-    ];
-    numberMaxSpuriousClusterCt.fill(numberSpuriousCtValues);
-
-    parentEl = document.getElementById('holderMinValidClusterCt');  
-    var numberMinValidClusterCt = new ctrls.DropDownControl(parentEl, null, 'Spurious Max Count', '', 'img/ws.wigo.dropdownhorizontalicon.png');
-    holderMinValidClusterCt.fill(numberSpuriousCtValues);
-    */
-
     parentEl = document.getElementById('holderCompassHeadingVisible');
     var selectCompassHeadingVisible = ctrls.NewYesNoControl(parentEl, null, 'Show Compass on Map?', -1);
 

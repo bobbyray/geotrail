@@ -2325,109 +2325,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // number of spurious consecutive points is less than the nMaxSpurious;
         // otherwise the consecutive points remain.
         this.filter = function () { 
-            /* ///--20170302 try different alogorithm. 
-            // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
-            // delete the array of spurious cluster indices.
-            // Note: ok to call if spurious cluster is empty.
-            //       Also for deletion of spurious cluster, if valid cluster is only one point, 
-            //       the valid cluster is deleted because it was suspected to be spurious. 
-            function DeleteSpuriousCluster() { 
-                if (arSpuriousClusterIx.length > 0) {
-                    // Delete any points in spurious cluster and empty spurious cluster.
-                    var ptSpurious, v;
-                    for (var i=0; i < arSpuriousClusterIx.length; i++) {
-                        ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
-                        ptSpurious.bDeleted = true;
-                        result.nDeleted++; 
-                    }
-                    // Empty the  spurious cluster.
-                    arSpuriousClusterIx = [];
-                }
-            }
-
-            var result = {bValid: false, nDeleted: 0}; 
-            var pt, v; // current point in loop and its velocity.   
-            var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
-            var arValidClusterIx = [];     // Array of indices in a valid cluster.
-            var prevPt = arRecordPt.length > 0 ? arRecordPt[0] : null; // Previous point for determining if a current point is spurious or not.
-            if (prevPt)                    // Append prevPt (first point) to valid cluster.  
-                arValidClusterIx.push(0);  
-            for (var iPt=1; iPt < arRecordPt.length;) {
-                pt = arRecordPt[iPt];
-                
-                if (pt.kind !== this.eRecordPt.RECORD) {
-                    // Ignore a point that is not a RECORD point.
-                    iPt++;
-                    continue;
-                }
-                if (pt.bDeleted) {
-                    // Ignore a point that is deleted.
-                    result.bValid = true;
-                    result.nDeleted++;
-                    iPt++;
-                    continue;
-                }
-                result.bValid = true; // Indicate path can be filtered.
-                v = pt.v(prevPt);
-                if (v < vLimit)  { 
-                    // pt is valid, not spurious.
-                    // Delete any points in spurious cluster and empty spurious cluster.
-                    DeleteSpuriousCluster();   
-                    // Append valid point to valid cluster.
-                    arValidClusterIx.push(iPt);
-                    // Set previous valid point to current point.
-                    prevPt = pt;
-                    // Advance loop index for next point.
-                    iPt++;
-                }  else {
-                    // pt is spurious.
-                    if (arSpuriousClusterIx.length < maxSpuriousClusterCt) {
-                        //  Append point to the consecutive points in the  spurious cluster.
-                        arSpuriousClusterIx.push(iPt);
-                        // Advance loop index for next point.
-                        iPt++;
-                    } else {
-                        // Limit for consecutive spurious pts reaached. 
-                        // Set previous valid point to first point in spurious cluster.
-                        prevPt = arRecordPt[arSpuriousClusterIx[0]];
-                        // Set loop index for next point to previous valid point index plus 1.
-                        iPt = arSpuriousClusterIx[0] + 1;
-
-                        if (arValidClusterIx.length <= minValidClusterCt) {
-                            // Delete the small cluster of valid points.
-                            for (var i=0; i < arValidClusterIx.length; i++) {
-                                arRecordPt[arValidClusterIx[i]].bDeleted = true; // Indicate filter has been applied.
-                                result.nDeleted++; 
-                            }
-                        }
-
-                        // Empty valid points cluster and append first point in current spurious cluseter
-                        // as the first valid point.
-                        arValidClusterIx = [];
-                        arValidClusterIx.push(arSpuriousClusterIx[0]);
-
-                        // Empty the spurious points cluster because the current spurious custer
-                        // is no longer considered surpious.
-                        arSpuriousClusterIx = [];
-                    }
-                }           
-            }
-            // Delete any points in spurious cluster and empty spurious cluster. 
-            DeleteSpuriousCluster(); 
-
-            // Set pathCoords to match RECORD points that are not deleted.
-            if (result.bValid && result.nDeleted > 0) {
-                SetPathCoords();
-                this.draw(); 
-                bUnfilterEnabled = true; 
-            } else {
-                bUnfilterEnabled = false;
-            }
-            bFilterEnabled = false;
-
-            return result;
-            */
-
             var result = filterFSM.doIt();
             var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
             if (result.bValid && nTotalDeleted > 0) {  
@@ -2764,8 +2661,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var filterFSM = new FilterFSM(this.eRecordPt); 
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
-        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             
-        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. 
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.
