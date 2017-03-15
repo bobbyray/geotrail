@@ -24,7 +24,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
     this.center = new wigo_ws_GeoPt(); // wigo_ws_GeoPt object for center of map.
     this.zoom = 0;      // Map zoom number.
     this.gpxPath = null;    // wigo_ws_GpxPath object for the geo path.
-                            // Note: bounds, center above are for cached map. gpxPath as similar properties for the trail. 
+                            // Note: bounds, center above are for cached map. gpxPath has similar properties for the trail. 
     // Assigns all members of other oject of same type to this object.
     this.assign = function (other) {
         this.nIx = other.nIx;
@@ -112,7 +112,7 @@ function wigo_ws_View() {
     //      sOwnerId: string for owner id of path.
     //      sShare: string for share value, public or private. 
     //              Note: Matches name of wigo_ws_GeoPathsRESTfulApi.eShare property.
-    //      arGeoPt:array of wigo_ws_GeoPt elements defining the path.
+    //      arGeoPt: array of wigo_ws_GeoPt elements defining the path.
     // NOTE: this is NOT an event fired by the view, rather an object to be filled in.
     this.NewUploadPathObj = function() { return NewUploadPathObj();};  
 
@@ -565,7 +565,39 @@ function wigo_ws_View() {
     this.ShowOfflinePathInfo = function (bShow, offlineParams) {
         ShowPathInfoDiv(bShow);
         if (bShow) {
-            map.DrawPath(offlineParams.gpxPath); 
+            map.DrawPath2(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); ////20170315 was map.DrawPath(..)
+            ////20170315 map.DrawPath2(offlineParams.gpxPath);
+            /* ////20170314 try again
+            window.setTimeout(function(){                     ////20170313 added
+                var oMap = map.getMap();                      ////20170313 added
+                ////20170313 var maxZoom = {maxZoom: offlineParams.zoom};  ////20170313 added
+                ////20170313 oMap.setZoom(offlineParams.zoom, maxZoom);    ////20170313 added
+                ////20170314 oMap.setZoom(offlineParams.zoom);    ////20170313 added
+                ////20170314 var mapZoom = oMap.getZoom();
+                ////20170314 if (mapZoom !== offlineParams.zoom) {
+                ////20170314     oMap.setZoom(offlineParams.zoom);    ////20170313 added
+                ////20170314 }
+                var mapZoom = oMap.getZoom();
+                if (mapZoom === offlineParams.zoom) {
+                    mapZoom--;
+                    oMap.setZoom(mapZoom);
+                }
+                oMap.setZoom(offlineParams.zoom);
+
+
+                ////2017034 map.PanToPathCenter(); ////20170314 try  
+            }, 100);  // 0 millisecond timeout did not work.              ////20170313 added
+            */
+            /* ////20170315
+            var oMap = map.getMap();
+            var mapZoom = oMap.getZoom();
+            if (mapZoom !== offlineParams.zoom) {
+                 window.setTimeout(function(){
+                     oMap.setZoom(offlineParams.zoom); 
+                 }, 
+                 100); 
+            }
+            */
         }
     };
 
@@ -595,6 +627,14 @@ function wigo_ws_View() {
     this.IsRecordingSignInActive = function() {
         return recordFSM.isSignInActive();
     }
+
+    // Initializes recording a trail.
+    // Arg
+    //  minId: number. smallest psuedo id for Record trail in list of trails to view.
+    // Note: Call after loading list of offline trails to view. The psuedo ids are negative.
+    this.initRecord = function(minId) {
+        recordFSM.decrNextOfflineId(minId);
+    };
 
     // ** Private members for html elements
     var that = this;
@@ -726,6 +766,11 @@ function wigo_ws_View() {
             // Ensure soft keyboard is removed after the change.
             txbxPathName.blur();
             that.ShowStatus("Select Record > Upload to complete saving.", false);
+        } else if (that.curMode() === that.eMode.offline) { ////20170314 added
+            // Note: This happens because of Record trail.
+            // Ensure soft keyboard is removed after the change.
+            txbxPathName.blur();
+            that.ShowStatus("Select Record > Save Locally to complete saving.", false);
         }
     }, false);
 
@@ -2008,7 +2053,8 @@ function wigo_ws_View() {
             cancel: 10,
             show_stats: 11, 
             filter: 12,     
-            unfilter: 13,   
+            unfilter: 13,
+            save_locally: 14, // save trail offline. ////20170311 added   
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2027,6 +2073,15 @@ function wigo_ws_View() {
         };
         var recordCtrl = null;
         var bOnline = true; 
+
+        // Decrements next psuedo id for saving a Record trail offline in local storage.
+        // Arg:
+        //  minId: number. minimum psuedo id for Record trail to be viewed. should be < 0.
+        //         The next psuedo id for saving a Record trail will be set based on minId.
+        // Note: next local psuedo id is always < 0 because real server database id is > 0.  
+        this.decrNextOfflineId = function(minId) {
+            localSaver.decrNextId(minId);
+        };
 
         // Transitions this FSM to its next state given an event.
         // Arg:
@@ -2179,6 +2234,8 @@ function wigo_ws_View() {
                 uploader.clear();
                 // Reset the captured points for trail.
                 map.recordPath.reset();
+                // Initialize parameters for saving a Record trail offline.
+                localSaver.initParams();
             };
 
             this.prepare = function() {
@@ -2241,7 +2298,8 @@ function wigo_ws_View() {
                 recordWatcher.clear(); // Ensure watching for location change is stopped.
                 recordCtrl.setLabel("Stopped");
                 recordCtrl.empty();
-                var bSavePathValid = bOnline && uploader.isSavePathValid(); 
+                ////20170309 var bSavePathValid = bOnline && uploader.isSavePathValid(); 
+                var bSavePathValid = uploader.isSavePathValid(); ////20170309 allow for offline or online.
                 if (bSavePathValid)
                     recordCtrl.appendItem("save_trail", "Save Trail");
                 // Decided not use append_trail. Instead use Edit mode to insert another trail.
@@ -2265,18 +2323,33 @@ function wigo_ws_View() {
             this.nextState = function(event) {
                 switch (event) {
                     case that.event.save_trail: 
-                        if (uploader.isUploadInProgress() ) {
-                            view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
-                        } else if (uploader.isPathAlreadyDefined()) {
-                            // Update existing trail that has already been uploaded.
-                            uploader.setArGeoPt(); 
-                            uploader.upload();
-                            stateStopped.prepare();
-                            curState = stateStopped;
-                        } else {
-                            // Define params for a new recorded trail.
-                            stateDefineTrailName.prepare();
-                            curState = stateDefineTrailName;
+                        if (bOnline) {  ////20170309 added if cond, body already exist. 
+                            if (uploader.isUploadInProgress() ) {
+                                view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
+                            } else if (uploader.isPathAlreadyDefined()) {
+                                // Update existing record trail that has already been uploaded.
+                                uploader.setArGeoPt(); 
+                                uploader.upload();
+                                stateStopped.prepare();
+                                curState = stateStopped;
+                            } else {
+                                // Define params for a new recorded trail.
+                                stateDefineTrailName.prepare();
+                                curState = stateDefineTrailName;
+                            }
+                        } else {  ////20170309 added else and body
+                            // Save record trail offline locally.
+                            if (localSaver.isPathNameDefined()) {
+                                // Update Record trail amd save it locally.
+                                localSaver.save()
+                                // Stay in same state.
+                                stateStopped.prepare();
+                                curState = stateStopped;
+                            } else {
+                                // Define trail name  for a new recorded trail.
+                                stateDefineTrailName.prepare();
+                                curState = stateDefineTrailName;
+                            }
                         }
                         break;
                     // case that.event.append_trail: // Note: this case is no longer used.
@@ -2380,10 +2453,16 @@ function wigo_ws_View() {
                 recordCtrl.setLabel("TrName");
                 recordCtrl.empty();
                 view.ShowStatus("Enter a name for the trail", false);
-                recordCtrl.appendItem("upload", "Upload");
+                ////20170311 recordCtrl.appendItem("upload", "Upload");
+                if (bOnline)                                                 ////20170311 added
+                    recordCtrl.appendItem("upload", "Upload");               ////20170311 added
+                else                                                         ////20170311 added
+                    recordCtrl.appendItem("save_locally", "Save Locally");   ////20170311 added
                 recordCtrl.appendItem("cancel", "Cancel");
                 ShowPathDescrBar(true); 
-                signin.showIfNeedBe(); 
+                ////20170311 signin.showIfNeedBe(); 
+                if (bOnline)               ////20170311 added
+                    signin.showIfNeedBe(); ////20170311 added
             };
 
             this.nextState = function(event) {
@@ -2402,6 +2481,16 @@ function wigo_ws_View() {
                             curState = stateStopped;
                         }
                         // Note: If something is wrong for upload stay in same state.
+                        break;
+                    case that.event.save_locally: ////20170311 added
+                        var bOk = localSaver.save();
+                        if (bOk) {
+                            ShowPathDescrBar(false);
+                            view.ShowStatus("Successfully saved Record trail locally.", false); ////20170314 added
+                            stateStopped.prepare();
+                            curState = stateStopped;
+                        } 
+                        // Note: If somethng is wrong for saving, stay in same state.
                         break;
                     case that.event.cancel:
                         stateStopped.prepare();
@@ -2569,7 +2658,7 @@ function wigo_ws_View() {
                     //       However, this should be fixed later.
                     if (typeof(nId) === 'number')
                         this.uploadPath.nId = nId;
-                        this.uploadPath.sPathName = sPathName; 
+                    this.uploadPath.sPathName = sPathName; 
                 } else {
                     view.ShowAlert("Upload failed. You may need to sign-in. Please try again.",
                         function() {  
@@ -2705,6 +2794,119 @@ function wigo_ws_View() {
             var bUploadInProgress = false;
         }
         var uploader = new Uploader();
+        // **
+
+        // ** Object to save a record trail to local storage (used in offline view).
+        function LocalSaver() {
+            // Initializes parameters for saving current Record trail to local storage.
+            this.initParams = function() {
+                params.nIx = -1; // Not used.
+                params.nId = 0;  // New record id.
+                params.tStamp = new Date(Date.now());
+                params.name = ''; 
+                params.gpxPath = null; // Record trail not defined yet.
+
+            };
+
+            // Returns true if user has entered a path name.
+            this.isPathNameDefined = function() {
+                var bYes = params.name.trim().length > 0;
+                return bYes;
+            };
+
+            // Descrements the next psuedo nId for Record trail.
+            // Arg: 
+            //  nIdArg: number. psuedo nId for Record trail when saving a new Record trail.
+            //          Must be < 0 because nId > 0 are for real database rcocrd nId.
+            this.decrNextId = function(minId) {
+                if (typeof(minId) === 'number' ) {
+                    nNextId = (params.nId < minId) ? params.nId : minId;
+                    // Decrement to next unused psuedo id.
+                    nNextId--;
+                }
+            };
+
+            // Saves Record trail to local storage.
+            this.save = function() {
+                var bOk = SetPathName();
+                if (bOk) {
+                    // Save current Record trail locally.
+                    var oMap = map.getMap();
+                    //// params.nIx = selectedDataIx; // Default is -1
+                    var bounds = oMap.getBounds();
+                    params.bounds.ne.lat = bounds.getNorthEast().lat;
+                    params.bounds.ne.lon = bounds.getNorthEast().lng;
+                    params.bounds.sw.lat = bounds.getSouthWest().lat;
+                    params.bounds.sw.lon = bounds.getSouthWest().lng;
+                    var center = oMap.getCenter();
+                    params.center.lat = center.lat;
+                    params.center.lon = center.lng;
+                    params.zoom = oMap.getZoom();
+
+                    // Set params.gpxPath properties. 
+                    params.gpxPath = new wigo_ws_GpxPath();
+                    var arGeoPt = map.recordPath.getGeoPtArray();
+                    params.gpxPath.arGeoPt = arGeoPt;
+                    params.gpxPath.gptBegin.lat = arGeoPt[0].lat;
+                    params.gpxPath.gptBegin.lon = arGeoPt[0].lon;
+                    var iLast = params.gpxPath.arGeoPt.length - 1;
+                    params.gpxPath.gptEnd.lat = arGeoPt[iLast].lat;
+                    params.gpxPath.gptEnd.lon = arGeoPt[iLast].lon;
+                   /* ////20170313 Use map bound for gpxPath corners ////20170314 try again
+                    var corners = new wigo_ws_GeoPt.Corners();
+                    for (var i = 0; i < arGeoPt.length; i++) {
+                        corners.Update(arGeoPt[i]); // Update bounding rectangle for route.
+                    }
+                    params.gpxPath.gptSW.lat = corners.gptSW.lat;
+                    params.gpxPath.gptSW.lon = corners.gptSW.lon;
+                    params.gpxPath.gptNE.lat = corners.gptNE.lat;
+                    params.gpxPath.gptNE.lon = corners.gptNE.lon;
+                    */
+
+                    params.gpxPath.gptSW.lat = params.bounds.sw.lat;
+                    params.gpxPath.gptSW.lon = params.bounds.sw.lon;
+                    params.gpxPath.gptNE.lat = params.bounds.ne.lat;
+                    params.gpxPath.gptNE.lon = params.bounds.ne.lon;
+
+                    // param.nId == 0 means a Record has not been before.
+                    if (params.nId === 0) {
+                        params.nId = nNextId;
+                        nNextId--; 
+                    }
+                    view.onSavePathOffline(view.curMode(), params); 
+
+                    ////207170309 this.uploadPath.arGeoPt = map.recordPath.getGeoPtArray();
+                    ////207170309 var bOk = this.uploadPath.arGeoPt.length > 1;
+                    ////207170309 if (!bOk) {
+                    ////207170309     view.ShowStatus("No points for the trail have been recorded.");
+                    ////207170309 }
+                } else {
+                    view.ShowStatus("Enter a Trail Name", false);
+                }
+                return bOk;
+            };
+
+            // Helper that sets path name for Record trail to be saved.
+            // Returns boolean:
+            //  true if path name is valid.
+            function SetPathName() {
+                var sName = txbxPathName.value.trim(); 
+                var bOk = sName.length > 0;
+                if (bOk) {
+                    params.name = sName;
+                } 
+                return bOk;            
+            }
+
+            // Next psuedo record id in local storage to uniquely identify a Record trail that is saved local storage,
+            // but has not been uploaded to server.
+            // nNextId is always < 0 to distingush from database record id, which is always > 0.
+            var nNextId = -1; 
+            // Current offline parameters to save.
+            var params = new wigo_ws_GeoPathMap.OfflineParams();
+            this.initParams();
+        }
+        var localSaver = new LocalSaver();
         // **
     }
 
@@ -5049,6 +5251,7 @@ function wigo_ws_Controller() {
             if (gpxOfflineArray && iPathList >= 0 && iPathList < gpxOfflineArray.length) {
                 var oParams = gpxOfflineArray[iPathList];
                 view.ShowOfflinePathInfo(true, oParams);
+
             }
         } else if (nMode === view.eMode.online_edit) {
             // Fire path selected event for editing.
@@ -5099,30 +5302,41 @@ function wigo_ws_Controller() {
     };
 
     // Save offline parameters for the selected geo path.
+    // Args
+    //  nMode: byte value of this.eMode enumeration. 
+    //  params: wigo_ws_GeoPathMap.OfflineParams object geo path to save offline.
+    //          params.nId and params.sName are not set, they have default constructed values. 
+    //          Note: This function sets params.nId and params.sName and passes
+    //          params when calling model to save.
     view.onSavePathOffline = function (nMode, params) {
-        // Save the params to storage.
-        if (params.nIx >= 0 && gpxArray && params.nIx < gpxArray.length) {
-            var gpx = gpxArray[params.nIx];
-            params.name = gpx.sName;
-            params.nId = gpx.nId;
-            params.gpxPath = model.ParseGpxXml(gpx.xmlData);
-        }
-
-        // Cache the map tiles.
-        view.CacheMap(function (status) {
-            // Show Status updates.
-            view.ShowStatus(status.sMsg, status.bError);
-            if (status.bDone) {
-                if (!status.bCancel)
-                    view.ShowAlert(status.sMsg);
-                view.ClearStatus();
-                if (!status.bError && !status.bCancel) {
-                    // Save the offline params in localStorage for 
-                    // using trail offline from cache.
-                    model.setOfflineParams(params);
-                }
+        if ( nMode === view.eMode.online_view) { ////20170309 added if cond, body already existed.
+            // Save the params to storage.
+            if (params.nIx >= 0 && gpxArray && params.nIx < gpxArray.length) {
+                var gpx = gpxArray[params.nIx];
+                params.name = gpx.sName;
+                params.nId = gpx.nId;
+                params.gpxPath = model.ParseGpxXml(gpx.xmlData);
             }
-        });
+
+            // Cache the map tiles.
+            view.CacheMap(function (status) {
+                // Show Status updates.
+                view.ShowStatus(status.sMsg, status.bError);
+                if (status.bDone) {
+                    if (!status.bCancel)
+                        view.ShowAlert(status.sMsg);
+                    view.ClearStatus();
+                    if (!status.bError && !status.bCancel) {
+                        // Save the offline params in localStorage for 
+                        // using trail offline from cache.
+                        model.setOfflineParams(params);
+                    }
+                }
+            });
+        } else if (nMode === view.eMode.offline) {  ////20170309 added else if cond and body.
+            // Save parameters to storage, but do not cache map tiles because offline.
+            model.setOfflineParams(params);
+        }
     };
 
     // Get list of geo paths from model to show in a list in the view.
@@ -5383,13 +5597,20 @@ function wigo_ws_Controller() {
         } else if (nMode === view.eMode.offline) {
             // Get list of offline geo paths from local storage.
             gpxOfflineArray = model.getOfflineParamsList();
+            
             // Show the list of paths in the view.
+            var minId = 0; // Miniumun psuedo id for offline trails. ////20170311 added
             var oParams;
             var arPathName = new Array();
             for (var i = 0; i < gpxOfflineArray.length; i++) {
                 oParams = gpxOfflineArray[i];
                 arPathName.push(oParams.name); 
+                if (oParams.nId < minId)  ////20170311 added
+                    minId = oParams.nId;  ////20170311 added
             }
+            // Update psuedo id for saving a Record trail locally. ////20170310 added.
+            view.initRecord(minId); //// 20170311 added 
+
             view.setPathList(arPathName);
         }
     }

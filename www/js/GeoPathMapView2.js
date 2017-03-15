@@ -174,6 +174,44 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.PanToPathCenter();
     };
 
+
+    // Draws geo path on the map object.
+    // Args:
+    //  path: wigo_ws_GpxPath object for the path.
+    //  zoom: number. zoom factor for the map.
+    //  gptCenter: wigo_ws_GeoPt. Center point on screen.
+    // Note: Provided for drawing offline paths, particularly a saved Record path.
+    this.DrawPath2 = function (path, zoom, gptCenter) {
+        if (!IsMapLoaded())
+            return; // Quit if map has not been loaded.
+        // Clear any current path before drawing another path.
+        this.ClearPath();
+
+        // Quit if path is not defined.  
+        if (!path) {
+            curPath = null;
+            return;
+        }
+
+        curPathSegs.Init(path);
+        var pathCoords = curPathSegs.getPathCoords();
+
+        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
+        mapPath.addTo(map);
+
+        // Draw start and end of path shape on the path.
+        SetStartEndOfPathShape();  
+
+        curPath = path; // Save current gpx path object.
+        
+        // Pan to center with zoom.
+        if (zoom && gptCenter) {
+            var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
+            map.setZoomAround(llCenter, zoom); 
+        }
+    };
+
+
     // Not Used. Does not seem to be useful.
     // // Redraw the map.
     // this.Redraw = function() { 
@@ -502,7 +540,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.PanToPathCenter = function () {
         var bOk = true;
         if (curPath) {
-            // Note: Use to pan to center of path and zoom. This did not work well
+            // Note: Used to pan to center of path and zoom. This did not work well
             // because saved zoom factor could represent zoom of previous trail rather
             // than zoom of current trail. Seems that zoom does not change
             // immediately when a path is drawn.

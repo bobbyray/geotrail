@@ -326,6 +326,9 @@ function wigo_ws_Model() {
 
     // Returns list, which is an Array object of wigo_ws_GeoPathMap.OfflineParams elements.
     this.getOfflineParamsList = function() {
+        // Always reload from local storage. arOfflineParams.arParms may have been reset.
+        // (Resetting arOfflineParams.arParms actually happened.)
+        arOfflineParams.LoadFromLocalStorage();  
         return arOfflineParams.getAll();
     }
 
