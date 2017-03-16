@@ -148,7 +148,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Draws geo path on the map object.
     // Args:
     //  path: wigo_ws_GpxPath object for the path.
-    this.DrawPath = function (path) {
+    //  zoom: number, optional. zoom factor.
+    //  gptCenter: wigo_ws_GeoPt, optional. center point for displaying.
+    // Notes:
+    //  Specify zoom, gptCenter for drawing a path offline. In this case the
+    //  zoom and center point were saved with the offline path data. (The current
+    //  zoom for the offline map may not have tites for drawing the path.)
+    //  Do not specify zoom and gptCenter for drawing a path online. In this
+    //  case the display is set to the bounds of the path with zoom set accordingly.
+    //  (Using current zoom does not work well because it is for the previous trail.)
+    this.DrawPath = function (path, zoom, gptCenter) {
         if (!IsMapLoaded())
             return; // Quit if map has not been loaded.
         //var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
@@ -171,47 +180,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         SetStartEndOfPathShape();  
 
         curPath = path; // Save current gpx path object.
-        this.PanToPathCenter();
-    };
-
-
-    // Draws geo path on the map object.
-    // Args:
-    //  path: wigo_ws_GpxPath object for the path.
-    //  zoom: number. zoom factor for the map.
-    //  gptCenter: wigo_ws_GeoPt. Center point on screen.
-    // Note: Provided for drawing offline paths, particularly a saved Record path.
-    this.DrawPath2 = function (path, zoom, gptCenter) {
-        if (!IsMapLoaded())
-            return; // Quit if map has not been loaded.
-        // Clear any current path before drawing another path.
-        this.ClearPath();
-
-        // Quit if path is not defined.  
-        if (!path) {
-            curPath = null;
-            return;
-        }
-
-        curPathSegs.Init(path);
-        var pathCoords = curPathSegs.getPathCoords();
-
-        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
-        mapPath.addTo(map);
-
-        // Draw start and end of path shape on the path.
-        SetStartEndOfPathShape();  
-
-        curPath = path; // Save current gpx path object.
-        
-        // Pan to center with zoom.
-        if (zoom && gptCenter) {
+        if (typeof(zoom) === 'number' && typeof(gptCenter) === 'object') {
             var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
             map.setZoomAround(llCenter, zoom); 
             map.panTo(llCenter); 
+        } else {
+            // Fit path bound to display.
+            this.PanToPathCenter()
         }
     };
-
 
     // Not Used. Does not seem to be useful.
     // // Redraw the map.

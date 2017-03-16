@@ -565,7 +565,7 @@ function wigo_ws_View() {
     this.ShowOfflinePathInfo = function (bShow, offlineParams) {
         ShowPathInfoDiv(bShow);
         if (bShow) {
-            map.DrawPath2(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
+            map.DrawPath(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
         }
     };
 
