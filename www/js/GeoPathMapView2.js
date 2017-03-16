@@ -208,6 +208,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         if (zoom && gptCenter) {
             var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
             map.setZoomAround(llCenter, zoom); 
+            map.panTo(llCenter); 
         }
     };
 
