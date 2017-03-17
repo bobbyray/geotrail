@@ -5039,7 +5039,7 @@ function wigo_ws_View() {
         recordFSM.nextState(recordFSM.eventValue(dataValue));
     };
 
-    parentEl = document.getElementById('offlineLocalData'); ////20170316 added
+    parentEl = document.getElementById('offlineLocalData'); 
     var offlineLocalData = new ctrls.DropDownControl(parentEl, "offlineLocalDataDropDown", "Local Data", null, "img/ws.wigo.dropdownicon.png");
     offlineLocalData.onListElClicked = function(dataValue) {
 
