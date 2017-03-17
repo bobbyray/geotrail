@@ -673,7 +673,7 @@ label {
     width: 75%;
 }
 
-#onlineRecord, #offlineRecord { 
+#onlineRecord {  /* ////20170316 separate #offlineRecord */
     height: 100%; 
     width: 10%; 
     float: left;
@@ -691,6 +691,23 @@ label {
 }
 #onlineRecord .wigo_ws_DropDownList, #offlineRecord .wigo_ws_DropDownList  { 
     width: 4em;
+}
+
+#offlineRecord, #offlineLocalData {  /* ////20170316 added ,#offlineLocalData */
+    height: 100%; 
+    width: 32%; 
+    float: left;
+    padding-left: 0.3em;
+    box-sizing: border-box; 
+}
+
+#offlineLocalData .wigo_ws_DropDownIcon {   /* ////20170316 added */
+    left: initial;
+    right: 0px;
+}
+
+#offlineLocalData .wigo_ws_DropDownLabel { /* ////20170316 added */
+    left: 15%;
 }
 
 #mapBar {

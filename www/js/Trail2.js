@@ -5039,6 +5039,12 @@ function wigo_ws_View() {
         recordFSM.nextState(recordFSM.eventValue(dataValue));
     };
 
+    parentEl = document.getElementById('offlineLocalData'); ////20170316 added
+    var offlineLocalData = new ctrls.DropDownControl(parentEl, "offlineLocalDataDropDown", "Local Data", null, "img/ws.wigo.dropdownicon.png");
+    offlineLocalData.onListElClicked = function(dataValue) {
+
+    }; 
+
     // OnOffControl for Phone Alert on map bar.
     var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
     var mapAlertCtrl = new ctrls.OnOffControl(holderMapPhAlertToggle, null, "Alert", -1);
