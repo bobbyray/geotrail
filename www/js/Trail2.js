@@ -2612,7 +2612,7 @@ function wigo_ws_View() {
                 this.uploadPath.sPathName = "";
                 this.uploadPath.Share = 'private';
                 this.uploadPath.arGeoPt.length = 0;
-                mainUploadPath = null; 
+                ////20170320Cleanup mainUploadPath = null; 
                 bNewUploadPath = false;  
                 txbxPathName.value = ""; 
             };
@@ -2651,6 +2651,7 @@ function wigo_ws_View() {
                 view.ShowStatus("Uploading recorded trail.", false);
             };
 
+            /* ////20170320 cleanup, not used
             // Uploads valid main path to the server with the recording path coords appended.
             // Returns true if upload is initiated.
             // Note: this.uploadPath is set to params for main path with arGeoPt of main path prepended.
@@ -2680,7 +2681,8 @@ function wigo_ws_View() {
                 }
                 return bOk;
             }
-            var mainUploadPath = null;  // Saved main upload path when a Append Trail is first selected for a main trail.
+            */
+            ////20170320Cleanup var mainUploadPath = null;  // Saved main upload path when a Append Trail is first selected for a main trail.
 
             // Returns true if path is already defined.
             // Note: true indicates the path is properly defined, which means 
@@ -2699,6 +2701,7 @@ function wigo_ws_View() {
                 return bUploadInProgress;
             };
 
+            /* ////20170320 cleanup, not used.
             // Returns true if record path can be appended to the main path.
             // Note: returns false if a recorded trail without a main trail prepended has been uploaded.
             this.isAppendPathValid = function() {
@@ -2720,17 +2723,20 @@ function wigo_ws_View() {
                 }
                 return bYes;
             };
+            */ 
 
             // Returns true if it is valid to save the recorded path.
             // Note: If a mainUploadPath has been uploaded, returns false.
             this.isSavePathValid = function() {
-                var bYes = mainUploadPath === null;
-                if (bYes) {
-                    bYes = map.recordPath.getLength() > 1;
-                }
+                ////20170320Cleanup var bYes = mainUploadPath === null;
+                ////20170320Cleanup if (bYes) {
+                ////20170320Cleanup     bYes = map.recordPath.getLength() > 1;
+                ////20170320Cleanup }
+                var bYes = map.recordPath.getLength() > 1;
                 return bYes;
             }
 
+            /* ////20170320 cleanup
             // ** Private members
             // Returns upload path for selected main trail.
             // Returns if null if there is no main trail selected or 
@@ -2743,7 +2749,9 @@ function wigo_ws_View() {
                 }
                 return mainUploadPath;
             }
+            */
 
+            /* ////20170320 cleanup
             // Returns upload path for a valid, selected main trail.
             // Returns null if there is no valid selected main trail.
             // The returned obj is one defined by view.NewUploadPathObj().
@@ -2761,6 +2769,7 @@ function wigo_ws_View() {
                 } 
                 return mainUploadPath;                
             }
+            */
 
             var bUploadInProgress = false;
         }
