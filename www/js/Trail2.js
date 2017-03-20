@@ -566,6 +566,13 @@ function wigo_ws_View() {
         ShowPathInfoDiv(bShow);
         if (bShow) {
             map.DrawPath(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
+            // Fill offlineLocalData drop list for actions to take on selected path.
+            offlineLocalData.setPathParams(offlineParams); ////20170318 added $$$$ 
+            ////20170318 if (offlineParams.nId < 0) { ////20170318ed add if then else. 
+            ////20170318      offlineLocalData.do(offlineLocalData.event.fill_record_trail); // upload or delete.
+            ////20170318 } else {
+            ////20170318     offlineLocalData.do(offlineLocalData.event.fill_trail);        // delete only.
+            ////20170318 }
         }
     };
 
@@ -2514,7 +2521,7 @@ function wigo_ws_View() {
         }
 
         // Object for managing sign-in control bar for Record.
-        function RecordSignIn() {
+        function SignIn() {
             // Shows the signin control bar.
             this.show = function() {
                 bSignInActive = true;
@@ -2547,8 +2554,7 @@ function wigo_ws_View() {
 
             var bSignInActive = false; // Indicates that signin is active.
         }
-        var signin = new RecordSignIn();
-
+        var signin = new SignIn();
 
         // ** Object to upload a record trail.
         function Uploader() {
@@ -2866,6 +2872,165 @@ function wigo_ws_View() {
         var localSaver = new LocalSaver();
         // **
     }
+
+
+    /* ////20170320 undo, leave nested in RecordFSM object
+    // Object for managing sign-in control bar. ////20170319 moved to here
+    function SignIn() {
+        // Shows the signin control bar.
+        this.show = function() {
+            bSignInActive = true;
+            ShowSignInCtrl(true);
+        };
+
+        // Gets owner id and shows signin ctrl if owner id is empty.
+        // Returns owner id string.
+        this.showIfNeedBe = function() {
+            var sOwnerId = view.getOwnerId();
+            var bOk = sOwnerId.length > 0;
+            if (!bOk) {
+                view.ShowStatus("Sign-in to upload the recorded trail.<br/>Then enter a name for the trail.", false); 
+                this.show();
+            }
+            return sOwnerId;
+        };
+
+        // Hides the signin control bar.
+        this.hide = function() {
+            bSignInActive = false;
+            ShowSignInCtrl(false);
+        };
+
+        // Returns boolean to indicate if signin for Record is active.
+        // Note: this.show() sets active, this.hide() claars active.
+        this.isSignInActive = function() {
+            return bSignInActive;
+        }
+
+        var bSignInActive = false; // Indicates that signin is active.
+    }
+    var signin = new SignIn();
+    */
+    
+
+    // Object for offline local data.
+    // Offline trail can be deleted. 
+    // Offline saved Record trail can be uploaded or deleted.
+    // Constructor args:
+    //  view: ref to wigo_ws_View object.
+    //  drioKust: ref to Wigo_Ws_CordovaControls().DropDownControl object. 
+    //            The drop down control for offline local data.
+    function OfflineLocalData(view, dropList) {  ////20170317 added
+        var that = this;
+        
+        // Enumeration nof events for actions.
+        this.event = {  unknown: -1, 
+                        delete: 0,               // Delete selected trail locally.
+                        upload: 1,               // Upload selected local, recored trail.
+                        ////20170318 fill_trail: 2,           // Fill drop list for local trail (show delete only).
+                        ////20170318 fill_record_trail: 3,    // Fill drop list for local, recorded trail (show upload and delete).
+                        ////20170318 fill_none: 4,            // Fill drop list with no items.
+                    };
+
+        // Returns value for an eventName.
+        // Arg:
+        //  sEventName: string. property name in this.event enumeration object.
+        this.EventValue = function(sEventName) {
+            var eventValue = this.event[sEventName];
+            if (typeof(eventValue) === 'undefined')
+                eventValue = this.event.unknown;
+            return eventValue;
+        };
+
+        // Saves ref to parameters for selected offline trail.
+        // Arg:
+        //  params: ref to wigo_ws_GeoPathMap.OfflineParams object.
+        //          Has offline information for the trail.
+        //          May be null for no selected trail.
+        this.setPathParams = function(params) {
+            offlineParams = params;
+            dropList.empty();
+            if (offlineParams) {
+                // Fill drop list.
+                if (offlineParams.nId < 0) {
+                    // Selected a Record trail
+                    dropList.appendItem("upload", "Upload");
+                    dropList.appendItem("delete", "Delete");
+                } else {
+                    // Selected a 
+                    dropList.appendItem("delete", "Delete");
+                }
+            }
+        };
+        var offlineParams = null;
+
+
+        // Indicates completion of uploading a path to the server.
+        // Args:
+        //  bOk: boolean. true indicates success.
+        //  nId: number. record id at server for the uploaded path.
+        //  sPathName: string. name of the path. (server might rename path to avoid duplicates.)
+        this.uploadCompleted = function(bOk, nId, sPathName) {
+            if (bOk) {
+                offlineParams.nId = nId;
+                if (sPathName !== offlineParams.name) {
+                    view.ShowStatus("")
+                    offlineParams.name = sPathName;
+                }
+            } else {
+                    view.ShowAlert("Upload failed. You may need to sign-in. Please try again.",
+                        function() {  
+                            signin.show(); 
+                        }
+                    );
+            }
+            bUploadInProgress = false;
+        };
+
+        // Process an event.
+        // Arg:
+        //  sEventName: string. property name of event enumeration object. 
+        this.do = function(eventValue) {
+            switch (eventValue) {
+                case this.event.delete:
+                    alert("Delete selected local data item.");
+                    //// $$$$ write
+                    break;
+                case this.event.upload:
+                    alert("Upload selected local data item.");
+                    //// $$$$ write
+                    break;
+                ////20170318 case this.event.fill_trail:
+                ////20170318     dropList.empty();
+                ////20170318     dropList.appendItem("delete", "Delete");
+                ////20170318     break;
+                ////20170318 case this.event.fill_record_trail:
+                ////20170318     dropList.empty();
+                ////20170318     dropList.appendItem("upload", "Upload");
+                ////20170318     dropList.appendItem("delete", "Delete");
+                ////20170318     break;
+                ////20170318 case this.event.fill_none:
+                ////20170318     dropList.empty();
+                ////20170318     break;
+            }
+        };
+
+        function Upload() {
+            var path = view.NewUploadPathObj(); 
+            path.nId = 0; 
+            //// $$$$ write
+            // sOwnerId = 
+            path.sPathName = offlineParams.name;
+            // path.Share = 
+            path.arGeoPt = offlineParams.arGeoPt;
+            view.onUpload(view.curMode(), path); 
+            view.ShowStatus("Uploading trail to server.", false);
+
+        }
+        var bUploadInProgress = false;
+         
+    }
+
 
     // ** More private members
     
@@ -5040,10 +5205,15 @@ function wigo_ws_View() {
     };
 
     parentEl = document.getElementById('offlineLocalData'); 
-    var offlineLocalData = new ctrls.DropDownControl(parentEl, "offlineLocalDataDropDown", "Local Data", null, "img/ws.wigo.dropdownicon.png");
-    offlineLocalData.onListElClicked = function(dataValue) {
+    var offlineLocalDataCtrl = new ctrls.DropDownControl(parentEl, "offlineLocalDataDropDown", "Local Data", null, "img/ws.wigo.dropdownicon.png");
+    offlineLocalDataCtrl.onListElClicked = function(dataValue) {
+        //// $$$$ write this
+        var nEvent = offlineLocalData.EventValue(dataValue);
+        offlineLocalData.do(nEvent);
+    };     
+    var offlineLocalData = new OfflineLocalData(this, offlineLocalDataCtrl); 
+    offlineLocalData.do(offlineLocalData.event.fill_record_trail); ////20170318 change later to fill_none
 
-    }; 
 
     // OnOffControl for Phone Alert on map bar.
     var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
@@ -5214,7 +5384,6 @@ function wigo_ws_Controller() {
             if (gpxOfflineArray && iPathList >= 0 && iPathList < gpxOfflineArray.length) {
                 var oParams = gpxOfflineArray[iPathList];
                 view.ShowOfflinePathInfo(true, oParams);
-
             }
         } else if (nMode === view.eMode.online_edit) {
             // Fire path selected event for editing.
