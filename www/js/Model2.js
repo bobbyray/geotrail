@@ -303,7 +303,7 @@ function wigo_ws_Model() {
         localStorage[sAccessHandleKey] = sAccessHandle;
     };
 
-    // Sets offline params for a map in local storage.
+    // Sets offline params object for a map in local storage.
     // Args:
     //  oParams: wigo_ws_GeoPathMap.OfflineParams object for a geo path.
     //           oParams.nId is used to find an existing object in the array.
@@ -313,6 +313,18 @@ function wigo_ws_Model() {
         arOfflineParams.setId(oParams);
         arOfflineParams.SaveToLocalStorage();
     };
+
+    // Replaces offline params object for a map in local storage.
+    // Args:
+    //  nId: number. id of offline path to replace.
+    //  oParams: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    this.replaceOfflineParams = function(nId, oParams) {
+        var bReplaced = arOfflineParams.replaceId(nId, oParams);
+        arOfflineParams.SaveToLocalStorage(); 
+        return bReplaced;
+    };
+
 
     // Returns wigo_ws_GeoPathMap.OfflineParameters object saved in local storage.
     // Return null if object is not found.
@@ -328,9 +340,18 @@ function wigo_ws_Model() {
     this.getOfflineParamsList = function() {
         // Always reload from local storage. arOfflineParams.arParms may have been reset.
         // (Resetting arOfflineParams.arParms actually happened.)
-        arOfflineParams.LoadFromLocalStorage();  
+        ////20170326NotNeeded???? arOfflineParams.LoadFromLocalStorage();  
         return arOfflineParams.getAll();
     }
+
+    ////20170323 // Saves offline params list for a map in local storage.
+    ////20170323 // The list save is the ref returned by this.getOfflineParamsList().
+    ////20170323 // Args:
+    ////20170323 //  nId: number. nId of element to replace.
+    ////20170323 //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. Replaces element found.
+    ////20170323 this.saveOfflineParamsList = function(nId, oParams) { ////20170321 added
+    ////20170323     arOfflineParams.SaveToLocalStorage();
+    ////20170323 };
 
     // Clears the list of offline parameters and saves the empty list to localStorage.
     this.clearOffLineParamsList = function () {
@@ -404,7 +425,7 @@ function wigo_ws_Model() {
                 }
             }
             return iFound;
-        }
+        };
 
         // Sets an element of this array to oParams.
         // If element already exits base on oParams.nId, the element is replaced.
@@ -418,12 +439,46 @@ function wigo_ws_Model() {
             } else {
                 arParams.push(oParams);
             }
-        }
+        };
+
+
+        // Replaces an element of this array with oParams.
+        // If element is not found, there is no change.
+        // Return true if element is found, false otherwise.
+        // Arg:
+        //  nId: number. id of the path for element for element to replace.        
+        //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. The replacement object.
+        this.replaceId = function(nId, oParams) {  ////20170323 added
+            var iFound = this.findIxOfId(nId);
+            if (iFound >= 0) {
+                arParams[iFound] = oParams;
+            }
+            var bReplaced = iFound >= 0;
+            return bReplaced;
+        };
+        
+
+        /* ////20170326 redunant function.
+        // Replaces an element of this array with other parameters.
+        // Returns true for success. false means element to replace was not found.
+        // Args:
+        //  nId: number. nId of element to replace.
+        //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. Replaces element found.
+        this.replaceId = function(nId, oParams) {  ////20170321 added
+            var iFound = this.findIxOfId(nId);
+            if (iFound >= 0) {
+                arParams[iFound] = oParams;
+            }
+            var bOk = iFound >= 0;
+            return bOk; 
+        };
+        */
+
 
         // Returns an Array of all the wigo_ws_GeoPathMap.OfflineParams elements.
         this.getAll = function () {
             return arParams;
-        }
+        };
         
         // Removes all elementsw of this array.
         this.Clear = function () {
