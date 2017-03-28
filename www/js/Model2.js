@@ -340,18 +340,8 @@ function wigo_ws_Model() {
     this.getOfflineParamsList = function() {
         // Always reload from local storage. arOfflineParams.arParms may have been reset.
         // (Resetting arOfflineParams.arParms actually happened.)
-        ////20170326NotNeeded???? arOfflineParams.LoadFromLocalStorage();  
         return arOfflineParams.getAll();
     }
-
-    ////20170323 // Saves offline params list for a map in local storage.
-    ////20170323 // The list save is the ref returned by this.getOfflineParamsList().
-    ////20170323 // Args:
-    ////20170323 //  nId: number. nId of element to replace.
-    ////20170323 //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. Replaces element found.
-    ////20170323 this.saveOfflineParamsList = function(nId, oParams) { ////20170321 added
-    ////20170323     arOfflineParams.SaveToLocalStorage();
-    ////20170323 };
 
     // Clears the list of offline parameters and saves the empty list to localStorage.
     this.clearOffLineParamsList = function () {
@@ -441,14 +431,13 @@ function wigo_ws_Model() {
             }
         };
 
-
         // Replaces an element of this array with oParams.
         // If element is not found, there is no change.
         // Return true if element is found, false otherwise.
         // Arg:
         //  nId: number. id of the path for element for element to replace.        
         //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. The replacement object.
-        this.replaceId = function(nId, oParams) {  ////20170323 added
+        this.replaceId = function(nId, oParams) { 
             var iFound = this.findIxOfId(nId);
             if (iFound >= 0) {
                 arParams[iFound] = oParams;
@@ -456,24 +445,6 @@ function wigo_ws_Model() {
             var bReplaced = iFound >= 0;
             return bReplaced;
         };
-        
-
-        /* ////20170326 redunant function.
-        // Replaces an element of this array with other parameters.
-        // Returns true for success. false means element to replace was not found.
-        // Args:
-        //  nId: number. nId of element to replace.
-        //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. Replaces element found.
-        this.replaceId = function(nId, oParams) {  ////20170321 added
-            var iFound = this.findIxOfId(nId);
-            if (iFound >= 0) {
-                arParams[iFound] = oParams;
-            }
-            var bOk = iFound >= 0;
-            return bOk; 
-        };
-        */
-
 
         // Returns an Array of all the wigo_ws_GeoPathMap.OfflineParams elements.
         this.getAll = function () {
