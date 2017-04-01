@@ -63,7 +63,15 @@ function wigo_ws_View() {
     //  nIx: integer for data index from item in selection list control. 
     this.onPathSelected = function (nMode, nIx) { };
 
-    // User request saving selected geo path in list of geo paths offline.
+    // Returns offline parameters item for an offline path.
+    // Returned object: wigo_ws_GeoPathMap.OfflineParams.
+    // Args:
+    //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
+    //  nIx: number. index of item in list of offline paths. 
+    // Note: Returns null if item is not found.
+    this.onGetPathOffline = function(nMode, nIx) { return null;};  ////20170401 added
+
+    // User requested saving selected geo path in list of geo paths offline.
     // Handler Signature:
     //  nMode: byte value of this.eMode enumeration.
     //  params: wigo_ws_GeoPathMap.OfflineParams object geo path to save offline.
@@ -72,10 +80,18 @@ function wigo_ws_View() {
     // Replaces offline path in list of geo paths.
     // Handler Signature:
     //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
-    //  nId: number. id offline path to replace.
+    //  nId: number. id of offline path to replace.
     //  params: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
     // Note: If nId is not found in list of offline geo paths, the list is unchanged.
     this.onReplacePathOffline = function(nMode, params) { };
+
+    // Deletes offline path in list of geo paths.
+    // Handler Signature:
+    //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
+    //  nId: number. id of offline path to replace. 
+    //               id is member of  wigo_ws_GeoPathMap.OfflineParams object in the offline list.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    this.onDeletePathOffline = function(nMode, nId) { };  ////20170328 added
 
     // Get list of geo paths to show in a list.
     // Handler Signature:
@@ -538,12 +554,38 @@ function wigo_ws_View() {
         this.setPathList([]);
     };
 
+    // Clears the current drawn path from the map.
+    this.clearPath = function() { ////20170328 added
+        if (map)
+            map.ClearPath();
+    };
+
+    // Updates item in the list of paths that user can select and 
+    // the display for the item if it is currently selected.
+    // Arg:
+    //  dataValue: string. dataValue attribute for the item in the selectGeoTrail ctrl.
+    //  sText: string. text for the item matching dataValue.
+    this.updatePathItem = function(dataValue, sText) { ////20170331 added
+        selectGeoTrail.setListElText(dataValue, sText);
+        var selectedValue = selectGeoTrail.getSelectedValue();
+        if (selectedValue === dataValue) {
+            selectGeoTrail.setSelected(dataValue);
+        }
+    };
+
     // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
         var sName = selectGeoTrail.getSelectedText();
         return sName;
     };
+
+    // Returns selected Path value from selectGeoTrail drop list.
+    // Returns empty string for no selection.
+    this.getSelectedPathValue = function() { ////20170401 added
+        var sValue = selectGeoTrail.getSelectedValue();
+        return sValue;
+    }
 
     // Shows geo path information.
     // Args:
@@ -584,9 +626,9 @@ function wigo_ws_View() {
     //  bOk: boolean. true for upload successful.
     //  sStatusMsg: string. status msg to show.
     //  nId: number. record id at server for uploated path.
-    //  sPathName: string. name of the path. (server rename path to avoid duplicate name.)
+    //  sPathName: string. name of the path. (server may rename path to avoid duplicate name.)
     //  bUpload: boolean. true for uploaded, false for deleted.
-    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId, sPathName, bDelete) {   
+    this.uploadPathCompleted = function(nMode, bOk, sStatusMsg, nId, sPathName, bUpload) {   ////20170330 was bDelte, never used
         if (nMode === this.eMode.online_view) {
             this.ShowStatus(sStatusMsg, !bOk);
             recordFSM.uploadPathCompleted(bOk, nId, sPathName); 
@@ -595,6 +637,13 @@ function wigo_ws_View() {
             fsmEdit.uploadPathCompleted(bOk, sStatusMsg);
         } else if (nMode === this.eMode.offline) {  
             offlineLocalData.uploadCompleted(bOk, nId, sPathName, sStatusMsg); 
+            // Update displayed path name in case the path name has been changed by useer or
+            // by server to avoid duplicate name.
+            ////20170330 Do NOT have access to gpxOfflineArray because it is in Controller.
+            ////20170330 Can not use selectGeoTrail because it may have change because upload is 
+            ////         is async and datavalue is index to gpxOfflineArray, not database record id.
+             
+
         }
     };
 
@@ -756,6 +805,63 @@ function wigo_ws_View() {
                 that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
         }
     }, false);
+
+    txbxPathName.addEventListener('keydown', function(event){
+        function IsTextEmpty() {
+            var text = event.target.value.trim();
+            return text.length === 0;
+        }
+
+        if (that.curMode() === that.eMode.offline) {
+            ////20170329 if (event.defaultPrevented) {
+            ////20170329     return; // Should do nothing if the default action has been cancelled
+            ////20170329 }  
+
+            ////20170329 var bHandled = false;
+            var bEnterKey = IsEnterKey(event);
+            if (bEnterKey && recordFSM.isDefiningTrailName())  {
+                if (!IsTextEmpty()) {
+                    // Save recorded trail locally.
+                    ////20170329 bHandled = true;
+                    //// $$$$ write
+                    recordFSM.nextState(recordFSM.event.save_locally);
+                    event.target.blur(); 
+                }
+            }
+            if (bEnterKey && offlineLocalData.isDefiningTrailName()) {
+                ////20170330 bHandled = true;
+                if (!IsTextEmpty()) {
+                    // Upload saved local recorded path. ////20170330 $$$$
+                    offlineLocalData.do(offlineLocalData.event.upload);
+                    event.target.blur(); 
+                    ////20170329 bHandled = true;
+                }
+            } 
+            ////20170329 if (bHandled)  {
+            ////20170329     // Suppress "double action" if event handled
+            ////20170329     event.preventDefault();            
+            ////20170329 }
+        }
+    }, false);
+
+    // Returns true if an keyboad event is for the Enter key.
+    // Arg:
+    //  event: KeyboardEvent object.
+    function IsEnterKey(event) {
+        var bYes = false;
+        if (event instanceof KeyboardEvent) {
+            if (event.key !== undefined) {
+                // Handle the event with KeyboardEvent.key and set handled true.
+                bYes = event.key === 'Enter';
+            } else if (event.keyIdentifier !== undefined) {
+                bYes = event.keyIdentifier === 'Enter';
+            } else if (event.keyCode !== undefined) {
+                bYes = event.keyCode === 13;
+            }
+        }
+        return bYes;
+    }
+
 
     var labelPathName = document.getElementById('labelPathName');
 
@@ -2342,7 +2448,12 @@ function wigo_ws_View() {
                             // Save record trail offline locally.
                             if (localSaver.isPathNameDefined()) {
                                 // Update Record trail amd save it locally.
-                                localSaver.save()
+                                var bSaveOk = localSaver.save();
+                                if (bSaveOk) {  ////20170330 added if and else bodies
+                                    view.ShowStatus("Successfully saved Record trail locally.", false); 
+                                } else {
+                                    view.ShowStatus("Failed to saved Record trail locally.", true); 
+                                }
                                 // Stay in same state.
                                 stateStopped.prepare();
                                 curState = stateStopped;
@@ -2865,29 +2976,45 @@ function wigo_ws_View() {
         //  sPathName: string. name of the path. (server might rename path to avoid duplicates.)
         //  sStatusMsg: string. status msg for result of uploading.
         this.uploadCompleted = function(bOk, nId, sPathName, sStatusMsg) {
-            var sDupName = ""; // Server could rename path to avoid duplicate name.
+            ////30270330 var sDupName = ""; // Server could rename path to avoid duplicate name.
             uploader.uploadCompleted(bOk, nId, sPathName, sStatusMsg);
             if (bOk) {
                 // Update params from fields returns from server.
                 if (offlineParamsUploading) {
                     var nCurId = offlineParams.nId;
                     offlineParamsUploading.nId = nId;
-                    if (sPathName !== offlineParamsUploading.name) {
-                        sDupName = "To avoid duplicate name at server, trail name changed to<br/>{0}".format(sPathName);
-                        offlineParamsUploading.name = sPathName;
-                    } 
-                    // Save copy of offlineParams being uploaded.  
-                    var bReplaced = view.onReplacePathOffline(view.eMode.offlin, nCurId, offlineParamsUploading); 
+                    ////20170330 if (sPathName !== offlineParamsUploading.name) {
+                    ////20170330     sDupName = "To avoid duplicate name at server, trail name changed to<br/>{0}".format(sPathName);
+                    ////20170330     offlineParamsUploading.name = sPathName;
+                    ////20170330 } 
+                    // Server may have ranmed path name, or user may have renamed path name saved locally. 
+                    // If server has renamed, sStatusMsg indicates this. Don't care if user renamed local path name.
+                    offlineParamsUploading.name = sPathName; // Ensure path name is that used at server.
+                    // Save copy of offlineParams that was uploaded.  
+                    var bReplaced = view.onReplacePathOffline(view.eMode.offline, nCurId, offlineParamsUploading); 
                     if (!bReplaced) {
                         sStatusMsg += "<br/>Trail no longer found locally at server.";
                     }
                 }
             }
             view.ShowStatus(sStatusMsg, !bOk);
-            if (sDupName.length > 0)
-                view.AppendStatus(sDupName, !bOk);   
+            ////20170330 if (sDupName.length > 0)
+            ////20170330     view.AppendStatus(sDupName, !bOk);   
             offlineParamsUploading = null;  
-            FillDropListForParams();
+              
+            // Update offline parameters due to uploading. 
+            // Note: This is necessary so that FillDropListForParams() no longer adds an 
+            // item for Upload, only an item for Delete. Also since upload is async,
+            // the selected offline path could be different, and the selected path
+            // should not be drawn again.
+            var dataValue = view.getSelectedPathValue();
+            if (dataValue){
+                var params = view.onGetPathOffline(view.eMode.offline, parseInt(dataValue, 10));
+                if (params)
+                    this.setPathParams(params);
+                // Note: this.setPathParams calls FillDropListForParams().
+            }
+           ////20170401Done_by_this.setPathParams FillDropListForParams(); ////20170331 $$$$ fix, not quite right. Begin Upload should not be option if selected in selectGeopTrail has not changed.
         };
 
         // Process an event.
@@ -2908,8 +3035,32 @@ function wigo_ws_View() {
                     dropList.appendItem("cancel", "Cancel");
                     break;
                 case this.event.delete:
-                    alert("Delete selected local data item.");
-                    // $$$$ write
+                    // Delete selected path ////20170328 added
+                    /* ////20170328 Refactor a bit
+                    if (offlineParams) {
+                        var bDeleted = view.onDeletePathOffline(view.eMode.offline, offlineParams.nId); 
+                        if (bDeleted) {
+                            view.onGetPaths(view.eMode.offline, ""); // Note: owner id is ignored for offline node.
+                            // Clear displayed path from the map.
+                            ////20170328 view.onPathSelected(view.eMode.offline, -1);  
+                            view.clearPath();  
+                        } else {
+                            var sPathName = offlineParams ? "<br/> " + offlineParams.name : ""; 
+                            var sMsg = "Failed to delete tail{0} from local storage".format(sPathName);
+                            view.ShowStatus(sMsg);
+                        }
+                    }
+                    */
+                    // Prompt if ok to delete the trail.
+                    if (offlineParams) { 
+                        var sNote = offlineParams.nId > 0 ? "\n\nNote: Trail is NOT deleted from web server, only from local data." : "";
+                        var sPrompt = "Ok to delete trail\n{0}?{1}".format(offlineParams.name, sNote);
+                        view.ShowConfirm(sPrompt, function(bConfirm){
+                            if (bConfirm) 
+                                Delete();
+                        },
+                        "Delete Trail", "Ok, Cancel");
+                    }
                     break;
                 case this.event.upload:
                     Upload(); 
@@ -2991,6 +3142,25 @@ function wigo_ws_View() {
             ok.upload = true;
             return ok;
         }
+
+        // Helper to delete current path from local data (local storage).
+        function Delete() {
+            if (offlineParams) {
+                var bDeleted = view.onDeletePathOffline(view.eMode.offline, offlineParams.nId); 
+                if (bDeleted) {
+                    view.onGetPaths(view.eMode.offline, ""); // Note: owner id is ignored for offline node.
+                    // Clear displayed path from the map.
+                    ////20170328 view.onPathSelected(view.eMode.offline, -1);  
+                    view.clearPath();  
+                } else {
+                    var sPathName = offlineParams ? "<br/> " + offlineParams.name : ""; 
+                    var sMsg = "Failed to delete tail{0} from local storage".format(sPathName);
+                    view.ShowStatus(sMsg);
+                }
+            }
+
+        };
+
         var offlineParamsUploading = null; // Copy of offlineParams being uploaded. 
         var eventProcessed = this.event.unknown; // Current event that was processed.
     }
@@ -5380,7 +5550,7 @@ function wigo_ws_Controller() {
             var fsm = view.fsmEdit();
             fsm.DoEditTransition(fsm.eventEdit.SelectedPath);
         }
-    }
+    };
 
     // Returns geo path upload data for data index from item in the selection list.
     // Handler signature:
@@ -5406,6 +5576,20 @@ function wigo_ws_Controller() {
         }        
         return uploadPath;
     };
+
+    // Returns offline parameters item for an offline path.
+    // Returned object: wigo_ws_GeoPathMap.OfflineParams.
+    // Args:
+    //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
+    //  nIx: number. index of item in list of offline paths. 
+    // Note: Returns null if item is not found.
+    view.onGetPathOffline = function(nMode, nIx) { ////20170401 added $$$$ 
+        var params = null;
+        if (gpxOfflineArray && nIx >= 0 && nIx < gpxOfflineArray.length) {
+            params = gpxOfflineArray[nIx];
+        }
+        return params;
+    }
 
     // Save offline parameters for the selected geo path.
     // Args
@@ -5444,7 +5628,6 @@ function wigo_ws_Controller() {
     };
 
     // Replaces offline path in list of geo paths.
-    // Handler Signature:
     //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
     //  nId: number. id of offline path to replace.
     //  params: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
@@ -5452,8 +5635,36 @@ function wigo_ws_Controller() {
     // Note: If nId is not found in list of offline geo paths, the list is unchanged.
     view.onReplacePathOffline = function(nMode, nId, params) { 
         var bReplaced = model.replaceOfflineParams(nId, params); 
+        // Update display for in case path name has changed for the display.
+        if (bReplaced) { ////20170330 added if body
+            if (gpxOfflineArray) {
+                var el; // ref to el, wigo_ws_GeoPathMap.OfflineParams object.
+                for (var i=0; i < gpxOfflineArray.length; i++) {
+                    el = gpxOfflineArray[i];
+                    if (el.nId === params.nId)  {
+                        // Update display for the new path.
+                        //// $$$$ 
+                        var sDataValue = i.toFixed(0);
+                        view.updatePathItem(sDataValue, params.name); 
+                    }
+                }
+            }
+        }
+
         return bReplaced;
     };
+
+    // Deletes offline path in list of geo paths.
+    //  nMode: value of view.eMode. Currently assumes view.eMode.offline.
+    //  nId: number. id of offline path to replace. 
+    //               id is member of  wigo_ws_GeoPathMap.OfflineParams object in the offline list.
+    //  Returns: boolean. true for path object deleted, false if nId is not found.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    view.onDeletePathOffline = function(nMode, nId) { ////20170328 added
+        var bDeleted = model.deleteOfflineParams(nId);
+        return bDeleted;
+    };  
+    
 
     // Get list of geo paths from model to show in a list in the view.
     //  nMode: byte value of this.eMode enumeration.

@@ -325,6 +325,19 @@ function wigo_ws_Model() {
         return bReplaced;
     };
 
+    // Deletes offline params object for a map in local storage.
+    // Args:
+    //  nId: number. id of offline path to replace.
+    //               nId matches a member of wigo_ws_GeoPathMap.OfflineParams object in the list.
+    //  oParams: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    this.deleteOfflineParams = function(nId) { ////20170328 added
+        var bDeleted = arOfflineParams.deleteId(nId);
+        arOfflineParams.SaveToLocalStorage(); 
+        return bDeleted;
+    };
+    
+
 
     // Returns wigo_ws_GeoPathMap.OfflineParameters object saved in local storage.
     // Return null if object is not found.
@@ -444,6 +457,22 @@ function wigo_ws_Model() {
             }
             var bReplaced = iFound >= 0;
             return bReplaced;
+        };
+
+        // Deletes an element of this array.
+        // If element is not found, there is no change.
+        // Return true if element is found, false otherwise.
+        // Arg:
+        //  nId: number. id of the path for element for element to replace.        
+        //       nId matches nId member of a wigo_ws_GeoPathMap.OfflineParams object in the path list.
+        this.deleteId = function(nId, oParams) { 
+            var iFound = this.findIxOfId(nId);
+            if (iFound >= 0) {
+                // Delete the element found.
+                arParams.splice(iFound, 1); 
+            }
+            var bDeleted = iFound >= 0;
+            return bDeleted;
         };
 
         // Returns an Array of all the wigo_ws_GeoPathMap.OfflineParams elements.
