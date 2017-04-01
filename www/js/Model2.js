@@ -331,7 +331,7 @@ function wigo_ws_Model() {
     //               nId matches a member of wigo_ws_GeoPathMap.OfflineParams object in the list.
     //  oParams: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
     // Note: If nId is not found in list of offline geo paths, the list is unchanged.
-    this.deleteOfflineParams = function(nId) { ////20170328 added
+    this.deleteOfflineParams = function(nId) { 
         var bDeleted = arOfflineParams.deleteId(nId);
         arOfflineParams.SaveToLocalStorage(); 
         return bDeleted;
