@@ -39,6 +39,9 @@
     <feature name="Pebble">
         <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
     </feature>
+    <feature name="NetworkStatus">
+        <param name="android-package" value="org.apache.cordova.networkinformation.NetworkManager" />
+    </feature>
     <allow-intent href="market:*" />
     <name>GeoTrail</name>
     <description>
