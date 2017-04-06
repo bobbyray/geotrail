@@ -87,7 +87,7 @@ function wigo_ws_NetworkInformation() {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170308_1502"; // Constant string for App version.
+    var sVersion = "1.1.025_20170406_1414"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -609,27 +609,18 @@ function wigo_ws_View() {
 
     // Fill the list of paths that user can select.
     // Similar to this.setPathList, but does NOT use the selectOnceAfterSetPathList object.
-    // Instead selects currently selected path before reloading if indicated by bSelectCurrent.
+    // Instead selects currently selected path before reloading and does NOT redraw the trail on the map.
     // Arg:
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
     //        Defaults to true if not given.
-    //  bSelectCurrent: boolean. true to select currently selected path after reloading.
-    this.loadPathList = function(arPath, bSort, bSelectCurrent) { 
-        // Save selected index if requested.
-        var dataIx = -1; 
-        if (bSelectCurrent) {
-            var sDataIx = selectGeoTrail.getSelectedValue();
-            dataIx = parseInt(sDataIx, 10);
-            if (dataIx === NaN) 
-                dataIx = -1;
-        }
-
+    this.loadPathList = function(arPath, bSort) {  
+        // Save selected index.
+        var sDataIx = selectGeoTrail.getSelectedValue();
         // Fill the selectGeoPath ctrl.
         FillPathList(arPath, bSort);
-        // If requested, select item that was selected before filling.
-        if (dataIx >= 0) 
-            selectGeoTrail.setSelected(dataIx);
+        // Select item that was selected before filling.
+        selectGeoTrail.setSelected(sDataIx);
     }; 
 
     // Clears the list of paths that the user can select.
@@ -2532,11 +2523,7 @@ function wigo_ws_View() {
                             if (localSaver.isPathNameDefined()) {
                                 // Update Record trail amd save it locally.
                                 var bSaveOk = localSaver.save();
-                                if (bSaveOk) { 
-                                    view.ShowStatus("Successfully saved Record trail locally.", false); 
-                                } else {
-                                    view.ShowStatus("Failed to save Record trail locally.", true); 
-                                }
+                                ShowOfflineSavePathResult(bSaveOk); 
                                 // Stay in same state.
                                 stateStopped.prepare();
                                 curState = stateStopped;
@@ -2681,9 +2668,9 @@ function wigo_ws_View() {
                         // Save the 
                         if (bOk)
                             bOk = localSaver.save();
+                        ShowOfflineSavePathResult(bOk); 
                         if (bOk) {
                             ShowPathDescrBar(false);
-                            view.ShowStatus("Successfully saved Record trail locally.", false); 
                             stateStopped.prepare();
                             curState = stateStopped;
                         } 
@@ -2931,6 +2918,11 @@ function wigo_ws_View() {
                 return bOk;
             };
 
+            // Returns path name.
+            this.getPathName = function() { 
+                return params.name;
+            }
+
             // Returns true if given psuedo Reccord path id matches that of the currently saved
             // Record trail.
             // Arg:
@@ -3018,7 +3010,6 @@ function wigo_ws_View() {
                 } 
                 return bOk;            
             }
-            
 
             // Next psuedo record id in local storage to uniquely identify a Record trail that is saved local storage,
             // but has not been uploaded to server.
@@ -3030,6 +3021,18 @@ function wigo_ws_View() {
         }
         var localSaver = new LocalSaver();
         // **
+
+        // Helper to show status for saving a path locally, offline.
+        // Arg:
+        //  bOk: boolean. true for successful save.
+        function ShowOfflineSavePathResult(bOk) {
+        // view.ShowStatus("Successfully saved Record trail locally.", false); 
+            var s = bOk ? "Successfully saved Record trail locally." : 
+                             "Failed to save Record trail locally.";
+            var pathName = localSaver.getPathName();
+            var sMsg = "{0}<br/>{1}".format(s, pathName);
+            view.ShowStatus(sMsg, !bOk);
+        }
     }
 
     // Object for offline local data.
@@ -5730,9 +5733,9 @@ function wigo_ws_Controller() {
         } else if (nMode === view.eMode.offline) {  
             // Save parameters to storage, but do not cache map tiles because offline.
             model.setOfflineParams(params);
-            // Reload the path list without redrawing on map, but keep previous selection before reloading.
+            // Reload the path list without redrawing on map, and keep previous selection before reloading.
             var pathNames = GetOfflinePathNameArray();
-            view.loadPathList(pathNames.arPathName, true, true); // true, true => sort, keep cur selecction.
+            view.loadPathList(pathNames.arPathName, true); // true => sort
         }
     };
 
