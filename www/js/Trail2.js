@@ -556,11 +556,28 @@ function wigo_ws_View() {
     };
 
     // Fill the list of paths that user can select.
+    // Uses selectOnceAfterSetPathList obj to select a path and to draw it
+    // if path is found by selectOnceAfterSetPathList.
     // Arg:
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
     //        Defaults to true if not given.
     this.setPathList = function (arPath, bSort) {
+        FillPathList(arPath, bSort);
+        
+        // Select previous path if indicated.
+        selectOnceAfterSetPathList.select();  
+    };
+
+
+    // Helper to fill the list of paths that user can select.
+    // Uses selectOnceAfterSetPathList obj to select a path and to draw it
+    // if path is found by selectOnceAfterSetPathList.
+    // Arg:
+    //  arPath is an array of strings for geo path names.
+    //  bSort is optional boolean to display sorted version of arPath.
+    //        Defaults to true if not given.
+    function FillPathList(arPath, bSort) { 
         if (typeof (bSort) !== 'boolean')
             bSort = true;
 
@@ -588,10 +605,32 @@ function wigo_ws_View() {
             // dataIx is data-value attribute of item and is index to arPath element.
             selectGeoTrail.appendItem(dataIx, name);
         }
+    }
 
-        // Select previous path is indicated.
-        selectOnceAfterSetPathList.select();  
-    };
+    // Fill the list of paths that user can select.
+    // Similar to this.setPathList, but does NOT use the selectOnceAfterSetPathList object.
+    // Instead selects currently selected path before reloading if indicated by bSelectCurrent.
+    // Arg:
+    //  arPath is an array of strings for geo path names.
+    //  bSort is optional boolean to display sorted version of arPath.
+    //        Defaults to true if not given.
+    //  bSelectCurrent: boolean. true to select currently selected path after reloading.
+    this.loadPathList = function(arPath, bSort, bSelectCurrent) { 
+        // Save selected index if requested.
+        var dataIx = -1; 
+        if (bSelectCurrent) {
+            var sDataIx = selectGeoTrail.getSelectedValue();
+            dataIx = parseInt(sDataIx, 10);
+            if (dataIx === NaN) 
+                dataIx = -1;
+        }
+
+        // Fill the selectGeoPath ctrl.
+        FillPathList(arPath, bSort);
+        // If requested, select item that was selected before filling.
+        if (dataIx >= 0) 
+            selectGeoTrail.setSelected(dataIx);
+    }; 
 
     // Clears the list of paths that the user can select.
     this.clearPathList = function () {
@@ -604,6 +643,7 @@ function wigo_ws_View() {
         if (map)
             map.ClearPath();
     };
+
 
     // Updates item in the list of paths that user can select and 
     // the display for the item if it is currently selected.
@@ -5325,11 +5365,6 @@ function wigo_ws_View() {
         if (listIx < 0) {   
             // No path selected.
             map.ClearPath();
-            if (that.curMode() === that.eMode.offline) {
-                // Reload drop list for offline mode
-                selectGeoTrail.clearValueDisplay(); 
-                that.onGetPaths(nMode, that.getOwnerId());
-            }
         } else {
             // Path is selected
             that.onPathSelected(that.curMode(), listIx);
@@ -5665,7 +5700,8 @@ function wigo_ws_Controller() {
     // Args
     //  nMode: byte value of this.eMode enumeration. 
     //  params: wigo_ws_GeoPathMap.OfflineParams object geo path to save offline.
-    //          params.nId and params.sName are not set, they have default constructed values. 
+    //          Note: For nMode equal view.eMode.online_view,
+    //          params.nId and params.sName are set by this function from corresponding item in gpxArray.
     view.onSavePathOffline = function (nMode, params) {
         if ( nMode === view.eMode.online_view) { 
             // Save the params to storage.
@@ -5694,6 +5730,9 @@ function wigo_ws_Controller() {
         } else if (nMode === view.eMode.offline) {  
             // Save parameters to storage, but do not cache map tiles because offline.
             model.setOfflineParams(params);
+            // Reload the path list without redrawing on map, but keep previous selection before reloading.
+            var pathNames = GetOfflinePathNameArray();
+            view.loadPathList(pathNames.arPathName, true, true); // true, true => sort, keep cur selecction.
         }
     };
 
@@ -5994,21 +6033,33 @@ function wigo_ws_Controller() {
             // Get list of offline geo paths from local storage.
             gpxOfflineArray = model.getOfflineParamsList();
             
-            // Show the list of paths in the view.
-            var minId = 0; // Miniumun psuedo id for offline trails. 
-            var oParams;
-            var arPathName = new Array();
-            for (var i = 0; i < gpxOfflineArray.length; i++) {
-                oParams = gpxOfflineArray[i];
-                arPathName.push(oParams.name); 
-                if (oParams.nId < minId)  
-                    minId = oParams.nId;  
-            }
+            var pathNames = GetOfflinePathNameArray(); 
             // Update psuedo id for saving a Record trail locally. 
-            view.initRecord(minId); 
+            view.initRecord(pathNames.minId); 
 
-            view.setPathList(arPathName);
+            view.setPathList(pathNames.arPathName);
         }
+    }
+
+    // Forms an array of path names from gpxOfflineArray, an array of offline parameters for paths.
+    // Returns: {arPathName: arPathName, minId: minId}
+    //  arPathNane: array of string. Each element is a path name.
+    //      order of elements in array is same order as in gpxOfflineArray.           
+    //  minId: number. minumum psuedo path database id, which is 0 if there is no psuedo id.
+    //      Note: A negative id indicates the path has not been saved to server.
+    function GetOfflinePathNameArray() { 
+        // Show the list of paths in the view.
+        var minId = 0; // Miniumun psuedo id for offline trails. 
+        var oParams;
+        var arPathName = new Array();
+        for (var i = 0; i < gpxOfflineArray.length; i++) {
+            oParams = gpxOfflineArray[i];
+            arPathName.push(oParams.name); 
+            if (oParams.nId < minId)  
+                minId = oParams.nId;  
+        }
+        var result = {arPathName: arPathName, minId: minId};
+        return result;
     }
 
     // Find list of geo paths from the model and show the list in the view.
