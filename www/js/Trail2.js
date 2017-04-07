@@ -51,19 +51,19 @@ function wigo_ws_NetworkInformation() {
 
     // Returns true if internet is available via cell tower access.
     this.isCellOnline = function() {
-        var bOnline = GetType().indexOf("Cell") !== -1;
+        var bOnline = GetTypeDescr().indexOf("Cell") !== -1;
         return bOnline;
     };
 
     // Returns true if internet is available via wifi access.
     this.isWiFiOnline = function() {
-        var bOnline = GetType().indexOf("WiFi") !== -1;
+        var bOnline = GetTypeDescr().indexOf("WiFi") !== -1;
         return bOnline;
     }; 
 
     // Returns string describing current network state.
     // Note: Returns empty state is current network state is not defined.
-    function GetType() {
+    function GetTypeDescr() {
         var networkState = navigator.connection.type;
         var sNetworkType = states[networkState];
         if (typeof(sNetworkType) !== 'string') 
@@ -553,6 +553,12 @@ function wigo_ws_View() {
     // Returns ref to Edit Finite State Machine editing path path.
     this.fsmEdit = function () {
         return fsmEdit;
+    };
+
+    // Returns ref to wigo_ws_NetworkInformation object.
+    // Note: object indicated type and state of internet connection.
+    this.refNetorkInfo = function() {  ////20170406 added
+        return networkInfo; 
     };
 
     // Fill the list of paths that user can select.
@@ -2515,8 +2521,16 @@ function wigo_ws_View() {
                                 curState = stateStopped;
                             } else {
                                 // Define params for a new recorded trail.
-                                stateDefineTrailName.prepare();
-                                curState = stateDefineTrailName;
+                                ////20170406 stateDefineTrailName.prepare();
+                                ////20170406 curState = stateDefineTrailName;
+                                if (networkInfo.isOnline()) {   ////20170406 added if cond, then body existed, else body added.
+                                    // Define params for a new recorded trail.
+                                    stateDefineTrailName.prepare();
+                                    curState = stateDefineTrailName;
+                                } else {
+                                    // Indicate indicate is not available, stay in same state.
+                                    view.ShowStatus("Internet access is not available. Cannot upload."); 
+                                }
                             }
                         } else {  
                             // Save record trail offline locally.
@@ -5801,6 +5815,18 @@ function wigo_ws_Controller() {
     //  path: Obj created by view.NewUploadPathObj().
     //        upload path object which contains array of GeoPt elements and other members.
     view.onUpload = function (nMode, path) { 
+        /* ////20170407
+        // Check if network is online. ////20170406 added. $$$$ add need to check in onDelete.
+        //
+        var networkInfo = view.refNetorkInfo();
+        if (!networkInfo.isOnline()) {
+            var sError = "Internet access is not available. Cannot upload.";
+            view.ShowStatus(sError);
+            view.uploadPathCompleted(nMode, false, sError, path.nId, path.sPathName, true); // true => upload.
+            return;
+        }
+        ////20170406 check above. May want check in model gpxPut(). $$$$ 
+        */
         if (model.IsOwnerAccessValid()) {
             var gpx = new wigo_ws_Gpx();
             gpx.nId = path.nId;
