@@ -1473,8 +1473,9 @@ function wigo_ws_View() {
                     ShowPathInfoDiv(false);
                     // Set options and show message for appending.
                     PrepareForEditing();
-                    // Show Delete button only for not new.
+                    // Show Delete and Cancel buttons only for not new.
                     ShowDeleteButton(!bNew);
+                    ShowCancelButton(!bNew);  
                     // Show path on map.
                     view.ShowPathInfo(false, that.gpxPath); 
                     if (!bNew) {   // May help first touch point to correct, not sure.
