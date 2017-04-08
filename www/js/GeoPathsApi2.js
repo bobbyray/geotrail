@@ -160,10 +160,6 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // Returns ref to enumeration object for sName duplication of Gpx object.
     this.eDuplicate = function () { return eDuplicate; };
 
-    ////20170408 // Returns new AuthResult object.
-    ////20170408 // Note: Provided to allow error checking for internet available before calling this.Authenicate().    
-    ////20170408 this.newAuthResult = function() {return new AuthResult();};
-
     // ** Private members
     // Enumeration of for duplication of sName of Gpx object:
     //   NotDup = 0: Not a duplicate. No record with gpx.sName in database. 
@@ -346,12 +342,12 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // var base = new wigo_ws_Ajax("http://localhost:63651/Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
     var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host (Would like to try https)
-    //20150808!!!! I cannot get the ajax requests to work locally with the IIS Express Server.
-    //             IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
-    //             but the ajaxs requests for this api fail if https is used for the apis.
-    //             I think the problem is a configuration problem with IIS Express,
-    //             and that https for the ajax requests may work properly 
-    //             at the (GoDaddy) remote host. For now, not using https for these apis.
+    //20150808 I cannot get the ajax requests to work locally with the IIS Express Server.
+    //         IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
+    //         but the ajaxs requests for this api fail if https is used for the apis.
+    //         I think the problem is a configuration problem with IIS Express,
+    //         and that https for the ajax requests may work properly 
+    //         at the (GoDaddy) remote host. For now, not using https for these apis.
 
     // Handler in base class to handle completion of ajax request.
     base.onRequestServed = function (nState, bOk, req) {

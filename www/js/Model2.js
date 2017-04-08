@@ -99,7 +99,7 @@ function wigo_ws_Model() {
     //      sStatus: status string describing result.
     this.putGpx = function (gpx, onDone) {
         // Quit if internet access is not available.
-        if (!CheckNetAccess(onDone)) {  ////20170407 added
+        if (!CheckNetAccess(onDone)) {  
             return true; 
         }        
         var bOk = api.GpxPut(gpx, this.getAccessHandle(), onDone);
@@ -118,7 +118,7 @@ function wigo_ws_Model() {
     //      sStatus: status string describing result.
     this.deleteGpx = function (gpxId, onDone) {
         // Quit if internet access is not available.
-        if (!CheckNetAccess(onDone)) {  ////20170407 added
+        if (!CheckNetAccess(onDone)) {  
             return true; 
         }        
         var bOk = api.GpxDelete(gpxId, this.getAccessHandle(), onDone);
@@ -137,7 +137,7 @@ function wigo_ws_Model() {
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxList = function (sOwnerId, nShare, onDone) {
         // Quit immediately if internet access is not available.
-        if (!CheckNetAccessGetList(onDone)) { ////20170407 added. 
+        if (!CheckNetAccessGetList(onDone)) { 
             return true;
         }
         var bOk = api.GpxGetList(sOwnerId, nShare, this.getAccessHandle(), onDone);
@@ -158,7 +158,7 @@ function wigo_ws_Model() {
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxListByLatLon = function (sOwnerId, nShare, gptSW, gptNE, onDone) {
         // Quit immediately if internet access is not available.
-        if (!CheckNetAccessGetList(onDone)) { ////20170407 added. 
+        if (!CheckNetAccessGetList(onDone)) { 
             return true;
         }
         var bOk = api.GpxGetListByLatLon(sOwnerId, nShare, gptSW, gptNE, this.getAccessHandle(), onDone);
@@ -178,22 +178,9 @@ function wigo_ws_Model() {
     //          error.msg: string describing the status.
     //          other fields of errorResult are defaults, empty strings.
     this.authenticate = function (accessToken, userID, userName, onDone) {
-        /* ////20170408 redo for clarity.
-        // Quit if internet access is available.
-        if (networkInfo.isOnline()) {  ////20170408 Putback ! $$$$ !!!!
-            if (typeof(onDone) === 'function' ) {
-                // errorResult = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus} 
-                var errorResult = api.newAuthResult();
-                errorResult.status = this.eAuthStatus().Error;
-                errorResult.msg = "Internet access is not available.";
-                onDone(errorResult);
-            }
-            return true;
-        }
-        */
-        var bNetOnline = networkInfo.isOnline();  ////2070408 added 
+        var bNetOnline = networkInfo.isOnline();  
         var authData = { 'accessToken': accessToken, 'userID': userID, 'userName': userName };
-        var bOk = api.Authenticate(authData, onDone, bNetOnline);  ////20170408 added arg bNetOnline arg
+        var bOk = api.Authenticate(authData, onDone, bNetOnline);  
         return bOk;
     };
 
@@ -457,7 +444,7 @@ function wigo_ws_Model() {
     //      sStatus: string. status indicating internet access is not available.
     function CheckNetAccess(onDone) {
         var bOk = true;
-        if (!networkInfo.isOnline()) { ////20170408 
+        if (!networkInfo.isOnline()) { 
             bOk = false;
             if (typeof(onDone) === 'function' ) {
                 onDone(bOk, "Internet access is not available.");
@@ -740,5 +727,5 @@ function wigo_ws_Model() {
     geoTrailVersion.LoadFromLocalStorage();
 
     // Network information object. Wrapper for cordova-plugin-network-information.
-    var networkInfo = new wigo_ws_NetworkInformation(); ////20170407 added
+    var networkInfo = new wigo_ws_NetworkInformation(); 
 }

@@ -38,53 +38,6 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
     };
 };
 
-/* ////20170407 move to separate file to share.
-// Wrapper object for cordova-plugin-network-information.
-// Provides simplified access to the plugin. 
-// Use the plugin directly if the wrapper is too simple
-// for your needs. 
-function wigo_ws_NetworkInformation() {
-    // Returns true is internet is available via wifi or cell access.
-    this.isOnline = function() {
-        var bOnline = this.isCellOnline() || this.isWiFiOnline();
-        return bOnline;
-    };
-
-    // Returns true if internet is available via cell tower access.
-    this.isCellOnline = function() {
-        var bOnline = GetTypeDescr().indexOf("Cell") !== -1;
-        return bOnline;
-    };
-
-    // Returns true if internet is available via wifi access.
-    this.isWiFiOnline = function() {
-        var bOnline = GetTypeDescr().indexOf("WiFi") !== -1;
-        return bOnline;
-    }; 
-
-    // Returns string describing current network state.
-    // Note: Returns empty state is current network state is not defined.
-    function GetTypeDescr() {
-        var networkState = navigator.connection.type;
-        var sNetworkType = states[networkState];
-        if (typeof(sNetworkType) !== 'string') 
-            sNetorkType = "";
-        return sNetworkType;
-    }
-
-
-    var states = {};
-    states[Connection.UNKNOWN]  = 'Unknown connection';
-    states[Connection.ETHERNET] = 'Ethernet connection';
-    states[Connection.WIFI]     = 'WiFi connection';
-    states[Connection.CELL_2G]  = 'Cell 2G connection';
-    states[Connection.CELL_3G]  = 'Cell 3G connection';
-    states[Connection.CELL_4G]  = 'Cell 4G connection';
-    states[Connection.CELL]     = 'Cell generic connection';
-    states[Connection.NONE]     = 'No network connection';
-
-}
-*/
 
 // Object for View present by page.
 function wigo_ws_View() {
@@ -559,7 +512,7 @@ function wigo_ws_View() {
 
     // Returns ref to wigo_ws_NetworkInformation object.
     // Note: object indicated type and state of internet connection.
-    this.refNetorkInfo = function() {  ////20170406 added
+    this.refNetorkInfo = function() {  
         return networkInfo; 
     };
 
@@ -2523,9 +2476,7 @@ function wigo_ws_View() {
                                 curState = stateStopped;
                             } else {
                                 // Define params for a new recorded trail.
-                                ////20170406 stateDefineTrailName.prepare();
-                                ////20170406 curState = stateDefineTrailName;
-                                if (networkInfo.isOnline()) {   ////20170406 added if cond, then body existed, else body added.
+                                if (networkInfo.isOnline()) {   
                                     // Define params for a new recorded trail.
                                     stateDefineTrailName.prepare();
                                     curState = stateDefineTrailName;
@@ -2877,9 +2828,8 @@ function wigo_ws_View() {
             this.upload = function() {
                 bUploadInProgress = true;
                 bNewUploadPath = true;      
-                view.ShowStatus("Uploading recorded trail.", false); ////20170407 moved up from below
+                view.ShowStatus("Uploading recorded trail.", false); 
                 view.onUpload(view.curMode(), this.uploadPath);
-                ////20170407 view.ShowStatus("Uploading recorded trail.", false);
             };
 
             // Returns true if path is already defined.
@@ -5818,18 +5768,6 @@ function wigo_ws_Controller() {
     //  path: Obj created by view.NewUploadPathObj().
     //        upload path object which contains array of GeoPt elements and other members.
     view.onUpload = function (nMode, path) { 
-        /* ////20170407
-        // Check if network is online. ////20170406 added. $$$$ add need to check in onDelete.
-        //
-        var networkInfo = view.refNetorkInfo();
-        if (!networkInfo.isOnline()) {
-            var sError = "Internet access is not available. Cannot upload.";
-            view.ShowStatus(sError);
-            view.uploadPathCompleted(nMode, false, sError, path.nId, path.sPathName, true); // true => upload.
-            return;
-        }
-        ////20170406 check above. May want check in model gpxPut(). $$$$ 
-        */
         if (model.IsOwnerAccessValid()) {
             var gpx = new wigo_ws_Gpx();
             gpx.nId = path.nId;
@@ -5990,8 +5928,8 @@ function wigo_ws_Controller() {
                     var sMsg = "Server-side authentication failed.<br/>" +
                                "You may need to go to Facebook and Log Out<br/>" +
                                "so that your old authentication is reset.";
-                    if (result.msg)                        ////20170408 added
-                        sMsg += "<br/>" + result.msg;     ////20170408 added
+                    if (result.msg)                       
+                        sMsg += "<br/>" + result.msg;     
                     view.ShowStatus(sMsg);
                 }
             });
@@ -6154,13 +6092,12 @@ function wigo_ws_Controller() {
         }
 
         // Local helper to set path list in the view.
-        function SetPathList(bOk, sStatus) {  ////20170407 added sStatus arg.
+        function SetPathList(bOk, sStatus) {  
             // Set path list in the view.
             view.setPathList(arPath, true);  
             // Show number of paths found.
             if (bOk) {
-                ////20170407 view.ShowStatus(StatusOkMsg(arPath.length), false); 
-                view.AppendStatus(StatusOkMsg(arPath.length), false);  ////20170407 changes to AppendStatus.
+                view.AppendStatus(StatusOkMsg(arPath.length), false);  
                 // Ensure signin control bar is hidden in case it was shown
                 // due to an authentication failure.
                 view.ShowSignInCtrl(false); 
@@ -6168,7 +6105,7 @@ function wigo_ws_Controller() {
                 // The error is typically due to authentication failure. 
                 // Show signin controll bar so that user can signin.
                 view.ShowSignInCtrl(true);  
-                view.AppendStatus(sStatus, !bOk); ////201704 added. 
+                view.AppendStatus(sStatus, !bOk); 
             }
         }
 
