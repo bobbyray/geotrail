@@ -38,6 +38,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
     };
 };
 
+/* ////20170407 move to separate file to share.
 // Wrapper object for cordova-plugin-network-information.
 // Provides simplified access to the plugin. 
 // Use the plugin directly if the wrapper is too simple
@@ -83,6 +84,7 @@ function wigo_ws_NetworkInformation() {
     states[Connection.NONE]     = 'No network connection';
 
 }
+*/
 
 // Object for View present by page.
 function wigo_ws_View() {
@@ -2875,8 +2877,9 @@ function wigo_ws_View() {
             this.upload = function() {
                 bUploadInProgress = true;
                 bNewUploadPath = true;      
+                view.ShowStatus("Uploading recorded trail.", false); ////20170407 moved up from below
                 view.onUpload(view.curMode(), this.uploadPath);
-                view.ShowStatus("Uploading recorded trail.", false);
+                ////20170407 view.ShowStatus("Uploading recorded trail.", false);
             };
 
             // Returns true if path is already defined.
@@ -5840,7 +5843,7 @@ function wigo_ws_Controller() {
 
             // gpx.tModified is dont care because server sets tModified when storing record to database.
             // Put Gpx object to server via the model.
-            var bOk = model.putGpx(gpx,
+            var bPutOk = model.putGpx(gpx,
                 // Async callback upon storing record at server.
                 function (bOk, sStatus) {
                     var nId = 0;
@@ -5874,7 +5877,7 @@ function wigo_ws_Controller() {
                     }
                     view.uploadPathCompleted(nMode, bOk, sStatusMsg, nId, sPathName, true); // true => upload. 
                 });
-            if (!bOk) {
+            if (!bPutOk) {
                 var sError = "Cannot upload GPX trail to server because another transfer is already in progress.";
                 view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload. 
             }
@@ -5985,8 +5988,10 @@ function wigo_ws_Controller() {
                     // var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
                     // Note: result has info for debug.
                     var sMsg = "Server-side authentication failed.<br/>" +
-                               "Please go to Facebook and Log Out<br/>" +
+                               "You may need to go to Facebook and Log Out<br/>" +
                                "so that your old authentication is reset.";
+                    if (result.msg)                        ////20170408 added
+                        sMsg += "<br/>" + result.msg;     ////20170408 added
                     view.ShowStatus(sMsg);
                 }
             });
@@ -6013,7 +6018,7 @@ function wigo_ws_Controller() {
                         }
 
                     } else {
-                        var sError = "Error logging out: {0}".format(sMsg);
+                        var sError = "Error logging out: <br/>{0}".format(sMsg);
                         view.ShowStatus(sError);
                     }
                 });
@@ -6149,12 +6154,13 @@ function wigo_ws_Controller() {
         }
 
         // Local helper to set path list in the view.
-        function SetPathList(bOk) {
+        function SetPathList(bOk, sStatus) {  ////20170407 added sStatus arg.
             // Set path list in the view.
-            view.setPathList(arPath, true);
+            view.setPathList(arPath, true);  
             // Show number of paths found.
             if (bOk) {
-                view.ShowStatus(StatusOkMsg(arPath.length), false); 
+                ////20170407 view.ShowStatus(StatusOkMsg(arPath.length), false); 
+                view.AppendStatus(StatusOkMsg(arPath.length), false);  ////20170407 changes to AppendStatus.
                 // Ensure signin control bar is hidden in case it was shown
                 // due to an authentication failure.
                 view.ShowSignInCtrl(false); 
@@ -6162,6 +6168,7 @@ function wigo_ws_Controller() {
                 // The error is typically due to authentication failure. 
                 // Show signin controll bar so that user can signin.
                 view.ShowSignInCtrl(true);  
+                view.AppendStatus(sStatus, !bOk); ////201704 added. 
             }
         }
 
@@ -6179,10 +6186,10 @@ function wigo_ws_Controller() {
                             // Append all private paths for path owner found on screen.
                             model.getGpxListByLatLon(sPathOwnerId, eShare.private, gptSW, gptNE, function (bOk, gpxList, sStatus) {
                                 AppendToPathList(bOk, gpxList, sStatus);
-                                SetPathList(bOk);
+                                SetPathList(bOk, sStatus);
                             });
                         } else {
-                            SetPathList(bOk);
+                            SetPathList(bOk, sStatus);
                         }
                     });
                 }
@@ -6203,7 +6210,7 @@ function wigo_ws_Controller() {
                         SetPathList(bOk);
                     }
                     */
-                    SetPathList(bOk); 
+                    SetPathList(bOk, sStatus); 
                 });
                 break;
             case view.eFindIx.all_mine:
@@ -6215,10 +6222,10 @@ function wigo_ws_Controller() {
                         // Append all private paths for path owner.
                         model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
                             AppendToPathList(bOk, gpxList, sStatus);
-                            SetPathList(bOk);
+                            SetPathList(bOk, sStatus);
                         });
                     } else {
-                        SetPathList(bOk);
+                        SetPathList(bOk, sStatus);
                     }
                 });
                 break;
@@ -6227,7 +6234,7 @@ function wigo_ws_Controller() {
                 view.ShowStatus("Searching for My Public trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.public, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
-                    SetPathList(bOk);
+                    SetPathList(bOk, sStatus);
                 });
                 break;
             case view.eFindIx.my_private:
@@ -6236,7 +6243,7 @@ function wigo_ws_Controller() {
                 view.ShowStatus("Searching for My Private trails.", false);
                 model.getGpxList(sPathOwnerId, eShare.private, function (bOk, gpxList, sStatus) {
                     AppendToPathList(bOk, gpxList, sStatus);
-                    SetPathList(bOk);
+                    SetPathList(bOk, sStatus);
                 });
                 break;
             default:

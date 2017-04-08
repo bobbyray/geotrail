@@ -95,14 +95,35 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //      accessToken: string obtained from OAuth (Facebook) server for access token.
     //      userID: string for user ID obtained from OAuth server.
     //      userName: string for user name obtained from OAuth server.
-    //  onDone, callback handler for authentication completed. 
-    //  Handler Signature, json {status, accessHandle, msg}:
-    //      status: integer for status define by this.EAuthStatus.
-    //      accessHandle: string for access handle (user identifier) from GeoPaths server.
-    //      msg: string describing the status.
+    //  onDone, callback handler for authentication completed. Signature:
+    //      result: AuthResult object: {status, accessHandle, userID, userName, msg}.
+    //      See function AuthResult() below for details..
+    //  bNetOnline: boolean, optional. true indicates internet access is available.
+    //              Defaults to true if not given.     
+    //              If false, calls onDone(errorResult):
+    //                  errorResult.error = this.eAuthStatus.Error.
+    //                  errorResult.msg set in indicate internet access is not available.
+    //                  other errorResult fields are defautlts (empty strings).
+    //                  Note: true is returned synchronously indicating that onDone() is called.     
     // Synchronous Return: boolean for successful post to server.
     // Note: OnDone handler called for asynchronous completion. 
-    this.Authenticate = function (authData, onDone) {
+    this.Authenticate = function (authData, onDone, bNetOnline) {
+        // bNetOnline defaults to true if not given.
+        if (typeof(bNetOnline) !== 'boolean') {
+            bNetOnline = true; // Defaults to true.
+        }
+        if (!bNetOnline) { 
+            // Call onDone(..) to indicate internet access is not availble.
+            if (typeof(onDone) === 'function' ) {
+                // errorResult = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus} 
+                var errorResult = new AuthResult();
+                errorResult.status = this.eAuthStatus().Error;
+                errorResult.msg = "Internet access is not available.";
+                onDone(errorResult);
+            }
+            return true; // Note: return true to indicate onDone(..) was called.
+        }
+
         // Save async completion handler.
         if (typeof (onDone) === 'function')
             onAuthenticate = onDone;
@@ -129,15 +150,19 @@ function wigo_ws_GeoPathsRESTfulApi() {
         var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
     }
 
-    // Returns enumeration object for sharing state of a record.
+    // Returns ref to enumeration object for sharing state of a record.
     // Returned obj: { public: 0, protected: 1, private: 2 }
     this.eShare = function () { return eShare; };
 
-    // Returns enumeration object for user login status when authorization has completed.
+    // Returns ref to enumeration object for user login status when authorization has completed.
     this.eAuthStatus = function () { return eAuthStatus; };
 
     // Returns ref to enumeration object for sName duplication of Gpx object.
     this.eDuplicate = function () { return eDuplicate; };
+
+    ////20170408 // Returns new AuthResult object.
+    ////20170408 // Note: Provided to allow error checking for internet available before calling this.Authenicate().    
+    ////20170408 this.newAuthResult = function() {return new AuthResult();};
 
     // ** Private members
     // Enumeration of for duplication of sName of Gpx object:
