@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170406_1414"; // Constant string for App version.
+    var sVersion = "1.1.025_20170408_1623"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -5292,7 +5292,15 @@ function wigo_ws_View() {
                       ]);
 
     selectSignIn.onListElClicked = function(dataValue) {
-        var option = this[this.selectedIndex];
+        // Quit if there is no internet access. 
+        if (!networkInfo.isOnline()) {
+            var sAction = dataValue === 'facebook' ? 'sign in' :
+                            dataValue === 'logout' ? 'log out' : 'action'; 
+            var sError = "Facebook {0} failed.<br/>Internet access is not available.".format(sAction);
+            that.ShowStatus(sError);
+            return;
+        }
+
         if (dataValue === 'facebook') {
             that.ClearStatus();
             fb.Authenticate();
@@ -6051,15 +6059,13 @@ function wigo_ws_Controller() {
 
         // Local helper to call after getting geo list is completed.
         // Appends to path list and shows status message.
-        function AppendToPathList (bOk, gpxList, sStatus) {
+        function AppendToPathList (bOk, gpxList, sStatus) {  // sStatus no longer used.
             if (bOk) {
                 for (var i = 0; gpxArray && gpxList && i < gpxList.length; i++) { // Added check for gpxArray not null. Saw it happen in debug once.
                     arPath.push(gpxList[i].sName);
                     gpxArray.push(gpxList[i]);
                 }
             }
-            if (!bOk )
-                view.AppendStatus(sStatus, !bOk);
         }
 
         // Local helper to form part of msg indicating trails <for kind of search>.
