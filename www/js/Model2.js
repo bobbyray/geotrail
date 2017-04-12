@@ -727,5 +727,12 @@ function wigo_ws_Model() {
     geoTrailVersion.LoadFromLocalStorage();
 
     // Network information object. Wrapper for cordova-plugin-network-information.
-    var networkInfo = new wigo_ws_NetworkInformation(); 
+    var networkInfo;
+    if (window.app.deviceDetails.isiPhone()) {
+        // cordova-plugin-network-information is not working for ios. Hangs app at start up.
+        // Use dummy replacement for wigo_ws_NetworkInformation object that always indicates online.
+        networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, isWiFiOnline: function(){return true;}};
+    } else {
+        networkInfo = new wigo_ws_NetworkInformation();
+    }
 }
