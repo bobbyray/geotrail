@@ -707,7 +707,7 @@ label {
 }
 
 #offlineLocalData .wigo_ws_DropDownLabel { 
-    left: 15%;
+    left: 14%;  /* ////20170413 was 15% */
 }
 
 #mapBar {
