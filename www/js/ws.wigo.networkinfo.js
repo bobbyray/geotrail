@@ -49,3 +49,20 @@ function wigo_ws_NetworkInformation() {
     states[Connection.NONE]     = 'No network connection';
 
 }
+
+// Creates and returns a wigo_ws_NetworkInformation Object.
+// Arg:
+//  bIos: boolean. If true returns dummy replacement for wigo_ws_NetworkInformation object that always indicates online.
+//                 If falses returns wigo_ws_NetworkInformation object.
+// Note: // cordova-plugin-network-information is not working for ios. Hangs app at start up.
+function wigo_ws_NewNetworkInformation(bIos) {
+    if (typeof(bIos) !== 'boolean')
+        bIos = false;
+    var networkInfo;
+    if (bIos) {
+        networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, isWiFiOnline: function(){return true;}};
+    } else { 
+        networkInfo = new wigo_ws_NetworkInformation(); 
+    }
+    return networkInfo;
+}

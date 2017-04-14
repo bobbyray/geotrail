@@ -1953,6 +1953,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     }
 
+    /* ////20170414 redo so confirm looks better for ios.
     // Caches a layer of map tiles locally to the device.
     // Args
     //  layer: L.TileLayer.Cordova of the layer to cache.
@@ -2066,6 +2067,146 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             onStatusUpdate(status);
         return true;
     }
+    */
+
+
+
+    // Caches a layer of map tiles locally to the device.
+    // Args
+    //  layer: L.TileLayer.Cordova of the layer to cache.
+    //  onStatusUpdate: callback for status update. Maybe null. callback signature:
+    //    arg object {sMsg: string, bDone: boolean, bError: boolean}: 
+    //      sMsg: Status msg.
+    //      bDone: Indicates done, no more callbacks.
+    //      bError: Indicates an error.
+    //      bCancel: Indicates user canceled when asked to confirm download.
+    // Returns:
+    //  boolean, true indicates success. Return is immediate but download of tiles is
+    //  asynchronous. onStatusUpdate(arg) is called (repeatedly) to update download progress 
+    //  asynchronously.
+    function CacheLayer(onStatusUpdate) {
+        var status = { sMsg: "", bDone: false, bError: false, bCancel: false };
+        if (!map || !tileLayer) {
+            status.sMsg = "Map is not loaded yet.";
+            status.bError = true;
+            status.bDone = true;
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return false; // Quit if map does not exist yet.
+        }
+
+        var message;
+        if (!tileLayer.dirhandle) {
+            message = "Writing to device storage is not allowed.\n" +
+                      "Enable permissions to use storage in device settings for you app.";
+            alert(message);
+            status.bDone = true;
+            status.bError = true;
+            status.sMsg = "Permissions to write to device storage is not enabled.";
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return false;
+        }
+
+        var padPercent = 20.0; // Percentage on each side of current map view to 
+                               // extend boundaries for caching tiles.
+        var lat = map.getCenter().lat;
+        var lng = map.getCenter().lng;
+        var zmin = map.getZoom();
+        var zmax = CACHE_ZOOM_MAX;
+        if (zmax < zmin)  
+            zmax = zmin;  
+        var bounds = map.getBounds();
+        bounds.pad(padPercent);
+        // Limit zoom if tile_list is too large
+        var bTileListDone = false;
+        var tile_list;
+        do {
+            if (zmax < zmin)  
+                zmax = zmin;  
+            tile_list = tileLayer.calculateXYZListFromBounds(bounds, zmin, zmax);
+            bTileListDone = tile_list.length < TILES_TO_DOWNLOAD_MAX || zmax <= zmin;
+            if (!bTileListDone) {
+                // Reduce zmax for zoom to reduce length of tile_list.
+                zmax--;
+            } 
+        } while (!bTileListDone)
+
+        
+        message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
+        ////20170414 var ok = confirm(message);
+        var bConfirm = true; 
+        var sTitle = 'GeoTrail';
+        var sAnswer = 'OK,Cancel';
+        if (navigator.notification) {
+            // Show confirmation dialog which has async completion.
+            navigator.notification.confirm(message, function (iButton) {
+                // Async completion for user's response.
+                var bOk = iButton === 1;
+                bConfirm = OnDone(bOk);
+            },
+            sTitle, sAnswer);
+        } else {
+            // Note: Should not happen because navigator.notification should be defined.
+            bConfirm = window.confirm(message);
+            OnDone(bConfirm);
+        }
+        return bConfirm; // Synchronous return. User confirms asynchronously if navigator.notitification.confirm() is called.
+
+        // Local helper called after user confirms or cancels.
+        function OnDone(ok) {
+            if (!ok) {
+                status.bDone = true;
+                status.bCancel = true;
+                status.sMsg = "User canceled.";
+                if (onStatusUpdate)
+                    onStatusUpdate(status);
+                return false;
+            }
+
+            tileLayer.downloadXYZList(
+                // 1st param: a list of XYZ objects indicating tiles to download
+                tile_list,
+                // 2nd param: overwrite existing tiles on disk? if no then a tile already on disk will be kept, which can be a big time saver
+                false,
+                // 3rd param: progress callback
+                // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
+                function (done, total) {
+                    var percent = Math.round(100 * done / total);
+                    status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
+                    if (onStatusUpdate)
+                        onStatusUpdate(status); 
+                },
+                // 4th param: complete callback
+                // no parameters are given, but we know we're done!
+                function () {
+                    // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
+                    tileLayer.getDiskUsage(function (filecount, bytes) {
+                        var kilobytes = Math.round(bytes / 1024);
+                        status.sMsg = "Map caching completed, status" + "<br/>" + filecount + " files" + "<br/>" + kilobytes + " kB";
+                        status.bDone = true;
+                        if (onStatusUpdate)
+                            onStatusUpdate(status); 
+                    });
+                },
+                // 5th param: error callback
+                // parameter is the error message string
+                function (error) {
+                    status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
+                    status.bDone = true;
+                    status.bError = true;
+                    if (onStatusUpdate)
+                        onStatusUpdate(status); 
+                }
+            );
+            status.sMsg = "Starting download of map tiles for caching.";
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return true;
+        }
+    }
+
+
 
     // Object for drawing and managing a path for recording. 
     // The path for the recording is separate and indepedent of the path drawn for the map.

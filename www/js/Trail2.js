@@ -5575,6 +5575,7 @@ Are you sure you want to delete the maps?";
     fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 
     // Object for network (internet) connection state.
+    /* ////20170414 
     var networkInfo;
     if (window.app.deviceDetails.isiPhone()) {
         // cordova-plugin-network-information is not working for ios. Hangs app at start up.
@@ -5583,6 +5584,8 @@ Are you sure you want to delete the maps?";
     } else {
         networkInfo = new wigo_ws_NetworkInformation();
     }
+    */
+    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
 }
 
 

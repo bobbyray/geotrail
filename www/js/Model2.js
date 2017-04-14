@@ -727,6 +727,7 @@ function wigo_ws_Model() {
     geoTrailVersion.LoadFromLocalStorage();
 
     // Network information object. Wrapper for cordova-plugin-network-information.
+    /* ////20170414 
     var networkInfo;
     if (window.app.deviceDetails.isiPhone()) {
         // cordova-plugin-network-information is not working for ios. Hangs app at start up.
@@ -735,4 +736,6 @@ function wigo_ws_Model() {
     } else {
         networkInfo = new wigo_ws_NetworkInformation();
     }
+    */
+    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
 }
