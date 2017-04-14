@@ -209,7 +209,7 @@ label {
 }
 
 #selectMapCache {
-    width: 29%;     /* ////20170413 was 28% */
+    width: 29%;     
     height: 100%;
     float: left;
 }
@@ -695,7 +695,7 @@ label {
 
 #offlineRecord, #offlineLocalData {  
     height: 100%; 
-    width: 35%;                /* ////20170403 was 32% */
+    width: 35%;               
     float: left;
     padding-left: 0.3em;
     box-sizing: border-box; 
@@ -707,7 +707,7 @@ label {
 }
 
 #offlineLocalData .wigo_ws_DropDownLabel { 
-    left: 14%;  /* ////20170413 was 15% */
+    left: 14%; 
 }
 
 #mapBar {
