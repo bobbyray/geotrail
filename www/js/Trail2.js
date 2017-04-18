@@ -3412,6 +3412,7 @@ function wigo_ws_View() {
     function ClearOfflineGeoPathSelect(select) {
         if (that.curMode() === that.eMode.offline) {
             selectGeoTrail.empty(1); // Keeps first item in the list.
+            selectGeoTrail.setSelectedIndex(0); // Show only the first element.
             map.ClearPath();
             // Clear the OfflineLocalData droplist. 
             offlineLocalData.setPathParams(null); 
