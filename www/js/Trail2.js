@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170408_1623"; // Constant string for App version.
+    var sVersion = "1.1.025_20170417"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3054,7 +3054,7 @@ function wigo_ws_View() {
             if (bOk) {
                 // Update params from fields returns from server.
                 if (offlineParamsUploading) {
-                    var nCurId = offlineParams.nId;
+                    var nCurId = offlineParamsUploading.nId;
                     offlineParamsUploading.nId = nId;
                     // Server may have ranmed path name, or user may have renamed path name saved locally. 
                     // If server has renamed, sStatusMsg indicates this. Don't care if user renamed local path name.
@@ -3089,6 +3089,12 @@ function wigo_ws_View() {
         this.do = function(eventValue) {
             // Helper to prepare for user to enter Path name and share.
             function PreparePathName() {
+                // Quit if offlienParams does not exists.
+                if (!offlineParams) {
+                    view.ShowStatus("Cannot upload trail.");
+                    return;
+                }
+
                 view.ShowStatus("Enter a name for the trail", false);
                 ShowPathDescrBar(true); 
                 // Set path name and share for editing.
@@ -3104,7 +3110,7 @@ function wigo_ws_View() {
             switch (eventValue) {
                 case this.event.begin_upload:
                     if (networkInfo.isOnline()) { 
-                        if (recordFSM.isCurPathSaved(offlineParams.nId) ) { 
+                        if (offlineParams && recordFSM.isCurPathSaved(offlineParams.nId) ) { 
                             // Warn user that recording of current trail will be ended because it is being uploaded.
                             var sMsg = "Recording the current trail will be ended because it is selected for uploading to server.";
                             view.ShowConfirm(sMsg, function(bConfirm){
@@ -3188,6 +3194,12 @@ function wigo_ws_View() {
                 return ok;
             }
 
+            // Quit if offlineParams does not exist. 
+            if (!offlineParams) {
+                ok.empty = true;
+                return ok; 
+            }
+
             uploader.uploadPath.nId = 0;  // Database record id is 0 for new record.
             // Set coords to upload.
             var bOk = uploader.setArGeoPtFromArray(offlineParams.gpxPath.arGeoPt);
@@ -3225,13 +3237,14 @@ function wigo_ws_View() {
                     view.onGetPaths(view.eMode.offline, ""); // Note: owner id is ignored for offline node.
                     // Clear displayed path from the map.
                     view.clearPath();  
+                    // Clear the offline local data droplist.
+                    offlineLocalData.setPathParams(null); 
                 } else {
                     var sPathName = offlineParams ? "<br/> " + offlineParams.name : ""; 
                     var sMsg = "Failed to delete tail{0} from local storage".format(sPathName);
                     view.ShowStatus(sMsg);
                 }
             }
-
         };
 
         var offlineParamsUploading = null; // Copy of offlineParams being uploaded. 
@@ -3400,6 +3413,8 @@ function wigo_ws_View() {
         if (that.curMode() === that.eMode.offline) {
             selectGeoTrail.empty(1); // Keeps first item in the list.
             map.ClearPath();
+            // Clear the OfflineLocalData droplist. 
+            offlineLocalData.setPathParams(null); 
         }
     }
 
