@@ -168,6 +168,9 @@
         },
         "com.jetboystudio.pebble.PebblePGPlugin": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-network-information": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },
     "dependent_plugins": {

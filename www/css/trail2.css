@@ -209,7 +209,7 @@ label {
 }
 
 #selectMapCache {
-    width: 28%;
+    width: 29%;     
     height: 100%;
     float: left;
 }
@@ -673,7 +673,7 @@ label {
     width: 75%;
 }
 
-#onlineRecord, #offlineRecord { 
+#onlineRecord {  
     height: 100%; 
     width: 10%; 
     float: left;
@@ -691,6 +691,23 @@ label {
 }
 #onlineRecord .wigo_ws_DropDownList, #offlineRecord .wigo_ws_DropDownList  { 
     width: 4em;
+}
+
+#offlineRecord, #offlineLocalData {  
+    height: 100%; 
+    width: 35%;               
+    float: left;
+    padding-left: 0.3em;
+    box-sizing: border-box; 
+}
+
+#offlineLocalData .wigo_ws_DropDownIcon {   
+    left: initial;
+    right: 0px;
+}
+
+#offlineLocalData .wigo_ws_DropDownLabel { 
+    left: 14%; 
 }
 
 #mapBar {

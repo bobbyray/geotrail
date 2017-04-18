@@ -148,7 +148,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Draws geo path on the map object.
     // Args:
     //  path: wigo_ws_GpxPath object for the path.
-    this.DrawPath = function (path) {
+    //  zoom: number, optional. zoom factor.
+    //  gptCenter: wigo_ws_GeoPt, optional. center point for displaying.
+    // Notes:
+    //  Specify zoom, gptCenter for drawing a path offline. In this case the
+    //  zoom and center point were saved with the offline path data. (The current
+    //  zoom for the offline map may not have tites for drawing the path.)
+    //  Do not specify zoom and gptCenter for drawing a path online. In this
+    //  case the display is set to the bounds of the path with zoom set accordingly.
+    //  (Using current zoom does not work well because it is for the previous trail.)
+    this.DrawPath = function (path, zoom, gptCenter) {
         if (!IsMapLoaded())
             return; // Quit if map has not been loaded.
         //var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
@@ -171,7 +180,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         SetStartEndOfPathShape();  
 
         curPath = path; // Save current gpx path object.
-        this.PanToPathCenter();
+        if (typeof(zoom) === 'number' && typeof(gptCenter) === 'object') {
+            var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
+            map.setZoomAround(llCenter, zoom); 
+            map.panTo(llCenter); 
+        } else {
+            // Fit path bound to display.
+            this.PanToPathCenter()
+        }
     };
 
     // Not Used. Does not seem to be useful.
@@ -502,7 +518,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.PanToPathCenter = function () {
         var bOk = true;
         if (curPath) {
-            // Note: Use to pan to center of path and zoom. This did not work well
+            // Note: Used to pan to center of path and zoom. This did not work well
             // because saved zoom factor could represent zoom of previous trail rather
             // than zoom of current trail. Seems that zoom does not change
             // immediately when a path is drawn.
@@ -1998,58 +2014,79 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             } 
         } while (!bTileListDone)
 
-        
         message = "Preparing to cache tiles.\n" + "Zoom level " + zmin + " through " + zmax + "\n" + tile_list.length + " tiles total." + "\nClick OK to proceed.";
-        var ok = confirm(message);
-        if (!ok) {
-            status.bDone = true;
-            status.bCancel = true;
-            status.sMsg = "User canceled.";
-            if (onStatusUpdate)
-                onStatusUpdate(status);
-            return false;
-        }
-
-        tileLayer.downloadXYZList(
-            // 1st param: a list of XYZ objects indicating tiles to download
-            tile_list,
-            // 2nd param: overwrite existing tiles on disk? if no then a tile already on disk will be kept, which can be a big time saver
-            false,
-            // 3rd param: progress callback
-            // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
-            function (done, total) {
-                var percent = Math.round(100 * done / total);
-                status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
-                if (onStatusUpdate)
-                    onStatusUpdate(status); 
+        var bConfirm = true; 
+        var sTitle = 'GeoTrail';
+        var sAnswer = 'OK,Cancel';
+        if (navigator.notification) {
+            // Show confirmation dialog which has async completion.
+            navigator.notification.confirm(message, function (iButton) {
+                // Async completion for user's response.
+                var bOk = iButton === 1;
+                bConfirm = OnDone(bOk);
             },
-            // 4th param: complete callback
-            // no parameters are given, but we know we're done!
-            function () {
-                // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
-                tileLayer.getDiskUsage(function (filecount, bytes) {
-                    var kilobytes = Math.round(bytes / 1024);
-                    status.sMsg = "Map caching completed, status" + "<br/>" + filecount + " files" + "<br/>" + kilobytes + " kB";
-                    status.bDone = true;
+            sTitle, sAnswer);
+        } else {
+            // Note: Should not happen because navigator.notification should be defined.
+            bConfirm = window.confirm(message);
+            OnDone(bConfirm);
+        }
+        return bConfirm; // Synchronous return. User confirms asynchronously if navigator.notitification.confirm() is called.
+
+        // Local helper called after user confirms or cancels.
+        function OnDone(ok) {
+            if (!ok) {
+                status.bDone = true;
+                status.bCancel = true;
+                status.sMsg = "User canceled.";
+                if (onStatusUpdate)
+                    onStatusUpdate(status);
+                return false;
+            }
+
+            tileLayer.downloadXYZList(
+                // 1st param: a list of XYZ objects indicating tiles to download
+                tile_list,
+                // 2nd param: overwrite existing tiles on disk? if no then a tile already on disk will be kept, which can be a big time saver
+                false,
+                // 3rd param: progress callback
+                // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
+                function (done, total) {
+                    var percent = Math.round(100 * done / total);
+                    status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
                     if (onStatusUpdate)
                         onStatusUpdate(status); 
-                });
-            },
-            // 5th param: error callback
-            // parameter is the error message string
-            function (error) {
-                status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
-                status.bDone = true;
-                status.bError = true;
-                if (onStatusUpdate)
-                    onStatusUpdate(status); 
-            }
-        );
-        status.sMsg = "Starting download of map tiles for caching.";
-        if (onStatusUpdate)
-            onStatusUpdate(status);
-        return true;
+                },
+                // 4th param: complete callback
+                // no parameters are given, but we know we're done!
+                function () {
+                    // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
+                    tileLayer.getDiskUsage(function (filecount, bytes) {
+                        var kilobytes = Math.round(bytes / 1024);
+                        status.sMsg = "Map caching completed, status" + "<br/>" + filecount + " files" + "<br/>" + kilobytes + " kB";
+                        status.bDone = true;
+                        if (onStatusUpdate)
+                            onStatusUpdate(status); 
+                    });
+                },
+                // 5th param: error callback
+                // parameter is the error message string
+                function (error) {
+                    status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
+                    status.bDone = true;
+                    status.bError = true;
+                    if (onStatusUpdate)
+                        onStatusUpdate(status); 
+                }
+            );
+            status.sMsg = "Starting download of map tiles for caching.";
+            if (onStatusUpdate)
+                onStatusUpdate(status);
+            return true;
+        }
     }
+
+
 
     // Object for drawing and managing a path for recording. 
     // The path for the recording is separate and indepedent of the path drawn for the map.
@@ -2325,109 +2362,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // number of spurious consecutive points is less than the nMaxSpurious;
         // otherwise the consecutive points remain.
         this.filter = function () { 
-            /* ///--20170302 try different alogorithm. 
-            // Helper function to mark as deleted points in arRecordPt in a spurious cluster and to 
-            // delete the array of spurious cluster indices.
-            // Note: ok to call if spurious cluster is empty.
-            //       Also for deletion of spurious cluster, if valid cluster is only one point, 
-            //       the valid cluster is deleted because it was suspected to be spurious. 
-            function DeleteSpuriousCluster() { 
-                if (arSpuriousClusterIx.length > 0) {
-                    // Delete any points in spurious cluster and empty spurious cluster.
-                    var ptSpurious, v;
-                    for (var i=0; i < arSpuriousClusterIx.length; i++) {
-                        ptSpurious = arRecordPt[arSpuriousClusterIx[i]];
-                        ptSpurious.bDeleted = true;
-                        result.nDeleted++; 
-                    }
-                    // Empty the  spurious cluster.
-                    arSpuriousClusterIx = [];
-                }
-            }
-
-            var result = {bValid: false, nDeleted: 0}; 
-            var pt, v; // current point in loop and its velocity.   
-            var arSpuriousClusterIx = [];  // Array of indices of in a spurious points cluster.
-            var arValidClusterIx = [];     // Array of indices in a valid cluster.
-            var prevPt = arRecordPt.length > 0 ? arRecordPt[0] : null; // Previous point for determining if a current point is spurious or not.
-            if (prevPt)                    // Append prevPt (first point) to valid cluster.  
-                arValidClusterIx.push(0);  
-            for (var iPt=1; iPt < arRecordPt.length;) {
-                pt = arRecordPt[iPt];
-                
-                if (pt.kind !== this.eRecordPt.RECORD) {
-                    // Ignore a point that is not a RECORD point.
-                    iPt++;
-                    continue;
-                }
-                if (pt.bDeleted) {
-                    // Ignore a point that is deleted.
-                    result.bValid = true;
-                    result.nDeleted++;
-                    iPt++;
-                    continue;
-                }
-                result.bValid = true; // Indicate path can be filtered.
-                v = pt.v(prevPt);
-                if (v < vLimit)  { 
-                    // pt is valid, not spurious.
-                    // Delete any points in spurious cluster and empty spurious cluster.
-                    DeleteSpuriousCluster();   
-                    // Append valid point to valid cluster.
-                    arValidClusterIx.push(iPt);
-                    // Set previous valid point to current point.
-                    prevPt = pt;
-                    // Advance loop index for next point.
-                    iPt++;
-                }  else {
-                    // pt is spurious.
-                    if (arSpuriousClusterIx.length < maxSpuriousClusterCt) {
-                        //  Append point to the consecutive points in the  spurious cluster.
-                        arSpuriousClusterIx.push(iPt);
-                        // Advance loop index for next point.
-                        iPt++;
-                    } else {
-                        // Limit for consecutive spurious pts reaached. 
-                        // Set previous valid point to first point in spurious cluster.
-                        prevPt = arRecordPt[arSpuriousClusterIx[0]];
-                        // Set loop index for next point to previous valid point index plus 1.
-                        iPt = arSpuriousClusterIx[0] + 1;
-
-                        if (arValidClusterIx.length <= minValidClusterCt) {
-                            // Delete the small cluster of valid points.
-                            for (var i=0; i < arValidClusterIx.length; i++) {
-                                arRecordPt[arValidClusterIx[i]].bDeleted = true; // Indicate filter has been applied.
-                                result.nDeleted++; 
-                            }
-                        }
-
-                        // Empty valid points cluster and append first point in current spurious cluseter
-                        // as the first valid point.
-                        arValidClusterIx = [];
-                        arValidClusterIx.push(arSpuriousClusterIx[0]);
-
-                        // Empty the spurious points cluster because the current spurious custer
-                        // is no longer considered surpious.
-                        arSpuriousClusterIx = [];
-                    }
-                }           
-            }
-            // Delete any points in spurious cluster and empty spurious cluster. 
-            DeleteSpuriousCluster(); 
-
-            // Set pathCoords to match RECORD points that are not deleted.
-            if (result.bValid && result.nDeleted > 0) {
-                SetPathCoords();
-                this.draw(); 
-                bUnfilterEnabled = true; 
-            } else {
-                bUnfilterEnabled = false;
-            }
-            bFilterEnabled = false;
-
-            return result;
-            */
-
             var result = filterFSM.doIt();
             var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
             if (result.bValid && nTotalDeleted > 0) {  
@@ -2764,8 +2698,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var filterFSM = new FilterFSM(this.eRecordPt); 
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
-        ///-- var maxSpuriousClusterCt = 2;  // Maximum number of consecutive points in a spurious cluster.             
-        ///-- var minValidClusterCt = 2;     // Minimum number of points in cluster for cluster to be considered valid. 
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.

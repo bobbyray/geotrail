@@ -37,6 +37,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
     -->
     <!-- local jquery -->
     <script src="js/jquery-1.11.3.js"></script>
+    <script src="js/ws.wigo.networkinfo.js"></script>
     <script src="js/Model2.js"></script>
     <script src="js/GeoPathMapView2.js"></script>
     <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
@@ -88,6 +89,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     </div>
                     <div id="offlineRecord">
                         <!-- Container for dropdown list control with id="offlineRecordDropDown" -->
+                    </div>
+                    <div id="offlineLocalData">
+                        <!-- Container for dropdow list control with id='offlineLocalDataDropDown' -->
                     </div>
                 </div>
             </div>
@@ -188,12 +192,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
             <div id='holderSpuriousVLimit' class='settingItem'>
             </div>
-            <!-- ///-- 20170302 did not finish, changing filtering algorithm 
-            <div id='holderMaxSpuriousClusterCt' class='settingItem'>
-            </div>
-            <div id='holderMinValidClusterCt' class='settingItem'>
-            </div>
-            -->
             <div id='holderBodyMass' class='settingItem'>
                 <label id='labelBodyMass'>Body Weight (lbs)</label>
                 <input id='numberBodyMass' type='number' step='5' min='100' max='250' value='150'>
@@ -335,7 +333,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     new, enters the TrName State for you to enter a trail name. Otherwise
                     uploads the recorded trail to the web server and remains in the Stopped State.
                     </li>
-                    <!-- Append Trail no longer used. There is insert trail in Edit mode instead
+                    <!-- Append Trail no longer used. Provide insert trail in Edit mode instead
                     <li>Append Trail<br/>
                     Append Trail is only available if you can append the recorded trail
                     to the main trail currently shown. If the main trail shown is not
@@ -358,7 +356,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     <li>Filter<br/>
                     Filters out spurious points for the recorded trail. Sometimes a location
                     can be wildly inaccurate.<br/>
-                    Option not present after filtering has been done.
                     </li>
                     <li>Unfilter<br/>
                     Puts back any points that have been removed by filtering.<br/>
@@ -402,20 +399,35 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         except that the map is shown from map tiles saved on your phone instead of from the web, 
         which means that the map is limited and is blank if you pan or zoom beyond the bounds
         of the saved map.
+       
+        <h3>Trails DropList</h3> 
+        Select a trail from the list you have saved.
+        <h3>Map Cache DropList</h3>
+        Shows information about the cache of map tiles.<br/>
         <ul>
-            <li>Trails DropList<br/>  
-            Select a trail from the list you have saved.</li>
-            <li>Map Cache DropList<br/>
-            Shows information about the cache of map tiles.<br/>
-            <ul>
-                <li>Size<br/>Select to see the number of files and the size in MB of all the files.</li>
-                <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
-                the offline trails from the phone.</li>
-            </ul>
-            <li>Record DropList<br/>
-            Records a trail as you travel. This works the same as described in 
-            <a href="#helpOnlineRecord">Online Record DropList</a>, except 
-            the option to save a trail to the web server is not available while offline.
+            <li>Size<br/>Select to see the number of files and the size in MB of all the files.</li>
+            <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
+            the offline trails from the phone.</li>
+        </ul>
+        <h3>Record DropList</h3>
+        Records a trail as you travel. This works the same as described in 
+        <a href="#helpOnlineRecord">Online Record DropList</a>, except 
+        the option to save a trail saves locally to the phone instead of
+        to the web server.
+        <h3>Local Data DropList</h3>
+        Manages the data saved locally.<br/>
+        <ul>
+            <li>Upload<br/>
+            Uploads the selected trail to the server. The option is only shown
+            if the local trail has not been uploaded to the web server. Also, the
+            upload can only be done if there is an Internet connection; if not
+            a message is shown to indicate the upload cannot be done.
+            </li>
+            <li>Delete<br/>
+            Deletes the selected trail. The trail is only deleted locally.
+            If the trail has been uploaded to the web server, it still remains
+            at the web server. Note that the trail can be deleted from the web
+            server by going to Edit a Trail available from the View droplist.
             </li>
         </ul>
         <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
@@ -655,7 +667,9 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The Prev Geo Loc Thres is given in Menu > Settings.</li>
             <li>Touch MyLoc button again to see the off trail distance, return heading, and turning suggestion.</li>
         </ol>
-        <p>Of course, if you know accurate compass directions yourself, follow the heading back to the trail.
+        <p>You can start recording your travel by selecting Record > Start. This draws on the map where you have traveled
+        allowing you to compare where you are with respect to the trail.
+        <p>Of course, if you know accurate compass directions yourself, follow the heading back to the trail.</p>
         The turning suggestions are only an aid if you do not know accurate compass directions.</p>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
@@ -711,6 +725,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>cordova-plugin-vibration 2.2.1-dev "Vibration"</li>
         <li>cordova-plugin-whitelist 1.2.2 "Whitelist"</li>
         <li>org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"</li>
+        <li>cordova-plugin-network-information 1.3.2 "Network Information"</li>
         </ul>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>

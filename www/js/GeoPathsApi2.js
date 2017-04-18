@@ -95,14 +95,35 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //      accessToken: string obtained from OAuth (Facebook) server for access token.
     //      userID: string for user ID obtained from OAuth server.
     //      userName: string for user name obtained from OAuth server.
-    //  onDone, callback handler for authentication completed. 
-    //  Handler Signature, json {status, accessHandle, msg}:
-    //      status: integer for status define by this.EAuthStatus.
-    //      accessHandle: string for access handle (user identifier) from GeoPaths server.
-    //      msg: string describing the status.
+    //  onDone, callback handler for authentication completed. Signature:
+    //      result: AuthResult object: {status, accessHandle, userID, userName, msg}.
+    //      See function AuthResult() below for details..
+    //  bNetOnline: boolean, optional. true indicates internet access is available.
+    //              Defaults to true if not given.     
+    //              If false, calls onDone(errorResult):
+    //                  errorResult.error = this.eAuthStatus.Error.
+    //                  errorResult.msg set in indicate internet access is not available.
+    //                  other errorResult fields are defautlts (empty strings).
+    //                  Note: true is returned synchronously indicating that onDone() is called.     
     // Synchronous Return: boolean for successful post to server.
     // Note: OnDone handler called for asynchronous completion. 
-    this.Authenticate = function (authData, onDone) {
+    this.Authenticate = function (authData, onDone, bNetOnline) {
+        // bNetOnline defaults to true if not given.
+        if (typeof(bNetOnline) !== 'boolean') {
+            bNetOnline = true; // Defaults to true.
+        }
+        if (!bNetOnline) { 
+            // Call onDone(..) to indicate internet access is not availble.
+            if (typeof(onDone) === 'function' ) {
+                // errorResult = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus} 
+                var errorResult = new AuthResult();
+                errorResult.status = this.eAuthStatus().Error;
+                errorResult.msg = "Internet access is not available.";
+                onDone(errorResult);
+            }
+            return true; // Note: return true to indicate onDone(..) was called.
+        }
+
         // Save async completion handler.
         if (typeof (onDone) === 'function')
             onAuthenticate = onDone;
@@ -129,11 +150,11 @@ function wigo_ws_GeoPathsRESTfulApi() {
         var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
     }
 
-    // Returns enumeration object for sharing state of a record.
+    // Returns ref to enumeration object for sharing state of a record.
     // Returned obj: { public: 0, protected: 1, private: 2 }
     this.eShare = function () { return eShare; };
 
-    // Returns enumeration object for user login status when authorization has completed.
+    // Returns ref to enumeration object for user login status when authorization has completed.
     this.eAuthStatus = function () { return eAuthStatus; };
 
     // Returns ref to enumeration object for sName duplication of Gpx object.
@@ -321,12 +342,12 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // var base = new wigo_ws_Ajax("http://localhost:63651/Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
     var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host (Would like to try https)
-    //20150808!!!! I cannot get the ajax requests to work locally with the IIS Express Server.
-    //             IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
-    //             but the ajaxs requests for this api fail if https is used for the apis.
-    //             I think the problem is a configuration problem with IIS Express,
-    //             and that https for the ajax requests may work properly 
-    //             at the (GoDaddy) remote host. For now, not using https for these apis.
+    //20150808 I cannot get the ajax requests to work locally with the IIS Express Server.
+    //         IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
+    //         but the ajaxs requests for this api fail if https is used for the apis.
+    //         I think the problem is a configuration problem with IIS Express,
+    //         and that https for the ajax requests may work properly 
+    //         at the (GoDaddy) remote host. For now, not using https for these apis.
 
     // Handler in base class to handle completion of ajax request.
     base.onRequestServed = function (nState, bOk, req) {

@@ -98,6 +98,10 @@ function wigo_ws_Model() {
     //      bOk: boolean for success.
     //      sStatus: status string describing result.
     this.putGpx = function (gpx, onDone) {
+        // Quit if internet access is not available.
+        if (!CheckNetAccess(onDone)) {  
+            return true; 
+        }        
         var bOk = api.GpxPut(gpx, this.getAccessHandle(), onDone);
         return bOk;
     };
@@ -113,6 +117,10 @@ function wigo_ws_Model() {
     //      bOk: boolean for success.
     //      sStatus: status string describing result.
     this.deleteGpx = function (gpxId, onDone) {
+        // Quit if internet access is not available.
+        if (!CheckNetAccess(onDone)) {  
+            return true; 
+        }        
         var bOk = api.GpxDelete(gpxId, this.getAccessHandle(), onDone);
         return bOk;
     };
@@ -128,6 +136,10 @@ function wigo_ws_Model() {
     //      gpxList: array of wigo_ws_Gpx objects found in database.
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxList = function (sOwnerId, nShare, onDone) {
+        // Quit immediately if internet access is not available.
+        if (!CheckNetAccessGetList(onDone)) { 
+            return true;
+        }
         var bOk = api.GpxGetList(sOwnerId, nShare, this.getAccessHandle(), onDone);
         return bOk;
     }
@@ -145,6 +157,10 @@ function wigo_ws_Model() {
     //      gpxList: array of wigo_ws_Gpx objects found in database.
     //      sStatus: string indicating result. (For bOk false, an error msg.)
     this.getGpxListByLatLon = function (sOwnerId, nShare, gptSW, gptNE, onDone) {
+        // Quit immediately if internet access is not available.
+        if (!CheckNetAccessGetList(onDone)) { 
+            return true;
+        }
         var bOk = api.GpxGetListByLatLon(sOwnerId, nShare, gptSW, gptNE, this.getAccessHandle(), onDone);
         return bOk;
     }
@@ -157,14 +173,14 @@ function wigo_ws_Model() {
     //  userID: string for unique user id.
     //  userName: string or user name.
     //  onDone: callback on async completion, Signature:
-    //      json {status, accessHandle, msg}:
-    //          status: integer for status define by this.EAuthStatus().
-    //          accessHandle: string for data access handle (user identifier) from GeoPaths server.
-    //          msg: string describing the status.
-    //      
+    //     errorResult: AuthResult object from api:  {status, accessHandle, msg}:
+    //          errorResult.status: integer for status define by this.EAuthStatus().Error.
+    //          error.msg: string describing the status.
+    //          other fields of errorResult are defaults, empty strings.
     this.authenticate = function (accessToken, userID, userName, onDone) {
+        var bNetOnline = networkInfo.isOnline();  
         var authData = { 'accessToken': accessToken, 'userID': userID, 'userName': userName };
-        var bOk = api.Authenticate(authData, onDone);
+        var bOk = api.Authenticate(authData, onDone, bNetOnline);  
         return bOk;
     };
 
@@ -175,7 +191,11 @@ function wigo_ws_Model() {
     //      bOk: boolean indicating success.
     //      sMsg: string describing the result.
     // Returns boolean synchronously indicating successful post to database server.
-    this.logout = function (onDone) {
+    this.logout = function (onDone) {  
+        // Quit if internet access is not available.
+        if (!CheckNetAccess(onDone)) { 
+            return true; 
+        }        
         var logoutData = { 'accessHandle': this.getAccessHandle(), 'userID': this.getOwnerId() };
         var bOk = api.Logout(logoutData, onDone);
         return bOk;
@@ -303,7 +323,7 @@ function wigo_ws_Model() {
         localStorage[sAccessHandleKey] = sAccessHandle;
     };
 
-    // Sets offline params for a map in local storage.
+    // Sets offline params object for a map in local storage.
     // Args:
     //  oParams: wigo_ws_GeoPathMap.OfflineParams object for a geo path.
     //           oParams.nId is used to find an existing object in the array.
@@ -312,6 +332,29 @@ function wigo_ws_Model() {
     this.setOfflineParams = function (oParams) {
         arOfflineParams.setId(oParams);
         arOfflineParams.SaveToLocalStorage();
+    };
+
+    // Replaces offline params object for a map in local storage.
+    // Args:
+    //  nId: number. id of offline path to replace.
+    //  oParams: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    this.replaceOfflineParams = function(nId, oParams) {
+        var bReplaced = arOfflineParams.replaceId(nId, oParams);
+        arOfflineParams.SaveToLocalStorage(); 
+        return bReplaced;
+    };
+
+    // Deletes offline params object for a map in local storage.
+    // Args:
+    //  nId: number. id of offline path to replace.
+    //               nId matches a member of wigo_ws_GeoPathMap.OfflineParams object in the list.
+    //  oParams: wigo_ws_GeoPathMap.OfflineParams object. The oject that replaces object identified by nId.
+    // Note: If nId is not found in list of offline geo paths, the list is unchanged.
+    this.deleteOfflineParams = function(nId) { 
+        var bDeleted = arOfflineParams.deleteId(nId);
+        arOfflineParams.SaveToLocalStorage(); 
+        return bDeleted;
     };
 
     // Returns wigo_ws_GeoPathMap.OfflineParameters object saved in local storage.
@@ -326,6 +369,8 @@ function wigo_ws_Model() {
 
     // Returns list, which is an Array object of wigo_ws_GeoPathMap.OfflineParams elements.
     this.getOfflineParamsList = function() {
+        // Always reload from local storage. arOfflineParams.arParms may have been reset.
+        // (Resetting arOfflineParams.arParms actually happened.)
         return arOfflineParams.getAll();
     }
 
@@ -346,7 +391,6 @@ function wigo_ws_Model() {
     this.getSettings = function () {
         return geoTrailSettings.getSettings();
     }
-
 
     // Sets version in localStorage.
     this.setVersion = function(version) {
@@ -371,6 +415,44 @@ function wigo_ws_Model() {
 
     var bReadingFile = false;
     var reader = new FileReader(); // Text file reader.
+
+    // Helper to check if internet access is available.
+    // Returns true if internet access is available.
+    // Arg:
+    //  onDone: callback function(bOk, gpxList, sStatus).
+    //      Called only if internet access is NOT available.
+    //      bOk: boolean. false indicating failure.
+    //      gpxList:  array of wigo_ws_Gpx objects. empty array.
+    //      sStatus: string. status indicating internet access is not available.
+    function CheckNetAccessGetList(onDone) {
+        var bOk = true;
+        if (!networkInfo.isOnline()) {
+            bOk = false;
+            if (typeof(onDone) === 'function' ) {
+                onDone(bOk, [], "Internet access is not available.");
+            }
+        }
+        return bOk;
+    }
+
+    // Helper to check if internet access is available.
+    // Returns true if internet access is available.
+    // Arg:
+    //  onDone: callback function(bOk, gpxList, sStatus).
+    //      Called only if internet access is NOT available.
+    //      bOk: boolean. false indicating failure.
+    //      sStatus: string. status indicating internet access is not available.
+    function CheckNetAccess(onDone) {
+        var bOk = true;
+        if (!networkInfo.isOnline()) { 
+            bOk = false;
+            if (typeof(onDone) === 'function' ) {
+                onDone(bOk, "Internet access is not available.");
+            }
+        }
+        return bOk;
+    }
+
 
     // Object for storing Offline Parameters for geo paths in local storage.
     // Manages an array of wigo_ws_GeoPathMap.OfflineParams objects.
@@ -401,7 +483,7 @@ function wigo_ws_Model() {
                 }
             }
             return iFound;
-        }
+        };
 
         // Sets an element of this array to oParams.
         // If element already exits base on oParams.nId, the element is replaced.
@@ -415,12 +497,43 @@ function wigo_ws_Model() {
             } else {
                 arParams.push(oParams);
             }
-        }
+        };
+
+        // Replaces an element of this array with oParams.
+        // If element is not found, there is no change.
+        // Return true if element is found, false otherwise.
+        // Arg:
+        //  nId: number. id of the path for element for element to replace.        
+        //  oParams: a wigo_ws_GeoPathMap.OfflineParams object. The replacement object.
+        this.replaceId = function(nId, oParams) { 
+            var iFound = this.findIxOfId(nId);
+            if (iFound >= 0) {
+                arParams[iFound] = oParams;
+            }
+            var bReplaced = iFound >= 0;
+            return bReplaced;
+        };
+
+        // Deletes an element of this array.
+        // If element is not found, there is no change.
+        // Return true if element is found, false otherwise.
+        // Arg:
+        //  nId: number. id of the path for element for element to replace.        
+        //       nId matches nId member of a wigo_ws_GeoPathMap.OfflineParams object in the path list.
+        this.deleteId = function(nId, oParams) { 
+            var iFound = this.findIxOfId(nId);
+            if (iFound >= 0) {
+                // Delete the element found.
+                arParams.splice(iFound, 1); 
+            }
+            var bDeleted = iFound >= 0;
+            return bDeleted;
+        };
 
         // Returns an Array of all the wigo_ws_GeoPathMap.OfflineParams elements.
         this.getAll = function () {
             return arParams;
-        }
+        };
         
         // Removes all elementsw of this array.
         this.Clear = function () {
@@ -459,7 +572,6 @@ function wigo_ws_Model() {
 
         this.LoadFromLocalStorage();
     }
-
     // Array of offline parameters for geo paths.
     var arOfflineParams = new OfflineParamsAry();
 
@@ -574,7 +686,6 @@ function wigo_ws_Model() {
         }
 
     }
-
     
     // Object for GeoTrail Version saved in localStorage.
     function GeoTrailVersion() {
@@ -614,4 +725,7 @@ function wigo_ws_Model() {
     // Version for GeoTrail app in localStorage.
     var geoTrailVersion = new GeoTrailVersion();
     geoTrailVersion.LoadFromLocalStorage();
+
+    // Network information object. Wrapper for cordova-plugin-network-information.
+    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
 }

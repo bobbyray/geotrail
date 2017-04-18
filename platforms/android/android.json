@@ -67,6 +67,10 @@
                         {
                             "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"NetworkStatus\"><param name=\"android-package\" value=\"org.apache.cordova.networkinformation.NetworkManager\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -92,6 +96,10 @@
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />",
                             "count": 1
                         }
                     ],
@@ -173,6 +181,9 @@
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
         "com.jetboystudio.pebble.PebblePGPlugin": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-network-information": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },
@@ -417,6 +428,21 @@
             "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
             "clobbers": [
                 "Pebble"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-network-information/www/network.js",
+            "id": "cordova-plugin-network-information.network",
+            "clobbers": [
+                "navigator.connection",
+                "navigator.network.connection"
+            ]
+        },
+        {
+            "file": "plugins/cordova-plugin-network-information/www/Connection.js",
+            "id": "cordova-plugin-network-information.Connection",
+            "clobbers": [
+                "Connection"
             ]
         }
     ]
