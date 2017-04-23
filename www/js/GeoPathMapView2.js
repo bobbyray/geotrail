@@ -113,8 +113,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Add a listener for the click event.
             map.on('click', onMapClick);
-            // Initialize PathListMarkers. ////20170420 added
-            pathMarkers.initialize(map);   ////20170420 added.
+            // Initialize PathListMarkers. 
+            pathMarkers.initialize(map);   
             // Callback to indicate the result.
             var bOk = tileLayer !== null;
             if (callback)
@@ -202,7 +202,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
     //      sDescr = "";   // string: description for the path. (For example could be total distance.)
     //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
-    this.newPathMarkerEl = function() {   ////20170422 
+    this.newPathMarkerEl = function() {   
         return pathMarkers.newPathMarkerEl();
     };
 
@@ -224,12 +224,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     };
     
     // Shows the path markers on the map.
-    this.ShowPathMarkers = function() { ////20170420 added 
-        //// $$$$ write
+    this.ShowPathMarkers = function() { 
         pathMarkers.show();
     };
-
-
 
     // Not Used. Does not seem to be useful.
     // // Redraw the map.
@@ -536,7 +533,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Returns L.Point object (.x, .y) for a lat/lon geo point.
     // Args:
     //  gpt: wigo_ws_GeoPt object for lat/lon to be converted to 
-    ///      pixel x,y position on map layer.
+    //       pixel x,y position on map layer.
     this.LatLonToPixel = function (gpt) {
         var ll = L.latLng(gpt.lat, gpt.lon);
         var pixel = map.latLngToLayerPoint(ll);
@@ -589,7 +586,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEditSegment();  
         ClearEraseSegment(); 
         ClearCompassHeadingArrow();
-        pathMarkers.clear();  ////20170422 added
+        pathMarkers.clear();  
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -2750,7 +2747,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //  view: clears the popup and show path for the marker selected by touch.
     //  Close: closes the popup.
     //  ZoomOUt: closes the popup and zooms out showing all the path markers.
-    function PathMarkers() { ////20170420 added
+    function PathMarkers() { 
 
         // Initializes this PathMarkers object.
         // Must be called once before other members can be used.
@@ -2758,25 +2755,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  oMap; Leaflet L.Map object: the underlying map on which path markers are drawn.
         this.initialize = function(oMap) {
             map = oMap;
-            oms = new OverlappingMarkerSpiderfier(map);  ////20170423 added
-            oms.addListener('click', PathMarkerClicked 
-            /* ////20170423 
-            function(marker) {  ////20170423 added
-                ////20170423???? popup.setContent(marker.desc);
-                var pathMarkerEl = liPathMarker[marker.key];
-                if (pathMarkerEl) {
-                    popup.setContent(pathMarkerEl.pathName);
-                    popup.setLatLng(marker.getLatLng());
-                    map.openPopup(popup);
-                }
-            }
-            */
-            );            
+            oms = new OverlappingMarkerSpiderfier(map);  
+            oms.addListener('click', PathMarkerClicked);            
         };
 
         // Clears all the path markers and empties the list of path markers.
         this.empty = function() {
-            //// $$$$ write
             this.clear();
 
             // Initialize the corners that covers all the path markers.
@@ -2789,14 +2773,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.clear = function() {
             if (!map)
                 return; // Quit, not initialized.
-            oms.clearMarkers(); ////20170423 added
-            map.closePopup(popup); ////20170423 added
+            oms.clearMarkers(); 
+            map.closePopup(popup); 
             var el;
             var keys = Object.keys(liPathMarker);
             for (var i=0; i < keys.length; i++) {
                 el = liPathMarker[keys[i]];
                 if (el.layer) {
-                    ////20170423 el.layer.removeEventListener('click', PathMarkerClicked, el); ////20170422 added
                     map.removeLayer(el.layer);
                     el.layer = null;
                 }
@@ -2825,7 +2808,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  key: string. key for identifying a path marker in the list.
         //  pathMarkerEl: PathMarkerEl object. path marker to append to the list.
         this.setPathMarkerEl = function(key, pathMarkerEl) {
-            pathMarkerEl.key = key; ////20170423 Add key as filed of marker layer.
+            pathMarkerEl.key = key; 
             liPathMarker[key] = pathMarkerEl;
             // Update the corners the covers all the path markers.
             var gptMarker = new wigo_ws_GeoPt();  // Convert Leaflet LatLng to geotrail wigo_ws_GeoPt.
@@ -2845,7 +2828,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             //  pathMarkerEl: PathMarkerEl obj. parameters for the layer to be added to the map.
             function PathMarkerLayer(pathMarkerEl) {
                 var layer = L.marker(pathMarkerEl.latLngMarker);
-                layer.key = pathMarkerEl.key; // Add key field to marker layer. ////20170423 added
+                layer.key = pathMarkerEl.key; // Add key field to marker layer.
                 return layer;
             }
 
@@ -2855,39 +2838,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 el = liPathMarker[keys[i]];
                 if (!el.layer) {
                     el.layer = PathMarkerLayer(el);
-                    ////21070423 el.layer.addEventListener('click', PathMarkerClicked, el); ////20170422 added
-                    oms.addMarker(el.layer); ////20170423 added  
+                    oms.addMarker(el.layer); 
                     map.addLayer(el.layer);
                 }
-                ////20170422MoveUp map.addLayer(el.layer);
             }
             // Set map bounds to cover the coners.
-            //// $$$$ write 
             that.FitBounds(corners.gptSW, corners.gptNE);
         }; 
-
-        /* ////20170423
-        // Event handler for a click (touch) on a path marker
-        // Arg:
-        //  e: Event object. 
-        // Note: this is context of the event handler and references a PathMarkerEl object.
-        function PathMarkerClicked(e) {
-            var sMsg = this.pathName + "\n" + this.sDescr;
-            alert(sMsg);
-        }
-        */
-
 
         // Event handler for Path Marker Clicked.
         // Arg:
         //  marker: L.Marker object; ref to marker clicked.
         //          Note: Addtional field of marker.key has been set.
-        function PathMarkerClicked (marker) {  ////20170423 added
-            ////20170423???? popup.setContent(marker.desc);
+        function PathMarkerClicked (marker) {  
             var pathMarkerEl = liPathMarker[marker.key];
             if (pathMarkerEl) {
-                ////20170423 popup.setContent(pathMarkerEl.pathName);
-                ////20170423  $$$$ write
                 popupDescrDiv.innerHTML = pathMarkerEl.pathName + "<br/>" + "Distance: 12.3 mi.";
                 popupViewBtn.setAttribute('data-key', marker.key);
                 popup.setContent(popupDiv);

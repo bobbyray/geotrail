@@ -524,7 +524,7 @@ function wigo_ws_View() {
     //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
     //      sDescr = "";   // string: description for the path. (For example could be total distance.)
     //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
-    this.newPathMarkerEl = function() { ////20170422 added 
+    this.newPathMarkerEl = function() { 
         return map.newPathMarkerEl();
     };
 
@@ -535,7 +535,7 @@ function wigo_ws_View() {
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
     //        Defaults to true if not given.
-    /// arPathMarker is optional array of PathMarkerEl objects. Each element
+    //  arPathMarker is optional array of PathMarkerEl objects. Each element
     //        gives the info for a marker on the map of the corresponding path.
     //        If the array is empty, there are no path markers.
     //        Default to empty array.
@@ -545,10 +545,10 @@ function wigo_ws_View() {
 
         // Select previous path if indicated.
         var bSelected = selectOnceAfterSetPathList.select();  
-        if (!bSelected) { ////20170422 added if and body.
+        if (!bSelected) { 
             // For Online mode, show path markers when a path has not been selected.
             if (nMode === this.eMode.online_view) {
-                map.ShowPathMarkers();  ////20170422 
+                map.ShowPathMarkers();  
             }
 
         }
@@ -737,7 +737,7 @@ function wigo_ws_View() {
     //  View setPathList(..) calls select() after filling selectGeoTrail.
     var selectOnceAfterSetPathList = {nPrevMode: that.eMode.unknown, sPathName: "",
         select: function() {
-            var bSelected = false; ////20170422 added
+            var bSelected = false; 
             var nCurMode = that.curMode();
             switch (nCurMode)
             {
@@ -754,7 +754,7 @@ function wigo_ws_View() {
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
                             if (dataValue) {
                                 selectGeoTrail.onListElClicked(dataValue);
-                                bSelected = true;  ////20170422 added
+                                bSelected = true;  
                             }
                             // Clear after selecting unless droplist is empty.
                             if (selectGeoTrail.getListLength() > 1) { // First entry is Select a Trail, which is same as empty.
@@ -765,7 +765,7 @@ function wigo_ws_View() {
                     }
                     break;
             }
-            return bSelected;  ////20170422 added
+            return bSelected;  
         }};
 
 
@@ -5387,7 +5387,7 @@ function wigo_ws_View() {
         if (listIx < 0) {   
             // No path selected.
             map.ClearPath();
-            map.ShowPathMarkers(); ////20170422 added
+            map.ShowPathMarkers(); 
         } else {
             // Path is selected
             that.onPathSelected(that.curMode(), listIx);
@@ -6104,7 +6104,7 @@ function wigo_ws_Controller() {
         // Local helper to create and return an array of path markers for the map.
         // Note: path markers are only created for online_view, otherwise an
         //       empty array of path markers is returned.
-        function CreatePathMarkerArray() { ////20170422 added 
+        function CreatePathMarkerArray() { 
             var arPathMarker = [];
             if (view.curMode() === view.eMode.online_view) {
                 var markerEl, gpxEl;
@@ -6165,8 +6165,8 @@ function wigo_ws_Controller() {
         // Local helper to set path list in the view.
         function SetPathList(bOk, sStatus) {  
             // Set path list in the view.
-            var arPathMarker = CreatePathMarkerArray(); ////20170422 added
-            view.setPathList(arPath, true, arPathMarker);  ////20170422 added arPathMarker arg.  
+            var arPathMarker = CreatePathMarkerArray(); 
+            view.setPathList(arPath, true, arPathMarker);  
             // Show number of paths found.
             if (bOk) {
                 view.AppendStatus(StatusOkMsg(arPath.length), false);  
