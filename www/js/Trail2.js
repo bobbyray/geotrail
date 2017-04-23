@@ -516,6 +516,18 @@ function wigo_ws_View() {
         return networkInfo; 
     };
 
+    // Creates and returns a PathMarkerEl object.
+    // The fields of the returned object should be set approppriatedly
+    // and the object appended to an array that is the arg of this.FillPathMarks(..).
+    // Fields of a returned PathMarkerEl object are initialized as follows:
+    //      pathName = ""; // string: path name.
+    //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+    //      sDescr = "";   // string: description for the path. (For example could be total distance.)
+    //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+    this.newPathMarkerEl = function() { ////20170422 added 
+        return map.newPathMarkerEl();
+    };
+
     // Fill the list of paths that user can select.
     // Uses selectOnceAfterSetPathList obj to select a path and to draw it
     // if path is found by selectOnceAfterSetPathList.
@@ -523,17 +535,27 @@ function wigo_ws_View() {
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
     //        Defaults to true if not given.
-    this.setPathList = function (arPath, bSort) {
+    /// arPathMarker is optional array of PathMarkerEl objects. Each element
+    //        gives the info for a marker on the map of the corresponding path.
+    //        If the array is empty, there are no path markers.
+    //        Default to empty array.
+    this.setPathList = function (arPath, bSort, arPathMarker) {
         FillPathList(arPath, bSort);
-        
+        map.FillPathMarkers(arPathMarker);
+
         // Select previous path if indicated.
-        selectOnceAfterSetPathList.select();  
+        var bSelected = selectOnceAfterSetPathList.select();  
+        if (!bSelected) { ////20170422 added if and body.
+            // For Online mode, show path markers when a path has not been selected.
+            if (nMode === this.eMode.online_view) {
+                map.ShowPathMarkers();  ////20170422 
+            }
+
+        }
     };
 
 
     // Helper to fill the list of paths that user can select.
-    // Uses selectOnceAfterSetPathList obj to select a path and to draw it
-    // if path is found by selectOnceAfterSetPathList.
     // Arg:
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
@@ -631,7 +653,7 @@ function wigo_ws_View() {
     this.ShowPathInfo = function (bShow, path) {
         ShowPathInfoDiv(bShow);
         map.DrawPath(path);
-    }
+    };
 
     // Caches current map view.
     // Arg:
@@ -706,6 +728,7 @@ function wigo_ws_View() {
     //         Clears nPrevMode and sPathName unless droplist is empty.
     //         Therefore auto selection is only done once until nPrevMode and sPathName
     //         are set again.
+    //         Returns: boolean. true if a selection is made.
     // Remarks: 
     //  selectGeoTrail is the droplist control. 
     //  If nPrevNode is unknown, there is no selection to match.
@@ -714,6 +737,7 @@ function wigo_ws_View() {
     //  View setPathList(..) calls select() after filling selectGeoTrail.
     var selectOnceAfterSetPathList = {nPrevMode: that.eMode.unknown, sPathName: "",
         select: function() {
+            var bSelected = false; ////20170422 added
             var nCurMode = that.curMode();
             switch (nCurMode)
             {
@@ -728,8 +752,10 @@ function wigo_ws_View() {
                         case that.eMode.online_edit:
                         case that.eMode.select_mode:  
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
-                            if (dataValue) 
+                            if (dataValue) {
                                 selectGeoTrail.onListElClicked(dataValue);
+                                bSelected = true;  ////20170422 added
+                            }
                             // Clear after selecting unless droplist is empty.
                             if (selectGeoTrail.getListLength() > 1) { // First entry is Select a Trail, which is same as empty.
                                 this.nPrevMode = that.eMode.unknown;
@@ -739,6 +765,7 @@ function wigo_ws_View() {
                     }
                     break;
             }
+            return bSelected;  ////20170422 added
         }};
 
 
@@ -5360,6 +5387,7 @@ function wigo_ws_View() {
         if (listIx < 0) {   
             // No path selected.
             map.ClearPath();
+            map.ShowPathMarkers(); ////20170422 added
         } else {
             // Path is selected
             that.onPathSelected(that.curMode(), listIx);
@@ -6073,6 +6101,26 @@ function wigo_ws_Controller() {
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
+        // Local helper to create and return an array of path markers for the map.
+        // Note: path markers are only created for online_view, otherwise an
+        //       empty array of path markers is returned.
+        function CreatePathMarkerArray() { ////20170422 added 
+            var arPathMarker = [];
+            if (view.curMode() === view.eMode.online_view) {
+                var markerEl, gpxEl;
+                for (var i=0; gpxArray && i < gpxArray.length; i++) {
+                    gpxEl = gpxArray[i];
+                    markerEl = view.newPathMarkerEl();
+                    markerEl.pathName = gpxEl.sName;
+                    markerEl.dataIx = i;
+                    markerEl.sDescr = "Some description: ";
+                    markerEl.latLngMarker = L.latLng(gpxEl.gptBegin.lat, gpxEl.gptBegin.lon); 
+                    arPathMarker.push(markerEl);
+                }
+            }
+            return arPathMarker;
+        }
+        
         // Local helper to call after getting geo list is completed.
         // Appends to path list and shows status message.
         function AppendToPathList (bOk, gpxList, sStatus) {  // sStatus no longer used.
@@ -6117,7 +6165,8 @@ function wigo_ws_Controller() {
         // Local helper to set path list in the view.
         function SetPathList(bOk, sStatus) {  
             // Set path list in the view.
-            view.setPathList(arPath, true);  
+            var arPathMarker = CreatePathMarkerArray(); ////20170422 added
+            view.setPathList(arPath, true, arPathMarker);  ////20170422 added arPathMarker arg.  
             // Show number of paths found.
             if (bOk) {
                 view.AppendStatus(StatusOkMsg(arPath.length), false);  

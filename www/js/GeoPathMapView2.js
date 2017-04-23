@@ -113,6 +113,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Add a listener for the click event.
             map.on('click', onMapClick);
+            // Initialize PathListMarkers. ////20170420 added
+            pathMarkers.initialize(map);   ////20170420 added.
             // Callback to indicate the result.
             var bOk = tileLayer !== null;
             if (callback)
@@ -189,6 +191,45 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.PanToPathCenter()
         }
     };
+
+    
+    
+    // Creates and returns a PathMarkerEl object.
+    // The fields of the returned object should be set approppriatedly
+    // and the object appended to an array that is the arg of this.FillPathMarks(..).
+    // Fields of a returned PathMarkerEl object are initialized as follows:
+    //      pathName = ""; // string: path name.
+    //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+    //      sDescr = "";   // string: description for the path. (For example could be total distance.)
+    //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+    this.newPathMarkerEl = function() {   ////20170422 
+        return pathMarkers.newPathMarkerEl();
+    };
+
+    // Fills the collection of path markers that can be shown on the map.
+    // Arg:
+    //  arPathMarkers: array of PathMarkerEl objs, optional. If not given 
+    //                 empties and clears the path markers from the map.
+    // Note: Does not show the path markers. 
+    this.FillPathMarkers = function(arPathMarker) {
+        pathMarkers.empty();
+        if (!arPathMarker)
+            return;
+        var el, key;
+        for (var i=0; i < arPathMarker.length; i++) {
+            el = arPathMarker[i];
+            key = el.dataIx.toFixed(0);
+            pathMarkers.setPathMarkerEl(key, el);
+        }
+    };
+    
+    // Shows the path markers on the map.
+    this.ShowPathMarkers = function() { ////20170420 added 
+        //// $$$$ write
+        pathMarkers.show();
+    };
+
+
 
     // Not Used. Does not seem to be useful.
     // // Redraw the map.
@@ -528,7 +569,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         return bOk;
     };
 
-    // Clears current path and geo location circle and arrow from the map.
+    // Clears current path and geo location circle, and compass arrow, path markers from the map.
     this.ClearPath = function () {
         if (!IsMapLoaded())
             return; // Quit if map has not been loaded.
@@ -548,6 +589,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEditSegment();  
         ClearEraseSegment(); 
         ClearCompassHeadingArrow();
+        pathMarkers.clear();  ////20170422 added
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -2086,8 +2128,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     }
 
-
-
     // Object for drawing and managing a path for recording. 
     // The path for the recording is separate and indepedent of the path drawn for the map.
     // Constructor arg:
@@ -2703,6 +2743,189 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var kgMass = 77.0; // Body mass in kilograms.
         
     }
-    
-}
 
+    // Object for collection of PathMarkerEl objects.
+    // Each path has a marker. Touch the marks show a popup which has the
+    // path name and control buttons:
+    //  view: clears the popup and show path for the marker selected by touch.
+    //  Close: closes the popup.
+    //  ZoomOUt: closes the popup and zooms out showing all the path markers.
+    function PathMarkers() { ////20170420 added
+
+        // Initializes this PathMarkers object.
+        // Must be called once before other members can be used.
+        // Arg:
+        //  oMap; Leaflet L.Map object: the underlying map on which path markers are drawn.
+        this.initialize = function(oMap) {
+            map = oMap;
+            oms = new OverlappingMarkerSpiderfier(map);  ////20170423 added
+            oms.addListener('click', PathMarkerClicked 
+            /* ////20170423 
+            function(marker) {  ////20170423 added
+                ////20170423???? popup.setContent(marker.desc);
+                var pathMarkerEl = liPathMarker[marker.key];
+                if (pathMarkerEl) {
+                    popup.setContent(pathMarkerEl.pathName);
+                    popup.setLatLng(marker.getLatLng());
+                    map.openPopup(popup);
+                }
+            }
+            */
+            );            
+        };
+
+        // Clears all the path markers and empties the list of path markers.
+        this.empty = function() {
+            //// $$$$ write
+            this.clear();
+
+            // Initialize the corners that covers all the path markers.
+            corners = new wigo_ws_GeoPt.Corners();
+
+            liPathMarker = {};
+        };
+
+        // Clears the path markers for the map, but does not empty the list of path markers.
+        this.clear = function() {
+            if (!map)
+                return; // Quit, not initialized.
+            oms.clearMarkers(); ////20170423 added
+            map.closePopup(popup); ////20170423 added
+            var el;
+            var keys = Object.keys(liPathMarker);
+            for (var i=0; i < keys.length; i++) {
+                el = liPathMarker[keys[i]];
+                if (el.layer) {
+                    ////20170423 el.layer.removeEventListener('click', PathMarkerClicked, el); ////20170422 added
+                    map.removeLayer(el.layer);
+                    el.layer = null;
+                }
+            }
+        };
+
+        // Creates and returns a PathMarkerEl object.
+        // See PathMarkerEl() object definition below.
+        // Note: Caller sets fields of the returned object
+        //       and passes the object as argment to this.setPathMarkerEl(..); 
+        this.newPathMarkerEl = function() {
+            // Path marker element object for a list of path marker elements.
+            function PathMarkerEl() {
+                this.pathName = ""; // string: path name.
+                this.dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+                this.sDescr = "";   // string: description for the path. (For example could be total distance.)
+                this.latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+                // this.layer is a field added by this.show() as a marker layer is added to the map.
+            }
+            var el = new PathMarkerEl();
+            return el;
+        };
+
+        // Sets path marker to list of path markers.
+        // Arg:
+        //  key: string. key for identifying a path marker in the list.
+        //  pathMarkerEl: PathMarkerEl object. path marker to append to the list.
+        this.setPathMarkerEl = function(key, pathMarkerEl) {
+            pathMarkerEl.key = key; ////20170423 Add key as filed of marker layer.
+            liPathMarker[key] = pathMarkerEl;
+            // Update the corners the covers all the path markers.
+            var gptMarker = new wigo_ws_GeoPt();  // Convert Leaflet LatLng to geotrail wigo_ws_GeoPt.
+            gptMarker.lat = pathMarkerEl.latLngMarker.lat;
+            gptMarker.lon = pathMarkerEl.latLngMarker.lng;
+            corners.Update(gptMarker); 
+        };
+
+        // Shows the list of path markers on the map.
+        this.show = function() {
+            if (!map)
+                return; // Quit, not initialized.
+
+
+            // Helper that creates and returns L.Layer object for marker to add to the map.
+            // Arg:
+            //  pathMarkerEl: PathMarkerEl obj. parameters for the layer to be added to the map.
+            function PathMarkerLayer(pathMarkerEl) {
+                var layer = L.marker(pathMarkerEl.latLngMarker);
+                layer.key = pathMarkerEl.key; // Add key field to marker layer. ////20170423 added
+                return layer;
+            }
+
+            var el;
+            var keys = Object.keys(liPathMarker);
+            for (var i=0; i < keys.length; i++) {
+                el = liPathMarker[keys[i]];
+                if (!el.layer) {
+                    el.layer = PathMarkerLayer(el);
+                    ////21070423 el.layer.addEventListener('click', PathMarkerClicked, el); ////20170422 added
+                    oms.addMarker(el.layer); ////20170423 added  
+                    map.addLayer(el.layer);
+                }
+                ////20170422MoveUp map.addLayer(el.layer);
+            }
+            // Set map bounds to cover the coners.
+            //// $$$$ write 
+            that.FitBounds(corners.gptSW, corners.gptNE);
+        }; 
+
+        /* ////20170423
+        // Event handler for a click (touch) on a path marker
+        // Arg:
+        //  e: Event object. 
+        // Note: this is context of the event handler and references a PathMarkerEl object.
+        function PathMarkerClicked(e) {
+            var sMsg = this.pathName + "\n" + this.sDescr;
+            alert(sMsg);
+        }
+        */
+
+
+        // Event handler for Path Marker Clicked.
+        // Arg:
+        //  marker: L.Marker object; ref to marker clicked.
+        //          Note: Addtional field of marker.key has been set.
+        function PathMarkerClicked (marker) {  ////20170423 added
+            ////20170423???? popup.setContent(marker.desc);
+            var pathMarkerEl = liPathMarker[marker.key];
+            if (pathMarkerEl) {
+                ////20170423 popup.setContent(pathMarkerEl.pathName);
+                ////20170423  $$$$ write
+                popupDescrDiv.innerHTML = pathMarkerEl.pathName + "<br/>" + "Distance: 12.3 mi.";
+                popupViewBtn.setAttribute('data-key', marker.key);
+                popup.setContent(popupDiv);
+                popup.setLatLng(marker.getLatLng());
+                map.openPopup(popup);
+            }
+        }
+
+        // Event handler for PoupViewBtn clicked.
+        function PopupViewBtnClicked(e) {
+            var sKey = this.getAttribute('data-key');
+            alert('Popup View Btn clicked.' + sKey);
+        }
+
+
+        // Object for list of PathMarkerEl objs. 
+        // Each property value is PathMarkerEl obj with a property name string that is its key.
+        // Note: a property name is likely a data record sequence id.
+        var liPathMarker = {}; 
+
+        var corners = new wigo_ws_GeoPt.Corners(); // Corners that covers all the path markers.
+        var map = null; // Leaflet L.Map object.
+        var oms = null; // OverlappingMarkerSpiderfier object for map.
+        var popup = new L.Popup();  // Popup for marker.
+        // Create div for popup content.
+        alert("Debug: Creating Marker Popup");
+        var popupDiv = document.createElement('div');
+        popupDiv.className = "wigo_ws_MarkerPopup";
+        var popupDescrDiv = document.createElement('div');
+        popupDescrDiv.className = "wigo_ws_MarkerPopupDescr";
+        popupDiv.appendChild(popupDescrDiv);
+        var popupViewBtn = document.createElement('button');
+        popupViewBtn.className = 'wigo_ws_MarkerPopupViewBtn';
+        popupViewBtn.setAttribute('data-key', ""); 
+        popupViewBtn.addEventListener('click', PopupViewBtnClicked, false);
+        popupDiv.appendChild(popupViewBtn);
+        
+
+    }
+    var pathMarkers = new PathMarkers();
+}
