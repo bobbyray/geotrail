@@ -119,6 +119,12 @@ function wigo_ws_View() {
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
     this.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) { };
 
+    // Gets wigo_ws_GpxPath object for a path.
+    // Signature of Handler:
+    //  nMode: view.eMode enumeration.
+    //  iPathList: number. index to array of data for the paths. 
+    //  Returns: wigo_ws_GpxPath obj. Data for path. null if iPathList is invalid.
+    this.onGetPath = function(nMode, iPathList) { return null}; ////20170424 added
 
     // Returns geo path upload data for data index from item in the selection list.
     // Handler signature:
@@ -5123,6 +5129,35 @@ function wigo_ws_View() {
         }
     };
 
+    // Show a path on the map due to selection from a path marker.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    map.onShowPath = function(sDataIx) {  ////20170424 added
+        var nDataIx = parseInt(sDataIx, 10);
+        that.onPathSelected(that.curMode(), nDataIx);
+        selectGeoTrail.setSelected(sDataIx); 
+    };
+
+    // Gets distance for a path.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    //  Returns: {n: number, s: string}:
+    //      n: number. total distance of path in meters.
+    //      s: string. total distance of path with suffix for units.
+    map.onGetPathDistance = function(sDataIx) { ////20170420 added
+        var result = {n: 0, s: "?"};
+        var nDataIx = parseInt(sDataIx, 10);
+        //// $$$$ write
+        var path = that.onGetPath(that.curMode(), nDataIx); 
+        var pathSegs = map.newPathSegs();
+        pathSegs.Init(path);
+        var dist = pathSegs.getTotalDistance();
+        result.n = dist; // distance of path in meters.
+        ////20170424 result.s = "{0}{1}".format(dist, lc.to(dist)); // string for distance of path in peferred units (English or Metric);
+        result.s = lc.to(dist);
+        return result;
+    };
+
     // Returns true if divSettings container is hidden.
     function IsSettingsHidden() {
         var bHidden = divSettings.style.display === 'none' || divSettings.style.dispaly === '';
@@ -5679,6 +5714,25 @@ function wigo_ws_Controller() {
             fsm.DoEditTransition(fsm.eventEdit.SelectedPath);
         }
     };
+
+
+    // Gets wigo_ws_GpxPath object for a path.
+    // Signature of Handler:
+    //      nMode: view.eMode enumeration.
+    //      iPathList: number. index to array of data for the paths. 
+    //      Returns: wigo_ws_GpxPath obj. Data for path. null if iPathList is invalid.
+    view.onGetPath = function(nMode, iPathList) { ////20170424 added
+        var path = null;
+        var nMode = view.curMode(); 
+        if (nMode === view.eMode.online_view) {
+            if (gpxArray && iPathList >= 0 && iPathList < gpxArray.length) {
+                var gpx = gpxArray[iPathList];
+                // Show the geo path info.
+                path = model.ParseGpxXml(gpx.xmlData); // Parse the xml to get path data.
+            }
+        }
+        return path;
+    }
 
     // Returns geo path upload data for data index from item in the selection list.
     // Handler signature:

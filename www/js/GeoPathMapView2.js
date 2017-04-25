@@ -70,6 +70,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var mapPath = null; // Map overlay for current path.
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
     
+    // ** Public members
     // Colors to use for drawing. 
     // Default values are set initially.
     // The values may be changed.
@@ -192,7 +193,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     };
 
-    
+    // Creates and returns a PathSegs object.
+    this.newPathSegs = function() { ////20170424 added
+        var segs = new PathSegs();
+        return segs;
+    }; 
     
     // Creates and returns a PathMarkerEl object.
     // The fields of the returned object should be set approppriatedly
@@ -752,7 +757,18 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // had onMapClick(llAt) available.
     this.onMapClick2 = function (e) { };
 
+    // Show a path on the map due to selection from a path marker.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    this.onShowPath = function(sDataIx) {};  ////20170424 added 
 
+    // Gets distance for a path.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    //  Returns: {n: number, s: string}:
+    //      n: number. total distance of path in meters.
+    //      s: string. total distance of path with suffix for units.
+    this.onGetPathDistance = function(sDataIx) { return {n: 0, s: "?"};};
 
     // Event handler for LeafLet click on map.
     function onMapClick(e) {
@@ -2755,7 +2771,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //  oMap; Leaflet L.Map object: the underlying map on which path markers are drawn.
         this.initialize = function(oMap) {
             map = oMap;
-            oms = new OverlappingMarkerSpiderfier(map);  
+            ////20170424 oms = new OverlappingMarkerSpiderfier(map);  
+            oms = new OverlappingMarkerSpiderfier(map, {keepSpiderfied: true});  
             oms.addListener('click', PathMarkerClicked);            
         };
 
@@ -2853,7 +2870,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         function PathMarkerClicked (marker) {  
             var pathMarkerEl = liPathMarker[marker.key];
             if (pathMarkerEl) {
-                popupDescrDiv.innerHTML = pathMarkerEl.pathName + "<br/>" + "Distance: 12.3 mi.";
+                ////20170424 popupDescrDiv.innerHTML = pathMarkerEl.pathName + "<br/>" + "Distance: 12.3 mi.";
+                var distance = that.onGetPathDistance(marker.key);
+                popupDescrDiv.innerHTML = "{0}<br/>Distance: {1}".format(pathMarkerEl.pathName, distance.s);
                 popupViewBtn.setAttribute('data-key', marker.key);
                 popup.setContent(popupDiv);
                 popup.setLatLng(marker.getLatLng());
@@ -2862,11 +2881,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
 
         // Event handler for PoupViewBtn clicked.
-        function PopupViewBtnClicked(e) {
+        function PopupViewBtnClicked(e) {  ////20140424 added
             var sKey = this.getAttribute('data-key');
-            alert('Popup View Btn clicked.' + sKey);
+            ////20170424 alert('Popup View Btn clicked.' + sKey);
+            ////20170424 var nDataIx = parseInt(sKey, 10);
+            that.onShowPath(sKey);
         }
-
 
         // Object for list of PathMarkerEl objs. 
         // Each property value is PathMarkerEl obj with a property name string that is its key.
@@ -2878,7 +2898,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var oms = null; // OverlappingMarkerSpiderfier object for map.
         var popup = new L.Popup();  // Popup for marker.
         // Create div for popup content.
-        alert("Debug: Creating Marker Popup");
+        ////20170423 alert("Debug: Creating Marker Popup");
         var popupDiv = document.createElement('div');
         popupDiv.className = "wigo_ws_MarkerPopup";
         var popupDescrDiv = document.createElement('div');
@@ -2887,10 +2907,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var popupViewBtn = document.createElement('button');
         popupViewBtn.className = 'wigo_ws_MarkerPopupViewBtn';
         popupViewBtn.setAttribute('data-key', ""); 
+        popupViewBtn.innerHTML = "View Trail";
         popupViewBtn.addEventListener('click', PopupViewBtnClicked, false);
         popupDiv.appendChild(popupViewBtn);
-        
-
     }
     var pathMarkers = new PathMarkers();
 }
