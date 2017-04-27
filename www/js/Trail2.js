@@ -2616,7 +2616,8 @@ function wigo_ws_View() {
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
-                    s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
+                    ////20170427Putback???? s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
+                    s = "Calories: {0} or {1}<br/>".format(stats.calories.toFixed(0), stats.calories2.toFixed(0)); ////20170427 changed
                     sMsg += s;
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);

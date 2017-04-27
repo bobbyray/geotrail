@@ -2334,7 +2334,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns stats for the record path.
-        // Returns Obj: {bOk: boolean, dTotal: number, msRunTime: number, msTotalTime: number, tStart: Date}
+        // Returns literal Obj with these fields:
         //  bOk: boolean. true for success (stats are valid).
         //  dTotal: number. total distance of record path in meters.
         //  msRecordTime: number. number of milliseconds for the RECORD time of the record path (PAUSE excluded).
@@ -2344,10 +2344,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //          bOk is false if tStart is null.
         //  kJoules: number. kinetic engery for body traveling for the recorded path. 
         //            Note: var kgMass is body mass.
-        //  calories: number. food calories on a product label corresponding to kJoules. 
+        //  calories: number. food calories on a product label corresponding to kJoules. Calculated by summing
+        //                    kinetic energy change for each point on the path.
         //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. 
+        //  calories2: number. food calories on a product label. Calculated by using average velocity and body mass.
+        //                     equals 1/2*m*v^2 where 
+        //                         v is average velocity = dTotal / (msRecordTime/1000), in m/sec, 
+        //                         m is body mass in kilograms.
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; 
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0}; 
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
@@ -2399,6 +2404,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             result.kJoules = (vvSum*kgMass/2.0)/1000.0;
             // Set result for food calories corresponding to result.kJoules.   
             result.calories = KJoulesToLabelCalories(result.kJoules);
+
+            // Calculate calories based on average velocity. ////20170427 added
+            if (result.msRecordTime > 0) {
+                var aveV = result.dTotal / (result.msRecordTime/1000);
+                var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
+                result.calories2 = KJoulesToLabelCalories(kJoules); 
+            }
 
             result.bOk = result.tStart !== null ? true : false;
             return result;
