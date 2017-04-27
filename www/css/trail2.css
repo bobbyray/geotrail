@@ -557,6 +557,9 @@ label {
 #mainMenu .wigo_ws_DropDownList {
     width: 17em;
 }
+#holderSpuriousVLimit, #holderPhoneVibeSecs {
+    font-size: 0.8em;
+}
 
 #spanTitle {
     position: absolute;

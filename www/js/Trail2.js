@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170417"; // Constant string for App version.
+    var sVersion = "1.1.025_20170427"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -911,7 +911,7 @@ function wigo_ws_View() {
                 event.target.blur();
             }
         }
-    }, false); // Try true to use capture instead of bubble. true does not capture!!!!
+    }, false); // Try true to use capture instead of bubble. true does not capture.
 
     // Returns true if an keyboad event is for the Enter key.
     // Arg:
