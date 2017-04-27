@@ -846,8 +846,6 @@ function wigo_ws_View() {
 
     var txbxPathName = document.getElementById('txbxPathName');
     txbxPathName.addEventListener('change', function(event){
-        ////20170427 CleanTextBox(txbxPathName); // repace quote char with ` 
-        
         if (that.curMode() === that.eMode.online_edit ||    
             that.curMode() === that.eMode.online_define) {
             // Note: Only do for editing or defining a trail.
@@ -884,10 +882,6 @@ function wigo_ws_View() {
         // to a server causes a transfer error. 
 
         var bEnterKey = IsEnterKey(event);
-        ////20170427 if (bEnterKey) {
-        ////20170427     CleanTextBox(txbxPathName); // repace quote char with `
-        ////20170427 }
-
         if (that.curMode() === that.eMode.offline) {
             if (bEnterKey && recordFSM.isDefiningTrailName())  {
                 if (!IsTextEmpty()) {
@@ -930,13 +924,6 @@ function wigo_ws_View() {
         }
         return bYes;
     }
-
-    ////20170427 // Cleans value of a textbox substituting for chars that would cause a problem for uploading to server.
-    ////20170427 // Arg:
-    ////20170427 //  txbx: input of type=text. textbox to clean.
-    ////20170427 function CleanTextBox(txbx) {  
-    ////20170427     txbx.value = txbx.value.replace(/['"]/g,"`"); // repace quote char with `
-    ////20170427 }
 
     var labelPathName = document.getElementById('labelPathName');
 

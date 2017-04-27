@@ -663,7 +663,7 @@ label {
 }
 #onlineSelectFind {
     height: 100%;
-    width: 40%;   /* ////20170427 50% */
+    width: 40%;  
     float: left;
     box-sizing: border-box; 
 }
@@ -672,10 +672,6 @@ label {
     right: 0px;
 }
 #onlineSelectFind .wigo_ws_DropDownLabel {
-    /* ////20170427 
-    left: 0px;
-    width: 75%;
-    */
     left: 30%
 }
 
