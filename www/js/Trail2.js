@@ -846,6 +846,8 @@ function wigo_ws_View() {
 
     var txbxPathName = document.getElementById('txbxPathName');
     txbxPathName.addEventListener('change', function(event){
+        CleanTextBox(txbxPathName); // repace quote char with ` ////20170426 added
+        
         if (that.curMode() === that.eMode.online_edit ||    
             that.curMode() === that.eMode.online_define) {
             // Note: Only do for editing or defining a trail.
@@ -869,7 +871,7 @@ function wigo_ws_View() {
             if (offlineLocalData.isDefiningTrailName()) 
                 that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
         }
-    }, false);
+    }, false); 
 
     txbxPathName.addEventListener('keydown', function(event){
         function IsTextEmpty() {
@@ -877,8 +879,47 @@ function wigo_ws_View() {
             return text.length === 0;
         }
 
+        /* ////20170425 does not work
+        // Local helper that returns true if key is valid.
+        // Note: The single quote and double quotes chars are invalid
+        //       in path name because they cause an error when trying
+        //       to post an object with the path namne to the server.
+        function IsKeyValid(key) {
+            var bValid = "\'\"".indexOf(key) < 0; // Valid if not a quote char.
+            return bValid;
+        }
+
+        // Ignore any invalid key. 
+        if (!IsKeyValid(event.keyCode))  {////20170425 added
+            // Just swallow key without informing user.
+            event.stopPropagation();
+            event.preventDefault();
+            return; 
+        }
+        */
+
+        // Remove any single quote char or double quote char with notifying user.
+        // A single quote or double quote in the path name in an object posted
+        // to a server causes a transfer error. 
+        ////20170426 this.value = this.value.replace(/['"]/g,""); // remove and single or double quote char.
+
+        var bEnterKey = IsEnterKey(event);
+        if (bEnterKey) {
+            CleanTextBox(txbxPathName); // repace quote char with `
+        }
+
         if (that.curMode() === that.eMode.offline) {
-            var bEnterKey = IsEnterKey(event);
+            ////20170426 var bEnterKey = IsEnterKey(event);
+
+            ////20170426DidNotWork 
+            ////20170426DidNotWork if (bEnterKey) { ////20170426 Try 
+            ////20170426DidNotWork     this.value = this.value.replace(/['"]/g,"\\'"); // repace quote char with \'.
+            ////20170426DidNotWork }
+
+            ////20710426MoveUp if (bEnterKey) {
+            ////20710426MoveUp    this.value = this.value.replace(/['"]/g,"`"); // repace quote char with `
+            ////20710426MoveUp }
+
             if (bEnterKey && recordFSM.isDefiningTrailName())  {
                 if (!IsTextEmpty()) {
                     // Save recorded trail locally.
@@ -901,7 +942,7 @@ function wigo_ws_View() {
                 event.target.blur();
             }
         }
-    }, false);
+    }, false); ////20170425 Try true to use capture instead of bubble. ////20170426  true does not capture!!!!
 
     // Returns true if an keyboad event is for the Enter key.
     // Arg:
@@ -921,6 +962,12 @@ function wigo_ws_View() {
         return bYes;
     }
 
+    // Cleans value of a textbox substituting for chars that would cause a problem for uploading to server.
+    // Arg:
+    //  txbx: input of type=text. textbox to clean.
+    function CleanTextBox(txbx) {  ////20170426 added
+        txbx.value = txbx.value.replace(/['"]/g,"`"); // repace quote char with `
+    }
 
     var labelPathName = document.getElementById('labelPathName');
 
@@ -2644,6 +2691,7 @@ function wigo_ws_View() {
                 ShowPathDescrBar(true); 
                 if (bOnline)               
                     signin.showIfNeedBe(); 
+                txbxPathName.focus();  // Set focus to textbox so keyboard is presented. ////20170426 added
             };
 
             this.nextState = function(event) {
@@ -2777,6 +2825,7 @@ function wigo_ws_View() {
                     view.ShowStatus("Enter a name for the trail.");
                     return bOk;
                 }
+                ////20170426DoesNotEncodeQuote this.uploadPath.sPathName = encodeURI(this.uploadPath.sPathName); ////20170426 try this for problem with quote chars
                 return bOk;            
             }; 
 
@@ -3138,6 +3187,7 @@ function wigo_ws_View() {
                 dropList.empty();
                 dropList.appendItem("upload", "Upload");
                 dropList.appendItem("cancel", "Cancel");
+                ////20170426No txbxPathName.focus(); ////20170426 added.
             }
 
             switch (eventValue) {
