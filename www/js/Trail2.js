@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170427"; // Constant string for App version.
+    var sVersion = "1.1.025_20170429"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -641,8 +641,7 @@ function wigo_ws_View() {
     // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
-        ////20170428 var sName = selectGeoTrail.getSelectedText();
-        var sName = selectGeoTrail.getSelectedPlainText();  ////20170428 changed.
+        var sName = selectGeoTrail.getSelectedPlainText(); 
         return sName;
     };
 
@@ -2617,12 +2616,10 @@ function wigo_ws_View() {
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
-                    ////20170427Putback???? s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
-                    ////20170428 s = "Kinetic Calories: {0} or {1}<br/>".format(stats.calories.toFixed(0), stats.calories2.toFixed(0)); ////20170427 changed
-                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(0)); ////20170427 changed
+                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(0)); 
                     sMsg += s;
-                    s = "Burned Calories: {0}<br/>".format(stats.calories3.toFixed(0));  ////20170428 added.
-                    sMsg += s;                                                           ////20170428 added.
+                    s = "Burned Calories: {0}<br/>".format(stats.calories3.toFixed(0));  
+                    sMsg += s;   
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;

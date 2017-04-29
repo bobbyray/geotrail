@@ -2407,7 +2407,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Set result for food calories corresponding to result.kJoules.   
             result.calories = KJoulesToLabelCalories(result.kJoules);
 
-            // Calculate calories based on average velocity. ////20170427 added
+            // Calculate calories based on average velocity. 
             if (result.msRecordTime > 0) {
                 var aveV = result.dTotal / (result.msRecordTime/1000);
                 var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
@@ -2607,7 +2607,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Arg:
         //  kJoules: float. number of kilojoules of engery to be produced from food.
         function KJoulesToLabelCalories(kJoules) {
-            ////20170428 var cals = 4.184 * kJoules;
             var cals = kJoules / 4.184; //20170428 Oops, was 4.184 * kJoules 
             // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
             // therefore cals is not divided by 0.85. However, results compared to nutrition tables
@@ -2784,8 +2783,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.
-        var calsBurnedEfficency = 0.25; // Efficiency of converted burned calories to calories rquired to move kgMass.
-        
+        var calsBurnedEfficency = 0.10; // Efficiency of converted burned calories to kinetic calories rquired to move kgMass.
     }
 
     // Object for collection of PathMarkerEl objects.
