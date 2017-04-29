@@ -2351,8 +2351,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //                     equals 1/2*m*v^2 where 
         //                         v is average velocity = dTotal / (msRecordTime/1000), in m/sec, 
         //                         m is body mass in kilograms.
+        //                      Note: Does not seem to be useful. Value is way too low. Use calories instead.
+        //  calories3: number. Estimated number of calories burned. Equals calories / calsBurnedEfficency.
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0}; 
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0, calories3: 0}; 
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
@@ -2410,6 +2412,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var aveV = result.dTotal / (result.msRecordTime/1000);
                 var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
                 result.calories2 = KJoulesToLabelCalories(kJoules); 
+
+                result.calories3 = CaloriesBurned(result.calories);
             }
 
             result.bOk = result.tStart !== null ? true : false;
@@ -2603,10 +2607,24 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Arg:
         //  kJoules: float. number of kilojoules of engery to be produced from food.
         function KJoulesToLabelCalories(kJoules) {
-            var cals = 4.184 * kJoules;
+            ////20170428 var cals = 4.184 * kJoules;
+            var cals = kJoules / 4.184; //20170428 Oops, was 4.184 * kJoules 
             // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
-            // therefore cals is not divided by 0.85. 
+            // therefore cals is not divided by 0.85. However, results compared to nutrition tables
+            // indicate that efficency of energy burned to move the body mass is only about 25%.
+            // In other words, the caloried burned by a person is about 4 times that calculated to
+            // move the body mass along the path. 
             return cals; 
+        }
+
+        // Returns calories burned.
+        // Arg:
+        //  cals: number. Calculated calories (or kilojoules).
+        //        calories burned = cals / calsBurnedEfficiency.
+        // Note: Efficiency is estimated to be 0.25. May want to make this a Settings item.
+        function CaloriesBurned(cals) {
+            var calsBurned = cals / calsBurnedEfficency; 
+            return calsBurned;
         }
 
         // Object for filtering arRecordPt. 
@@ -2766,6 +2784,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.
+        var calsBurnedEfficency = 0.25; // Efficiency of converted burned calories to calories rquired to move kgMass.
         
     }
 

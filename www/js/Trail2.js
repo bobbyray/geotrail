@@ -641,7 +641,8 @@ function wigo_ws_View() {
     // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
-        var sName = selectGeoTrail.getSelectedText();
+        ////20170428 var sName = selectGeoTrail.getSelectedText();
+        var sName = selectGeoTrail.getSelectedPlainText();  ////20170428 changed.
         return sName;
     };
 
@@ -2617,8 +2618,11 @@ function wigo_ws_View() {
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
                     ////20170427Putback???? s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
-                    s = "Calories: {0} or {1}<br/>".format(stats.calories.toFixed(0), stats.calories2.toFixed(0)); ////20170427 changed
+                    ////20170428 s = "Kinetic Calories: {0} or {1}<br/>".format(stats.calories.toFixed(0), stats.calories2.toFixed(0)); ////20170427 changed
+                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(0)); ////20170427 changed
                     sMsg += s;
+                    s = "Burned Calories: {0}<br/>".format(stats.calories3.toFixed(0));  ////20170428 added.
+                    sMsg += s;                                                           ////20170428 added.
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
