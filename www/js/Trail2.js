@@ -2613,6 +2613,10 @@ function wigo_ws_View() {
                     sMsg += s;
                     s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
                     sMsg += s;
+                    // Show speed in miles per hour (MPH) or kilometers per hour (KPH). ////20170429 added
+                    var speed = lc.toSpeed(stats.dTotal, stats.msRecordTime/1000.0);    ////20170429 added
+                    s = "Speed: {0}<br/>".format(speed.text);                           ////20170429 added
+                    sMsg += s;                                                          ////20170429 added
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
@@ -4844,6 +4848,40 @@ function wigo_ws_View() {
                 nFixed = this.kmeterFixedPoint;
             var s = result.n.toFixed(nFixed) + result.unit;
             return s; 
+        };
+
+        // Returns literal object for speed:
+        //  speed: number. speed value.
+        //  unit:  string: unit for speed:
+        //         For English: MPH
+        //           MPH is for miles per hour.
+        //         For Metric: KPM
+        //           KPH is for kilometers per hour.
+        //  text: string. speed value with unit suffic.
+        // Args:
+        //  mLen: number. Length (distance) in meters.
+        //  secTime: number. Elapsed time in seconds.
+        this.toSpeed = function(mLen, secTime) { ////20170429 added
+            var result = {speed: 0, unit: "MPH", text: ""};
+            var dist;
+            var hrTime = secTime / 3600; // 3600 seconds in an hour.
+            if (this.bMetric) {
+                // Concvert meters to kilometes.
+                dist = mLen / 1000.0;
+                result.unit = "KPH";
+            } else {
+                // Convert meters to miles.
+                dist = mLen / 1609.34;
+                result.unit = "MPH"; 
+            }
+            result.speed = dist / hrTime;
+            if (Number.isFinite(result.speed)) {
+                var nFixed = this.bMetric ? this.kmeterFixedPoint : this.mileFixedPoint;
+                result.text = "{0}{1}".format(result.speed.toFixed(nFixed), result.unit);
+            } else {
+                result.text = "error" + result.unit;
+            }
+            return result;
         };
     }
     var lc = new LengthConverter(); // Length converter object for displaying status to phone or pebble.
