@@ -2613,10 +2613,10 @@ function wigo_ws_View() {
                     sMsg += s;
                     s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
                     sMsg += s;
-                    // Show speed in miles per hour (MPH) or kilometers per hour (KPH). ////20170429 added
-                    var speed = lc.toSpeed(stats.dTotal, stats.msRecordTime/1000.0);    ////20170429 added
-                    s = "Speed: {0}<br/>".format(speed.text);                           ////20170429 added
-                    sMsg += s;                                                          ////20170429 added
+                    // Show speed in miles per hour (MPH) or kilometers per hour (KPH). 
+                    var speed = lc.toSpeed(stats.dTotal, stats.msRecordTime/1000.0);    
+                    s = "Speed: {0}<br/>".format(speed.text);                           
+                    sMsg += s;                                                          
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
@@ -4861,7 +4861,7 @@ function wigo_ws_View() {
         // Args:
         //  mLen: number. Length (distance) in meters.
         //  secTime: number. Elapsed time in seconds.
-        this.toSpeed = function(mLen, secTime) { ////20170429 added
+        this.toSpeed = function(mLen, secTime) { 
             var result = {speed: 0, unit: "MPH", text: ""};
             var dist;
             var hrTime = secTime / 3600; // 3600 seconds in an hour.
