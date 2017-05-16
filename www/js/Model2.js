@@ -49,6 +49,11 @@ function wigo_ws_GeoTrailSettings() {
     this.dPrevGeoLocThres =5.0; //20161205 was 40.0;
     // Float for velocity in meters/sec for velocity limit used in filtering spurious record points.
     this.vSpuriousVLimit = 5.0; 
+    // Float for body mass in kilograms.
+    this.kgBodyMass = 75.0; ////20170501 added, but already provided by (UpdateIfNeedBe).
+    // Float for converting kinetic Calories to burned calories, equals kinetic calories / burned calories.
+    // Note: burned calories are calculated as follows: kinetic calories / this conversion factor.
+    this.calorieConversionEfficiency = 0.10; ////20170501 added
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
@@ -81,6 +86,16 @@ function wigo_ws_GeoTrailVersion() { // 20160610 added.
     this.sVersion = ""; 
     // Boolean to indicated Terms of Use has been accepted.
     this.bTermsOfUseAccepted = false; 
+}
+
+// Object for statistics for a trail that has been recorded.
+function wigo_ws_GeoTrailRecordStats() { ////20170501 added
+    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer.
+    this.msRunTime = 0;  // number. Run time for the recorded path in milliseconds.
+    this.mDistance = 0;  // number. Distance of path in meters.
+    this.caloriesKinetic = 0;      // number. Kinetic engery in calories to move body mass along the path.
+    this.caloriesBurnedCalc = 0;   // number. Calories burned calculated by the GeoTrail app.
+    this.caloriesBurnedActual = 0; // number. Actual calories looked up by user from some web site. ////20170515 was null.
 }
 
 // Object for the Model (data) used by html page.
@@ -372,12 +387,35 @@ function wigo_ws_Model() {
         // Always reload from local storage. arOfflineParams.arParms may have been reset.
         // (Resetting arOfflineParams.arParms actually happened.)
         return arOfflineParams.getAll();
-    }
+    };
 
     // Clears the list of offline parameters and saves the empty list to localStorage.
     this.clearOffLineParamsList = function () {
         arOfflineParams.Clear();
         arOfflineParams.SaveToLocalStorage();
+    };
+
+    // Clears record stats object in local storage.
+    this.clearRecordStats = function() { ////20170509 added
+        arRecordStats.Clear();
+    };
+    
+    // Sets record stats object in local storage.
+    // Arg:
+    //  status: wigo_ws_GeoTrailRecordStats obj. The stats to save.
+    this.setRecordStats = function(stats) { ////20170507 added
+        arRecordStats.setId(stats);
+    };
+
+    // Returns list of record stats objects, which is
+    // Array oibjec of wigo_ws_GeoTrailRecordStats objects.
+    this.getRecordStatsList = function() { ////20170507 added
+        return arRecordStats.getAll();
+    };
+
+    // Returns ref to last wigo_ws_GeoTrailRecordStats in this array.
+    this.getLastRecordStats = function() {
+        return arRecordStats.getLast();
     }
 
     // Sets settings in localStorage.
@@ -410,6 +448,7 @@ function wigo_ws_Model() {
     var sOfflineParamsKey = 'GeoPathsOfflineParamsKey';
     var sGeoTrailSettingsKey = 'GeoTrailSettingsKey'; 
     var sGeoTrailVersionKey = 'GeoTrailVersionKey'; 
+    var sRecordStatsKey = 'GeoTrailRecordStatsKey';  ////20170501 added
 
     var api = new wigo_ws_GeoPathsRESTfulApi(); // Api for data exchange with server.
 
@@ -535,7 +574,7 @@ function wigo_ws_Model() {
             return arParams;
         };
         
-        // Removes all elementsw of this array.
+        // Removes all elements of this array.
         this.Clear = function () {
             var nCount = arParams.length;
             for (var i = 0; i < nCount; i++) {
@@ -574,6 +613,81 @@ function wigo_ws_Model() {
     }
     // Array of offline parameters for geo paths.
     var arOfflineParams = new OfflineParamsAry();
+
+    // Object for storing an array of wigo_ws_GeoTrailRecordStats objects.
+    // Note: Construction loads this object from localStorage.
+    function RecordStatsAry() { ////20170501 added
+        // Sets a record stats element in this array and saves array to localStorage. 
+        // Arg: 
+        //  stats wigo_ws_RecordStats. stats element to set.
+        //        stats.nTimeStamp is the unique id for the element.
+        //        If stats.nTimeStamp matches an existing element, the
+        //        element is replaced; otherwise it is added.
+        this.setId = function(stats) {  ////20170507 added
+            var iAt = FindIxOfId(stats.nTimeStamp);
+            if (iAt < 0) {
+                iAt = arRecordStats.length;
+            }       
+            arRecordStats[iAt] = stats;
+            this.SaveToLocalStorage();    
+        };
+        // Returns ref to array of all the wigo_ws_RecordStats objects.
+        this.getAll = function() {
+            return arRecordStats;
+        };
+
+        // Returns ref to last wigo_ws_GeoTrailRecordStats object in array.
+        // Returns null if there is no last element.
+        this.getLast = function() {
+            var iLast = arRecordStats.length-1;
+            var last = iLast >= 0 ? arRecordStats[iLast] : null;
+            return last;
+        };
+
+        // Clears this array.
+        this.Clear = function() {
+            var nCount = arRecordStats.length;
+            for (var i=0; i < nCount; i++) {
+                arRecordStats.pop();
+            }
+        };
+
+        // Loads this object from local storage.
+        this.LoadFromLocalStorage = function() {
+            var sRecordStats = localStorage[sRecordStatsKey];
+            if (sRecordStats !== undefined) 
+                arRecordStats = JSON.parse(sRecordStats)
+            else 
+                arRecordStats = [];
+        };
+
+        // Saves this object to local storage.
+        this.SaveToLocalStorage = function() {
+            localStorage[sRecordStatsKey] = JSON.stringify(arRecordStats);
+        };
+
+        // Searches for record stats element.
+        // Returns index of element if found, or -1 if not found.
+        // Arg:
+        //  nTimeStamp: number. nTimeStamp id of element to match.
+        function FindIxOfId(nTimeStamp) { ////20170507 added
+            var iFound = -1;
+            var el;
+            for (var i=0; i < arRecordStats.length; i++) {
+                el = arRecordStats[i];
+                if (el.nTimeStamp === nTimeStamp) {
+                    iFound = i;
+                    break;
+                }
+            }
+            return iFound;
+        }
+
+        var arRecordStats = []; // Array of wigo_ws_GeoTrailRecordStats objects.
+
+        this.LoadFromLocalStorage();
+    }
+    var arRecordStats = new RecordStatsAry();  ////20170507
 
     // Object for the Geo Trail Settings persisted to localStorage.
     function GeoTrailSettings() {
@@ -658,6 +772,11 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('kgBodyMass', 3, 75.0)
                 // ** 
 
+                // ** Changes for nSchema 4.
+                // 20170501 added setting.calorieConversionEfficiency
+                UpdateIfNeeded('calorieConversionEfficiency', 4, 0.10); 
+                // **
+
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
@@ -668,7 +787,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 3;  // Must be set to next number when next nSchema change is added. 
+        var nSchemaSaved = 4;  // Must be set to next number when next nSchema change is added. ////20170502 was 3
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 

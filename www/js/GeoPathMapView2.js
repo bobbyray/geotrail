@@ -2583,6 +2583,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             kgMass = mass;
         };
 
+        
+        // Sets the calories burned efficiency factor.
+        // Arg:
+        //  efficiency: number. efficiency factor, the ratio of kinetic calories : calories burned.
+        //              Note: this is decimal fraction, not a percentage.
+        this.setCaloriesBurnedEfficiency = function (efficiency) { ////20170505 added
+            calsBurnedEfficency = efficiency;
+        };
+
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
         function SetPathCoords() {
             // Set pathCoords to match RECORD points that are not deleted.

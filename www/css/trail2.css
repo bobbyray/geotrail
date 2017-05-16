@@ -381,7 +381,7 @@ label {
     height: 1.3em; 
 }
 
-#spanSettingsTitle {
+#spanSettingsTitle, #spanCCEUpdateTitle {
     font-size: 1.2em;
     font-weight: bolder;
 }
@@ -399,12 +399,37 @@ label {
     width: 98%;  
 }
 
+/* Calorie Conversion Efficiency Row in Settings ////20170502 added */
+.cceRow { 
+    clear: both;
+    width: 98%;
+    padding-left: 2em;
+    box-sizing: border-box; 
+}
+.cceLabel {
+    width: 11em; /* ////20170509 was 10 was 8em */
+}
+#divCCEContent { /* ////20170511 added */
+    position: relative;
+}
+#divCCEUpdate { /* Same as .settingItem, except height is not specified */
+    position: absolute;   /* ////20170511 added */
+    padding-bottom: 0.35em; 
+    border: black 2px solid;
+    width: 98%;  
+    background-color: white;
+}
+/* ////20170511 remove same as static. added */
+#divCCEItem { 
+    position: static; 
+}
+
 #divSettings input {
     width: 5em;
 }
 
 #divSettings label {
-    padding-top: 0px;
+    padding-top: 0.3em; /* ////20170506 was 0px */
 }
 
 .settingItem .wigo_ws_DropDownLabel {
@@ -436,6 +461,16 @@ label {
     background-color: lightgray;
     width: 3em;
     font-size: 120%;
+}
+
+.cceValueLabel {  /* ////20170506 added  was #labelCCEValue*/
+    clear: none;
+    padding-left: 0.5em;
+    width: initial;
+}
+#buCCESet {  /* ////20170506 added */
+    padding-top: 0.3em;
+    float: right;
 }
 
 #divHomeArea  {
