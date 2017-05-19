@@ -199,53 +199,62 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
 
 
-            <div id='holderCCE'>  <!-- ////20170501 added -->
-              <div id='divCCEContent'> <!-- ////20170511 added -->
+            <div id='holderCCE'>  
+              <div id='divCCEContent'> 
                 <div id='divCCEItem' class='settingItem wigo_ws_Show'>
                     <label >Calorie Conversion Efficiency</label>
-                    <label id='labelCCEValue' class='cceValueLabel'></label>  <!-- ////20170506 removed class='cceLabel' -->
+                    <label id='labelCCEValue' class='cceValueLabel'></label>  
                     <button id='buCCESet'>Set</button>
                 </div>
                 <div id='divCCEUpdate' class='wigo_ws_NoShow'> 
-                    <span id='spanCCEUpdateTitle'>Setting Calorie Conversion Efficiency</span><br/>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Distance</label><label id='cceDistance' class='cceValueLabel'></label>
+                    <div id='divCCEUpdateCtrls'> 
+                        <span id='spanCCEUpdateTitle'>Setting Calorie Conversion Efficiency</span><br/>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Distance</label><label id='cceDistance' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Time</label><label id='cceTime' class='cceValueLabel'></label>     
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Speed</label><label id='cceSpeed' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Kinetic Calories</label><label id='cceKineticCalories' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Estimated Calories</label><label id='cceCaloriesBurned' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Actual Calories</label><input id='cceActualCalories' type='number' value='0'/>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>New Efficiency %age</label><input id='cceNewEfficiency' type='number' value='0'/> 
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Current Efficiency %age</label><label id='cceCurEfficiency' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <button id='buCCEApply'>Apply</button> <button id='buCCECancel'>Cancel</button>
+                        </div>
                     </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Time</label><label id='cceTime' class='cceValueLabel'></label>     
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Speed</label><label id='cceSpeed' class='cceValueLabel'></label>
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Kinetic Calories</label><label id='cceKineticCalories' class='cceValueLabel'></label>
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Calories Burned</label><label id='cceCaloriesBurned' class='cceValueLabel'></label>
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Actual Calories</label><input id='cceActualCalories' type='number' value='0'/>
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>New Efficiency %age</label><input id='cceNewEfficiency' type='number' value='0'/> <!-- ////20170508 removed % -->
-                    </div>
-                    <div class='cceRow'>
-                        <label class='cceLabel'>Current Efficiency %age</label><label id='cceCurEfficiency' class='cceValueLabel'></label>
-                    </div>
-                    <div class='cceRow'>
-                        <button id='buCCEApply'>Apply</button> <button id='buCCECancel'>Cancel</button>
-                    </div>
-                    <div> 
-                        The time, distance, and speed for your last recorded travel are shown below.
-                        Google "calories burned calculator" to find a calculator for the actual calories
+                    <div id='divCCEUpdateNote'> 
+                        <b>Note: </b>When a trail has been recorded, the time, distance, and speed you traveled are shown above.
+                        Google for a "calories burned calculator" to find a calculator for the actual calories
                         you have burned. 
-                        The time, distance, and speed are typically needed when using the calculator you found.
-                        Enter the result given by the calculator as the Actual Calories below.
-                        The new calorie conversion efficiency factor is determined and shown as the New Efficiency.
-                        <br/>Instead, you can set the New Efficiency directly.  
-                        <br/>For comparison the Current Efficiency is also shown.
-                        <br/>Touch the Apply button to accept the New efficiency factor.
-                        <br/>Touch Cancel to not change the efficiency factor.
+                        The time, distance, and speed are typically needed when using the calculator you found along with 
+                        other factors such as your height, weight, age, and kind of activity.
+                        Enter the result given by the calculator as the Actual Calories.
+                        The new calorie conversion efficiency is determined and shown as the New Efficiency.
+                        <p>Touch the Apply button to accept the New Efficiency.</p>
+                        <p>Touch Cancel to not change the efficiency.</p>
+                        <p>Instead, you can set the New Efficiency directly. If there is no recorded trail, the
+                        only option is to set the New Efficiency.
+                        </p>
+                        <p>Kinetic Calories give the calculated kinetic engery in calories to move your body mass along the recorded trail.</p>
+                        <p>Estimated Calories are the estimated calories you burned to move along the recorded trail:<br/>
+                        Estimated Calories =  KineticCalories / Current Efficiency.</p>
+                        <p>Calories are in units of US Food Calories:<br/>1 US Food Calorie = 4.184 kiloJoules.</p>
+                        <br/>
                     </div>
                 </div>
               </div>  
@@ -279,6 +288,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <button id="buSettingsDone">Done</button>
             <button id="buSettingsCancel">Cancel</button>
         </div>
+        <!-- ////20170518 <br/><br/> --> <!-- space at end of Settings so that leaflet copyright notice does not overlay Dore and Cancel buttons -->
     </div>
     
     <!-- Help Guide, only shown when selected from mainMenu -->

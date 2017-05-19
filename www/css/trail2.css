@@ -48,6 +48,7 @@ body {
     padding:0px;
     /* text-transform:uppercase; */
     width:100%;
+    position: fixed; /* ////20170519 added */
 }
 
 /* Portrait layout (default) */
@@ -366,7 +367,7 @@ label {
 
 /* Settings home area */
 #divSettings {
-    position: absolute;  
+    position: fixed;  /* ////20170518 was absolute */
     left: 0px;
     top: 0px;  
     display: none;
@@ -375,7 +376,7 @@ label {
     border: 1px solid #999;
     z-index: 2;
     font-size: 120%;
-    width: 97%;
+    width: 100%;  /* ////20170518 was 97% */
 }
 #divSettingsTitle {
     height: 1.3em; 
@@ -389,6 +390,7 @@ label {
 #divSettingsScroll {
     overflow-y: scroll;
     height: 20em; 
+    padding-right: 0.3em; /* ////20170518 added */
 }
 
 /* Settings items */
@@ -399,7 +401,7 @@ label {
     width: 98%;  
 }
 
-/* Calorie Conversion Efficiency Row in Settings ////20170502 added */
+/* Calorie Conversion Efficiency Row in Settings */
 .cceRow { 
     clear: both;
     width: 98%;
@@ -407,19 +409,25 @@ label {
     box-sizing: border-box; 
 }
 .cceLabel {
-    width: 11em; /* ////20170509 was 10 was 8em */
+    width: 11em; 
 }
-#divCCEContent { /* ////20170511 added */
+#divCCEContent { 
     position: relative;
 }
-#divCCEUpdate { /* Same as .settingItem, except height is not specified */
-    position: absolute;   /* ////20170511 added */
+#divCCEUpdate { /* Same as .settingItem, except height is not specified and position is fixed */
+    position: fixed;   /* ////20170517 was absolute  */
+    left: 0px;
+    top: 0px;
     padding-bottom: 0.35em; 
     border: black 2px solid;
     width: 98%;  
     background-color: white;
 }
-/* ////20170511 remove same as static. added */
+#divCCEUpdateNote {  /* ////20170517 added */
+    overflow-y: scroll;
+    padding-left: .2em;
+    padding-right: .1em;
+}
 #divCCEItem { 
     position: static; 
 }
@@ -429,7 +437,7 @@ label {
 }
 
 #divSettings label {
-    padding-top: 0.3em; /* ////20170506 was 0px */
+    padding-top: 0.3em; 
 }
 
 .settingItem .wigo_ws_DropDownLabel {
@@ -463,12 +471,12 @@ label {
     font-size: 120%;
 }
 
-.cceValueLabel {  /* ////20170506 added  was #labelCCEValue*/
+.cceValueLabel {  
     clear: none;
     padding-left: 0.5em;
     width: initial;
 }
-#buCCESet {  /* ////20170506 added */
+#buCCESet {  
     padding-top: 0.3em;
     float: right;
 }
@@ -505,6 +513,7 @@ label {
     border: none;
     height: 1.5em; 
     padding-top: 0.6em;  
+    padding-bottom: 1.5em; /* ////20170518 added */
 }
 #buSettingsDone {
     margin-left: 25%;

@@ -2588,7 +2588,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Arg:
         //  efficiency: number. efficiency factor, the ratio of kinetic calories : calories burned.
         //              Note: this is decimal fraction, not a percentage.
-        this.setCaloriesBurnedEfficiency = function (efficiency) { ////20170505 added
+        this.setCaloriesBurnedEfficiency = function (efficiency) { 
             calsBurnedEfficency = efficiency;
         };
 
@@ -2611,17 +2611,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return vLimit > 0;  
         }
 
-        // Returns float for number of food calories listed on a product label for 
-        // metabolized energy due to respiration.
+        // Returns float for number of US food calories for engery in kiloJoules.
         // Arg:
-        //  kJoules: float. number of kilojoules of engery to be produced from food.
+        //  kJoules: float. number of kilojoules of engery.
         function KJoulesToLabelCalories(kJoules) {
-            var cals = kJoules / 4.184; //20170428 Oops, was 4.184 * kJoules 
-            // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
-            // therefore cals is not divided by 0.85. However, results compared to nutrition tables
-            // indicate that efficency of energy burned to move the body mass is only about 25%.
-            // In other words, the caloried burned by a person is about 4 times that calculated to
-            // move the body mass along the path. 
+            var cals = kJoules / 4.184; // 4.184 kiloJoules = 1 Food Calorie.
             return cals; 
         }
 

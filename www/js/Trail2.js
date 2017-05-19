@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170501"; // Constant string for App version.
+    var sVersion = "1.1.025_20170519"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -176,7 +176,7 @@ function wigo_ws_View() {
     //  Args: none.
     //  Returns wigo_ws_GeoTrailRecordStats object for last stats saved, 
     //      or null if there is no record stats object.
-    this.onGetLastRecordStats = function() {};  ////20170507 added
+    this.onGetLastRecordStats = function() {};  
 
     // Sets recorded starts.
     // Handler Signature:
@@ -188,13 +188,13 @@ function wigo_ws_View() {
     // literal obj for stats from recordPath.getStats():
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
-    this.onSetRecordStats = function(stats, bData) {}; ////20170507 added
+    this.onSetRecordStats = function(stats, bData) {}; 
 
     // Clears the list of record stats objects for recorded trails.
     // Handler signature:
     //  Args: none.
     //  Returns nothing.
-    this.onClearRecordStats = function(){}; ////20170507 added
+    this.onClearRecordStats = function(){}; 
 
     // Save current version.
     // Handler Signature:
@@ -1046,20 +1046,19 @@ function wigo_ws_View() {
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
-            // Save actual calories that user has entered.           ////20170515 added 
+            // Save actual calories that user has entered.           
             var actualCalories = cceActualCaloriesNumber.getValue();
             var statsData = that.onGetLastRecordStats();
             if (statsData) {
                 statsData.caloriesBurnedActual = actualCalories; 
                 that.onSetRecordStats(statsData); 
-            }                                                        ////21070515 end of add.
+            }
             titleBar.scrollIntoView();   
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
-        ////20170516 $$$$ check if setting Calorie Conversion Eficiency is active.
         // Do not cancel if setting Calorie Conversion Eficiency is active.
-        if (IsSettingCCEActive()) { ////20170516 added if and body
+        if (IsSettingCCEActive()) { 
             return;
         }
 
@@ -1068,65 +1067,35 @@ function wigo_ws_View() {
         titleBar.scrollIntoView();   
     });
 
-    // Controls for Calorie Conversion Efficiency ////20170502 added
+    // Controls for Calorie Conversion Efficiency 
     var divCCEItem = document.getElementById('divCCEItem');
-    ////20170506 alert('labelCCEValue definition'); ////20170505 Debug, delete stmt.
-    ////20170507Use_CCELabelValuePercentage() var labelCCEValue = document.getElementById('labelCCEValue');
-    /* ////20170508 refactor. Use CCELabel() instead.
-    // Object for Label control for showing Calorie Conversion Efficiency.
-    // Note: Displays as percentage and stores data-value attribute 
-    //       as string for decimal mumber value, not a percentage value.
-    // constructor arg:
-    //  id: string. id of the hmtl label control.
-    function CCELabelValuePercentage(id) {
-        // Returns number for the calorie conversion efficency as a percentage.
-        this.get = function() {
-            var sValue = ctrl.getAttribute('data-value');
-            var value = parseFloat(sValue);
-            return value;
-        };
-
-        // Sets value for label showing Calorie Conversion Efficiency.
-        // Arge:
-        //  value: number. calorie conversion efficiency.
-        //         Note: value is decimal fraction, displayed value is a percentage.
-        this.set = function(value) {
-            ctrl.setAttribute('data-value', value.toFixed(4));
-            ctrl.innerText = (value*100.0).toFixed(1) + "%"; 
-        }
-        ////20170506 var ctrl = document.getElementById('labelCCEValue');
-        var ctrl = document.getElementById(id);
-    }
-    */
-    ////20170508 var cceLabelValue = new CCELabelValuePercentage('labelCCEValue');
     var cceLabelValue = new CCELabel('labelCCEValue', 3, true);
 
     var divCCEUpdate = document.getElementById('divCCEUpdate');
+
+    var divCCEUpdateCtrls = document.getElementById('divCCEUpdateCtrls');
+    var divCCEUpdateNote = document.getElementById('divCCEUpdateNote');
+
     var buCCESet = document.getElementById('buCCESet');
     buCCESet.addEventListener('click', function(event) {
         ShowCCEItem(false);
-        ////20170511 cceActualCaloriesNumber.ctrl.focus(); ////20170511 added $$$$ try again.
-        ////20170511 setTimeout(function(){ 
-        ////20170511     cceActualCaloriesNumber.ctrl.focus(); 
-        ////20170511 }, 0);  // Does not work very well.
     }, false);
 
     var buCCEApply = document.getElementById('buCCEApply');
     buCCEApply.addEventListener('click', function(event) {
-        ////20170514 var dataValue = parseFloat(cceNewEfficiencyNumber.ctrl.value) / 100; 
-        ////20170514 cceNewEfficiencyNumber.set(dataValue);
         var dataValue = cceNewEfficiencyNumber.getValue();
-        cceLabelValue.set(dataValue);
-        // Save value useer entered from cceActualCaloriesNumber in local storage.
-        ////20170510 var actualCalories = parseFloat(cceActualCaloriesNumber.ctrl.value);
-        ////20170514 $$$$ fix. Do not save here. Save on done.
-        ////20170515 var actualCalories = cceActualCaloriesNumber.getValue();
-        ////20170515 if (actualCalories !== cceLabelValue.get()) {
-        ////20170515     var statsData = that.onGetLastRecordStats();
-        ////20170515     statsData.caloriesBurnedActual = actualCalories;
-        ////20170515     that.onSetRecordStats(statsData); 
-        ////20170515 }
-        ShowCCEItem(true);
+        ////20170519 cceLabelValue.set(dataValue);
+        ////20170519 // Save value useer entered from cceActualCaloriesNumber in local storage.
+        ////20170519 ShowCCEItem(true);
+        // New efficiency is valid only if > 0.
+        if (dataValue > 0) { 
+            // Set new efficiency number for Settings. 
+            // Note that the change for Settings is not saved until user click Done button for Settings.
+            cceLabelValue.set(dataValue);
+            ShowCCEItem(true);
+        } else {
+            AlertMsg("Set Actual Calories or New Efficiency.")
+        }
     }, false);
     var buCCECancel = document.getElementById('buCCECancel');
     buCCECancel.addEventListener('click', function(event) {
@@ -1137,52 +1106,17 @@ function wigo_ws_View() {
     // Arg:
     //  bShow: boolean. true to show divCCEItem and hide divCCEUpdate. 
     function ShowCCEItem(bShow) {
-        ShowElement(divCCEItem, bShow);
+        // ShowElement(divCCEItem, bShow); 
+        // Note: Leave divCCEItem showing. It is covered by divCCEUpdate with position of fixed, top 0.
         ShowElement(divCCEUpdate, !bShow); 
-        ////20170511???? ShowSettingsDiv(true); ////20170511 added $$$$
+        if (!bShow) { ////20170518 added if and body.
+            // Set height of divCCEUpdateNote to fill available space.
+            var yBody = document.body.offsetHeight;
+            var yCtrls = divCCEUpdateCtrls.offsetHeight;
+            var yScroll =  yBody - yCtrls;
+            divCCEUpdateNote.style.height = yScroll.toFixed(0) + 'px';
+        }
     }
-
-    /* ////20170508 refactor, use CCELabel() instead
-    // Controls for updating calorie conversion efficiency.  ////20170506 added.
-    // Object for Label control for showing parameters in a label.
-    // constructor arg:
-    //  id: string. id of the hmtl label control.
-    //  showDecPlaces. number. number of decimal places to show in UI.
-    //      Note: always stores data-value attribute string to 4 decimal places.
-    function CCELabelValue(id, showDecPlaces) {
-        // Returns number for the calorie conversion efficency as a percentage.
-        this.get = function() {
-            var sValue = ctrl.getAttribute('data-value');
-            var value = parseFloat(sValue);
-            return value;
-        };
-
-        // Sets value for label showing Calorie Conversion Efficiency.
-        // Arge:
-        //  value: number. calorie conversion efficiency.
-        //         Note: value is decimal fraction, displayed value is a percentage.
-        //  suffix: string, optional. Suffix appended to value for display.
-        //          Defaults to empty string.
-        this.set = function(value, suffix) {
-            if (typeof(suffix) !== 'string') {
-                suffix = '';
-            }
-            ctrl.setAttribute('data-value', value.toFixed(4));
-            ctrl.innerText = value.toFixed(showDecPlaces) + suffix; 
-        };
-
-        // Shows or hides the parent row of this label control.
-        // Arg:
-        //  bShow: boolean. true to show row, false to hide row.
-        this.showParent = function(bShow) {
-            if (ctrl.parentElement) {
-                ShowElement(ctrl.parentElement, bShow);
-            }
-        };
-        ////20170506 var ctrl = document.getElementById('labelCCEValue');
-        var ctrl = document.getElementById(id);
-    }
-    */
 
     // Object for calorie conversion efficency number control.
     // Construct Arg:
@@ -1191,7 +1125,7 @@ function wigo_ws_View() {
     //  bPercentage. boolean, optional. true indicates to set value as a percent, 
     //               which is 100 times data-value attribute.
     //               Defaults to false;                
-    function CCENumber(id, decPlaces, bPercentage) { ////20170507 
+    function CCENumber(id, decPlaces, bPercentage) { 
         if ((typeof(decPlaces) != 'number')) {
             decPlaces = 2;
         }
@@ -1239,11 +1173,10 @@ function wigo_ws_View() {
 
     // Returns number. Displayed string converted to data value. 
     //  Also data-value attribute is set and converted value redisplayed.
-    CCENumber.prototype.getValue = function() {  ////20170510 added
+    CCENumber.prototype.getValue = function() {  
         var value = parseFloat(this.ctrl.value);
         if (this.bPercentage) 
             value = value / 100;
-        ////20170511 this.ctrl.setAttribute('data-value', value.toFixed(this.decPlaces));
         this.set(value);
         return value;
     };
@@ -1280,14 +1213,12 @@ function wigo_ws_View() {
     
     var cceDistancLabel = new CCELabel('cceDistance', 2);
     var cceTimeLabel = new CCELabel('cceTime',1);
-    var cceSpeedLabel = new CCELabel('cceSpeed',1);                     ////20170516 was 2.   
-    var cceKineticCaloriesLabel = new CCELabel('cceKineticCalories',2); ////20170511 added, was 0. 
-    var cceCaloriesBurnedLabel = new CCELabel('cceCaloriesBurned',2);   ////20170516 was 1.
+    var cceSpeedLabel = new CCELabel('cceSpeed',1);                     
+    var cceKineticCaloriesLabel = new CCELabel('cceKineticCalories',2); 
+    var cceCaloriesBurnedLabel = new CCELabel('cceCaloriesBurned',2);   
 
-    ////20170507 var cceActualCaloriesNumber = document.getElementById('cceActualCalories');
-    ////20170507 var cceNewEfficiencyNumber = document.getElementById('cceNewEfficiency');
     var cceActualCaloriesNumber = new CCENumber('cceActualCalories', 0);
-    cceActualCaloriesNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false); ////20170511 added
+    cceActualCaloriesNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false); 
     cceActualCaloriesNumber.ctrl.addEventListener('change', function(event) {
         // Calcuate new efficency.
         var actualCalories = cceActualCaloriesNumber.getValue();
@@ -1298,11 +1229,9 @@ function wigo_ws_View() {
     }, false);
     
     var cceNewEfficiencyNumber = new CCENumber('cceNewEfficiency', 3, true); // true => percentage
+    cceNewEfficiencyNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false);  
     cceNewEfficiencyNumber.ctrl.addEventListener('change', function(event){
-        ////20170516 var dataValue = parseFloat(cceNewEfficiencyNumber.ctrl.value) / 100; 
-        ////20170516 cceNewEfficiencyNumber.set(dataValue);
-        ////20170516 cceLabelValue.set(dataValue);
-        // Calculate and show actual calories based on the new efficiency.  ////20170516 added
+        // Calculate and show actual calories based on the new efficiency.  
         var newEfficincy = cceNewEfficiencyNumber.getValue();
         var kineticCalories = cceKineticCaloriesLabel.get();
         var actualCalories = kineticCalories / newEfficincy;
@@ -2877,10 +2806,9 @@ function wigo_ws_View() {
                     var nSecs = msInterval / 1000;
                     var nMins = Math.floor(nSecs/60);
                     var nSecs = nSecs % 60; 
-                    /////20170510  var sSecs = nSecs < 10 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0); // Extra 0 for  9.5 <= nSecs < 10
                     // Note: Must use  nSecs < 9.5, not <= 9.5 because 9.5.toFixed(0) rounds to 10 and 9.5 < 9.5 is false.
                     var sSecs = nSecs < 9.5 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0);  
-                    sSecs = "{0} : {1}".format(nMins, sSecs); ////20170510 space around : for mins and secs.
+                    sSecs = "{0} : {1}".format(nMins, sSecs); 
                     return sSecs;
                 }
                 var stats = map.recordPath.getStats();
@@ -2904,15 +2832,15 @@ function wigo_ws_View() {
                     // sMsg += s;
                     s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(1)); 
                     sMsg += s;
-                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0));  ////20170502 was Burned Calories
+                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0));  
                     sMsg += s;   
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
                     view.ShowStatus(sMsg, false);
-                    view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. ////20170508 added
-                    view.onSetRecordStats(stats); // Save stats data. ////20170508 added
+                    view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. 
+                    view.onSetRecordStats(stats); // Save stats data. 
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
                 }
@@ -4077,22 +4005,7 @@ function wigo_ws_View() {
 
         // Event handler for numberMass control getting focus: 
         // Handler function selects text (digits) in the numberMass control.
-        ////20170511 $$$$ may want to refactor handler to share 
         numberMass.addEventListener('focus', SelectNumberOnFocus, false); 
-        ////201705 Refactor event handler to share.
-        ////20170511 function(event){ 
-        ////20170511     var iLast = this.value.length;
-        ////20170511     var el = this;
-        ////20170511     if (iLast >= 0) { 
-        ////20170511         // Select all the text (digits) for edition.
-        ////20170511         // Set selection after this ui thread ends, otherwise the selection is removed when soft keyboard appears.
-        ////20170511         window.setTimeout(function(){
-        ////20170511             el.setSelectionRange(0, iLast); 
-        ////20170511         }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
-        ////20170511         this.setSelectionRange(0, iLast);
-        ////20170511     }
-        ////20170511 },
-        ////20170511  false);
 
         // Sets data-mass attribute based on value of numberMass and this.bMetric.
         // For this.bMetric false converts displayed numberMass value from pounds to kilograms.
@@ -4130,15 +4043,13 @@ function wigo_ws_View() {
             window.setTimeout(function(){
                 el.setSelectionRange(0, iLast); 
             }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
-            this.setSelectionRange(0, iLast);
         }
     }    
 
     // Helper to check if setting calorie converion efficiency is active.
-    function IsSettingCCEActive() {  ////20170515
+    function IsSettingCCEActive() {  
         var bYes = IsElementShown(divCCEUpdate);
         if (bYes) {
-            ////20170516 divCCEUpdate.focus();
             divCCEUpdate.scrollIntoView(); 
             AlertMsg("Please complete Setting Calorie Conversion Efficiency.");   
         }
@@ -4210,18 +4121,6 @@ function wigo_ws_View() {
             return bOk;
         }
 
-        /* ////20170516 refactor to share. Move outside.
-        // Helper to check if setting calorie converion efficiency is active.
-        function IsSettingCCEActive() {  ////20170515
-            var bYes = IsElementShown(divCCEUpdate);
-            if (bYes) {
-                divCCEUpdate.focus();
-                AlertMsg("Please complete Setting Calorie Conversion Efficiency.");   
-            }
-            return bYes;
-        }
-        */
-
         // Check each ctrl for validity one by one.
         if (!IsSelectCtrlOk2(selectAllowGeoTracking))  
             return false;
@@ -4268,7 +4167,7 @@ function wigo_ws_View() {
         if (!IsLonCtrlOk(numberHomeAreaNELon))
             return false;
 
-        if (IsSettingCCEActive())  ////20170515 
+        if (IsSettingCCEActive())  
             return false;
 
         return true;
@@ -4303,7 +4202,7 @@ function wigo_ws_View() {
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
         settings.vSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue()); 
         settings.kgBodyMass = bodyMass.getMass(); 
-        settings.calorieConversionEfficiency = cceLabelValue.get(); ////20170505 added
+        settings.calorieConversionEfficiency = cceLabelValue.get(); 
         settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
@@ -4347,24 +4246,16 @@ function wigo_ws_View() {
         bodyMass.setMass(settings.kgBodyMass); 
         bodyMass.show();
 
-        ////20170508 alert('Debug: Setting Control Values from Settings.');   ////20170507 Debug only, delete
-        cceLabelValue.set(settings.calorieConversionEfficiency); ////20170506 added
-        // Set ctrls for calculating and updating calorie conversion efficiency. ////20170506
+        cceLabelValue.set(settings.calorieConversionEfficiency); 
+        // Set ctrls for calculating and updating calorie conversion efficiency. 
         var bShowCCERow = true;
         var lastStats = that.onGetLastRecordStats();
         if (lastStats === null) {
-            ////20170507 cceDistancLabel.set(0, "?");
-            ////20170507 cceTimeLabel.set(0, "?");
-            ////20170507 cceSpeedLabel.set(0, "?"); 
-            ////20170507 cceCaloriesBurnedLabel.set(0, "?"); 
-            ////20170507 cceActualCaloriesNumber.value = "0";
-            ////20170507 cceNewEfficiencyNumber.value = "0";
-            ////20170507 cceCurEfficiencyLabel.set(0);
             // Hide label ctls that have invalid values.
             bShowCCERow = false;
             cceNewEfficiencyNumber.set(settings.calorieConversionEfficiency);
-            cceActualCaloriesNumber.set(0);  // Value is set to 0, but row is hidden. ////20170515 added 
-            cceKineticCaloriesLabel.set(0);  // Value is set ot 0, but row is hidden. ////20170516 added
+            cceActualCaloriesNumber.set(0);  // Value is set to 0, but row is hidden. 
+            cceKineticCaloriesLabel.set(0);  // Value is set ot 0, but row is hidden. 
         } else {
             bShowCCERow = true;
             var lc2 = new LengthConverter();
@@ -4376,14 +4267,10 @@ function wigo_ws_View() {
             cceTimeLabel.set(lastStats.msRunTime/(1000*60.0), "mins");
             var cceSpeed = lc2.toSpeed(lastStats.mDistance, lastStats.msRunTime/1000.0);
             cceSpeedLabel.set(cceSpeed.speed, cceSpeed.unit); 
-            cceKineticCaloriesLabel.set(lastStats.caloriesKinetic); ////20170511 added
+            cceKineticCaloriesLabel.set(lastStats.caloriesKinetic); 
             cceCaloriesBurnedLabel.set(lastStats.caloriesBurnedCalc, "");
-            ////20170507 cceActualCaloriesNumber.value = caloriesBurnedActual.toFixed(0); 
-            ////20170510 var caloriesBurnedActual = lastStats.caloriesBurnedActual  ? lastStats.caloriesBurnedActual.toFixed(0) : 0;
-            ////20170515 var caloriesBurnedActual = lastStats.caloriesBurnedActual  ? lastStats.caloriesBurnedActual : 0;
-            ////20170515 var caloriesBurnedActual = lastStats.caloriesBurnedActual;
-            cceActualCaloriesNumber.set(lastStats.caloriesBurnedActual);   ////20170515 was caloriesBurnedActual as local var.
-            if (lastStats.caloriesBurnedActual > 0) {                      ////20170515 was caloriesBurnedActual as local var. 
+            cceActualCaloriesNumber.set(lastStats.caloriesBurnedActual);   
+            if (lastStats.caloriesBurnedActual > 0) {                      
                 cceNewEfficiencyNumber.set(lastStats.caloriesKinetic / lastStats.caloriesBurnedActual);
             } else {
                 cceNewEfficiencyNumber.set(0);
@@ -4397,13 +4284,10 @@ function wigo_ws_View() {
         cceDistancLabel.showParent(bShowCCERow);
         cceTimeLabel.showParent(bShowCCERow);
         cceSpeedLabel.showParent(bShowCCERow); 
-        cceKineticCaloriesLabel.showParent(bShowCCERow);  ////20170511 added.
+        cceKineticCaloriesLabel.showParent(bShowCCERow);  
         cceCaloriesBurnedLabel.showParent(bShowCCERow); 
         cceActualCaloriesNumber.showParent(bShowCCERow);
-        ////20170515 cceActualCaloriesNumber.value = "0"; 
-        ////20170507 cceNewEfficiencyNumber.value = "0";
-        ////20170507 cceActualCaloriesNumber.value = "0";
-        cceNewEfficiencyNumber.set(settings.calorieConversionEfficiency); 
+        ////20170519 cceNewEfficiencyNumber.set(settings.calorieConversionEfficiency); 
         ShowElement(cceNewEfficiencyNumber.ctrl, true);
         cceCurEfficiencyLabel.showParent(bShowCCERow);
 
@@ -4430,8 +4314,8 @@ function wigo_ws_View() {
         map.recordPath.setVLimit(settings.vSpuriousVLimit); 
         // Set body mass. (Used to calculate calories for a recorded path.)
         map.recordPath.setBodyMass(settings.kgBodyMass);  
-        // Set calorie conversion efficiency factor for RecordFSM ////20170506 added
-        map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); ////20170506
+        // Set calorie conversion efficiency factor for RecordFSM 
+        map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
         // Enable phone alerts.
@@ -5044,7 +4928,7 @@ function wigo_ws_View() {
 
     // Returns true is an HtmlElement has class of wigo_show.
     // Note: Only valid for an element shown by ShowElement(el, bShow) above.
-    function IsElementShown(el) { ////20170515 added
+    function IsElementShown(el) { 
         var bShown = false;
         if (el instanceof HTMLElement) {
             bShown = el.classList.contains("wigo_ws_Show");
@@ -6430,7 +6314,7 @@ function wigo_ws_Controller() {
     //      or null if there is no record stats object.
     view.onGetLastRecordStats = function() {
         return model.getLastRecordStats();
-    };  ////20170507 added
+    };  
 
     // Sets recorded starts.
     //  Args: 
@@ -6441,19 +6325,7 @@ function wigo_ws_Controller() {
     // literal obj for stats from recordPath.getStats():
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
-    view.onSetRecordStats = function(stats) { ////20170509 added
-        /* ////20170511 redo 
-        ////20170510 var data = ConvertRecordStatsToData(stats);
-        if (typeof(bData) !== 'boolean')
-            bData = false;
-        var data;
-        if (bData) {
-            data = stats;
-        } else {
-            data = ConvertRecordStatsToData(stats);
-        }
-        model.setRecordStats(data);
-        */
+    view.onSetRecordStats = function(stats) { 
         var data = null;
         if (typeof stats !== 'undefined') {
             if (stats instanceof wigo_ws_GeoTrailRecordStats) {
@@ -6465,7 +6337,7 @@ function wigo_ws_Controller() {
         if (data)
             model.setRecordStats(data);
 
-    }; ////20170507 added
+    }; 
 
     // Clears the list of record stats objects for recorded trails.
     //  Args: none.
@@ -6595,17 +6467,6 @@ function wigo_ws_Controller() {
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
     function ConvertRecordStatsToData(stats) {
-/* ////20170509 to see data values.
-// Object for statistics for a trail that has been recorded.
-function wigo_ws_GeoTrailRecordStats() { ////20170501 added
-    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer.
-    this.msRunTime = 0;  // number. Run time for the recorded path in milliseconds.
-    this.mDistance = 0;  // number. Distance of path in meters.
-    this.caloriesKinetic = 0;    // number. Kinetic engery in calories to move body mass along the path.
-    this.caloriesBurnedCalc = 0; // number. Calories burned calculated by the GeoTrail app.
-    this.caloriesBurnedActual = null;  // number or null. Actual calories looked up from some web site.
-}
-*/    
         var data = new wigo_ws_GeoTrailRecordStats();
         data.nTimeStamp = stats.tStart ? stats.tStart.getTime() : 0;
         data.msRunTime = stats.msRecordTime;
