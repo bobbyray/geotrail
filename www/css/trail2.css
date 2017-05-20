@@ -48,7 +48,7 @@ body {
     padding:0px;
     /* text-transform:uppercase; */
     width:100%;
-    position: fixed; /* ////20170519 added */
+    position: fixed; 
 }
 
 /* Portrait layout (default) */
@@ -367,7 +367,7 @@ label {
 
 /* Settings home area */
 #divSettings {
-    position: fixed;  /* ////20170518 was absolute */
+    position: fixed;  
     left: 0px;
     top: 0px;  
     display: none;
@@ -376,7 +376,7 @@ label {
     border: 1px solid #999;
     z-index: 2;
     font-size: 120%;
-    width: 100%;  /* ////20170518 was 97% */
+    width: 100%;  
 }
 #divSettingsTitle {
     height: 1.3em; 
@@ -390,7 +390,7 @@ label {
 #divSettingsScroll {
     overflow-y: scroll;
     height: 20em; 
-    padding-right: 0.3em; /* ////20170518 added */
+    padding-right: 0.3em; 
 }
 
 /* Settings items */
@@ -415,7 +415,7 @@ label {
     position: relative;
 }
 #divCCEUpdate { /* Same as .settingItem, except height is not specified and position is fixed */
-    position: fixed;   /* ////20170517 was absolute  */
+    position: fixed;  
     left: 0px;
     top: 0px;
     padding-bottom: 0.35em; 
@@ -423,7 +423,7 @@ label {
     width: 98%;  
     background-color: white;
 }
-#divCCEUpdateNote {  /* ////20170517 added */
+#divCCEUpdateNote {  
     overflow-y: scroll;
     padding-left: .2em;
     padding-right: .1em;
@@ -513,7 +513,7 @@ label {
     border: none;
     height: 1.5em; 
     padding-top: 0.6em;  
-    padding-bottom: 1.5em; /* ////20170518 added */
+    padding-bottom: 1.5em; 
 }
 #buSettingsDone {
     margin-left: 25%;

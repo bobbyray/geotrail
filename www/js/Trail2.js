@@ -1084,9 +1084,6 @@ function wigo_ws_View() {
     var buCCEApply = document.getElementById('buCCEApply');
     buCCEApply.addEventListener('click', function(event) {
         var dataValue = cceNewEfficiencyNumber.getValue();
-        ////20170519 cceLabelValue.set(dataValue);
-        ////20170519 // Save value useer entered from cceActualCaloriesNumber in local storage.
-        ////20170519 ShowCCEItem(true);
         // New efficiency is valid only if > 0.
         if (dataValue > 0) { 
             // Set new efficiency number for Settings. 
@@ -1109,7 +1106,7 @@ function wigo_ws_View() {
         // ShowElement(divCCEItem, bShow); 
         // Note: Leave divCCEItem showing. It is covered by divCCEUpdate with position of fixed, top 0.
         ShowElement(divCCEUpdate, !bShow); 
-        if (!bShow) { ////20170518 added if and body.
+        if (!bShow) { 
             // Set height of divCCEUpdateNote to fill available space.
             var yBody = document.body.offsetHeight;
             var yCtrls = divCCEUpdateCtrls.offsetHeight;
@@ -4287,7 +4284,6 @@ function wigo_ws_View() {
         cceKineticCaloriesLabel.showParent(bShowCCERow);  
         cceCaloriesBurnedLabel.showParent(bShowCCERow); 
         cceActualCaloriesNumber.showParent(bShowCCERow);
-        ////20170519 cceNewEfficiencyNumber.set(settings.calorieConversionEfficiency); 
         ShowElement(cceNewEfficiencyNumber.ctrl, true);
         cceCurEfficiencyLabel.showParent(bShowCCERow);
 
