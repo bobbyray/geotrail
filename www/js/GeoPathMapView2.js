@@ -233,6 +233,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         pathMarkers.show();
     };
 
+    // Clears the path markers from the map.
+    this.ClearPathMarkers = function() { ////20170522 added
+        pathMarkers.clear();
+    };
+
     // Not Used. Does not seem to be useful.
     // // Redraw the map.
     // this.Redraw = function() { 
