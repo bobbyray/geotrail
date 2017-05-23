@@ -234,7 +234,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     };
 
     // Clears the path markers from the map.
-    this.ClearPathMarkers = function() { ////20170522 added
+    this.ClearPathMarkers = function() { 
         pathMarkers.clear();
     };
 

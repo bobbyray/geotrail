@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170522"; // Constant string for App version.
+    var sVersion = "1.1.025_20170523"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -1031,7 +1031,7 @@ function wigo_ws_View() {
         }
     }
 
-    var divHomeArea = document.getElementById('divHomeArea'); /* ////20170521 added */
+    var divHomeArea = document.getElementById('divHomeArea'); 
 
     $(buSetHomeArea).bind('click', function (e) {
         var corners = map.GetBounds();
@@ -1107,7 +1107,7 @@ function wigo_ws_View() {
     function ShowCCEItem(bShow) {
         // ShowElement(divCCEItem, bShow); 
         // Note: Leave divCCEItem showing. It is covered by divCCEUpdate with position of fixed, top 0.
-        ShowElement(divHomeArea, bShow);   // Added for iPhone. ////20170521 added.
+        ShowElement(divHomeArea, bShow);   // Added for iPhone. 
         ShowElement(divCCEUpdate, !bShow); 
         if (!bShow) { 
             // Set height of divCCEUpdateNote to fill available space.
@@ -1651,7 +1651,7 @@ function wigo_ws_View() {
                         txbxPathName.value = "";   
                         // Initially select public share for drawing a new path. 
                         // See property property of  wigo_ws_GeoPathsRESTfulApi for sharing enumeration ;
-                        view.setShareOption("private");  ////20170522 was public
+                        view.setShareOption("private");  
                     } else {
                         // Hide path description including textbox and server action buttons.
                         ShowOwnerIdDiv(true); // Hidden after signin.
@@ -2664,7 +2664,7 @@ function wigo_ws_View() {
                 recordCtrl.setLabel("On");
                 recordCtrl.empty();
                 recordCtrl.appendItem("stop", "Stop");
-                map.ClearPathMarkers();  // Ensure path markers are cleared when recording. ////20170522 added
+                map.ClearPathMarkers();  // Ensure path markers are cleared when recording. 
                 // Start watching for location change.
                 recordWatcher.watch();
             };

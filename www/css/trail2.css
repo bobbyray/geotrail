@@ -601,7 +601,7 @@ label {
 #mainMenu .wigo_ws_DropDownList {
     width: 17em;
 }
-#holderSpuriousVLimit, #holderPhoneVibeSecs, #divCCEItem {  /* ////20170521 added divCCEItem */
+#holderSpuriousVLimit, #holderPhoneVibeSecs, #divCCEItem {  
     font-size: 0.8em;
 }
 
