@@ -329,15 +329,31 @@ function Wigo_Ws_CordovaControls() {
             return sValue;
         };
 
-        // Returns string for text of from the value control, which represents
+        // Returns string for text from the value control, which represents
         // the selected droplist element.
         // Returns empty string if there is no value control.
         // Remarks:
         // The returned string is value.innerHTML, rather than innerText.
         this.getSelectedText = function() {
             var sText = "";
-            if (value)
+            if (value) {
                 sText = value.innerHTML;
+            }
+            return sText;
+        };
+
+        // Returns string for plain text from the value control, which represents
+        // the selected droplist element.
+        // Returns empty string if there is no value control.
+        // Remarks:
+        // The returned string is value.innerText, rather than innerHTML.
+        // value.innerHTML would have & char as hmtl entity sequence &amp;
+        // Instead value.innerText has & char, not the html entity sqequence.
+        this.getSelectedPlainText = function() {
+            var sText = "";
+            if (value) {
+                sText = value.innerText;
+            }
             return sText;
         };
 

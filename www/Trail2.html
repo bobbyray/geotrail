@@ -39,6 +39,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
     <script src="js/jquery-1.11.3.js"></script>
     <script src="js/ws.wigo.networkinfo.js"></script>
     <script src="js/Model2.js"></script>
+    <script src="js/oms.min.js"></script>  
     <script src="js/GeoPathMapView2.js"></script>
     <script charset="utf-8" src="js/PebbleAdapter.js"></script> 
     <script src="jsAuthCordova/FbAuthentication2.js"></script>
@@ -108,7 +109,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 </div>
             </div>
             <div id="divPathName">
-                <input id="txbxPathName" type="text"/>  
+                <input id="txbxPathName" type="text" /> <!-- pattern does not work: pattern="[a-zA-Z0-9]+" title="Use alpha numberic" -->  
             </div>
         </div>
 
@@ -196,6 +197,66 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <label id='labelBodyMass'>Body Weight (lbs)</label>
                 <input id='numberBodyMass' type='number' step='5' min='100' max='250' value='150'>
             </div>
+            <div id='holderCCE'>  
+              <div id='divCCEContent'> 
+                <div id='divCCEItem' class='settingItem wigo_ws_Show'>
+                    <label >Calorie Conversion Efficiency</label>
+                    <label id='labelCCEValue' class='cceValueLabel'></label>  
+                    <button id='buCCESet'>Set</button>
+                </div>
+                <div id='divCCEUpdate' class='wigo_ws_NoShow'> 
+                    <div id='divCCEUpdateCtrls'> 
+                        <span id='spanCCEUpdateTitle'>Setting Calorie Conversion Efficiency</span><br/>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Distance</label><label id='cceDistance' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Time</label><label id='cceTime' class='cceValueLabel'></label>     
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Speed</label><label id='cceSpeed' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Kinetic Calories</label><label id='cceKineticCalories' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Estimated Calories</label><label id='cceCaloriesBurned' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Actual Calories</label><input id='cceActualCalories' type='number' value='0'/>
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>New Efficiency %age</label><input id='cceNewEfficiency' type='number' value='0'/> 
+                        </div>
+                        <div class='cceRow'>
+                            <label class='cceLabel'>Current Efficiency %age</label><label id='cceCurEfficiency' class='cceValueLabel'></label>
+                        </div>
+                        <div class='cceRow'>
+                            <button id='buCCEApply'>Apply</button> <button id='buCCECancel'>Cancel</button>
+                        </div>
+                    </div>
+                    <div id='divCCEUpdateNote'> 
+                        <b>Note: </b>When a trail has been recorded, the time, distance, and speed you traveled are shown above.
+                        Google for a "calories burned calculator" to find a calculator for the actual calories
+                        you have burned. 
+                        The time, distance, and speed are typically needed when using the calculator you found along with 
+                        other factors such as your height, weight, age, and kind of activity.
+                        Enter the result given by the calculator as the Actual Calories.
+                        The new calorie conversion efficiency is determined and shown as the New Efficiency.
+                        <p>Touch the Apply button to accept the New Efficiency.</p>
+                        <p>Touch Cancel to not change the efficiency.</p>
+                        <p>Instead, you can set the New Efficiency directly. If there is no recorded trail, the
+                        only option is to set the New Efficiency.
+                        </p>
+                        <p>Kinetic Calories give the calculated kinetic energy in calories to move your body mass along the recorded trail.</p>
+                        <p>Estimated Calories are the estimated calories you burned to move along the recorded trail:<br/>
+                        Estimated Calories =  Kinetic Calories / Current Efficiency.</p>
+                        <p>Calories are in units of US Food Calories:<br/>1 US Food Calorie = 4.184 kiloJoules.</p>
+                        <br/>
+                    </div>
+                </div>
+              </div>  
+            </div>
             <div id='holderCompassHeadingVisible' class='settingItem'> 
             </div>
             <div id='holderClickForGeoLoc' class='settingItem'>
@@ -269,13 +330,18 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         </ul>
         <h2 id="helpOnlineMap">Online Map</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
-        from which you select a trail to view. Your current geolocation on the trail is shown 
+        from which you select a trail to view. 
+        Also you can select a trail by touching a blue marker on the map that indicates where a trail is. If the markers overlap, 
+        touching causes the markers to spread apart so you can select one individually. Touching a marker shows a pop-up
+        that shows the trail name and length of the trail. Touch the View Trail button on the pop-up to show the trail on the map.
+        <p>Your current geolocation on the trail is shown 
         and you can be alerted if you are off trail. When you are off trail, instructions for returning to the trail
         are shown. The beginning of the trail is indicated by a short green line and the end by a short red line. 
-        Also automatic tracking can be enabled to determine if you are off trail.
+        Also automatic tracking can be enabled to determine if you are off trail.</p>
         <h3>Trails DropList</h3>
         <p>Select a trail from the web that others have made public and ones
         that are private to you.</p>
+        <p>Touch the Select a Geo Trail item at the top of the droplist to show the blue markers for trails on the map.
         <h3>Save Offline Button</h3>
         <p>Touch the Save Offline button to save a trail you are viewing so that you can
         view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
@@ -483,20 +549,22 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         </ul>
         <h2 id="helpEditTrail">Edit a Trail</h2>
         <p> Edit provides a way to edit a trail you have saved online.
-        The procedure is the same as for <a href="#helpDrawTrail">Draw a Trail</a>, 
+        The procedure is the same for <a href="#helpDrawTrail">Draw a Trail</a>, 
         except that you select a trail to edit instead of defining a name for the trail.</p>
         <p>You must be signed in to edit a trail, and you can only edit trails that you have defined.</p>
         <h2>Getting Trail Maps from Websites</h2>
-        <p>Websites such as <a href="https://www.mtbproject.com/">Mountain Bike Project</a> and
-        <a href="http://www.hillmap.com">Hillmap</a> allow you to download a gpx file from the site for a trail. 
+        <p>Websites such as Mountain Bike Project (www.mtbproject.com) and
+        Hillmap (www.hillmap.com) allow you to download a gpx file from the site for a trail. 
         </p>
-        <p>At http://www.hillmap.com you can create a trail from a laptop or desktop computer:</p>
+        <p>For example, at www.hillmap.com you can create a trail from a laptop or desktop computer:</p>
         <ul>
             <li>Use the Path tab to define your trail.</li>
             <li>Use Tools > Download Gpx to download your path.</li>
         </ul>
-        <p>Use the site http://www.wigo.ws/geopaths/gpxpaths.html to upload and save the path that you have
-        downloaded so that you can access the path (aka trail) online from this phone app.</p>
+        <p>A site may provide a trail in Google's KML format instead of GPX. 
+        There are sites that will convert a KML file to a GPX file.</p>
+        <p>Use the site www.wigo.ws/geopaths/gpxpaths.html to upload the path that you have
+        downloaded in GPX format so that you can access the path (aka trail) online from GeoTrail.</p>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
         <h3>Menu > Terms of Use</h3>
@@ -573,6 +641,28 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The velocity limit in meters/second for a recorded point to be spurious. 
             A point in a recorded trail may be spurious (invalid). If the velocity of point from a previous point
             is too great, the point cannot actually be in the recorded trail and can be filtered out.</li>
+            <li>Body Weight</br>
+            Your body weight in pounds or kilograms depending on the Measuring System, English or Metric, chosen.
+            Your body weight is used to calculate the number of calories burned traveling while recording a trail.
+            </li>
+            <li>Calorie Conversion Efficiency<br/>
+            Touch Set to change the Calorie Conversion Efficiency.<br/>
+            When a trail has been recorded, the time, distance, and speed you traveled are shown.
+            Google for a "calories burned calculator" to find a calculator for the actual calories
+            you have burned. 
+            The time, distance, and speed are typically needed when using the calculator you found along with 
+            other factors such as your height, weight, age, and kind of activity.
+            Enter the result given by the calculator as the Actual Calories.
+            The new calorie conversion efficiency is determined and shown as the New Efficiency.<br/>
+            <br/>Touch the Apply button to accept the New Efficiency.<br/>
+            <br/>Touch Cancel to not change the efficiency.<br/>
+            <br/>Instead, you can set the New Efficiency directly. If there is no recorded trail, the
+            only option is to set the New Efficiency.<br/>
+            <br>Kinetic Calories give the calculated kinetic energy in calories to move your body mass along the recorded trail.<br/>
+            <br/>Estimated Calories are the estimated calories you burned to move along the recorded trail:<br/>
+            Estimated Calories =  Kinetic Calories / Current Efficiency.<br/>
+            <br/>Calories are in units of US Food Calories:<br/>1 US Food Calorie = 4.184 kiloJoules.
+            </li>
             <li>Show Compass Heading on Map?<br/>Yes | No<br/>
             An arrow for the compass heading from your current location may be shown on the map.</li>
             <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>
@@ -726,6 +816,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>cordova-plugin-whitelist 1.2.2 "Whitelist"</li>
         <li>org.nypr.cordova.wakeupplugin 0.1.0 "WakeupTimer"</li>
         <li>cordova-plugin-network-information 1.3.2 "Network Information"</li>
+        <li>github.com/jawj/OverlappingMarkerSpiderfier-Leaflet, May 10, 2016</li>
         </ul>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
@@ -752,6 +843,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>cordova-plugin-statusbar npm v2.2.0</li>
         <li>cordova-plugin-vibration npm v1.2.0</li>
         <li>org.apache.cordova.device-orientation npm v0.3.11</li>
+        <li>github.com/jawj/OverlappingMarkerSpiderfier-Leaflet, May 10, 2016</li>
         </ul>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>

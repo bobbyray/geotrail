@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.025_20170417"; // Constant string for App version.
+    var sVersion = "1.1.026_20170523"; // Constant string for App version.
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -119,6 +119,12 @@ function wigo_ws_View() {
     //  gptNE: wigo_ws_GeoPt for NorthEast corner of rectangle. If null, do not find by lat/lon.
     this.onFindPaths = function (sOwnerId, nFindIx, gptSW, gptNE) { };
 
+    // Gets wigo_ws_GpxPath object for a path.
+    // Signature of Handler:
+    //  nMode: view.eMode enumeration.
+    //  iPathList: number. index to array of data for the paths. 
+    //  Returns: wigo_ws_GpxPath obj. Data for path. null if iPathList is invalid.
+    this.onGetPath = function(nMode, iPathList) { return null}; 
 
     // Returns geo path upload data for data index from item in the selection list.
     // Handler signature:
@@ -164,6 +170,31 @@ function wigo_ws_View() {
     //  Args: none
     //  Returns: wigo_ws_GeoTrailSettings object for current setting. May be null.
     this.onGetSettings = function () { };
+
+    // Gets the last record stats object for a record trail.
+    // Handler signature:
+    //  Args: none.
+    //  Returns wigo_ws_GeoTrailRecordStats object for last stats saved, 
+    //      or null if there is no record stats object.
+    this.onGetLastRecordStats = function() {};  
+
+    // Sets recorded starts.
+    // Handler Signature:
+    //  Args: 
+    //    stats: literal obj from recordPath.getStats() | wigo_ws_GeoTrailRecordStats obj. stats to be set.
+    //           If stats is literal obj from recordPath.getStats, stats is converted to wigo_ws_GeoTrailRecordStats
+    //           object that is set in localStorage.
+    // Note: 
+    // literal obj for stats from recordPath.getStats():
+    //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    this.onSetRecordStats = function(stats, bData) {}; 
+
+    // Clears the list of record stats objects for recorded trails.
+    // Handler signature:
+    //  Args: none.
+    //  Returns nothing.
+    this.onClearRecordStats = function(){}; 
 
     // Save current version.
     // Handler Signature:
@@ -516,6 +547,18 @@ function wigo_ws_View() {
         return networkInfo; 
     };
 
+    // Creates and returns a PathMarkerEl object.
+    // The fields of the returned object should be set approppriatedly
+    // and the object appended to an array that is the arg of this.FillPathMarks(..).
+    // Fields of a returned PathMarkerEl object are initialized as follows:
+    //      pathName = ""; // string: path name.
+    //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+    //      sDescr = "";   // string: description for the path. (For example could be total distance.)
+    //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+    this.newPathMarkerEl = function() { 
+        return map.newPathMarkerEl();
+    };
+
     // Fill the list of paths that user can select.
     // Uses selectOnceAfterSetPathList obj to select a path and to draw it
     // if path is found by selectOnceAfterSetPathList.
@@ -523,17 +566,27 @@ function wigo_ws_View() {
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
     //        Defaults to true if not given.
-    this.setPathList = function (arPath, bSort) {
+    //  arPathMarker is optional array of PathMarkerEl objects. Each element
+    //        gives the info for a marker on the map of the corresponding path.
+    //        If the array is empty, there are no path markers.
+    //        Default to empty array.
+    this.setPathList = function (arPath, bSort, arPathMarker) {
         FillPathList(arPath, bSort);
-        
+        map.FillPathMarkers(arPathMarker);
+
         // Select previous path if indicated.
-        selectOnceAfterSetPathList.select();  
+        var bSelected = selectOnceAfterSetPathList.select();  
+        if (!bSelected) { 
+            // For Online mode, show path markers when a path has not been selected.
+            if (nMode === this.eMode.online_view) {
+                map.ShowPathMarkers();  
+            }
+
+        }
     };
 
 
     // Helper to fill the list of paths that user can select.
-    // Uses selectOnceAfterSetPathList obj to select a path and to draw it
-    // if path is found by selectOnceAfterSetPathList.
     // Arg:
     //  arPath is an array of strings for geo path names.
     //  bSort is optional boolean to display sorted version of arPath.
@@ -613,7 +666,7 @@ function wigo_ws_View() {
     // Returns selected Path Name from selectGeoTrail drop list.
     // Returns empty string for no selection.
     this.getSelectedPathName = function () {
-        var sName = selectGeoTrail.getSelectedText();
+        var sName = selectGeoTrail.getSelectedPlainText(); 
         return sName;
     };
 
@@ -631,7 +684,7 @@ function wigo_ws_View() {
     this.ShowPathInfo = function (bShow, path) {
         ShowPathInfoDiv(bShow);
         map.DrawPath(path);
-    }
+    };
 
     // Caches current map view.
     // Arg:
@@ -706,6 +759,7 @@ function wigo_ws_View() {
     //         Clears nPrevMode and sPathName unless droplist is empty.
     //         Therefore auto selection is only done once until nPrevMode and sPathName
     //         are set again.
+    //         Returns: boolean. true if a selection is made.
     // Remarks: 
     //  selectGeoTrail is the droplist control. 
     //  If nPrevNode is unknown, there is no selection to match.
@@ -714,6 +768,7 @@ function wigo_ws_View() {
     //  View setPathList(..) calls select() after filling selectGeoTrail.
     var selectOnceAfterSetPathList = {nPrevMode: that.eMode.unknown, sPathName: "",
         select: function() {
+            var bSelected = false; 
             var nCurMode = that.curMode();
             switch (nCurMode)
             {
@@ -728,8 +783,10 @@ function wigo_ws_View() {
                         case that.eMode.online_edit:
                         case that.eMode.select_mode:  
                             var dataValue = selectGeoTrail.selectByText(this.sPathName);
-                            if (dataValue) 
+                            if (dataValue) {
                                 selectGeoTrail.onListElClicked(dataValue);
+                                bSelected = true;  
+                            }
                             // Clear after selecting unless droplist is empty.
                             if (selectGeoTrail.getListLength() > 1) { // First entry is Select a Trail, which is same as empty.
                                 this.nPrevMode = that.eMode.unknown;
@@ -739,6 +796,7 @@ function wigo_ws_View() {
                     }
                     break;
             }
+            return bSelected;  
         }};
 
 
@@ -836,7 +894,7 @@ function wigo_ws_View() {
             if (offlineLocalData.isDefiningTrailName()) 
                 that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
         }
-    }, false);
+    }, false); 
 
     txbxPathName.addEventListener('keydown', function(event){
         function IsTextEmpty() {
@@ -844,8 +902,12 @@ function wigo_ws_View() {
             return text.length === 0;
         }
 
+        // Remove any single quote char or double quote char with notifying user.
+        // A single quote or double quote in the path name in an object posted
+        // to a server causes a transfer error. 
+
+        var bEnterKey = IsEnterKey(event);
         if (that.curMode() === that.eMode.offline) {
-            var bEnterKey = IsEnterKey(event);
             if (bEnterKey && recordFSM.isDefiningTrailName())  {
                 if (!IsTextEmpty()) {
                     // Save recorded trail locally.
@@ -868,7 +930,7 @@ function wigo_ws_View() {
                 event.target.blur();
             }
         }
-    }, false);
+    }, false); // Try true to use capture instead of bubble. true does not capture.
 
     // Returns true if an keyboad event is for the Enter key.
     // Arg:
@@ -887,7 +949,6 @@ function wigo_ws_View() {
         }
         return bYes;
     }
-
 
     var labelPathName = document.getElementById('labelPathName');
 
@@ -970,6 +1031,8 @@ function wigo_ws_View() {
         }
     }
 
+    var divHomeArea = document.getElementById('divHomeArea'); 
+
     $(buSetHomeArea).bind('click', function (e) {
         var corners = map.GetBounds();
         numberHomeAreaSWLat.value = corners.gptSW.lat;
@@ -985,14 +1048,196 @@ function wigo_ws_View() {
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
+            // Save actual calories that user has entered.           
+            var actualCalories = cceActualCaloriesNumber.getValue();
+            var statsData = that.onGetLastRecordStats();
+            if (statsData) {
+                statsData.caloriesBurnedActual = actualCalories; 
+                that.onSetRecordStats(statsData); 
+            }
             titleBar.scrollIntoView();   
         }
     });
     $(buSettingsCancel).bind('click', function (e) {
+        // Do not cancel if setting Calorie Conversion Eficiency is active.
+        if (IsSettingCCEActive()) { 
+            return;
+        }
+
         ShowSettingsDiv(false);
         that.ClearStatus();
         titleBar.scrollIntoView();   
     });
+
+    // Controls for Calorie Conversion Efficiency 
+    var divCCEItem = document.getElementById('divCCEItem');
+    var cceLabelValue = new CCELabel('labelCCEValue', 3, true);
+
+    var divCCEUpdate = document.getElementById('divCCEUpdate');
+
+    var divCCEUpdateCtrls = document.getElementById('divCCEUpdateCtrls');
+    var divCCEUpdateNote = document.getElementById('divCCEUpdateNote');
+
+    var buCCESet = document.getElementById('buCCESet');
+    buCCESet.addEventListener('click', function(event) {
+        ShowCCEItem(false);
+    }, false);
+
+    var buCCEApply = document.getElementById('buCCEApply');
+    buCCEApply.addEventListener('click', function(event) {
+        var dataValue = cceNewEfficiencyNumber.getValue();
+        // New efficiency is valid only if > 0.
+        if (dataValue > 0) { 
+            // Set new efficiency number for Settings. 
+            // Note that the change for Settings is not saved until user click Done button for Settings.
+            cceLabelValue.set(dataValue);
+            ShowCCEItem(true);
+        } else {
+            AlertMsg("Set Actual Calories or New Efficiency.")
+        }
+    }, false);
+    var buCCECancel = document.getElementById('buCCECancel');
+    buCCECancel.addEventListener('click', function(event) {
+        ShowCCEItem(true);
+    }, false);
+
+    // Shows or hides Calorie Conversion Item in Settings.
+    // Arg:
+    //  bShow: boolean. true to show divCCEItem and hide divCCEUpdate. 
+    function ShowCCEItem(bShow) {
+        // ShowElement(divCCEItem, bShow); 
+        // Note: Leave divCCEItem showing. It is covered by divCCEUpdate with position of fixed, top 0.
+        ShowElement(divHomeArea, bShow);   // Added for iPhone. 
+        ShowElement(divCCEUpdate, !bShow); 
+        if (!bShow) { 
+            // Set height of divCCEUpdateNote to fill available space.
+            var yBody = document.body.offsetHeight;
+            var yCtrls = divCCEUpdateCtrls.offsetHeight;
+            var yScroll =  yBody - yCtrls;
+            divCCEUpdateNote.style.height = yScroll.toFixed(0) + 'px';
+        }
+    }
+
+    // Object for calorie conversion efficency number control.
+    // Construct Arg:
+    //  id: string. id of html input control of type number.
+    //  decPlaces: integer, optional. number of decimal places. Defaults to 2.
+    //  bPercentage. boolean, optional. true indicates to set value as a percent, 
+    //               which is 100 times data-value attribute.
+    //               Defaults to false;                
+    function CCENumber(id, decPlaces, bPercentage) { 
+        if ((typeof(decPlaces) != 'number')) {
+            decPlaces = 2;
+        }
+        if ((typeof(bPercentage) !== 'boolean'))
+            bPercentage =false;
+
+        // Html control element.
+        this.ctrl = document.getElementById(id);
+
+        // Sets the value for the control.
+        // Arg:
+        //  value: number. data-value attribute of ctrl set to this number.
+        this.set = function(value) {
+            this.ctrl.setAttribute('data-value', value.toFixed(decPlaces));
+            if (bPercentage) {
+                var valuePlaces = decPlaces - 2; 
+                if (valuePlaces < 0)
+                    valuePlaces = 0;
+                this.ctrl.value = (value*100).toFixed(valuePlaces);
+            } else {
+                this.ctrl.value = value.toFixed(decPlaces);
+            }
+        };
+
+        // Return number for data-value of this control.
+        this.get = function() {
+            var sValue = this.ctrl.getAttribute('data-value');
+            var value = parseFloat(sValue);
+            return value;
+        };
+
+        // Shows or hides the parent this control.
+        // Arg:
+        //  bShow: boolean. true to show row, false to hide row.
+        this.showParent = function(bShow) {
+            if (this.ctrl.parentElement) {
+                ShowElement(this.ctrl.parentElement, bShow);
+            }
+        };
+
+        // Save decPlaces and bPer for prototype to use.
+        this.decPlaces = decPlaces;
+        this.bPercentage = bPercentage;
+    };
+
+    // Returns number. Displayed string converted to data value. 
+    //  Also data-value attribute is set and converted value redisplayed.
+    CCENumber.prototype.getValue = function() {  
+        var value = parseFloat(this.ctrl.value);
+        if (this.bPercentage) 
+            value = value / 100;
+        this.set(value);
+        return value;
+    };
+
+    // Object for calorie conversion label using a Label control.
+    // Note: CCENumber() is base class. this.set member is over-ridden.
+    function CCELabel(id, decPlaces, bPercentage) {
+        // Initialize members from base class CCENumber.
+        CCENumber.call(this, id, decPlaces, bPercentage);
+        
+        // Override set member. (Uses innerText instead of value attribute of ctrl.)
+        // Sets the value for the control.
+        // Arg:
+        //  value: number. data-value attribute of ctrl set to this number.
+        //  suffix: string, optional. suffix to append to numeric value shown.
+        //          Defaults to % for bPercentage true, otherwise to empty string.
+        //          If an empty suffix is needed for percentage, provide empty string
+        //          as the suffix (do not use the default).
+        this.set = function(value, suffix) {
+            if (typeof(suffix) !== 'string') {
+                suffix = bPercentage ? '%' : '';
+            }
+            this.ctrl.setAttribute('data-value', value.toFixed(decPlaces));
+            if (bPercentage) {
+                var valuePlaces = decPlaces - 2; 
+                if (valuePlaces < 0)
+                    valuePlaces = 0;
+                this.ctrl.innerText = (value*100).toFixed(valuePlaces) + suffix;
+            } else {
+                this.ctrl.innerText = value.toFixed(decPlaces) + suffix;
+            }
+        };
+    }
+    
+    var cceDistancLabel = new CCELabel('cceDistance', 2);
+    var cceTimeLabel = new CCELabel('cceTime',1);
+    var cceSpeedLabel = new CCELabel('cceSpeed',1);                     
+    var cceKineticCaloriesLabel = new CCELabel('cceKineticCalories',2); 
+    var cceCaloriesBurnedLabel = new CCELabel('cceCaloriesBurned',2);   
+
+    var cceActualCaloriesNumber = new CCENumber('cceActualCalories', 0);
+    cceActualCaloriesNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false); 
+    cceActualCaloriesNumber.ctrl.addEventListener('change', function(event) {
+        // Calcuate new efficency.
+        var actualCalories = cceActualCaloriesNumber.getValue();
+        // Note: getValue shows the value again closing the soft keyboard.
+        var kineticCalories = cceKineticCaloriesLabel.get();
+        var efficency = kineticCalories / actualCalories;
+        cceNewEfficiencyNumber.set(efficency);
+    }, false);
+    
+    var cceNewEfficiencyNumber = new CCENumber('cceNewEfficiency', 3, true); // true => percentage
+    cceNewEfficiencyNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false);  
+    cceNewEfficiencyNumber.ctrl.addEventListener('change', function(event){
+        // Calculate and show actual calories based on the new efficiency.  
+        var newEfficincy = cceNewEfficiencyNumber.getValue();
+        var kineticCalories = cceKineticCaloriesLabel.get();
+        var actualCalories = kineticCalories / newEfficincy;
+        cceActualCaloriesNumber.set(actualCalories);
+    }, false);
+    var cceCurEfficiencyLabel = new CCELabel('cceCurEfficiency', 3, true);  // true => percentage
 
     // Selects state for Tracking on/off and runs the tract timer accordingly.
     // Arg: 
@@ -1406,7 +1651,7 @@ function wigo_ws_View() {
                         txbxPathName.value = "";   
                         // Initially select public share for drawing a new path. 
                         // See property property of  wigo_ws_GeoPathsRESTfulApi for sharing enumeration ;
-                        view.setShareOption("public");
+                        view.setShareOption("private");  
                     } else {
                         // Hide path description including textbox and server action buttons.
                         ShowOwnerIdDiv(true); // Hidden after signin.
@@ -2419,6 +2664,7 @@ function wigo_ws_View() {
                 recordCtrl.setLabel("On");
                 recordCtrl.empty();
                 recordCtrl.appendItem("stop", "Stop");
+                map.ClearPathMarkers();  // Ensure path markers are cleared when recording. 
                 // Start watching for location change.
                 recordWatcher.watch();
             };
@@ -2560,9 +2806,10 @@ function wigo_ws_View() {
                 function TimeInterval(msInterval) {
                     var nSecs = msInterval / 1000;
                     var nMins = Math.floor(nSecs/60);
-                    var nSecs = nSecs % 60;
-                    var sSecs = nSecs < 10 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0);
-                    var sSecs = "{0}:{1}".format(nMins, sSecs);
+                    var nSecs = nSecs % 60; 
+                    // Note: Must use  nSecs < 9.5, not <= 9.5 because 9.5.toFixed(0) rounds to 10 and 9.5 < 9.5 is false.
+                    var sSecs = nSecs < 9.5 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0);  
+                    sSecs = "{0} : {1}".format(nMins, sSecs); 
                     return sSecs;
                 }
                 var stats = map.recordPath.getStats();
@@ -2577,17 +2824,24 @@ function wigo_ws_View() {
                     sMsg += s;
                     s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
                     sMsg += s;
+                    // Show speed in miles per hour (MPH) or kilometers per hour (KPH). 
+                    var speed = lc.toSpeed(stats.dTotal, stats.msRecordTime/1000.0);    
+                    s = "Speed: {0}<br/>".format(speed.text);                           
+                    sMsg += s;                                                          
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
-                    s = "Calories: {0}<br/>".format(stats.calories.toFixed(0));
+                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(1)); 
                     sMsg += s;
+                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0));  
+                    sMsg += s;   
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
-                        
                     view.ShowStatus(sMsg, false);
+                    view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. 
+                    view.onSetRecordStats(stats); // Save stats data. 
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
                 }
@@ -2611,6 +2865,7 @@ function wigo_ws_View() {
                 ShowPathDescrBar(true); 
                 if (bOnline)               
                     signin.showIfNeedBe(); 
+                txbxPathName.focus();  // Set focus to textbox so keyboard is presented. 
             };
 
             this.nextState = function(event) {
@@ -3751,18 +4006,7 @@ function wigo_ws_View() {
 
         // Event handler for numberMass control getting focus: 
         // Handler function selects text (digits) in the numberMass control.
-        numberMass.addEventListener('focus', function(event){ 
-            var iLast = this.value.length;
-            var el = this;
-            if (iLast >= 0) { 
-                // Select all the text (digits) for edition.
-                // Set selection after this ui thread ends, otherwise the selection is removed when soft keyboard appears.
-                window.setTimeout(function(){
-                    el.setSelectionRange(0, iLast); 
-                }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
-                this.setSelectionRange(0, iLast);
-            }
-        }, false);
+        numberMass.addEventListener('focus', SelectNumberOnFocus, false); 
 
         // Sets data-mass attribute based on value of numberMass and this.bMetric.
         // For this.bMetric false converts displayed numberMass value from pounds to kilograms.
@@ -3786,6 +4030,32 @@ function wigo_ws_View() {
 
 
     // ** Helper for Settings
+
+    // Event handler that selects all chars in an input control on focus.
+    // Arg:
+    //  event: FocusEvent. not currently used.
+    // Note: this is for an html input element of type number.
+    function SelectNumberOnFocus(event) { 
+        var iLast = this.value.length;
+        var el = this;
+        if (iLast >= 0) { 
+            // Select all the text (digits) for edition.
+            // Set selection after this ui thread ends, otherwise the selection is removed when soft keyboard appears.
+            window.setTimeout(function(){
+                el.setSelectionRange(0, iLast); 
+            }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
+        }
+    }    
+
+    // Helper to check if setting calorie converion efficiency is active.
+    function IsSettingCCEActive() {  
+        var bYes = IsElementShown(divCCEUpdate);
+        if (bYes) {
+            divCCEUpdate.scrollIntoView(); 
+            AlertMsg("Please complete Setting Calorie Conversion Efficiency.");   
+        }
+        return bYes;
+    }
 
     // Checks that the control values for settings are valid.
     // Shows dialog for an invalid setting and sets focus to the control.
@@ -3898,6 +4168,9 @@ function wigo_ws_View() {
         if (!IsLonCtrlOk(numberHomeAreaNELon))
             return false;
 
+        if (IsSettingCCEActive())  
+            return false;
+
         return true;
     }
 
@@ -3930,6 +4203,7 @@ function wigo_ws_View() {
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
         settings.vSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue()); 
         settings.kgBodyMass = bodyMass.getMass(); 
+        settings.calorieConversionEfficiency = cceLabelValue.get(); 
         settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
@@ -3973,6 +4247,50 @@ function wigo_ws_View() {
         bodyMass.setMass(settings.kgBodyMass); 
         bodyMass.show();
 
+        cceLabelValue.set(settings.calorieConversionEfficiency); 
+        // Set ctrls for calculating and updating calorie conversion efficiency. 
+        var bShowCCERow = true;
+        var lastStats = that.onGetLastRecordStats();
+        if (lastStats === null) {
+            // Hide label ctls that have invalid values.
+            bShowCCERow = false;
+            cceNewEfficiencyNumber.set(settings.calorieConversionEfficiency);
+            cceActualCaloriesNumber.set(0);  // Value is set to 0, but row is hidden. 
+            cceKineticCaloriesLabel.set(0);  // Value is set ot 0, but row is hidden. 
+        } else {
+            bShowCCERow = true;
+            var lc2 = new LengthConverter();
+            lc2.bMetric = lc.bMetric;
+            lc2.feetLimit = -1;  // Always use miles or kilometers.
+            lc2.meterLimit = -1; // Always use miles or kilometers.
+            var cceDistance = lc2.toNum(lastStats.mDistance);
+            cceDistancLabel.set(cceDistance.n, cceDistance.unit);
+            cceTimeLabel.set(lastStats.msRunTime/(1000*60.0), "mins");
+            var cceSpeed = lc2.toSpeed(lastStats.mDistance, lastStats.msRunTime/1000.0);
+            cceSpeedLabel.set(cceSpeed.speed, cceSpeed.unit); 
+            cceKineticCaloriesLabel.set(lastStats.caloriesKinetic); 
+            cceCaloriesBurnedLabel.set(lastStats.caloriesBurnedCalc, "");
+            cceActualCaloriesNumber.set(lastStats.caloriesBurnedActual);   
+            if (lastStats.caloriesBurnedActual > 0) {                      
+                cceNewEfficiencyNumber.set(lastStats.caloriesKinetic / lastStats.caloriesBurnedActual);
+            } else {
+                cceNewEfficiencyNumber.set(0);
+            }
+            var curEfficiency = lastStats.caloriesKinetic / lastStats.caloriesBurnedCalc;
+            if (!Number.isFinite(curEfficiency)) {
+                curEfficiency = 0;
+            }
+            cceCurEfficiencyLabel.set(curEfficiency);
+        }
+        cceDistancLabel.showParent(bShowCCERow);
+        cceTimeLabel.showParent(bShowCCERow);
+        cceSpeedLabel.showParent(bShowCCERow); 
+        cceKineticCaloriesLabel.showParent(bShowCCERow);  
+        cceCaloriesBurnedLabel.showParent(bShowCCERow); 
+        cceActualCaloriesNumber.showParent(bShowCCERow);
+        ShowElement(cceNewEfficiencyNumber.ctrl, true);
+        cceCurEfficiencyLabel.showParent(bShowCCERow);
+
         selectCompassHeadingVisible.setState(settings.bCompassHeadingVisible ? 1 : 0); 
         selectClickForGeoLoc.setState(settings.bClickForGeoLoc ? 1 : 0);
         numberHomeAreaSWLat.value = settings.gptHomeAreaSW.lat;
@@ -3996,9 +4314,10 @@ function wigo_ws_View() {
         map.recordPath.setVLimit(settings.vSpuriousVLimit); 
         // Set body mass. (Used to calculate calories for a recorded path.)
         map.recordPath.setBodyMass(settings.kgBodyMass);  
+        // Set calorie conversion efficiency factor for RecordFSM 
+        map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
-
         // Enable phone alerts.
         alerter.bAlertsAllowed = settings.bPhoneAlert;
         alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
@@ -4607,6 +4926,16 @@ function wigo_ws_View() {
         }
     }
 
+    // Returns true is an HtmlElement has class of wigo_show.
+    // Note: Only valid for an element shown by ShowElement(el, bShow) above.
+    function IsElementShown(el) { 
+        var bShown = false;
+        if (el instanceof HTMLElement) {
+            bShown = el.classList.contains("wigo_ws_Show");
+        }
+        return bShown;
+    }
+
     // Shows or hides the selectFind droplist.
     function ShowFind(bShow) {
         ShowElement(selectFind, bShow);
@@ -4805,6 +5134,40 @@ function wigo_ws_View() {
                 nFixed = this.kmeterFixedPoint;
             var s = result.n.toFixed(nFixed) + result.unit;
             return s; 
+        };
+
+        // Returns literal object for speed:
+        //  speed: number. speed value.
+        //  unit:  string: unit for speed:
+        //         For English: MPH
+        //           MPH is for miles per hour.
+        //         For Metric: KPM
+        //           KPH is for kilometers per hour.
+        //  text: string. speed value with unit suffic.
+        // Args:
+        //  mLen: number. Length (distance) in meters.
+        //  secTime: number. Elapsed time in seconds.
+        this.toSpeed = function(mLen, secTime) { 
+            var result = {speed: 0, unit: "MPH", text: ""};
+            var dist;
+            var hrTime = secTime / 3600; // 3600 seconds in an hour.
+            if (this.bMetric) {
+                // Concvert meters to kilometes.
+                dist = mLen / 1000.0;
+                result.unit = "KPH";
+            } else {
+                // Convert meters to miles.
+                dist = mLen / 1609.34;
+                result.unit = "MPH"; 
+            }
+            result.speed = dist / hrTime;
+            if (Number.isFinite(result.speed)) {
+                var nFixed = this.bMetric ? this.kmeterFixedPoint : this.mileFixedPoint;
+                result.text = "{0}{1}".format(result.speed.toFixed(nFixed), result.unit);
+            } else {
+                result.text = "error" + result.unit;
+            }
+            return result;
         };
     }
     var lc = new LengthConverter(); // Length converter object for displaying status to phone or pebble.
@@ -5096,6 +5459,33 @@ function wigo_ws_View() {
         }
     };
 
+    // Show a path on the map due to selection from a path marker.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    map.onShowPath = function(sDataIx) {  
+        var nDataIx = parseInt(sDataIx, 10);
+        that.onPathSelected(that.curMode(), nDataIx);
+        selectGeoTrail.setSelected(sDataIx); 
+    };
+
+    // Gets distance for a path.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    //  Returns: {n: number, s: string}:
+    //      n: number. total distance of path in meters.
+    //      s: string. total distance of path with suffix for units.
+    map.onGetPathDistance = function(sDataIx) { 
+        var result = {n: 0, s: "?"};
+        var nDataIx = parseInt(sDataIx, 10);
+        var path = that.onGetPath(that.curMode(), nDataIx); 
+        var pathSegs = map.newPathSegs();
+        pathSegs.Init(path);
+        var dist = pathSegs.getTotalDistance();
+        result.n = dist; // distance of path in meters.
+        result.s = lc.to(dist);
+        return result;
+    };
+
     // Returns true if divSettings container is hidden.
     function IsSettingsHidden() {
         var bHidden = divSettings.style.display === 'none' || divSettings.style.dispaly === '';
@@ -5360,6 +5750,7 @@ function wigo_ws_View() {
         if (listIx < 0) {   
             // No path selected.
             map.ClearPath();
+            map.ShowPathMarkers(); 
         } else {
             // Path is selected
             that.onPathSelected(that.curMode(), listIx);
@@ -5652,6 +6043,25 @@ function wigo_ws_Controller() {
         }
     };
 
+
+    // Gets wigo_ws_GpxPath object for a path.
+    // Signature of Handler:
+    //      nMode: view.eMode enumeration.
+    //      iPathList: number. index to array of data for the paths. 
+    //      Returns: wigo_ws_GpxPath obj. Data for path. null if iPathList is invalid.
+    view.onGetPath = function(nMode, iPathList) { 
+        var path = null;
+        var nMode = view.curMode(); 
+        if (nMode === view.eMode.online_view) {
+            if (gpxArray && iPathList >= 0 && iPathList < gpxArray.length) {
+                var gpx = gpxArray[iPathList];
+                // Show the geo path info.
+                path = model.ParseGpxXml(gpx.xmlData); // Parse the xml to get path data.
+            }
+        }
+        return path;
+    }
+
     // Returns geo path upload data for data index from item in the selection list.
     // Handler signature:
     //  nMode: byte value of this.eMode enumeration.
@@ -5898,6 +6308,45 @@ function wigo_ws_Controller() {
         return settings;
     };
 
+    // Gets the last record stats object for a record trail.
+    //  Args: none.
+    //  Returns wigo_ws_GeoTrailRecordStats object for last stats saved, 
+    //      or null if there is no record stats object.
+    view.onGetLastRecordStats = function() {
+        return model.getLastRecordStats();
+    };  
+
+    // Sets recorded starts.
+    //  Args: 
+    //    stats: literal obj from recordPath.getStats() | wigo_ws_GeoTrailRecordStats obj. stats to be set.
+    //           If stats is literal obj from recordPath.getStats, stats is converted to wigo_ws_GeoTrailRecordStats
+    //           object that is set in localStorage.
+    // Note: 
+    // literal obj for stats from recordPath.getStats():
+    //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    view.onSetRecordStats = function(stats) { 
+        var data = null;
+        if (typeof stats !== 'undefined') {
+            if (stats instanceof wigo_ws_GeoTrailRecordStats) {
+                data = stats;
+            } else if ( typeof stats.kJoules === 'number') {
+                data = ConvertRecordStatsToData(stats);
+            }
+        }
+        if (data)
+            model.setRecordStats(data);
+
+    }; 
+
+    // Clears the list of record stats objects for recorded trails.
+    //  Args: none.
+    //  Returns nothing.
+    view.onClearRecordStats = function() {
+        model.clearRecordStats();
+    };
+    
+
     // Saves app version to localStorage.
     // Arg:
     //  version: wigo_ws.GeoTrailVersion object to save to localStorage.
@@ -6009,6 +6458,25 @@ function wigo_ws_Controller() {
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
     var gpxOfflineArray = null; // Array of wigo_ws_GeoPathMap.OfflineParams objects obtained from model.
 
+    // Converts record path stats to data to save to save to local storage.
+    // Returns: wigo_ws_GeoTrailRecordStats object. 
+    //  Args: 
+    //    stats: literal obj. stats from recordPath.getStats() member of wigo_ws_GeoPathMap object.
+    // Note: 
+    // literal obj for stats:
+    //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    function ConvertRecordStatsToData(stats) {
+        var data = new wigo_ws_GeoTrailRecordStats();
+        data.nTimeStamp = stats.tStart ? stats.tStart.getTime() : 0;
+        data.msRunTime = stats.msRecordTime;
+        data.mDistance = stats.dTotal;
+        data.caloriesKinetic = stats.calories;
+        data.caloriesBurnedCalc = stats.calories3;
+        // data.caloriesBurnedActual is not set. Value is default set by constructor.
+        return data;
+    }
+
     // Get list of geo paths from the model and show the list in the view.
     // Args:
     //  nMode: view.eMode for current view mode.
@@ -6073,6 +6541,26 @@ function wigo_ws_Controller() {
         gpxArray = new Array(); // Clear existing gpxArray.
         var arPath = new Array(); // List of path names to show in view.
 
+        // Local helper to create and return an array of path markers for the map.
+        // Note: path markers are only created for online_view, otherwise an
+        //       empty array of path markers is returned.
+        function CreatePathMarkerArray() { 
+            var arPathMarker = [];
+            if (view.curMode() === view.eMode.online_view) {
+                var markerEl, gpxEl;
+                for (var i=0; gpxArray && i < gpxArray.length; i++) {
+                    gpxEl = gpxArray[i];
+                    markerEl = view.newPathMarkerEl();
+                    markerEl.pathName = gpxEl.sName;
+                    markerEl.dataIx = i;
+                    markerEl.sDescr = "Some description: ";
+                    markerEl.latLngMarker = L.latLng(gpxEl.gptBegin.lat, gpxEl.gptBegin.lon); 
+                    arPathMarker.push(markerEl);
+                }
+            }
+            return arPathMarker;
+        }
+        
         // Local helper to call after getting geo list is completed.
         // Appends to path list and shows status message.
         function AppendToPathList (bOk, gpxList, sStatus) {  // sStatus no longer used.
@@ -6117,7 +6605,8 @@ function wigo_ws_Controller() {
         // Local helper to set path list in the view.
         function SetPathList(bOk, sStatus) {  
             // Set path list in the view.
-            view.setPathList(arPath, true);  
+            var arPathMarker = CreatePathMarkerArray(); 
+            view.setPathList(arPath, true, arPathMarker);  
             // Show number of paths found.
             if (bOk) {
                 view.AppendStatus(StatusOkMsg(arPath.length), false);  

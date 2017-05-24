@@ -22,6 +22,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
         else
             onGpxPut = function (bOk, sStatus) { };
 
+        EncodeGpxEl(gpx); // Encode special chars for passthru to server. 
         var bOk = base.Post(eState.GpxPut, sGpxPutUri(ah), gpx);
         return bOk;
     };
@@ -375,6 +376,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
                 if (bOk) {
                     if (req && req.readyState == 4 && req.status === 200) {
                         gpxList = JSON.parse(req.responseText);
+                        DecodeGpxList(gpxList);  
                         sStatus = "GpxGetList succeeded.";
                     } else {
                         gpxList = new Array();
@@ -394,6 +396,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
                 if (bOk) {
                     if (req && req.readyState == 4 && req.status === 200) {
                         gpxList = JSON.parse(req.responseText);
+                        DecodeGpxList(gpxList);  
                         sStatus = "GpxGetListByLatLon succeeded.";
                     } else {
                         gpxList = new Array();
@@ -428,6 +431,58 @@ function wigo_ws_GeoPathsRESTfulApi() {
                 onLogout(bOk, sLogoutMsg);
         }
     };
+
+    // Object to encode / decode chars that need to passthru transfer with web server.
+    // Attribution: Stackover question: http://stackoverflow.com/questions/1219860/html-encoding-lost-when-attribute-read-from-input-field
+    // Note: For this api, only single quote char and double quote char need to be translated to passthru.
+    function PassThru() { 
+        // Returns text with special chars replaced with corresponding html entity sequence.
+        // Arg:
+        //  str: string. plain text that may contain special characters the need to be encoded
+        //               in order to pass through to web server.
+        this.encode = function(str) {
+            return str
+                    // .replace(/&/g, '&amp;')  // Not needed.
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    // .replace(/</g, '&lt;')  // Not needed
+                    // .replace(/>/g, '&gt;'); // Not needed.
+                    };
+
+        this.decode = function(str) {
+            return str
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    // .replace(/&lt;/g, '<')  // Not needed
+                    // .replace(/&gt;/g, '>')  // Not needed
+                    //.replace(/&amp;/g, '&')  // Not needed
+                    ;            
+        };
+    }
+    var passThru = new PassThru(); 
+
+    // Helper to encode gpx element for passthru.
+    // Arg:
+    //  gpxEl: wigo_ws_Gpx obj. ref to element to encode.
+    function EncodeGpxEl(gpxEl) {  
+        gpxEl.sName = passThru.encode(gpxEl.sName); 
+    }
+
+    // Helper to decode gpx element for passthru.
+    // Arg:
+    //  gpxEl: wigo_ws_Gpx obj. ref to element to decode.
+    function DecodeGpxEl(gpxEl) {
+        gpxEl.sName = passThru.decode(gpxEl.sName);
+    }
+
+    // Helper to decode gpx elements for passthru.
+    // Arg:
+    //  gpxList: array of wigo_ws_Gpx objs. ref to elements to decode.
+    function DecodeGpxList(gpxList) {  
+        for (var i=0; i < gpxList.length; i++) {
+            DecodeGpxEl(gpxList[i]);
+        }
+    }
 }
 
 // Objects for wigo_ws_GeoPaths

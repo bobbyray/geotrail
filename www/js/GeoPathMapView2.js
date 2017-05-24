@@ -70,6 +70,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     var mapPath = null; // Map overlay for current path.
     var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
     
+    // ** Public members
     // Colors to use for drawing. 
     // Default values are set initially.
     // The values may be changed.
@@ -113,6 +114,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Add a listener for the click event.
             map.on('click', onMapClick);
+            // Initialize PathListMarkers. 
+            pathMarkers.initialize(map);   
             // Callback to indicate the result.
             var bOk = tileLayer !== null;
             if (callback)
@@ -188,6 +191,51 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Fit path bound to display.
             this.PanToPathCenter()
         }
+    };
+
+    // Creates and returns a PathSegs object.
+    this.newPathSegs = function() { 
+        var segs = new PathSegs();
+        return segs;
+    }; 
+    
+    // Creates and returns a PathMarkerEl object.
+    // The fields of the returned object should be set approppriatedly
+    // and the object appended to an array that is the arg of this.FillPathMarks(..).
+    // Fields of a returned PathMarkerEl object are initialized as follows:
+    //      pathName = ""; // string: path name.
+    //      dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+    //      sDescr = "";   // string: description for the path. (For example could be total distance.)
+    //      latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+    this.newPathMarkerEl = function() {   
+        return pathMarkers.newPathMarkerEl();
+    };
+
+    // Fills the collection of path markers that can be shown on the map.
+    // Arg:
+    //  arPathMarkers: array of PathMarkerEl objs, optional. If not given 
+    //                 empties and clears the path markers from the map.
+    // Note: Does not show the path markers. 
+    this.FillPathMarkers = function(arPathMarker) {
+        pathMarkers.empty();
+        if (!arPathMarker)
+            return;
+        var el, key;
+        for (var i=0; i < arPathMarker.length; i++) {
+            el = arPathMarker[i];
+            key = el.dataIx.toFixed(0);
+            pathMarkers.setPathMarkerEl(key, el);
+        }
+    };
+    
+    // Shows the path markers on the map.
+    this.ShowPathMarkers = function() { 
+        pathMarkers.show();
+    };
+
+    // Clears the path markers from the map.
+    this.ClearPathMarkers = function() { 
+        pathMarkers.clear();
     };
 
     // Not Used. Does not seem to be useful.
@@ -495,7 +543,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Returns L.Point object (.x, .y) for a lat/lon geo point.
     // Args:
     //  gpt: wigo_ws_GeoPt object for lat/lon to be converted to 
-    ///      pixel x,y position on map layer.
+    //       pixel x,y position on map layer.
     this.LatLonToPixel = function (gpt) {
         var ll = L.latLng(gpt.lat, gpt.lon);
         var pixel = map.latLngToLayerPoint(ll);
@@ -528,7 +576,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         return bOk;
     };
 
-    // Clears current path and geo location circle and arrow from the map.
+    // Clears current path and geo location circle, and compass arrow, path markers from the map.
     this.ClearPath = function () {
         if (!IsMapLoaded())
             return; // Quit if map has not been loaded.
@@ -548,6 +596,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEditSegment();  
         ClearEraseSegment(); 
         ClearCompassHeadingArrow();
+        pathMarkers.clear();  
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -713,7 +762,18 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // had onMapClick(llAt) available.
     this.onMapClick2 = function (e) { };
 
+    // Show a path on the map due to selection from a path marker.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    this.onShowPath = function(sDataIx) {};  
 
+    // Gets distance for a path.
+    // Signature of handler:
+    //  sDataIx: string. index of data element for the path to shown.
+    //  Returns: {n: number, s: string}:
+    //      n: number. total distance of path in meters.
+    //      s: string. total distance of path with suffix for units.
+    this.onGetPathDistance = function(sDataIx) { return {n: 0, s: "?"};};
 
     // Event handler for LeafLet click on map.
     function onMapClick(e) {
@@ -2086,8 +2146,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     }
 
-
-
     // Object for drawing and managing a path for recording. 
     // The path for the recording is separate and indepedent of the path drawn for the map.
     // Constructor arg:
@@ -2281,7 +2339,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns stats for the record path.
-        // Returns Obj: {bOk: boolean, dTotal: number, msRunTime: number, msTotalTime: number, tStart: Date}
+        // Returns literal Obj with these fields:
         //  bOk: boolean. true for success (stats are valid).
         //  dTotal: number. total distance of record path in meters.
         //  msRecordTime: number. number of milliseconds for the RECORD time of the record path (PAUSE excluded).
@@ -2291,10 +2349,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //          bOk is false if tStart is null.
         //  kJoules: number. kinetic engery for body traveling for the recorded path. 
         //            Note: var kgMass is body mass.
-        //  calories: number. food calories on a product label corresponding to kJoules. 
+        //  calories: number. food calories on a product label corresponding to kJoules. Calculated by summing
+        //                    kinetic energy change for each point on the path.
         //  nExcessiveV: number. Number of points whose velocity exceeeded vLimit. 
+        //  calories2: number. food calories on a product label. Calculated by using average velocity and body mass.
+        //                     equals 1/2*m*v^2 where 
+        //                         v is average velocity = dTotal / (msRecordTime/1000), in m/sec, 
+        //                         m is body mass in kilograms.
+        //                      Note: Does not seem to be useful. Value is way too low. Use calories instead.
+        //  calories3: number. Estimated number of calories burned. Equals calories / calsBurnedEfficency.
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0}; 
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0, calories3: 0}; 
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             
@@ -2346,6 +2411,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             result.kJoules = (vvSum*kgMass/2.0)/1000.0;
             // Set result for food calories corresponding to result.kJoules.   
             result.calories = KJoulesToLabelCalories(result.kJoules);
+
+            // Calculate calories based on average velocity. 
+            if (result.msRecordTime > 0) {
+                var aveV = result.dTotal / (result.msRecordTime/1000);
+                var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
+                result.calories2 = KJoulesToLabelCalories(kJoules); 
+
+                result.calories3 = CaloriesBurned(result.calories);
+            }
 
             result.bOk = result.tStart !== null ? true : false;
             return result;
@@ -2514,6 +2588,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             kgMass = mass;
         };
 
+        
+        // Sets the calories burned efficiency factor.
+        // Arg:
+        //  efficiency: number. efficiency factor, the ratio of kinetic calories : calories burned.
+        //              Note: this is decimal fraction, not a percentage.
+        this.setCaloriesBurnedEfficiency = function (efficiency) { 
+            calsBurnedEfficency = efficiency;
+        };
+
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
         function SetPathCoords() {
             // Set pathCoords to match RECORD points that are not deleted.
@@ -2533,15 +2616,22 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return vLimit > 0;  
         }
 
-        // Returns float for number of food calories listed on a product label for 
-        // metabolized energy due to respiration.
+        // Returns float for number of US food calories for engery in kiloJoules.
         // Arg:
-        //  kJoules: float. number of kilojoules of engery to be produced from food.
+        //  kJoules: float. number of kilojoules of engery.
         function KJoulesToLabelCalories(kJoules) {
-            var cals = 4.184 * kJoules;
-            // Note: I think the food label takes into account the typical 0.85 metabolic effiency.
-            // therefore cals is not divided by 0.85. 
+            var cals = kJoules / 4.184; // 4.184 kiloJoules = 1 Food Calorie.
             return cals; 
+        }
+
+        // Returns calories burned.
+        // Arg:
+        //  cals: number. Calculated calories (or kilojoules).
+        //        calories burned = cals / calsBurnedEfficiency.
+        // Note: Efficiency is estimated to be 0.25. May want to make this a Settings item.
+        function CaloriesBurned(cals) {
+            var calsBurned = cals / calsBurnedEfficency; 
+            return calsBurned;
         }
 
         // Object for filtering arRecordPt. 
@@ -2701,8 +2791,159 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.
-        
+        var calsBurnedEfficency = 0.10; // Efficiency of converted burned calories to kinetic calories rquired to move kgMass.
     }
-    
-}
 
+    // Object for collection of PathMarkerEl objects.
+    // Each path has a marker. Touch the marks show a popup which has the
+    // path name and control buttons:
+    //  view: clears the popup and show path for the marker selected by touch.
+    //  Close: closes the popup.
+    //  ZoomOUt: closes the popup and zooms out showing all the path markers.
+    function PathMarkers() { 
+
+        // Initializes this PathMarkers object.
+        // Must be called once before other members can be used.
+        // Arg:
+        //  oMap; Leaflet L.Map object: the underlying map on which path markers are drawn.
+        this.initialize = function(oMap) {
+            map = oMap;
+            // Use option of {keepSpiderfied: true} to keep spider for overlapping markers
+            // open after closing a spideried marker so the spider remains for selecting.
+            oms = new OverlappingMarkerSpiderfier(map, {keepSpiderfied: true});  
+            oms.addListener('click', PathMarkerClicked);            
+        };
+
+        // Clears all the path markers and empties the list of path markers.
+        this.empty = function() {
+            this.clear();
+
+            // Initialize the corners that covers all the path markers.
+            corners = new wigo_ws_GeoPt.Corners();
+
+            liPathMarker = {};
+        };
+
+        // Clears the path markers for the map, but does not empty the list of path markers.
+        this.clear = function() {
+            if (!map)
+                return; // Quit, not initialized.
+            oms.clearMarkers(); 
+            map.closePopup(popup); 
+            var el;
+            var keys = Object.keys(liPathMarker);
+            for (var i=0; i < keys.length; i++) {
+                el = liPathMarker[keys[i]];
+                if (el.layer) {
+                    map.removeLayer(el.layer);
+                    el.layer = null;
+                }
+            }
+        };
+
+        // Creates and returns a PathMarkerEl object.
+        // See PathMarkerEl() object definition below.
+        // Note: Caller sets fields of the returned object
+        //       and passes the object as argment to this.setPathMarkerEl(..); 
+        this.newPathMarkerEl = function() {
+            // Path marker element object for a list of path marker elements.
+            function PathMarkerEl() {
+                this.pathName = ""; // string: path name.
+                this.dataIx = -1;   // interger: index in a array of data corresponding to the PathMarkerEl.
+                this.sDescr = "";   // string: description for the path. (For example could be total distance.)
+                this.latLngMarker = L.latLng(0, 0); // Leaflet L.LatLng obj. location on map of the marker.
+                // this.layer is a field added by this.show() as a marker layer is added to the map.
+            }
+            var el = new PathMarkerEl();
+            return el;
+        };
+
+        // Sets path marker to list of path markers.
+        // Arg:
+        //  key: string. key for identifying a path marker in the list.
+        //  pathMarkerEl: PathMarkerEl object. path marker to append to the list.
+        this.setPathMarkerEl = function(key, pathMarkerEl) {
+            pathMarkerEl.key = key; 
+            liPathMarker[key] = pathMarkerEl;
+            // Update the corners the covers all the path markers.
+            var gptMarker = new wigo_ws_GeoPt();  // Convert Leaflet LatLng to geotrail wigo_ws_GeoPt.
+            gptMarker.lat = pathMarkerEl.latLngMarker.lat;
+            gptMarker.lon = pathMarkerEl.latLngMarker.lng;
+            corners.Update(gptMarker); 
+        };
+
+        // Shows the list of path markers on the map.
+        this.show = function() {
+            if (!map)
+                return; // Quit, not initialized.
+
+
+            // Helper that creates and returns L.Layer object for marker to add to the map.
+            // Arg:
+            //  pathMarkerEl: PathMarkerEl obj. parameters for the layer to be added to the map.
+            function PathMarkerLayer(pathMarkerEl) {
+                var layer = L.marker(pathMarkerEl.latLngMarker);
+                layer.key = pathMarkerEl.key; // Add key field to marker layer.
+                return layer;
+            }
+
+            var el;
+            var keys = Object.keys(liPathMarker);
+            for (var i=0; i < keys.length; i++) {
+                el = liPathMarker[keys[i]];
+                if (!el.layer) {
+                    el.layer = PathMarkerLayer(el);
+                    oms.addMarker(el.layer); 
+                    map.addLayer(el.layer);
+                }
+            }
+            // Set map bounds to cover the coners.
+            that.FitBounds(corners.gptSW, corners.gptNE);
+        }; 
+
+        // Event handler for Path Marker Clicked.
+        // Arg:
+        //  marker: L.Marker object; ref to marker clicked.
+        //          Note: Addtional field of marker.key has been set.
+        function PathMarkerClicked (marker) {  
+            var pathMarkerEl = liPathMarker[marker.key];
+            if (pathMarkerEl) {
+                var distance = that.onGetPathDistance(marker.key);
+                popupDescrDiv.innerHTML = "{0}<br/>Distance: {1}".format(pathMarkerEl.pathName, distance.s);
+                popupViewBtn.setAttribute('data-key', marker.key);
+                popup.setContent(popupDiv);
+                popup.setLatLng(marker.getLatLng());
+                map.openPopup(popup);
+            }
+        }
+
+        // Event handler for PoupViewBtn clicked.
+        function PopupViewBtnClicked(e) {  
+            var sKey = this.getAttribute('data-key');
+            that.onShowPath(sKey);
+        }
+
+        // Object for list of PathMarkerEl objs. 
+        // Each property value is PathMarkerEl obj with a property name string that is its key.
+        // Note: a property name is likely a data record sequence id.
+        var liPathMarker = {}; 
+
+        var corners = new wigo_ws_GeoPt.Corners(); // Corners that covers all the path markers.
+        var map = null; // Leaflet L.Map object.
+        var oms = null; // OverlappingMarkerSpiderfier object for map.
+        var popup = new L.Popup();  // Popup for marker.
+        // Create div for popup content.
+        var popupDiv = document.createElement('div');
+        popupDiv.className = "wigo_ws_MarkerPopup";
+        var popupDescrDiv = document.createElement('div');
+        popupDescrDiv.className = "wigo_ws_MarkerPopupDescr";
+        popupDiv.appendChild(popupDescrDiv);
+        var popupViewBtn = document.createElement('button');
+        popupViewBtn.className = 'wigo_ws_MarkerPopupViewBtn';
+        popupViewBtn.setAttribute('data-key', ""); 
+        popupViewBtn.innerHTML = "View Trail";
+        popupViewBtn.addEventListener('click', PopupViewBtnClicked, false);
+        popupDiv.appendChild(popupViewBtn);
+    }
+    var pathMarkers = new PathMarkers();
+}

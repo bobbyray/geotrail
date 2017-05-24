@@ -48,6 +48,7 @@ body {
     padding:0px;
     /* text-transform:uppercase; */
     width:100%;
+    position: fixed; 
 }
 
 /* Portrait layout (default) */
@@ -366,7 +367,7 @@ label {
 
 /* Settings home area */
 #divSettings {
-    position: absolute;  
+    position: fixed;  
     left: 0px;
     top: 0px;  
     display: none;
@@ -375,13 +376,13 @@ label {
     border: 1px solid #999;
     z-index: 2;
     font-size: 120%;
-    width: 97%;
+    width: 100%;  
 }
 #divSettingsTitle {
     height: 1.3em; 
 }
 
-#spanSettingsTitle {
+#spanSettingsTitle, #spanCCEUpdateTitle {
     font-size: 1.2em;
     font-weight: bolder;
 }
@@ -389,6 +390,7 @@ label {
 #divSettingsScroll {
     overflow-y: scroll;
     height: 20em; 
+    padding-right: 0.3em; 
 }
 
 /* Settings items */
@@ -399,12 +401,43 @@ label {
     width: 98%;  
 }
 
+/* Calorie Conversion Efficiency Row in Settings */
+.cceRow { 
+    clear: both;
+    width: 98%;
+    padding-left: 2em;
+    box-sizing: border-box; 
+}
+.cceLabel {
+    width: 11em; 
+}
+#divCCEContent { 
+    position: relative;
+}
+#divCCEUpdate { /* Same as .settingItem, except height is not specified and position is fixed */
+    position: fixed;  
+    left: 0px;
+    top: 0px;
+    padding-bottom: 0.35em; 
+    border: black 2px solid;
+    width: 98%;  
+    background-color: white;
+}
+#divCCEUpdateNote {  
+    overflow-y: scroll;
+    padding-left: .2em;
+    padding-right: .1em;
+}
+#divCCEItem { 
+    position: static; 
+}
+
 #divSettings input {
     width: 5em;
 }
 
 #divSettings label {
-    padding-top: 0px;
+    padding-top: 0.3em; 
 }
 
 .settingItem .wigo_ws_DropDownLabel {
@@ -436,6 +469,16 @@ label {
     background-color: lightgray;
     width: 3em;
     font-size: 120%;
+}
+
+.cceValueLabel {  
+    clear: none;
+    padding-left: 0.5em;
+    width: initial;
+}
+#buCCESet {  
+    padding-top: 0.3em;
+    float: right;
 }
 
 #divHomeArea  {
@@ -470,6 +513,7 @@ label {
     border: none;
     height: 1.5em; 
     padding-top: 0.6em;  
+    padding-bottom: 1.5em; 
 }
 #buSettingsDone {
     margin-left: 25%;
@@ -556,6 +600,9 @@ label {
 
 #mainMenu .wigo_ws_DropDownList {
     width: 17em;
+}
+#holderSpuriousVLimit, #holderPhoneVibeSecs, #divCCEItem {  
+    font-size: 0.8em;
 }
 
 #spanTitle {
@@ -660,7 +707,7 @@ label {
 }
 #onlineSelectFind {
     height: 100%;
-    width: 50%; 
+    width: 40%;  
     float: left;
     box-sizing: border-box; 
 }
@@ -669,8 +716,7 @@ label {
     right: 0px;
 }
 #onlineSelectFind .wigo_ws_DropDownLabel {
-    left: 0px;
-    width: 75%;
+    left: 30%
 }
 
 #onlineRecord {  
@@ -769,6 +815,8 @@ label {
     padding-right: 0.4em;
     width: 100%;
     box-sizing: border-box; 
+    height: 100%;        
+    overflow-y: scroll;  
 }
 
 
