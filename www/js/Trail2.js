@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.026_20170523"; // Constant string for App version.
+    var sVersion = "1.1.026_20170526"; // Constant string for App version. ////20170526 RecordCenter Branch
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2525,7 +2525,7 @@ function wigo_ws_View() {
 
         // Hepler for testing recording a watch point.
         // Append and draws a point to the record path.
-        // Return true is a point is appended to the path, which is done if testing is
+        // Return true if a point is appended to the path, which is done if testing is
         // enabled and recording is active. false indicates no point was appended.
         // Arg:
         //  llNext: L.LatLng. A simulated watch point to append.
@@ -2605,6 +2605,12 @@ function wigo_ws_View() {
             function AppendAndDrawPt(llNext, msTimeStamp) {
                 map.recordPath.appendPt(llNext, msTimeStamp);  
                 map.recordPath.draw();
+                // After adding first point only, zoom to first record point.
+                ////20170527 if (map.recordPath.getLength() === 1) { ////20170527 added if and body
+                ////20170527     ////$$$$ fix.
+                ////20170527     map.recordPath.zoomToFirstCoord(1000);
+                ////20170527 }
+                map.recordPath.zoomToFirstCoordOnce(1000); ////20170527 added  
             }
             var myWatchId = null;
         } 
@@ -2645,6 +2651,7 @@ function wigo_ws_View() {
                     case that.event.start: 
                         this.reset(); 
                         stateOn.prepare();
+                        map.recordPath.enableZoomToFirstCoordOnce(); ////20170527 added
                         curState = stateOn;
                         break;
                     case that.event.unclear:

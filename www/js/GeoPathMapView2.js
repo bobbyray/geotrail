@@ -48,6 +48,25 @@ L.LatLng.prototype.bearingWordTo = function(other) {
     return bearingword;
 };
 
+// Returns L.LatLng obj offset from this object.
+// Args:
+//  mX: number. Offset in x direction (along latitude) in meters.
+//  my: number. Offset in y direction (along longitude) in meters.
+//  Note: For x, East is +, West is -.
+//        For y, North is +, South is -.
+L.LatLng.prototype.offsetXY = function(mX, mY) {
+    // note: ll.toBounds(mToCorner) is documented, but does not exist.
+    // Find ne and se corner of square bounding first coordinate.
+    var yDelta = L.latLng(this.lat + 1.0, this.lng); // y latlng one degree away.
+    var mYperDeg = this.distanceTo(yDelta);   // y distance in one degree.
+    var xDelta = L.latLng(this.lat, this.lng + 1.0); // x latng one degree away.
+    var mXperDeg = this.distanceTo(xDelta);   // x distance in one degree.
+    var degYDelta = mY / mYperDeg;
+    var degXDelta = mX / mXperDeg;
+    var llOffset = L.latLng(this.lat + degXDelta, this.lng + degYDelta);
+    return llOffset;
+};
+
 /* -------------------------------------------------------------------*/
 
 // Object for showing geo path map.
@@ -114,6 +133,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Add a listener for the click event.
             map.on('click', onMapClick);
+
+            // Add a listener for the zoomend event 
+            map.on('zoomend', onMapZoomEnd);  ////20170527 added
+
             // Initialize PathListMarkers. 
             pathMarkers.initialize(map);   
             // Callback to indicate the result.
@@ -785,6 +808,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         that.onMapClick2(e);
     }
 
+    // Event handler for zoomend event on map.
+    function onMapZoomEnd(e) { ////20170527 added
+        if (degCompassHeading !== null)
+            SetCompassHeadingArrow(degCompassHeading);
+    }
+
     // ** More private members
 
     // Object defining information about path segments.
@@ -1266,7 +1295,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return arLatLng;
         }
         
-        
+        degCompassHeading = degHeading; // Save compass heading. ////21070527 added.
         var arrowOptions = {
             color: that.color.compassHeadingArrow,
             fill: true,
@@ -1278,6 +1307,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             compassHeadingArrow.addTo(map);
         }
     }
+    var degCompassHeading = null; // Saved heading for compass arrow. ////20170527 added
     
 
     // Determines heading of line and extends line by a given delta.
@@ -2338,6 +2368,49 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             }
         };
 
+        
+        // Zoom map to first coordinate in the record path only once.
+        // Arg:
+        //  mToSide: number. Length in meters to side of a square boundary 
+        //           around fist coordinate of record path.
+        // Note: enableZoomToFirstCoordOnce() must be called to enable. 
+        //       After zooming to first coord, zooming is disabled
+        //       until enableZoomToFirstCoordOnce() is called again.
+        this.zoomToFirstCoordOnce = function(mToSide) { ////20170527 add function $$$$
+            if (bZoomToFirstCoordOnce && pathCoords.length > 0) {
+                bZoomToFirstCoordOnce = false;  
+                var ll = pathCoords[0];
+
+                /* ////20170527 works, refactor.
+                // note: ll.toBounds(mToCorner) is documented, but does not exist.
+                // Find ne and se corner of square bounding first coordinate.
+                var yDelta = L.latLng(ll.lat + 1.0, ll.lng); // y latlng one degree away.
+                var mYperDeg = ll.distanceTo(yDelta);   // y distance in one degree.
+                var xDelta = L.latLng(ll.lat, ll.lng + 1.0); // x latng one degree away.
+                var mXperDeg = ll.distanceTo(xDelta);   // x distance in one degree.
+                var degYDelta = mToSide / mYperDeg;
+                var degXDelta = mToSide / mXperDeg;
+
+                var ne = L.latLng(ll.lat + degXDelta, ll.lng + degYDelta); // NorthEast corner of bounds.
+                var sw = L.latLng(ll.lat - degXDelta, ll.lng - degYDelta); // SouthWest corner of bounds.
+                var bounds = L.latLngBounds(sw, ne);
+                map.fitBounds(bounds);
+                */
+
+                // note: ll.toBounds(mToCorner) is documented, but does not exist.
+                var ne = ll.offsetXY(mToSide, mToSide);
+                var sw = ll.offsetXY(-mToSide, -mToSide);
+                var bounds = L.latLngBounds(sw, ne);
+                map.fitBounds(bounds);
+            }
+        };
+
+        // Enables zooming to first coordinate once time.
+        this.enableZoomToFirstCoordOnce = function() {  ////20170527 added
+            bZoomToFirstCoordOnce = true;
+        };
+        var bZoomToFirstCoordOnce = false;
+
         // Returns stats for the record path.
         // Returns literal Obj with these fields:
         //  bOk: boolean. true for success (stats are valid).
@@ -2544,7 +2617,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns array of wigo_ws_GeoPt objs for pathCoords.
-        // If pathCoords is empty (lenght 0), returned array has length of 0. 
+        // If pathCoords is empty (length 0), returned array has length of 0. 
         this.getGeoPtArray = function() {
             var arGeoPt = [];
             var geoPt;
