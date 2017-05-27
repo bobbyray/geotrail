@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.026_20170526"; // Constant string for App version. ////20170526 RecordCenter Branch
+    var sVersion = "1.1.026_20170526"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2606,11 +2606,7 @@ function wigo_ws_View() {
                 map.recordPath.appendPt(llNext, msTimeStamp);  
                 map.recordPath.draw();
                 // After adding first point only, zoom to first record point.
-                ////20170527 if (map.recordPath.getLength() === 1) { ////20170527 added if and body
-                ////20170527     ////$$$$ fix.
-                ////20170527     map.recordPath.zoomToFirstCoord(1000);
-                ////20170527 }
-                map.recordPath.zoomToFirstCoordOnce(1000); ////20170527 added  
+                map.recordPath.zoomToFirstCoordOnce(1000); 
             }
             var myWatchId = null;
         } 
@@ -2651,7 +2647,7 @@ function wigo_ws_View() {
                     case that.event.start: 
                         this.reset(); 
                         stateOn.prepare();
-                        map.recordPath.enableZoomToFirstCoordOnce(); ////20170527 added
+                        map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
                         break;
                     case that.event.unclear:

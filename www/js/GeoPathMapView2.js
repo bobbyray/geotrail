@@ -135,7 +135,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             map.on('click', onMapClick);
 
             // Add a listener for the zoomend event 
-            map.on('zoomend', onMapZoomEnd);  ////20170527 added
+            map.on('zoomend', onMapZoomEnd);  
 
             // Initialize PathListMarkers. 
             pathMarkers.initialize(map);   
@@ -809,7 +809,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
 
     // Event handler for zoomend event on map.
-    function onMapZoomEnd(e) { ////20170527 added
+    function onMapZoomEnd(e) { 
         if (degCompassHeading !== null)
             SetCompassHeadingArrow(degCompassHeading);
     }
@@ -1295,7 +1295,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return arLatLng;
         }
         
-        degCompassHeading = degHeading; // Save compass heading. ////21070527 added.
+        degCompassHeading = degHeading; // Save compass heading. 
         var arrowOptions = {
             color: that.color.compassHeadingArrow,
             fill: true,
@@ -1307,7 +1307,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             compassHeadingArrow.addTo(map);
         }
     }
-    var degCompassHeading = null; // Saved heading for compass arrow. ////20170527 added
+    var degCompassHeading = null; // Saved heading for compass arrow.
     
 
     // Determines heading of line and extends line by a given delta.
@@ -2376,26 +2376,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Note: enableZoomToFirstCoordOnce() must be called to enable. 
         //       After zooming to first coord, zooming is disabled
         //       until enableZoomToFirstCoordOnce() is called again.
-        this.zoomToFirstCoordOnce = function(mToSide) { ////20170527 add function $$$$
+        this.zoomToFirstCoordOnce = function(mToSide) { 
             if (bZoomToFirstCoordOnce && pathCoords.length > 0) {
                 bZoomToFirstCoordOnce = false;  
                 var ll = pathCoords[0];
-
-                /* ////20170527 works, refactor.
-                // note: ll.toBounds(mToCorner) is documented, but does not exist.
-                // Find ne and se corner of square bounding first coordinate.
-                var yDelta = L.latLng(ll.lat + 1.0, ll.lng); // y latlng one degree away.
-                var mYperDeg = ll.distanceTo(yDelta);   // y distance in one degree.
-                var xDelta = L.latLng(ll.lat, ll.lng + 1.0); // x latng one degree away.
-                var mXperDeg = ll.distanceTo(xDelta);   // x distance in one degree.
-                var degYDelta = mToSide / mYperDeg;
-                var degXDelta = mToSide / mXperDeg;
-
-                var ne = L.latLng(ll.lat + degXDelta, ll.lng + degYDelta); // NorthEast corner of bounds.
-                var sw = L.latLng(ll.lat - degXDelta, ll.lng - degYDelta); // SouthWest corner of bounds.
-                var bounds = L.latLngBounds(sw, ne);
-                map.fitBounds(bounds);
-                */
 
                 // note: ll.toBounds(mToCorner) is documented, but does not exist.
                 var ne = ll.offsetXY(mToSide, mToSide);
@@ -2406,7 +2390,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Enables zooming to first coordinate once time.
-        this.enableZoomToFirstCoordOnce = function() {  ////20170527 added
+        this.enableZoomToFirstCoordOnce = function() { 
             bZoomToFirstCoordOnce = true;
         };
         var bZoomToFirstCoordOnce = false;
