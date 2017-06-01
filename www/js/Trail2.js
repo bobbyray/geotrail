@@ -2610,7 +2610,7 @@ function wigo_ws_View() {
                 map.recordPath.appendPt(llNext, msTimeStamp);  
                 map.recordPath.draw();
                 // After adding first point only, zoom to first record point.
-                map.recordPath.zoomToFirstCoordOnce(50); 
+                map.recordPath.zoomToFirstCoordOnce(500); 
             }
             var myWatchId = null;
         } 
