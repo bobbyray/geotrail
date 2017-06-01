@@ -63,7 +63,6 @@ L.LatLng.prototype.offsetXY = function(mX, mY) {
     var mXperDeg = this.distanceTo(xDelta);   // x distance in one degree.
     var degYDelta = mY / mYperDeg;
     var degXDelta = mX / mXperDeg;
-    ////20170530Oops var llOffset = L.latLng(this.lat + degXDelta, this.lng + degYDelta);
     var llOffset = L.latLng(this.lat + degYDelta, this.lng + degXDelta);
     return llOffset;
 };
@@ -767,7 +766,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Returns ref to div for the map-canvas element.
     // Note: The div element seems to change dynamically. 
     //       Therefore setting a var for document.getElementById('map-canvas') does not work.
-    this.getMapCanvas = function() {  ////20170531 added.
+    this.getMapCanvas = function() {  
         var mapCanvas = document.getElementById('map-canvas');
         return mapCanvas;
     }
@@ -2374,72 +2373,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var iLast = pathCoords.length - 1;
             if (iLast >= 0) {
                 var llEnd = pathCoords[iLast];
-                /* ////20170531 Redo to account for map-canvas overflowing y due to divMode above it.
-                ////20170529DoesNotWork var zoom = map.getZoom();                
-                ////20170529DoesNotWork map.setZoomAround(llEnd, zoom); 
-                var bounds = map.getBounds();
-                if (!bounds.contains(llEnd)) {  ////$$$$ put back !
-                    ////bounds = bounds.extend(llEnd);
-                    ////map.fitBounds(bounds);
-                    ////20170529 var ptEnd = map.latLngToLayerPoint(llEnd);
-                    ////20170531 var ptEnd = map.latLngToContainerPoint(llEnd);
-                    var ptEnd1 = map.latLngToContainerPoint(llEnd); ////20170531 see for debug. $$$$ delete stmt.
-                    var zoom = map.getZoom();              ////20170531 try 
-                    var ptEnd = map.project(llEnd, zoom);  ////20170531 try
-                    var ptPixelOrigin = map.getPixelOrigin();  ////20170531 for debug now, probably delete stmt.
-                    ////20170531 ptEnd = ptEnd.add(ptPixelOrigin); 
-                    var pxBounds = map.getPixelBounds();
-                    var szBounds = pxBounds.getSize();
-                    var xMargin = Math.ceil(szBounds.x * 0.10); // Integer number of extra pels for x offset.
-                    var yMargin = Math.ceil(szBounds.y * 0.10); // Integer number of extra pesl for y offset.
-                    var ptOffset = L.point(0,0);  ////20170531 Try y offset of 136 px which is height of divMode.
-                    if (ptEnd.x < pxBounds.min.x)
-                        ptOffset.x += ptEnd.x - pxBounds.min.x - xMargin;
-                    if (ptEnd.y < pxBounds.min.y )
-                        ptOffset.y += (ptEnd.y - pxBounds.min.y - yMargin); ////20170531 Remove -  // screen y is negative geo y. Check $$$$
-                    if (ptEnd.x > pxBounds.max.x) 
-                        ptOffset.x += ptEnd.x - pxBounds.max.x + xMargin;
-                    ////20170531 if (ptEnd.y > pxBounds.max.y)
-                    ////20170531     ptOffset.y += (ptEnd.y - pxBounds.max.y + yMargin); ////20170531 Remove - // screen y is negative geo y. 
-                    var yMax = pxBounds.max.y - 136; ////20170531 136 is height of divMode.
-                    if (ptEnd.y > yMax)
-                        ptOffset.y += (ptEnd.y - yMax + yMargin); ////20170531 Remove - // screen y is negative geo y. 
-                    map.panBy(ptOffset);
-                }
-                */ 
-                
-                /* ////20170601 works, redo slightly.
                 var pxBounds = map.getPixelBounds();
-                ////21070531 pxBounds.max.y -= 136;                  
-                // Decrease bottom y of pxBounds to account for area overflowing page due to div above.
-                // Note: Height of map-canvas is 100% of body.
-                var canvas = map.getMapCanvas(); 
-                if (canvas) {
-                    pxBounds.max.y -= canvas.offsetTop; 
-                }
-
-                var zoom = map.getZoom();              ////20170531 try 
-                var ptEnd = map.project(llEnd, zoom);  ////20170531 try
-                
-                if (!pxBounds.contains(ptEnd)) {
-                    var szBounds = pxBounds.getSize();
-                    var xMargin = Math.ceil(szBounds.x * 0.10); // Integer number of extra pels for x offset.
-                    var yMargin = Math.ceil(szBounds.y * 0.10); // Integer number of extra pesl for y offset.
-                    var ptOffset = L.point(0,0);  ////20170531 Try y offset of 136 px which is height of divMode.
-                    if (ptEnd.x < pxBounds.min.x)
-                        ptOffset.x += ptEnd.x - pxBounds.min.x - xMargin;
-                    if (ptEnd.y < pxBounds.min.y )
-                        ptOffset.y += (ptEnd.y - pxBounds.min.y - yMargin); ////20170531 Remove -  // screen y is negative geo y. Check $$$$
-                    if (ptEnd.x > pxBounds.max.x) 
-                        ptOffset.x += ptEnd.x - pxBounds.max.x + xMargin;
-                    if (ptEnd.y > pxBounds.max.y)
-                        ptOffset.y += (ptEnd.y - pxBounds.max.y + yMargin); ////20170531 Remove - // screen y is negative geo y. 
-                    map.panBy(ptOffset);
-                }
-                */
-
-                var pxBounds = map.getPixelBounds();
-                ////21070531 pxBounds.max.y -= 136;                  
                 // Decrease bottom y of pxBounds to account for area overflowing page due to div above.
                 // Note: Height of map-canvas is 100% of body.
                 var canvas = geoPathMap.getMapCanvas(); 
@@ -2454,19 +2388,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 pxBounds.min.y += yMargin;
                 pxBounds.max.x -= xMargin;
                 pxBounds.max.y -= yMargin;
-                var zoom = map.getZoom();              ////20170531 try 
-                var ptEnd = map.project(llEnd, zoom);  ////20170531 try
+                var zoom = map.getZoom();              
+                var ptEnd = map.project(llEnd, zoom);  
                 
                 if (!pxBounds.contains(ptEnd)) {
-                    var ptOffset = L.point(0,0);  ////20170531 Try y offset of 136 px which is height of divMode.
+                    var ptOffset = L.point(0,0);  
                     if (ptEnd.x < pxBounds.min.x)
                         ptOffset.x += ptEnd.x - pxBounds.min.x - xMargin;
                     if (ptEnd.y < pxBounds.min.y )
-                        ptOffset.y += (ptEnd.y - pxBounds.min.y - yMargin); ////20170531 Remove -  // screen y is negative geo y. Check $$$$
+                        ptOffset.y += (ptEnd.y - pxBounds.min.y - yMargin); 
                     if (ptEnd.x > pxBounds.max.x) 
                         ptOffset.x += ptEnd.x - pxBounds.max.x + xMargin;
                     if (ptEnd.y > pxBounds.max.y)
-                        ptOffset.y += (ptEnd.y - pxBounds.max.y + yMargin); ////20170531 Remove - // screen y is negative geo y. 
+                        ptOffset.y += (ptEnd.y - pxBounds.max.y + yMargin); 
                     map.panBy(ptOffset);
                 }
             }

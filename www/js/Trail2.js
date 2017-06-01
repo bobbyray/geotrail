@@ -2565,7 +2565,7 @@ function wigo_ws_View() {
                         //       the record path redraw after clearing, although it seldoms happens.
                         //       Therefore add a test, && myWatchId !== null, just in case this function is called
                         //       when trying to clear watch. The test should not hurt and might help.
-                        if (!bTesting && myWatchId !== null) {  ////20170529 added && myWatchId !== null
+                        if (!bTesting && myWatchId !== null) {  
                             // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
                             if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
                                 prevPosition = position;                                        
@@ -2594,8 +2594,6 @@ function wigo_ws_View() {
             this.testWatchPt = function(llNext) {
                 if (bTesting) {
                     var msTimeStamp = Date.now();
-                    ////20170601 // llNext.lng = llNext.lng; ////20170530 $$$$ put back, debug y pixels.
-                    ////20170601 llNext = llNext.offsetXY(0, -200);  ////20170530 debug only, y pixels. was -40, 
                     AppendAndDrawPt(llNext, msTimeStamp);
                 }
                 return bTesting
@@ -2612,7 +2610,7 @@ function wigo_ws_View() {
                 map.recordPath.appendPt(llNext, msTimeStamp);  
                 map.recordPath.draw();
                 // After adding first point only, zoom to first record point.
-                map.recordPath.zoomToFirstCoordOnce(50); ////20170529 was 1000 $$$$ putback to 1000.
+                map.recordPath.zoomToFirstCoordOnce(50); 
             }
             var myWatchId = null;
         } 
