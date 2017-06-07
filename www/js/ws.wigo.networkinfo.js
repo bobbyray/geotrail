@@ -30,11 +30,11 @@ function wigo_ws_NetworkInformation() {
     // Returns string describing current network state.
     // Note: Returns empty state is current network state is not defined.
     function GetTypeDescr() {
-        InitStatesOnce();  ////20170605 added.
+        InitStatesOnce();  
         var networkState = navigator.connection.type;
         var sNetworkType = states[networkState];
         if (typeof(sNetworkType) !== 'string') 
-            sNetworkType = "";            /////20170605 Typo, was sNetorkType
+            sNetworkType = "";            
         return sNetworkType;
     }
 
@@ -53,31 +53,9 @@ function wigo_ws_NetworkInformation() {
             states[Connection.NONE]     = 'No network connection';
         }
     }
-    var states = null; // Object for list of network connection states.  ////20170605 was [] was {} 
+    var states = null; // Object for list of network connection states.  
     // Note: It may take awhile for the Connection plugin object to be created.
-    // There InitStatesOnce() is called to create states if need be. 
-
-    /* ////20170605 Connection not defined for new Pixel phone. Try navigator instead.
-    states[Connection.UNKNOWN]  = 'Unknown connection';
-    states[Connection.ETHERNET] = 'Ethernet connection';
-    states[Connection.WIFI]     = 'WiFi connection';
-    states[Connection.CELL_2G]  = 'Cell 2G connection';
-    states[Connection.CELL_3G]  = 'Cell 3G connection';
-    states[Connection.CELL_4G]  = 'Cell 4G connection';
-    states[Connection.CELL]     = 'Cell generic connection';
-    states[Connection.NONE]     = 'No network connection';
-    */
-
-    /* ////20170605 does not work
-    states[navigator.connection.UNKNOWN]  = 'Unknown connection';
-    states[navigator.connection.ETHERNET] = 'Ethernet connection';
-    states[navigator.connection.WIFI]     = 'WiFi connection';
-    states[navigator.connection.CELL_2G]  = 'Cell 2G connection';
-    states[navigator.connection.CELL_3G]  = 'Cell 3G connection';
-    states[navigator.connection.CELL_4G]  = 'Cell 4G connection';
-    states[navigator.connection.CELL]     = 'Cell generic connection';
-    states[navigator.connection.NONE]     = 'No network connection';
-    */ 
+    // Therefore InitStatesOnce() is called to create states if need be. 
 }
 
 // Creates and returns a wigo_ws_NetworkInformation Object.
@@ -93,7 +71,6 @@ function wigo_ws_NewNetworkInformation(bIos) {
         networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, isWiFiOnline: function(){return true;}};
     } else { 
         networkInfo = new wigo_ws_NetworkInformation(); 
-        ////20170605???? networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, isWiFiOnline: function(){return true;}};
     }
     return networkInfo;
 }
