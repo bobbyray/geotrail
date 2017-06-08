@@ -48,6 +48,25 @@ L.LatLng.prototype.bearingWordTo = function(other) {
     return bearingword;
 };
 
+// Returns L.LatLng obj offset from this object.
+// Args:
+//  mX: number. Offset in x direction (along latitude) in meters.
+//  my: number. Offset in y direction (along longitude) in meters.
+//  Note: For x, East is +, West is -.
+//        For y, North is +, South is -.
+L.LatLng.prototype.offsetXY = function(mX, mY) {
+    // note: ll.toBounds(mToCorner) is documented, but does not exist.
+    // Find ne and se corner of square bounding first coordinate.
+    var yDelta = L.latLng(this.lat + 1.0, this.lng); // y latlng one degree away.
+    var mYperDeg = this.distanceTo(yDelta);   // y distance in one degree.
+    var xDelta = L.latLng(this.lat, this.lng + 1.0); // x latng one degree away.
+    var mXperDeg = this.distanceTo(xDelta);   // x distance in one degree.
+    var degYDelta = mY / mYperDeg;
+    var degXDelta = mX / mXperDeg;
+    var llOffset = L.latLng(this.lat + degYDelta, this.lng + degXDelta);
+    return llOffset;
+};
+
 /* -------------------------------------------------------------------*/
 
 // Object for showing geo path map.
@@ -114,6 +133,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
             // Add a listener for the click event.
             map.on('click', onMapClick);
+
+            // Add a listener for the zoomend event 
+            map.on('zoomend', onMapZoomEnd);  
+
             // Initialize PathListMarkers. 
             pathMarkers.initialize(map);   
             // Callback to indicate the result.
@@ -739,6 +762,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Note: See RecordPath function below for properties of this.recordPath object.
     this.recordPath = new RecordPathMgr(this);
 
+
+    // Returns ref to div for the map-canvas element.
+    // Note: The div element seems to change dynamically. 
+    //       Therefore setting a var for document.getElementById('map-canvas') does not work.
+    this.getMapCanvas = function() {  
+        var mapCanvas = document.getElementById('map-canvas');
+        return mapCanvas;
+    }
+    
+
     // For debug, a mouse click (touch) on the map can simulate a geolocation.
     // Boolean to indicate mouse clicks are ignored so that this.onMapClick(llAt) 
     // is not called.  this.onMapClick2(e) is always called regardless of state of
@@ -783,6 +816,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
         // Always do callback for enhance map click. (Callback defaults to a no op.)
         that.onMapClick2(e);
+    }
+
+    // Event handler for zoomend event on map.
+    function onMapZoomEnd(e) { 
+        if (degCompassHeading !== null)
+            SetCompassHeadingArrow(degCompassHeading);
     }
 
     // ** More private members
@@ -1266,7 +1305,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return arLatLng;
         }
         
-        
+        degCompassHeading = degHeading; // Save compass heading. 
         var arrowOptions = {
             color: that.color.compassHeadingArrow,
             fill: true,
@@ -1278,6 +1317,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             compassHeadingArrow.addTo(map);
         }
     }
+    var degCompassHeading = null; // Saved heading for compass arrow.
     
 
     // Determines heading of line and extends line by a given delta.
@@ -2333,10 +2373,65 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var iLast = pathCoords.length - 1;
             if (iLast >= 0) {
                 var llEnd = pathCoords[iLast];
-                var zoom = map.getZoom();                
-                map.setZoomAround(llEnd, zoom); 
+                var pxBounds = map.getPixelBounds();
+                // Decrease bottom y of pxBounds to account for area overflowing page due to div above.
+                // Note: Height of map-canvas is 100% of body.
+                var canvas = geoPathMap.getMapCanvas(); 
+                if (canvas) {
+                    pxBounds.max.y -= canvas.offsetTop; 
+                }
+                var szBounds = pxBounds.getSize();
+                var xMargin = Math.ceil(szBounds.x * 0.10); // Integer number of extra pels for x offset.
+                var yMargin = Math.ceil(szBounds.y * 0.10); // Integer number of extra pesl for y offset.
+                // Shrink bounds by the margins.
+                pxBounds.min.x += xMargin;
+                pxBounds.min.y += yMargin;
+                pxBounds.max.x -= xMargin;
+                pxBounds.max.y -= yMargin;
+                var zoom = map.getZoom();              
+                var ptEnd = map.project(llEnd, zoom);  
+                
+                if (!pxBounds.contains(ptEnd)) {
+                    var ptOffset = L.point(0,0);  
+                    if (ptEnd.x < pxBounds.min.x)
+                        ptOffset.x += ptEnd.x - pxBounds.min.x - xMargin;
+                    if (ptEnd.y < pxBounds.min.y )
+                        ptOffset.y += (ptEnd.y - pxBounds.min.y - yMargin); 
+                    if (ptEnd.x > pxBounds.max.x) 
+                        ptOffset.x += ptEnd.x - pxBounds.max.x + xMargin;
+                    if (ptEnd.y > pxBounds.max.y)
+                        ptOffset.y += (ptEnd.y - pxBounds.max.y + yMargin); 
+                    map.panBy(ptOffset);
+                }
             }
         };
+
+        
+        // Zoom map to first coordinate in the record path only once.
+        // Arg:
+        //  mToSide: number. Length in meters to side of a square boundary 
+        //           around fist coordinate of record path.
+        // Note: enableZoomToFirstCoordOnce() must be called to enable. 
+        //       After zooming to first coord, zooming is disabled
+        //       until enableZoomToFirstCoordOnce() is called again.
+        this.zoomToFirstCoordOnce = function(mToSide) { 
+            if (bZoomToFirstCoordOnce && pathCoords.length > 0) {
+                bZoomToFirstCoordOnce = false;  
+                var ll = pathCoords[0];
+
+                // note: ll.toBounds(mToCorner) is documented, but does not exist.
+                var ne = ll.offsetXY(mToSide, mToSide);
+                var sw = ll.offsetXY(-mToSide, -mToSide);
+                var bounds = L.latLngBounds(sw, ne);
+                map.fitBounds(bounds);
+            }
+        };
+
+        // Enables zooming to first coordinate once time.
+        this.enableZoomToFirstCoordOnce = function() { 
+            bZoomToFirstCoordOnce = true;
+        };
+        var bZoomToFirstCoordOnce = false;
 
         // Returns stats for the record path.
         // Returns literal Obj with these fields:
@@ -2544,7 +2639,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Returns array of wigo_ws_GeoPt objs for pathCoords.
-        // If pathCoords is empty (lenght 0), returned array has length of 0. 
+        // If pathCoords is empty (length 0), returned array has length of 0. 
         this.getGeoPtArray = function() {
             var arGeoPt = [];
             var geoPt;

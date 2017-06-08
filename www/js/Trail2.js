@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.026_20170523"; // Constant string for App version.
+    var sVersion = "1.1.026_20170607"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2525,7 +2525,7 @@ function wigo_ws_View() {
 
         // Hepler for testing recording a watch point.
         // Append and draws a point to the record path.
-        // Return true is a point is appended to the path, which is done if testing is
+        // Return true if a point is appended to the path, which is done if testing is
         // enabled and recording is active. false indicates no point was appended.
         // Arg:
         //  llNext: L.LatLng. A simulated watch point to append.
@@ -2561,7 +2561,11 @@ function wigo_ws_View() {
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
                         // Success.
-                        if (!bTesting) {
+                        // Note: One would think myWatchId could not be null here. However, I think I have seen
+                        //       the record path redraw after clearing, although it seldoms happens.
+                        //       Therefore add a test, && myWatchId !== null, just in case this function is called
+                        //       when trying to clear watch. The test should not hurt and might help.
+                        if (!bTesting && myWatchId !== null) {  
                             // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
                             if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
                                 prevPosition = position;                                        
@@ -2605,6 +2609,8 @@ function wigo_ws_View() {
             function AppendAndDrawPt(llNext, msTimeStamp) {
                 map.recordPath.appendPt(llNext, msTimeStamp);  
                 map.recordPath.draw();
+                // After adding first point only, zoom to first record point.
+                map.recordPath.zoomToFirstCoordOnce(500); 
             }
             var myWatchId = null;
         } 
@@ -2645,6 +2651,7 @@ function wigo_ws_View() {
                     case that.event.start: 
                         this.reset(); 
                         stateOn.prepare();
+                        map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
                         break;
                     case that.event.unclear:
