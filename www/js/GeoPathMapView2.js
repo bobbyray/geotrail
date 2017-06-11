@@ -279,7 +279,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
             var bounds = L.latLngBounds(sw, ne);
             map.fitBounds(bounds);
-            // Adjust bounds to account for map-canvas extending beyond bottom of screen. ////20170610 added
+            // Adjust bounds to account for map-canvas extending beyond bottom of screen.
             var pxBounds = map.getPixelBounds();
             var mapCanvas = that.getMapCanvas();
             if (mapCanvas) {
@@ -1942,7 +1942,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' // use https ... openstreetmap instead of http ... osm
                     // May want to get mapbox account to get better map tiles.
                     // Can get elevation thru mapbox api which would be useful.
-                    layer = L.tileLayerCordova('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { ////20170611 was http ... osm
+                    layer = L.tileLayerCordova('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
                         // these options are perfectly ordinary L.TileLayer options
                         maxZoom: 18,
                         attribution: 'Map data &copy; <a href="http://osm.org">OpenStreetMap</a> contributors, ' +
@@ -1972,7 +1972,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
                 } else {
                     // Create regular OpenStreetMap tile layer without title caching.
-                    layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   ////20170611 use https ... openstreetmap instead of http ... osm.
+                    layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   
                         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     });
                 }

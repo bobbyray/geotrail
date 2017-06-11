@@ -187,7 +187,7 @@ function Wigo_Ws_CordovaControls() {
         // Handler Signature:
         //  No arg.
         //  Returns: not used.
-        this.onNoSelectionClicked = function() { };  ////20170611 added
+        this.onNoSelectionClicked = function() { };  
 
         // Set to event handler function called to measure the max height available for the droplist.
         // Maybe null, in which case the height for the droplist is not changed.
