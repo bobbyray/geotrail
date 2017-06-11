@@ -342,7 +342,8 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //var base = new wigo_ws_Ajax("http://localhost:54545/Service.svc/"); // Local debug (works)
     // var base = new wigo_ws_Ajax("http://localhost:63651/Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
-    var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host (Would like to try https)
+    // var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host http protocol
+    var base = new wigo_ws_Ajax("https://www.wigo.ws/geopathsx/Service.svc/"); // Remote host https protocol
     //20150808 I cannot get the ajax requests to work locally with the IIS Express Server.
     //         IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
     //         but the ajaxs requests for this api fail if https is used for the apis.

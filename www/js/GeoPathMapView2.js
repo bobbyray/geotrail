@@ -279,6 +279,29 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
             var bounds = L.latLngBounds(sw, ne);
             map.fitBounds(bounds);
+            // Adjust bounds to account for map-canvas extending beyond bottom of screen. ////20170610 added
+            var pxBounds = map.getPixelBounds();
+            var mapCanvas = that.getMapCanvas();
+            if (mapCanvas) {
+                var ptOffset = L.point(0, mapCanvas.offsetTop/2);
+                map.panBy(ptOffset);
+            }
+            /* // This does not work. I think needing to know zoom is the reason. 
+            var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
+            var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
+            var pxBounds = map.getPixelBounds();
+            var mapCanvas = that.getMapCanvas();
+            if (mapCanvas) {
+                var llBottomRight = L.latLng(sw.lat, ne.lng);
+                var zoom = map.getZoom();
+                var ptBottomRight =  map.project(llBottomRight, zoom);
+                ptBottomRight.y -= mapCanvas.offsetTop;
+                llBottomRight = map.unproject(ptBottomRight);
+                sw.lat = llBottomRight.lat;
+            }
+            var bounds = L.latLngBounds(sw, ne);
+            map.fitBounds(bounds);
+            */
         } else {
             // Set zoom around last point of path.            
             var iLast = path.arGeoPt.length -1;
@@ -1916,13 +1939,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 console.log("Creating L.TileLayer");
                 
                 if (bTileCaching) {
-                    // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+                    // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' // use https ... openstreetmap instead of http ... osm
                     // May want to get mapbox account to get better map tiles.
                     // Can get elevation thru mapbox api which would be useful.
-                    layer = L.tileLayerCordova('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    layer = L.tileLayerCordova('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { ////20170611 was http ... osm
                         // these options are perfectly ordinary L.TileLayer options
                         maxZoom: 18,
-                        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                        attribution: 'Map data &copy; <a href="http://osm.org">OpenStreetMap</a> contributors, ' +
                                         '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
                         // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
                         folder: 'WigoWsGeoTrail',
@@ -1949,7 +1972,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
                 } else {
                     // Create regular OpenStreetMap tile layer without title caching.
-                    layer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   ////20170611 use https ... openstreetmap instead of http ... osm.
                         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     });
                 }

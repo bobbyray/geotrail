@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.026_20170607"; // Constant string for App version. 
+    var sVersion = "1.1.026_20170611"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -5764,6 +5764,17 @@ function wigo_ws_View() {
         }
         titleBar.scrollIntoView();
     };
+
+    // Determine and return height available for selectGeoTrail droolist.
+    // Returns: number. number of pixels available. <= 0 means do not change height.
+    selectGeoTrail.onMeasureMaxHeight = function() {
+        var height = 0; // Note: 0 means no change in height.
+        var mapCanvas = map.getMapCanvas(); 
+        if (mapCanvas && mapBar) {
+            height = mapBar.offsetTop - mapCanvas.offsetTop 
+        }
+        return height;
+    }
 
     selectGeoTrail.onNoSelectionClicked = function() {
         // Ensure titlebar is scrolled into view.
