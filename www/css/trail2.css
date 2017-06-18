@@ -772,7 +772,7 @@ label {
     float: left;
 }
 #mapBarBtns input[type='button'] { /* ////20170617 added */
-    width: 15vw; 
+    width: 18vw; 
     height: 85%;
 }
 #mapTrackToggle, #mapPhAlertToggle {
