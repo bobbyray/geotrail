@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.026_20170617"; // Constant string for App version. 
+    var sVersion = "1.1.026_20170618a"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -229,18 +229,20 @@ function wigo_ws_View() {
         // Helper to complete initialization after map has been initialized.
         function CompleteInitialization(bOk, sMsg) {
             that.ShowStatus(sMsg, !bOk)
-            var settings = that.onGetSettings();
-            SetSettingsParams(settings);
-            // Set view find paramters for search for geo paths to the home area.
-            viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
-            that.setModeUI(that.curMode());  
-            selectMode.setSelectedIndex(0);  
-            map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
+            if (bOk) { ////20170617 added if cond only, body already existed.
+                var settings = that.onGetSettings();
+                SetSettingsParams(settings);
+                // Set view find paramters for search for geo paths to the home area.
+                viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
+                that.setModeUI(that.curMode());  
+                selectMode.setSelectedIndex(0);  
+                map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
 
-            if (!map.isOfflineDataEnabled()) {
-                var sMsg = "Offline Maps cannot be used.\n" +
-                           "Check that permissions for this app in the device settings allow storage to be used.\n";
-                alert(sMsg);
+                if (!map.isOfflineDataEnabled()) {
+                    var sMsg = "Offline Maps cannot be used.\n" +
+                            "Check that permissions for this app in the device settings allow storage to be used.\n";
+                    alert(sMsg);
+                }
             }
         }
         
@@ -261,7 +263,9 @@ function wigo_ws_View() {
             });
         }
 
-        //alert("Waiting to continue for debug.");   // comment out 
+        //// alert("Checking if Terms of Use accepted."); /* ////20170617 !!!! debug only */
+
+        //// //alert("Waiting to continue for debug.");   // comment out 
         var version = that.onGetVersion();
         if (!version)
             version = new wigo_ws_GeoTrailVersion();
@@ -274,6 +278,7 @@ function wigo_ws_View() {
         }
 
         if (version.bTermsOfUseAccepted) {
+            ////20170617 alert("Terms of Use Already accepted.") ////20170617 debug, remove !!!!
             DoInitialization();
         } else {
             ConfirmTermsOfUse(true, function(bConfirm) {

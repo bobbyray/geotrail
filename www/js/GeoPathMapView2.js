@@ -131,14 +131,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (tileLayer)
                 tileLayer.addTo(map);
 
-            // Add a listener for the click event.
-            map.on('click', onMapClick);
+            if (map) { // For safety check that map has been created successfully. ////20170617 added if cond, body existed.
+                // Add a listener for the click event.
+                map.on('click', onMapClick);
 
-            // Add a listener for the zoomend event 
-            map.on('zoomend', onMapZoomEnd);  
+                // Add a listener for the zoomend event 
+                map.on('zoomend', onMapZoomEnd);  
 
-            // Initialize PathListMarkers. 
-            pathMarkers.initialize(map);   
+                // Initialize PathListMarkers. 
+                pathMarkers.initialize(map);   
+            }
             // Callback to indicate the result.
             var bOk = tileLayer !== null;
             if (callback)
@@ -1953,6 +1955,30 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         debug: true
                     });
 
+                    /* ////20170617 already checking and retrying.
+                    //20170617 Failing for new installation on an exception. Ignore the exception here. Caller should retry.
+                    try {
+                        // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' // use https ... openstreetmap instead of http ... osm
+                        // May want to get mapbox account to get better map tiles.
+                        // Can get elevation thru mapbox api which would be useful.
+                        layer = L.tileLayerCordova('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                            // these options are perfectly ordinary L.TileLayer options
+                            maxZoom: 18,
+                            attribution: 'Map data &copy; <a href="http://osm.org">OpenStreetMap</a> contributors, ' +
+                                            '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+                            // these are specific to L.TileLayer.Cordova and mostly specify where to store the tiles on disk
+                            folder: 'WigoWsGeoTrail',
+                            name: 'Trail',
+                            debug: true
+                        });
+                    } catch(ex) {
+                        var sMsg = ex ? ex : "unknown exception status";
+                        console.log("Exception creating TileLayerCordova instance: " + sMsg);
+                        layer = null;
+                    }
+                    */
+
+
                     /* //20150822 Original URI template for mapbox tiles, which used to work but no longer.
                                   Requires mapbox access in order to get public access token.
                                   Developer license for 50K map views per month is free, which may be a good 
@@ -1980,7 +2006,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
                 bOk = layer != null && layer != undefined;
             } catch (e) {
-                sMsg = e;
+                console.log(e ? e : "Exception creating L.TileLayer");                
                 bOk = false;
                 layer = null;
             }
