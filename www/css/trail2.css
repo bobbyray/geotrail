@@ -789,7 +789,7 @@ label {
     width: 8vw; /* ////20170617 was 2.0em */ 
     height: 85%;  
 }
-#mapBar .wigo_ws_OnOffLabel,  {  /* ////20170617 added */
+#mapBar .wigo_ws_OnOffLabel  {  /* ////20170617 added */
     margin-left: 0px; 
     margin-right: 0px;  
     width: 5vw;
