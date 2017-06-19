@@ -778,7 +778,7 @@ label {
 #mapTrackToggle, #mapPhAlertToggle {
     height: 100%;
     border: 1px solid black;
-    width: 26vw;  /* ////20170617 was 25vw was auto */  
+    width: 27vw;  /* ////20170617 was 25vw was auto */  
     float: right;
     /* ////20170617 margin-left: 2px; */
 }
