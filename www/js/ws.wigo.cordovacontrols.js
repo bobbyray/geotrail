@@ -688,7 +688,7 @@ function Wigo_Ws_CordovaControls() {
             label.innerText = labelStr;
             this.ctrl.appendChild(label)
         }
-        var onCtrl = this.create("span", null, "wigo_ws_OnCtrl wigo_ws_Unknown");  ////20170617 fix type, was wgo_ws_Unknown
+        var onCtrl = this.create("span", null, "wigo_ws_OnCtrl wigo_ws_Unknown");  
         SetOnText();
         this.ctrl.appendChild(onCtrl);
         onCtrl.addEventListener('click', function(event){

@@ -124,7 +124,6 @@ h1 {
 /* Below are additions for Trail2.html app. */
 input[type="button"] {
     -webkit-user-select: none;
-    /* ////20170617 font-size: 1.3em;  */
 }
 
 html {
@@ -764,32 +763,31 @@ label {
     width: 100%;
     height: 2.5em;  
     z-index: 1; 
-    box-sizing: border-box;  /* ///// add box-sizing */ 
+    box-sizing: border-box;  
 }
 #mapBarBtns {
     height: 100%;
     width: auto;
     float: left;
 }
-#mapBarBtns input[type='button'] { /* ////20170617 added */
+#mapBarBtns input[type='button'] { 
     width: 18vw; 
     height: 85%;
 }
 #mapTrackToggle, #mapPhAlertToggle {
     height: 100%;
     border: 1px solid black;
-    width: 27vw;  /* ////20170617 was 25vw was auto */  
+    width: 27vw;  
     float: right;
-    /* ////20170617 margin-left: 2px; */
 }
 
-#mapBar .wigo_ws_OnCtrl, #mapBar .wigo_ws_OffCtrl  {  /* ////20170617 was #mapTrackToggle */
-    margin-left: 0px; /* ////20170617  was 0.2em */
-    margin-right: 0px;  /* ////20170617 was 0.2em */
-    width: 8vw; /* ////20170617 was 2.0em */ 
+#mapBar .wigo_ws_OnCtrl, #mapBar .wigo_ws_OffCtrl  {  
+    margin-left: 0px; 
+    margin-right: 0px;  
+    width: 8vw; 
     height: 85%;  
 }
-#mapBar .wigo_ws_OnOffLabel  {  /* ////20170617 added */
+#mapBar .wigo_ws_OnOffLabel  {  
     margin-left: 0px; 
     margin-right: 0px;  
     width: 5vw;
