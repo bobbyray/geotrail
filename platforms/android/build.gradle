@@ -168,8 +168,8 @@ android {
             minSdkVersion cdvMinSdkVersion
         }
         applicationId 'ws.wigo.geotrail'
-        versionCode 101260
-        versionName '1.1.026'
+        versionCode 101270
+        versionName '1.1.027'
     }
     lintOptions {
         abortOnError false;

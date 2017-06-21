@@ -449,9 +449,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Ctr Trail Button<br/>
             Pans the map to the center of the selected trail.</li>
             <li>MyLoc Button<br/>
-            Displays your current location on the map.</li>
-            <li>Track Off | On</br>
-            Switches between geolocation tracking On or Off. If Geo Tracking Allowed is No in
+            Displays your current location on the map. If a trail is selected, checks if you are off trail.</li>
+            <li>Track Off | On<br/>
+            Switches between geolocation tracking On or Off. 
+            When Track is On, checking is done automatically to determine if you are off trail.<br/>
+            If Geo Tracking Allowed is No in
             <a href="#helpAllowGeoTracking">Menu > Settings > Allow Geo Tracking</a>,
             Track is not shown.<br/>
             Note: Track On will run down your battery more quickly.</li>
@@ -563,7 +565,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         </ul>
         <p>A site may provide a trail in Google's KML format instead of GPX. 
         There are sites that will convert a KML file to a GPX file.</p>
-        <p>Use the site www.wigo.ws/geopaths/gpxpaths.html to upload the path that you have
+        <p>Use the site www.wigo.ws/geopathsx/gpxpaths.html to upload the path that you have
         downloaded in GPX format so that you can access the path (aka trail) online from GeoTrail.</p>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
@@ -641,7 +643,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The velocity limit in meters/second for a recorded point to be spurious. 
             A point in a recorded trail may be spurious (invalid). If the velocity of point from a previous point
             is too great, the point cannot actually be in the recorded trail and can be filtered out.</li>
-            <li>Body Weight</br>
+            <li>Body Weight<br/>
             Your body weight in pounds or kilograms depending on the Measuring System, English or Metric, chosen.
             Your body weight is used to calculate the number of calories burned traveling while recording a trail.
             </li>
@@ -701,7 +703,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 </ul>
             </li>
             <li>If your Pebble watch is paired with your phone correctly, you can start Pebble GeoTrail
-                from your watch by selecting the Pebble GeoTrail app.</br>
+                from your watch by selecting the Pebble GeoTrail app.<br/>
                 Note: This only starts the Pebble GeoTrail app on the your watch and does not 
                 start the GeoTrail app on your phone.
             </li>
@@ -869,18 +871,34 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>The geolocation provided by your phone has tolerances for its accuracy.</li>
         </ul>
         <h2>DATA AND PRIVACY</h2>
-        <h3>Server Data</h3>
-        <p>For trails that you define, data is stored on a server. The data has latitude and longitude for points
-        defining the trail. Your Facebook public identification (not your name) is associated with your trails.
-        The data is not encrypted. Minimal protection for the database is provided through access controlled by a password.
-        Be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
-        <h3>Data on Your Phone</h3>
-        <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
-        It can be deleted by you from your phone by managing the application on your phone.</p>
-        <h3>Making Your Trails Public or Private</h3>
-        <p>When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone
-        using this app. If the trail is marked Private, the trail is only visible by you when using the app.
-        However, as mentioned above, the data at the server could be compromised, in which case your Private trails could be known.</p>
+            <h3>Geolocation</h3>
+            <p>Geolocation is used by this app to show your location on a map with respect to a trail that you have selected,
+            or to record a trail as you travel. Warnings, which you control, can be shown by the app when your geolocation
+            is off the trail you have selected.</p>
+            <p>If you choose not to allow this app to use geolocation, the app will not be useful.</p>
+            At your option, you may save geolocation data to define a trail on a web server.
+            <h3>Web Server Data</h3>
+            <p>For trails, that you define manually or record by using geolocation, 
+            data is stored on a web server. The data has latitude and longitude for points
+            defining the trail. Your Facebook public identifier (not your name) is associated with your trails.
+            Protection for the database is provided through access controlled by a password. 
+            Data exchanges with the server are encrypted via the https protocol.
+            The web hosting company
+            provides security against malicious intrusions. However,
+            be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
+            <h3>Data on Your Phone</h3>
+            <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
+            <p>If from this app you log in using Facebook, your Facebook public identifier is saved on the phone; 
+            when from this app you logout, your identifier is removed.</p>
+            <p>The data can be deleted by you from your phone by managing the application on your phone.</p>
+            <h3>Making Your Trails Public or Private</h3>
+            <p>When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone
+            using this app. If the trail is marked Private, the trail is only visible by you when using the app.
+            <h3>Your Data Is Not Shared with Any Other Party</h3>
+            As mentioned above, your Facebook public identifier is associated with the 
+            geolocation data for a trail you have defined. 
+            Marking a trail you save to the web server as Public allows others using this app to view the trail.
+            However, neither the geolocation data nor the Facebook public identifier is ever given to another party.
         <h2>A FURTHER CAUTION</h2>
         <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
         may not be appropriate for your abilities and that the trails could have inaccuracies.</p>

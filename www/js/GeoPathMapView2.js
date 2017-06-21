@@ -1935,6 +1935,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var iTry = 0;
         var timerId = null;
 
+        ////20170621 alert('Creating TileLayer, debug msg'); ////20170621 delete stmt
+
         // Local helper function to NewTileLayer(callback).
         function CreateTileLayer() {
             try {
@@ -1980,7 +1982,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
 
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
-                bOk = layer != null && layer != undefined;
+                ////20170621 bOk = layer != null && layer != undefined;
+                bOk = layer != null && typeof layer !== 'undefined';
             } catch (e) {
                 console.log(e ? e : "Exception creating L.TileLayer");                
                 bOk = false;
@@ -2055,6 +2058,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             timerId = window.setInterval(function () {
                 if (iTry < nTries) {
                     iTry++;
+                    /* ////20170621 fix. 
                     if (bOk) {
                         // Successfully created tile layer.
                         // Now wait for filesystem to complete initialization.
@@ -2067,9 +2071,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         // Try to create tile layer again.
                         CreateTileLayer();
                     }
+                    */
+                    // Try to create tile layer again.
+                    CreateTileLayer();
                 } else {
                     // Failed after nTries, so quit trying.
                     window.clearInterval(timerId); // Stop timer.
+                    sMsg = "Failed to create TileLayer after {0} tries".format(iTry); ////20170621 added
                     if (callback)
                         callback(layer, sMsg);
                 }
@@ -2169,41 +2177,64 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return false;
             }
 
-            tileLayer.downloadXYZList(
-                // 1st param: a list of XYZ objects indicating tiles to download
-                tile_list,
-                // 2nd param: overwrite existing tiles on disk? if no then a tile already on disk will be kept, which can be a big time saver
-                false,
-                // 3rd param: progress callback
-                // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
-                function (done, total) {
-                    var percent = Math.round(100 * done / total);
-                    status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
-                    if (onStatusUpdate)
-                        onStatusUpdate(status); 
-                },
-                // 4th param: complete callback
-                // no parameters are given, but we know we're done!
-                function () {
-                    // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
-                    tileLayer.getDiskUsage(function (filecount, bytes) {
-                        var kilobytes = Math.round(bytes / 1024);
-                        status.sMsg = "Map caching completed, status" + "<br/>" + filecount + " files" + "<br/>" + kilobytes + " kB";
-                        status.bDone = true;
+            // Handle error that can occur if user denies permission to write to local storage.
+            // Arg
+            //  ex: error object. ex.message should be string with error message.
+            function DownLoadErrorHandler(ex) {  ////20170621 added
+                window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false);
+                var exMsg = ex.message ? "<br/>" + ex.message : "<br/>";
+                status.sMsg = "Failed to cache map.<br/>Check GeoTrail App permissions to see if you allow writing to storage.<br/>{0}".format(exMsg);
+                status.bDone = true;
+                status.bError = true;
+                if (onStatusUpdate)
+                    onStatusUpdate(status); 
+            }
+
+            try {  // Catch exception that can occur if user denies perssion to access storage.  ////20170621  Added try, body existed.
+                window.addEventListener("cordovacallbackerror",DownLoadErrorHandler, false); // Error event may occur if user denies permission to write to local storage. ////20170621
+                tileLayer.downloadXYZList(
+                    // 1st param: a list of XYZ objects indicating tiles to download
+                    tile_list,
+                    // 2nd param: overwrite existing tiles on disk? if no then a tile already on disk will be kept, which can be a big time saver
+                    false,
+                    // 3rd param: progress callback
+                    // receives the number of tiles downloaded and the number of tiles total; caller can calculate a percentage, update progress bar, etc.
+                    function (done, total) {
+                        var percent = Math.round(100 * done / total);
+                        status.sMsg = "Saving map tiles: " + done + " of " + total + " = " + percent + "%" +" ...";
                         if (onStatusUpdate)
                             onStatusUpdate(status); 
-                    });
-                },
-                // 5th param: error callback
-                // parameter is the error message string
-                function (error) {
-                    status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
-                    status.bDone = true;
-                    status.bError = true;
-                    if (onStatusUpdate)
-                        onStatusUpdate(status); 
-                }
-            );
+                    },
+                    // 4th param: complete callback
+                    // no parameters are given, but we know we're done!
+                    function () {
+                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); ////20170621 added
+                        // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
+                        tileLayer.getDiskUsage(function (filecount, bytes) {
+                            var kilobytes = Math.round(bytes / 1024);
+                            status.sMsg = "Map caching completed, status" + "<br/>" + filecount + " files" + "<br/>" + kilobytes + " kB";
+                            status.bDone = true;
+                            if (onStatusUpdate)
+                                onStatusUpdate(status); 
+                        });
+                    },
+                    // 5th param: error callback
+                    // parameter is the error message string
+                    function (error) {
+                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); ////20170621 added
+                        status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
+                        status.bDone = true;
+                        status.bError = true;
+                        if (onStatusUpdate)
+                            onStatusUpdate(status); 
+                    }
+                );
+            } catch (ex) {
+                // Exception can occur if user denies permission to wrrite to local files.
+                // Note: Download error event seems to be occur instead of exception. 
+                DownLoadErrorHandler(ex);
+            }
+
             status.sMsg = "Starting download of map tiles for caching.";
             if (onStatusUpdate)
                 onStatusUpdate(status);
