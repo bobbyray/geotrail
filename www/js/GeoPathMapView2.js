@@ -1951,9 +1951,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var timerId = null;
 
         // Local helper function to NewTileLayer(callback).
-        // Returns TileLayer that has been created.
         function CreateTileLayer() {
-            let layer = null;  
+            // Note: Do not use let for local version of layer. Not compatible with older android os like on Galaxy S3.
+            layer = null;  
             try {
                 console.log("Creating L.TileLayer");
                 if (bTileCaching) {
@@ -2002,7 +2002,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 bOk = false;
                 layer = null;
             }
-            return layer; 
         }
 
         // Local helper function to test writing to device storage.
@@ -2064,7 +2063,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // First try to create tile layer. Also wait until dirhandle is initialed for filesystem.
         // Will retry on failure.
         bOfflineDataEnabled = false; // Set to true later if filesystem allows data storage usage.
-        layer = CreateTileLayer(); 
+        CreateTileLayer(); 
         if (bOk && layer.dirhandle) {  
             // TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
             // TestFileWrite() may fails initially even though writing to local storage is allowed.
@@ -2079,7 +2078,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 if (iTry < nTries) {
                     iTry++;
                     // Try to create tile layer again.
-                    layer = CreateTileLayer();  
+                    CreateTileLayer();  
                     if (bOk && layer.dirhandle) {  
                         window.clearInterval(timerId); // Stop timer.
                         sMsg = "Created TileLayer after {0} retries".format(iTry); 

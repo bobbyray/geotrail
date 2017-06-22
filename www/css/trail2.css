@@ -767,12 +767,14 @@ label {
 }
 #mapBarBtns {
     height: 100%;
-    width: auto;
+    width: 44vw;             
     float: left;
+    box-sizing: border-box;  
 }
 #mapBarBtns input[type='button'] { 
     width: 18vw; 
     height: 85%;
+    box-sizing:  border-box;   
 }
 #mapTrackToggle, #mapPhAlertToggle {
     height: 100%;
