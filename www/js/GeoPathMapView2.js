@@ -713,10 +713,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.GoOffline = function (bOffline) {
         var result = {bOk: true, sMsg: ""};
         if (tileLayer) {
-            if (bOffline)
-                tileLayer.goOffline();
-            else
-                tileLayer.goOnline();
+            try {  
+                if (bOffline)
+                    tileLayer.goOffline();
+                else
+                    tileLayer.goOnline();
+            } catch (ex) {
+                result.bOk = false;
+                var sOnOffline = bOffline ? "offline." : "online.";
+                var exMsg = ex && ex.message ? "<br/>" + ex.message : "";
+                result.sMsg = "Exception preparing for using map " + sOnOffline  + exMsg;
+            }
         } else {
             result.bOk = false;
             var sOnOffline = bOffline ? "offline." : "online.";
@@ -1926,22 +1933,29 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //          layer: the L.TileLayer.Cordova object for caching map tiles.
     //              layer is null if it cannot be created.
     //          sMsg: string for a message. Is an error message when layer is null.
+    // Note: This function retries and should return after successfully creating L.tileLayerCordova,
+    //       which can cache (write) map sections to local storage.
+    //       For some reason I cannot fathom, a retry is needed because first attempt to create
+    //       L.tileLayerCordova also fails. The function should return after the first successful
+    //       retry, but instead it only returns after the max retry count. 
+    //       A max retry of 1 with a retry wait of 500ms seems to work. 
+    //       One would think that a return of 3 would return successfully after the first retry,
+    //       but not so. The return also occurs after the max retry count.
     function NewTileLayer(callback) {
         var layer = null;
         var sMsg = "";
         var bOk = false;
-        var msRetryWait = 100; // Milliseconds to wait before retrying.
-        var nTries = 30;
+        var msRetryWait = 500; // Milliseconds to wait before retrying. 
+        var nTries = 3; // Number of retries. First try is 0. Actually 1 probably works, but use three.
         var iTry = 0;
         var timerId = null;
 
-        ////20170621 alert('Creating TileLayer, debug msg'); ////20170621 delete stmt
-
         // Local helper function to NewTileLayer(callback).
+        // Returns TileLayer that has been created.
         function CreateTileLayer() {
+            let layer = null;  
             try {
                 console.log("Creating L.TileLayer");
-                
                 if (bTileCaching) {
                     // base URI template for tiles: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' // use https ... openstreetmap instead of http ... osm
                     // May want to get mapbox account to get better map tiles.
@@ -1982,13 +1996,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
 
                 sMsg = "TileLayer created on try " + iTry.toString() + ".";
-                ////20170621 bOk = layer != null && layer != undefined;
                 bOk = layer != null && typeof layer !== 'undefined';
             } catch (e) {
                 console.log(e ? e : "Exception creating L.TileLayer");                
                 bOk = false;
                 layer = null;
             }
+            return layer; 
         }
 
         // Local helper function to test writing to device storage.
@@ -2050,34 +2064,41 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // First try to create tile layer. Also wait until dirhandle is initialed for filesystem.
         // Will retry on failure.
         bOfflineDataEnabled = false; // Set to true later if filesystem allows data storage usage.
-        CreateTileLayer();
-        if (bOk && layer.dirhandle ) {
-            TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
+        layer = CreateTileLayer(); 
+        if (bOk && layer.dirhandle) {  
+            // TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
+            // TestFileWrite() may fails initially even though writing to local storage is allowed.
+            // Now that an error is detected for writing cached files by L.TileLayer, TestFileWrite() is not needed
+            // and is causing confusion when it fails when it should not. 
+            OfflineDataEnabled = true; 
+            if (callback)
+                callback(layer, sMsg);
         } else {
             // Note: Need to retry because either layer was not created or layer.dirhandle was not created yet.
             timerId = window.setInterval(function () {
                 if (iTry < nTries) {
                     iTry++;
-                    /* ////20170621 fix. 
-                    if (bOk) {
-                        // Successfully created tile layer.
-                        // Now wait for filesystem to complete initialization.
-                        if (layer.dirhandle) {
-                            window.clearInterval(timerId); // Stop timer.
-                            // Test writing to file.
-                            TestFileWrite(); // TestFileWrite() will do callback(layer, sMsg).
-                        } // Note: else is keep waiting another timer interval
-                    } else {
-                        // Try to create tile layer again.
-                        CreateTileLayer();
-                    }
-                    */
                     // Try to create tile layer again.
-                    CreateTileLayer();
+                    layer = CreateTileLayer();  
+                    if (bOk && layer.dirhandle) {  
+                        window.clearInterval(timerId); // Stop timer.
+                        sMsg = "Created TileLayer after {0} retries".format(iTry); 
+                        if (callback)
+                            callback(layer, sMsg);
+                    }
+                     
                 } else {
                     // Failed after nTries, so quit trying.
                     window.clearInterval(timerId); // Stop timer.
-                    sMsg = "Failed to create TileLayer after {0} tries".format(iTry); ////20170621 added
+                    var sPrefix;
+                    if (bOk) {
+                        sPrefix = "Created TileLayer";
+                        if (!layer.dirhandle)
+                            sPrefix += ", but failed to create dirhandle";
+                    } else {
+                        sPrefix = "FAILED to created TileLayer";
+                    }
+                    sMsg = "{0} after {1} (max) retries.".format(sPrefix, iTry); 
                     if (callback)
                         callback(layer, sMsg);
                 }
@@ -2180,7 +2201,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // Handle error that can occur if user denies permission to write to local storage.
             // Arg
             //  ex: error object. ex.message should be string with error message.
-            function DownLoadErrorHandler(ex) {  ////20170621 added
+            function DownLoadErrorHandler(ex) {  
                 window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false);
                 var exMsg = ex.message ? "<br/>" + ex.message : "<br/>";
                 status.sMsg = "Failed to cache map.<br/>Check GeoTrail App permissions to see if you allow writing to storage.<br/>{0}".format(exMsg);
@@ -2190,8 +2211,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     onStatusUpdate(status); 
             }
 
-            try {  // Catch exception that can occur if user denies perssion to access storage.  ////20170621  Added try, body existed.
-                window.addEventListener("cordovacallbackerror",DownLoadErrorHandler, false); // Error event may occur if user denies permission to write to local storage. ////20170621
+            try {  // Catch exception that can occur if user denies perssion to access storage.  
+                window.addEventListener("cordovacallbackerror",DownLoadErrorHandler, false); // Error event may occur if user denies permission to write to local storage. 
                 tileLayer.downloadXYZList(
                     // 1st param: a list of XYZ objects indicating tiles to download
                     tile_list,
@@ -2208,7 +2229,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     // 4th param: complete callback
                     // no parameters are given, but we know we're done!
                     function () {
-                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); ////20170621 added
+                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); 
                         // for this demo, on success we use another L.TileLayer.Cordova feature and show the disk usage
                         tileLayer.getDiskUsage(function (filecount, bytes) {
                             var kilobytes = Math.round(bytes / 1024);
@@ -2221,7 +2242,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     // 5th param: error callback
                     // parameter is the error message string
                     function (error) {
-                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); ////20170621 added
+                        window.removeEventListener("cordovacallbackerror",DownLoadErrorHandler, false); 
                         status.sMsg = "Failed to cache map.<br/>Error code: " + error.code;
                         status.bDone = true;
                         status.bError = true;

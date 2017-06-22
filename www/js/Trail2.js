@@ -42,7 +42,6 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.027_20170620"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -229,11 +228,17 @@ function wigo_ws_View() {
                 selectMode.setSelectedIndex(0);  
                 map.FitBounds(settings.gptHomeAreaSW, settings.gptHomeAreaNE);
 
-                if (!map.isOfflineDataEnabled()) {
-                    var sMsg = "Offline Maps cannot be used.\n" +
-                            "Check that permissions for this app in the device settings allow storage to be used.\n";
-                    alert(sMsg);
-                }
+                // if (!map.isOfflineDataEnabled()) {
+                //    var sMsg = "Offline Maps cannot be used.\n" +
+                //             "Check that permissions for this app in the device settings allow storage to be used.\n";
+                //    alert(sMsg);
+                //}
+                // Note: Testing map.isOfflineDataEnabled() is not reliable. 
+                //       An error is now detected if map caching by L.TileLayer fails to write to storage.
+                //       Handling the error shows a message to check app permissions for GeoTrail storage.
+                // Log message indicating if map initialized ok.  
+                var sLogMsg = "View Map: {0}, {1}".format(bOk ? "Ok" : "FAILED", sMsg);
+                console.log(sLogMsg); 
             }
         }
         
@@ -6704,7 +6709,7 @@ Wigo_Ws_InitDeviceDetails(window.app.deviceDetails);
 // Try deviceready() handler instead.
 // Note: It seems HockeyApp works for distribution even if Cordova plugin 
 // for hockeyapp is not used. 
-document.addEventListener("deviceready", function() {
+document.addEventListener("deviceready", function(e) {
     //20161210 Initialize hockeyapp for distruction of app for ios.
     if (typeof(hockeyapp) !== 'undefined') {
         // hockeyapp.start(null, null, "296f229a3907490abd795f3a70760dea");
@@ -6722,10 +6727,8 @@ document.addEventListener("deviceready", function() {
         }, 
         "296f229a3907490abd795f3a70760dea",
         true); // true => autoSend crash report if one exists on start.
-    } else {
-        //debug alert('Device is ready.');
-        console.log('Device is ready.');
-    }
+    } 
+    console.log('Device is ready.');
 }, 
 false);
 
@@ -6742,4 +6745,4 @@ window.app.OnDocReady = function (e) {
 // that device does not support requestFileSystem.
 // Note: Occasionally still get error using $(window).load(..). Retry on 
 // error has been added and I think that will ensure the tile layer 
-$(window).load(window.app.OnDocReady);
+$(window).load(window.app.OnDocReady); 
