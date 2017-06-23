@@ -1946,7 +1946,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var sMsg = "";
         var bOk = false;
         var msRetryWait = 500; // Milliseconds to wait before retrying. 
-        var nTries = 3; // Number of retries. First try is 0. Actually 1 probably works, but use three.
+        var nTries = 8; // Number of tries. 
         var iTry = 0;
         var timerId = null;
 
@@ -1995,10 +1995,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     });
                 }
 
-                sMsg = "TileLayer created on try " + iTry.toString() + ".";
-                bOk = layer != null && typeof layer !== 'undefined';
+                ////20170623 sMsg = "TileLayer created on try " + iTry.toString() + ".";
+                ////20170623 sMsg = "TileLayer created on try {0}.".format(iTry+1);
+                bOk = layer !== null && typeof layer !== 'undefined';
+                if (bOk) {
+                    sMsg = "TileLayer created on try {0}.".format(iTry+1);
+                } else {
+                    sMsg = "FAILED to create TileLayer on try {0}.".format(iTry+1);
+                }
             } catch (e) {
                 console.log(e ? e : "Exception creating L.TileLayer");                
+                sMsg = "FAILED to create TileLayer on try {0}.".format(iTry+1);
                 bOk = false;
                 layer = null;
             }
@@ -2071,21 +2078,23 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             // and is causing confusion when it fails when it should not. 
             OfflineDataEnabled = true; 
             if (callback)
-                callback(layer, sMsg);
-        } else {
+                callback(layer, sMsg); 
+        } else { 
             // Note: Need to retry because either layer was not created or layer.dirhandle was not created yet.
             timerId = window.setInterval(function () {
                 if (iTry < nTries) {
                     iTry++;
-                    // Try to create tile layer again.
-                    CreateTileLayer();  
+                    // Check if dirhandle has been creaated after waiting.
+                    ////20170623 CreateTileLayer();  
                     if (bOk && layer.dirhandle) {  
                         window.clearInterval(timerId); // Stop timer.
-                        sMsg = "Created TileLayer after {0} retries".format(iTry); 
+                        ////20170623 sMsg = "Created TileLayer after {0} retries".format(iTry); 
                         if (callback)
                             callback(layer, sMsg);
+                        return;
                     }
-                     
+                    // Try to create tile layer again.
+                    CreateTileLayer();  ////20170623 moved to here. 
                 } else {
                     // Failed after nTries, so quit trying.
                     window.clearInterval(timerId); // Stop timer.
@@ -2097,7 +2106,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     } else {
                         sPrefix = "FAILED to created TileLayer";
                     }
-                    sMsg = "{0} after {1} (max) retries.".format(sPrefix, iTry); 
+                    sMsg = "{0} after {1} (max) tries.".format(sPrefix, iTry); 
                     if (callback)
                         callback(layer, sMsg);
                 }
