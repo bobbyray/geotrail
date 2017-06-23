@@ -187,7 +187,14 @@ function Wigo_Ws_CordovaControls() {
         // Handler Signature:
         //  No arg.
         //  Returns: not used.
-        this.onNoSelectionClicked = function() { };
+        this.onNoSelectionClicked = function() { };  
+
+        // Set to event handler function called to measure the max height available for the droplist.
+        // Maybe null, in which case the height for the droplist is not changed.
+        // Handler Signature:
+        //  No Arg.
+        //  Returns: number. Number of pixels for max height. If <= 0 height is not changed.
+        this.onMeasureMaxHeight = null; 
 
         // Fills dropdown list with values.
         // Arg:
@@ -434,10 +441,15 @@ function Wigo_Ws_CordovaControls() {
         // Arg:
         //  bDrop: boolean. true to show the dropdown list, false to hide it.
         this.drop = function (bDrop) {
+            if (bDrop && this.onMeasureMaxHeight) {
+                var height = this.onMeasureMaxHeight(list);
+                if (typeof height === 'number' && height > 0) {
+                    list.style.maxHeight = height.toFixed(0) + "px";
+                }
+            }
             bDropDownListDropped = bDrop;
             this.show(list, bDrop);
         };
-
         
         // Indiates that the droplist is shown when user clicks on the value.
         this.bDropOnValueClicked = true; 
@@ -676,7 +688,7 @@ function Wigo_Ws_CordovaControls() {
             label.innerText = labelStr;
             this.ctrl.appendChild(label)
         }
-        var onCtrl = this.create("span", null, "wigo_ws_OnCtrl wgo_ws_Unknown");
+        var onCtrl = this.create("span", null, "wigo_ws_OnCtrl wigo_ws_Unknown");  
         SetOnText();
         this.ctrl.appendChild(onCtrl);
         onCtrl.addEventListener('click', function(event){
