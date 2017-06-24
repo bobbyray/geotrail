@@ -1995,8 +1995,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     });
                 }
 
-                ////20170623 sMsg = "TileLayer created on try " + iTry.toString() + ".";
-                ////20170623 sMsg = "TileLayer created on try {0}.".format(iTry+1);
                 bOk = layer !== null && typeof layer !== 'undefined';
                 if (bOk) {
                     sMsg = "TileLayer created on try {0}.".format(iTry+1);
@@ -2085,16 +2083,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 if (iTry < nTries) {
                     iTry++;
                     // Check if dirhandle has been creaated after waiting.
-                    ////20170623 CreateTileLayer();  
                     if (bOk && layer.dirhandle) {  
                         window.clearInterval(timerId); // Stop timer.
-                        ////20170623 sMsg = "Created TileLayer after {0} retries".format(iTry); 
                         if (callback)
                             callback(layer, sMsg);
                         return;
                     }
                     // Try to create tile layer again.
-                    CreateTileLayer();  ////20170623 moved to here. 
+                    CreateTileLayer();  
                 } else {
                     // Failed after nTries, so quit trying.
                     window.clearInterval(timerId); // Stop timer.
