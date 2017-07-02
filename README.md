@@ -30,10 +30,10 @@ Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed
 #####
 This app and its plugins and modules are open source code. Refer to License file for more details.
 
-#####Pebble App (Optional)
+##### Pebble App (Optional)
 The [PebbleMsg app project](https://github.com/bobbyray/PebbleMsg) contains the code for the C program that runs in a Pebble watch. Import this project to the Cloud Pebble IDE to build and install on a Pebble watch.
 
-#####Debugging the app
+##### Debugging the app
 Chrome must be installed on the phone device and on your pc.
 
 From Chrome on your pc:
@@ -42,3 +42,5 @@ From Chrome on your pc:
 * Click on WebView ws.wigo.geotrail to debug the app.
  * The familiar Chrome Debugger showing the HTML, CSS, and javacript for the app appears in a separate Chrome window. 
 
+#### Server Side Code
+The [GeoPathsx project](https://github.com/bobbyray/GeoPathsx) is the repository for the server side code required by the GeoTrail app.
