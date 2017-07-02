@@ -1,7 +1,9 @@
 # geotrail
 ##### Mobile phone app for geo location around a defined trail.
-The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and tested only for an Android phone, v4.2.2. This app is in early stage of development and is only expected to be used by contributors. I installed Cordova, v6.2.0, on a Windows10 pc. The project also uses Android Studio so that java code for plugins can be written and debugged. A pc running Linux should work too.
-**To try this app**
+The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and tested for Android phones, v4.2.2 and v7.1.2. The project also uses Android Studio so that java code for plugins can be written and debugged. A pc running Linux should work too.
+
+There is also a version for the iPhone in the [geotrail-pgb repository](https://github.com/bobbyray/geotrail-pgb).
+#### To try this app
 Note: [Apache / Cordova Platform](https://cordova.apache.org/) must be installed first.
 1. Clone or download this code to your personal computer (pc).
    * clone
