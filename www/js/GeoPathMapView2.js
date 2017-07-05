@@ -2279,6 +2279,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var pathCoords = []; // Array of L.LatLng objs for path coordinates.
         var arRecordPt = []; // Array of RecordPt objs for the path. 
 
+        // ** Events generated. Set event handlers for these functions.
+        // Distance traveled alert. Handler Signature:
+        //  stats: object returns by this.getStats();
+        //  Returns: nothing.
+        this.onDistanceAlert = function (stats) { return null}; 
+        // **
+
         // Object for a point in the path.
         // Enumeration for kind of RecordPt obj.
         this.eRecordPt = {RECORD: 0, PAUSE: 1, RESUME: 2}; 
@@ -2658,6 +2665,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
         
         // Appends the location point to the path of points.
+        // Returns RecordPt object that is appended to the path.
         // Arg:
         //  ll: L.LatLng object. The point to append to the path.
         //  msTimeStamp: number. timestamp for ll in milliseconds.
@@ -2680,6 +2688,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 if (pt.kind === this.eRecordPt.RECORD) {
                     arRecordPt.push(pt);
                     pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                    distanceAlerter.resetDistance(); 
                 }
             } else {
                 if (pt.kind === this.eRecordPt.RECORD) {
@@ -2688,6 +2697,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     if (d > dThres) {
                         arRecordPt.push(pt);
                         pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                        distanceAlerter.update(pt);  
                     }
                 } else {
                     arRecordPt.push(pt);
@@ -2757,6 +2767,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return vLimit;
         };
 
+        // Set distance alert interval in meters.  
+        // Arg:
+        //  kmDistance: float. distance interval in kilometers.
+        this.setDistanceAlertInterval = function(kmDistance) {  
+            distanceAlerter.setDistanceInterval(kmDistance * 1000);
+        };
+
         // Sets body mass in kilograms.
         // Arg: 
         //  mass: number. body mass in kilograms.
@@ -2764,7 +2781,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             kgMass = mass;
         };
 
-        
         // Sets the calories burned efficiency factor.
         // Arg:
         //  efficiency: number. efficiency factor, the ratio of kinetic calories : calories burned.
@@ -2835,6 +2851,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var result = {bValid: bOk, nDeleted: nDeleted, nAlreadyDeleted: nAlreadyDeleted}; 
                 return result;
             }; 
+
+            // Same as this.doIt(), except repeats until there no more points to filter out.
+            this.doItAll = function() {
+                var result = this.doIt();
+                // For safety check, try no more than 100 times.
+                for (var i=0; i < 100; i++) {
+                    if (result.bValid && result.nDeleted > 0) {
+                        result = this.doIt();
+                    } else {
+                        // Quit when there no points to deleted.
+                        break;
+                    }
+                }
+                return result;
+            }
             
             var eEvent = {validPt: 0, invalidPt: 1, done: 2}; // Events for filtering.
 
@@ -2962,6 +2993,53 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
         }
         var filterFSM = new FilterFSM(this.eRecordPt); 
+
+        // Object for detecting distance traveled when recording. 
+        function DistanceAlerter() {
+            // Sets the distance interval for generating an alert.
+            // Arg:
+            //  mDistanceIntervalArg: number. distance interval in meters.
+            //  0 indicates no alert is generated.
+            this.setDistanceInterval = function(mDistanceIntervalArg) {
+                mDistanceInterval = mDistanceIntervalArg;
+            };
+            
+            // Resets the distance traveled..
+            this.resetDistance = function() {
+                mDistance = 0; 
+                mIntervalLimit = mDistanceInterval;
+            };
+            
+            // Update after appending a RecordPt for  distance alert.
+            // Generates a distance alert when distance travel exceeds the distance interval.
+            // Arg:
+            //  recordPt: RecordPt obj. Last record pt appended to path.
+            // Event: 
+            //  that.onDistanceAlert(stats). 
+            this.update = function (recordPt) { 
+                if (mDistanceInterval > 0.0001) {
+                    mDistance += recordPt.d();
+                    if (mDistance > mIntervalLimit) {
+                        // May be time to generate an alert.
+                        // Filter the path to be sure.
+                        var result = filterFSM.doItAll();
+                        var stats = that.getStats(); 
+                        mDistance = stats.dTotal;
+                        if (mDistance > mIntervalLimit) {
+                            mIntervalLimit += mDistanceInterval;
+                            that.onDistanceAlert(stats);
+                        }
+                    }
+                }
+            };
+
+            // Interval distance in meters for generating an alert for distance traveled.
+            // 0 indicates no alert is generated.
+            var mDistanceInterval = 0; 
+            var mDistance = 0; // Total distance traveled in meters.
+            var mIntervalLimit = 0; // Ending point generating an alert based on total distance traveled.
+        }
+        var distanceAlerter = new DistanceAlerter(); 
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      

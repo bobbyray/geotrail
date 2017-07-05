@@ -461,10 +461,12 @@ label {
     right: 0px;
 }
 
-#divSettings #labelBodyMass {
+#divSettings #labelBodyMass,
+#divSettings labelRecordDistanceAlert {
     padding-top: 0.4em;
 }
-#divSettings #numberBodyMass {
+#divSettings #numberBodyMass,
+#divSettings #numberRecordDistanceAlert {
     float: right;
     background-color: lightgray;
     width: 3em;

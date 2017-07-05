@@ -40,6 +40,9 @@ function wigo_ws_GeoTrailSettings() {
     this.secsPhoneVibe = 0.0;
     // Integer for number of beeps on an alert. 0 indicates no beep.
     this.countPhoneBeep = 1;
+    // Distance in kilometers to issue periodic alert that specified distance interval 
+    // has been travel when recording. 
+    this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  //0.5  miles convert to meters. 
     // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
     this.bPebbleAlert = true;
     // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
@@ -777,6 +780,10 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('calorieConversionEfficiency', 4, 0.10); 
                 // **
 
+                // ** Changes for nSchema 5.  
+                UpdateIfNeeded('kmRecordDistancAlertInterval', 5, 2.0*1.60934);
+                // **
+
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
@@ -787,7 +794,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 4;  // Must be set to next number when next nSchema change is added.
+        var nSchemaSaved = 5;  // Must be set to next number when next nSchema change is added.
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 

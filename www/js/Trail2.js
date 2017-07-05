@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.027_20170623-1701"; // Constant string for App version. 
+    var sVersion = "1.1.027_20170705-1356"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3841,8 +3841,11 @@ function wigo_ws_View() {
     ];
     distanceUnits.fill(distanceUnitsValues);
     distanceUnits.onListElClicked = function(dataValue) { 
-        bodyMass.bMetric = dataValue === 'metric';
+        var bMetric = dataValue === 'metric';
+        bodyMass.bMetric = bMetric;
         bodyMass.show();
+        recordDistanceAlert.bMetric = bMetric;  
+        recordDistanceAlert.show();             
     }
 
 
@@ -3878,6 +3881,134 @@ function wigo_ws_View() {
         ['5', '5']
     ];
     numberPhoneBeepCount.fill(numberPhoneBeepCountValues);
+
+    // Distance record alert that occurs periodically after a specified distance traveled.  
+    var numberRecordDistanceAlert = document.getElementById('numberRecordDistanceAlert');
+    var labelRecordDistanceAlert = document.getElementById('labelRecordDistanceAlert'); 
+    function RecordDistanceAlert() {
+        // Call base class.
+        LabelNumberCtrl.call(this, labelRecordDistanceAlert, numberRecordDistanceAlert);
+        
+        // **  Over-ride properties for this derived class.
+        this.labelTextMetric = "Record Distance Alert (km)";
+        
+        this.labelTextEnglish = "Record Distance Alert (miles)";
+        
+        // Returns float. kilometers converted to miles.
+        // Arg:
+        //  nNumber. float. number of kilometers.
+        this.metricToEnglish = function(nNumber) {
+            nNumber = 0.621371 * nNumber;
+            return nNumber;
+        };
+
+        // Returns float. kilometers for number in miles.
+        // Arg:
+        //  nNumber: float. number value in English units to convert to Metric units.
+        // NOTE: This method should be over-ridden.
+        this.englishToMetric = function(nNumber) {
+            nNumber = nNumber /  0.621371;
+            return nNumber;
+        };
+        // **
+    }
+    var recordDistanceAlert = new RecordDistanceAlert(); // Record Distance Alert object.
+
+    // Composite Control object for label and a number.
+    // Constructor args:
+    //  labelCtrl: HTMLElement. a label control.
+    //  numberCtrl: HTMLElement. an input control with type='number'.
+    // Note: This is base class. Derived object constructor calls this function:
+    //       LabelNumberCtrl.call(this, labelCtrl, numberCtrl);
+    //       Then contructor over-rides properties specific to its object.
+    function LabelNumberCtrl(labelCtrl, numberCtrl) {
+        var that = this;
+        // boolean. true for UI value shown in metric. false for UI value shown in English units. 
+        this.bMetric = false;
+
+        // ** Propertis to over-ride 
+        // Number of decimal places for showing number.
+        this.nDecimalPlaces = 2;
+
+        // string. Text to show in label UI for metric 
+        this.labelTextMetric = "metric";
+        // string. Text to show in label UI for English.
+        this.labelTextEnglish = "English";
+
+        // Returns float. English equivalent for number in metric units.
+        // Arg:
+        //  nNumber: float. number value in metric units to convert to English units.
+        // NOTE: This method should be over-ridden.
+        this.metricToEnglish = function(nNumber) {
+            return nNumber;
+        };
+
+        // Returns float. Metric equivalent for number in English units.
+        // Arg:
+        //  nNumber: float. number value in English units to convert to Metric units.
+        // NOTE: This method should be over-ridden.
+        this.englishToMetric = function(nNumber) {
+            return nNumber;
+        }
+        // **
+
+        // Sets data attribute of number control in metric units.
+        // Arg:
+        //  number: float. value for number.
+        this.setNumber = function(number) {
+            var sNumber = number.toFixed(nDataDecimalPlaces);
+            numberCtrl.setAttribute('data-number', sNumber);
+        };
+
+        // Returns float. data-number attribute in netric units.
+        this.getNumber = function() {
+            var sValue = numberCtrl.getAttribute('data-number');
+            var nValue = Number(sValue);
+            return nValue; 
+        };
+
+        // Show label and number value in the UI.
+        this.show = function() {
+            var nValue = this.getNumber();
+            var bOk = nValue !== Number.NaN;
+            if (bOk) {
+                if (this.bMetric) {
+                    labelCtrl.innerHTML = this.labelTextMetric;
+                } else {
+                    nValue = this.metricToEnglish(nValue);      
+                    labelCtrl.innerHTML = this.labelTextEnglish;
+                }
+                var sValue = nValue.toFixed(this.nDecimalPlaces);
+                numberCtrl.value = sValue;
+            }
+        };
+
+        // Add event hanlder for change on numberCtrl.
+        // Event handler save data attribute of numberCtrl in metric
+        // and shows value in UI again using number of decicmal places property.
+        numberCtrl.addEventListener('change', function(event){
+            var nValue = Number(numberCtrl.value);
+            var bOk = nValue !== Number.NaN;
+            if (bOk) {
+                if (!that.bMetric) {
+                    nValue = that.englishToMetric(nValue); 
+                }
+                that.setNumber(nValue); 
+                // Display again to show number of decimal places indicated.
+                that.show();
+            }
+        }, false);
+
+        
+        /* ////20170703 Not working for input of type number on Pixel????
+        // Event handler for numberCtrl getting focus: 
+        // Handler function selects text (digits) in the numberMass control.
+        numberCtrl.addEventListener('focus', SelectNumberOnFocus, false); 
+        */
+
+        var nDataDecimalPlaces = 4; 
+    }
+
 
     var holderPebbleAlert = document.getElementById('holderPebbleAlert');
     var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch', -1);
@@ -3980,7 +4111,7 @@ function wigo_ws_View() {
         this.show = function() {
             var sMass = numberMass.getAttribute('data-mass');
             var nMass = Number(sMass);
-            var bOk = nMass != Number.NaN;
+            var bOk = nMass !== Number.NaN;   
             if (bOk) {
                 if (this.bMetric) {
                     sMass = nMass.toFixed(1);
@@ -4041,6 +4172,7 @@ function wigo_ws_View() {
     //  event: FocusEvent. not currently used.
     // Note: this is for an html input element of type number.
     function SelectNumberOnFocus(event) { 
+        /* ////20170703 causing exception for input of type=number on Pixel. Check into this. Used to work.
         var iLast = this.value.length;
         var el = this;
         if (iLast >= 0) { 
@@ -4050,6 +4182,7 @@ function wigo_ws_View() {
                 el.setSelectionRange(0, iLast); 
             }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
         }
+        */
     }    
 
     // Helper to check if setting calorie converion efficiency is active.
@@ -4203,6 +4336,7 @@ function wigo_ws_View() {
         settings.bPhoneAlert = selectPhoneAlert.getState() === 1;
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
+        settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
@@ -4243,12 +4377,17 @@ function wigo_ws_View() {
         selectPhoneAlert.setState(settings.bPhoneAlert ? 1 : 0);
         numberPhoneVibeSecs.setSelected(settings.secsPhoneVibe.toFixed(1));
         numberPhoneBeepCount.setSelected(settings.countPhoneBeep.toFixed(0));
+
+        recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
+        recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
+        recordDistanceAlert.show();                                          
+        
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
         numberSpuriousVLimit.setSelected(settings.vSpuriousVLimit.toFixed(0)); 
         
-        bodyMass.bMetric = settings.distanceUnits == 'metric'; 
+        bodyMass.bMetric = settings.distanceUnits === 'metric';   
         bodyMass.setMass(settings.kgBodyMass); 
         bodyMass.show();
 
@@ -4317,6 +4456,8 @@ function wigo_ws_View() {
         map.dPrevGeoLocThres = settings.dPrevGeoLocThres;
         // Set VLimit for filtering spurious points in recorded trail.
         map.recordPath.setVLimit(settings.vSpuriousVLimit); 
+        // Set record distance alert interal. 
+        map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
         // Set body mass. (Used to calculate calories for a recorded path.)
         map.recordPath.setBodyMass(settings.kgBodyMass);  
         // Set calorie conversion efficiency factor for RecordFSM 
@@ -5489,6 +5630,14 @@ function wigo_ws_View() {
         result.n = dist; // distance of path in meters.
         result.s = lc.to(dist);
         return result;
+    };
+
+     // Event handler for distance traveled alert when recording a path.
+    map.recordPath.onDistanceAlert = function(stats) { 
+        var sDist = lc.to(stats.dTotal);
+        var sMsg = "Distance Alert: traveled {0}".format(sDist);
+        alerter.DoAlert();
+        that.ShowStatus(sMsg, false); 
     };
 
     // Returns true if divSettings container is hidden.
