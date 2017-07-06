@@ -2609,6 +2609,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Filters arRecordPts marking spurious items as deleted and redraws the record trail.
+        // Arg: 
+        //  bAll: boolean, optional. true to repeat filtering until all spurious points are filtered out.
+        //        defaults to true. 
         // Returns {bValid: boolean, bApplied: boolean}:
         //  bValid is true if there are points to filter,
         //  nDeleted  is number of points marked deleted., ie the filter was applied. 
@@ -2618,8 +2621,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Consecutive spurious points are marked as deleted provided the 
         // number of spurious consecutive points is less than the nMaxSpurious;
         // otherwise the consecutive points remain.
-        this.filter = function () { 
-            var result = filterFSM.doIt();
+        this.filter = function (bAll) {   
+            if (typeof bAll !== 'boolean')
+                bAll = true;
+            var result;
+            if (bAll)
+                result = filterFSM.doItAll();
+            else
+                result = filterFSM.doIt();
+
             var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
             if (result.bValid && nTotalDeleted > 0) {  
                 SetPathCoords();
@@ -2773,6 +2783,20 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.setDistanceAlertInterval = function(kmDistance) {  
             distanceAlerter.setDistanceInterval(kmDistance * 1000);
         };
+
+        // Returns number: distance traveled in meters while recording.
+        // Arg:
+        //  bFilter: boolean, optional. true to filter all spurious points first. defaults to true.
+        this.getDistanceTraveled = function(bFilter) {  
+            if (typeof bFilter !== 'boolean')
+                bFilter = true;
+            // Filler all spurious points.
+            if (bFilter)
+                filterFSM.doItAll();
+            var stats = this.getStats();
+            return stats.dTotal;
+        }
+
 
         // Sets body mass in kilograms.
         // Arg: 
@@ -3022,7 +3046,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     if (mDistance > mIntervalLimit) {
                         // May be time to generate an alert.
                         // Filter the path to be sure.
-                        var result = filterFSM.doItAll();
+                        that.filter(); 
                         var stats = that.getStats(); 
                         mDistance = stats.dTotal;
                         if (mDistance > mIntervalLimit) {

@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.027_20170705-1356"; // Constant string for App version. 
+    var sVersion = "1.1.027_20170706-1240"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3604,12 +3604,20 @@ function wigo_ws_View() {
 
     // Get current geo location, show on the map, and update status in phone and Pebble.
     function DoGeoLocation() {
-        that.ShowStatus("Getting Geo Location ...", false);
+        // Show distance traveled if recording. 
+        var sPrefixMsg = '';
+        if (!recordFSM.isOff()) {
+            var mRecordDist = map.recordPath.getDistanceTraveled(true); 
+            if (mRecordDist > 0.0001) {
+                sPrefixMsg = 'Distance traveled: {0}<br/>'.format(lc.to(mRecordDist));
+            }
+        }
+        that.ShowStatus(sPrefixMsg + "Getting Geo Location ...", false); 
         TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult, positionError) {
             if (positionError)
                 ShowGeoLocPositionError(positionError); 
             else 
-                ShowGeoLocUpdateStatus(updateResult);
+                ShowGeoLocUpdateStatus(updateResult, false, sPrefixMsg);  // false => no notification.
         });
     }
 
@@ -5432,7 +5440,8 @@ function wigo_ws_View() {
     //    by the method. 
     //  bNotifyToo boolean, optional. true to indicate that a notification is given in addition to a beep 
     //             when an alert is issued because geolocation is off track. Defaults to false.
-    function ShowGeoLocUpdateStatus(upd, bNotifyToo) {
+    //  sPrefixMsg string, optional. prefix message for update status msg. defaults to empty string.
+    function ShowGeoLocUpdateStatus(upd, bNotifyToo, sPrefixMsg) { 
         // Return msg for paths distances from start and to end for phone.
         function PathDistancesMsg(upd) {
             // Set count for number of elements in dFromStart or dToEnd arrays.
@@ -5486,13 +5495,14 @@ function wigo_ws_View() {
             s += "Tot {0}<br/>".format(lc.to(dTotal));
             return s;
         }
-
+        if (typeof sPrefixMsg !== 'string') 
+            sPrefixMsg = '';              
         that.ClearStatus();
         if (!upd.bToPath) {
             if (map.IsPathDefined()) {
                 var sMsg = "On Trail<br/>";
                 sMsg += PathDistancesMsg(upd);
-                that.ShowStatus(sMsg, false); // false => not an error.
+                that.ShowStatus(sPrefixMsg + sMsg, false); // false => not an error. 
                 sMsg = "On Trail<br/>";
                 sMsg += PathDistancesPebbleMsg(upd);
                 pebbleMsg.Send(sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking.
@@ -5502,7 +5512,7 @@ function wigo_ws_View() {
                 if (upd.bCompass) {
                     sAt +=  "Compass Heading: {0}&deg;<br/>".format(upd.bearingCompass.toFixed(0));
                 }
-                that.ShowStatus(sAt, false); // false => no error.
+                that.ShowStatus(sPrefixMsg + sAt, false); // false => no error.
                 sAt = "lat/lng\n{0}\n{1}\n".format(upd.loc.lat.toFixed(6), upd.loc.lng.toFixed(6));
                 if (upd.bCompass) {
                     sAt += "Cmps Hdg: {0}{1}\n".format(upd.bearingCompass.toFixed(0), sDegree);
@@ -5546,7 +5556,7 @@ function wigo_ws_View() {
             }
             // Show distance from start and to end.
             sMsg += PathDistancesMsg(upd);
-            that.ShowStatus(sMsg, false);
+            that.ShowStatus(sPrefixMsg + sMsg, false);  
             // Issue alert to indicated off-path.
             alerter.DoAlert(bNotifyToo); 
 
