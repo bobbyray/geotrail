@@ -187,7 +187,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
             <div id='holderRecordDistanceAlert' class='settingItem'>
                 <label id='labelRecordDistanceAlert'>Record Dist Alert (miles)</label>
-                <input id='numberRecordDistanceAlert' type='number' step='.5' min='0.0' max='100.0 value='0.5'/>
+                <input id='numberRecordDistanceAlert' type='number' step='.5' min='0.0' max='100.0 value='0.5' tabindex='-1'/>
             </div>
             <div id='holderPebbleAlert' class='settingItem'>
             </div>
@@ -199,7 +199,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
             <div id='holderBodyMass' class='settingItem'>
                 <label id='labelBodyMass'>Body Weight (lbs)</label>
-                <input id='numberBodyMass' type='number' step='5' min='100' max='250' value='150'/>
+                <input id='numberBodyMass' tabindex='-1' type='number' step='5' min='100' max='250' value='150'/> 
+                <!-- ////20170708 added tabindex above -->
             </div>
             <div id='holderCCE'>  
               <div id='divCCEContent'> 
