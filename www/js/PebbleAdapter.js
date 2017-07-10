@@ -83,10 +83,10 @@ function wigo_ws_PebbleAdapter(uuid) {
     //              bOk: boolean that indicates app successfully started or 
     //                   was already running.
     this.StartApp = function (cbResult) {
-        if (!InitializeIfNeedBe()) {////20170710 added.
+        if (!InitializeIfNeedBe()) {
             if (typeof(cbResult) === 'function')
                 cbResult(false);
-            return;                ////20170710 added.
+            return;               
         }
         
         bSendBusy = false; // Clear busy flag just in case.
@@ -175,10 +175,14 @@ function wigo_ws_PebbleAdapter(uuid) {
     //      value is string for an interger >= 0.
     //      For value == "0", there is no timeout.
     this.SendText = function(text, nVibes, bCheckTimeOut, cbResult) {
-        if (!InitializeIfNeedBe()) ////20170710 added.
-            return false;          ////20170710 added.
+        if (!InitializeIfNeedBe()) 
+            return false;          
         var bSent = false;
-        if (this.bEnabled /* && !bSendBusy*/) {  ////20170709 ignore bSendBusy
+        if (this.bEnabled /* && !bSendBusy*/) {  
+            // Note: Could also require && !bSendBusy. Requiring && !bSendBusy is probably ok now.
+            //       The problem was due to the event handler for the ACK or NACK events from Pebble not
+            //       being initialized, which should now be fixed. However, probably no need to 
+            //       check for !bSendBusy in case the event handlers are not initialized.
             bSendBusy = true;
             if (typeof(cbResult) === 'function') 
                 onAckOrNack = cbResult;
@@ -256,118 +260,6 @@ function wigo_ws_PebbleAdapter(uuid) {
         return bValid;
     }
 
-    /* ////20170710 Redo because Pebble object may not be ready initially.
-    var bPebblePlugInValid = IsPebblePluginValid();  ////20170710 added for debug.
-    console.log(bPebblePlugInValid ? "Pebbble plugin OK" : "Pebble Plugin INVALID!"); ////20170710 added for debug. 
-
-    // listeners for Pebble connect, update info
-    if (IsPebblePluginValid())
-    document.addEventListener("Pebble.connect", function (e) {
-        console.log('Pebble.connect', 'connected');
-        bSendBusy = false;
-        Pebble.firmware(function (info) {
-            pebbleVersion = info.tag;
-
-        });
-        Pebble.isDataLoggingSupported(function (supported) {
-            pebbleDataLoggingSupported = (supported) ? 'yes' : 'no';
-        });
-        Pebble.areAppMessagesSupported(function (supported) {
-            pebbleAppMessageSupport = (supported) ? 'yes' : 'no';
-        });
-        pebbleConnected = true;
-    });
-
-    // listeners for Pebble disconnect
-    if (IsPebblePluginValid())
-    document.addEventListener("Pebble.disconnect", function (e) {
-        console.log('Pebble.disconnect', 'disconnected');
-        bSendBusy = false;
-        pebbleConnected = false;
-        pebbleDataLoggingSupported = false;
-        pebbleAppMessageSupport = false;
-    });
-
-    // listen for NACK messages from Pebble
-    var onAckOrNack = null;
-    if (IsPebblePluginValid())
-    document.addEventListener("Pebble.nack", function (e) {
-        bSendBusy = false;
-        console.log('NACK', e.detail);
-        if (onAckOrNack)
-            onAckOrNack(false); // false => NACK.
-    });
-
-    // listen for ACK messages from Pebble
-    if (IsPebblePluginValid())
-    document.addEventListener("Pebble.ack", function (e) {
-        bSendBusy = false;
-        console.log('ACK', e.detail);
-        if (onAckOrNack)
-            onAckOrNack(true); // true => ACK.
-    });
-
-    // listen for data from Pebble
-    if (IsPebblePluginValid())  
-    document.addEventListener("Pebble.data", function (e) {
-        var data = JSON.parse(e.detail.data);
-        console.log('DATA', e.detail);
-
-        // Element 0 is cmd: 'text' or 'click' 
-        var cmd = data[0] && data[0].value ? data[0].value : null;
-        if (cmd === 'text') {
-            var sText = data[1] ? data[1].value : null;
-            if (sText)
-                that.onTextReceived(sText);
-            console.log("Text from Pebble: ", sText);
-        } else if (cmd === 'click') {
-            // Element 1 is button id, element 2 is click type.
-            var sLogMsg = "Pebble button click, ";
-            var nClickType = null;
-            var nButtonId = data[1] ? data[1].value : null;
-            if (nButtonId)
-                nClickType = data[2] ? data[2].value : null;
-            if (nButtonId && nClickType) {
-                if (that.eButtonId.IsValid(nButtonId) && that.eClickType.IsValid(nClickType)) {
-                    that.onClickReceived(nButtonId, nClickType);
-                } else {
-                    sLogMsg = 'Invalid ' + sLogMsg;
-                }
-            }
-            var sId_Type = ' id: {0}, type: {1}'.format(nButtonId, nClickType);
-            console.log(sLogMsg, sId_Type);
-        } else {
-            console.log("Unknown cmd received from Pebble: ", cmd);
-        }
-
-        // Ack Pebble message. If Ack is not given, pebble detects timeout error,
-        // which could be ignored. A comment by plugin author indicated sending
-        // Ack here to Pebble might cause a problem, but sending Ack works fine for me.
-        // In the Pebble code, the timeout error is detected as an indication that 
-        // this phone app is not running.
-        Pebble.sendAck(e.detail.transaction);
-    });
-
-    // tell java to listen for these:
-    // Note: For debugging without Pebble support, check for Pebble before calling Pebble function 
-    //       when constructing this object. constructor.
-    if (IsPebblePluginValid()) {
-        Pebble.registerConnect();
-        Pebble.registerDisconnect();
-        Pebble.registerAck(this.uuid);
-        Pebble.registerNack(this.uuid);
-        Pebble.registerData(this.uuid);
-
-        // Do not know what this TODO means?
-        // TODO: unregister on pause, register on resume to prevent memory leaks
-
-        // dispatch initial state of connection
-        Pebble.isConnected(function (connected) {
-            document.dispatchEvent(new CustomEvent('Pebble.' + (connected ? 'connect' : 'disconnect')));
-        });
-    }
-    */
-
     var bInitialized = false;  // Set to true once Pebble plugin has been successfully initialized.
     var onAckOrNack = null;    // Callback function when ACK or NACK event is received.
     // Initialize the Pebble plugin once. Can be called repeatly because it returns
@@ -379,13 +271,12 @@ function wigo_ws_PebbleAdapter(uuid) {
         if (bInitialized)
             return bInitialized; 
         var bPebblePlugInValid = IsPebblePluginValid();
-        console.log(bPebblePlugInValid ? "Pebbble plugin OK" : "Pebble Plugin INVALID!"); ////20170710 added for debug. 
+        console.log(bPebblePlugInValid ? "Pebbble plugin OK" : "Pebble Plugin INVALID!"); 
         if (!bPebblePlugInValid) {
             return bInitialized; 
         }
 
         // listeners for Pebble connect, update info
-        ////20170710 if (IsPebblePluginValid())
         document.addEventListener("Pebble.connect", function (e) {
             console.log('Pebble.connect', 'connected');
             bSendBusy = false;
@@ -403,7 +294,6 @@ function wigo_ws_PebbleAdapter(uuid) {
         });
 
         // listeners for Pebble disconnect
-        ////21070710 if (IsPebblePluginValid())
         document.addEventListener("Pebble.disconnect", function (e) {
             console.log('Pebble.disconnect', 'disconnected');
             bSendBusy = false;
@@ -413,8 +303,6 @@ function wigo_ws_PebbleAdapter(uuid) {
         });
 
         // listen for NACK messages from Pebble
-        ////20170710 var onAckOrNack = null; //// move up from fuction level.
-        ////20170710 if (IsPebblePluginValid())
         document.addEventListener("Pebble.nack", function (e) {
             bSendBusy = false;
             console.log('NACK', e.detail);
@@ -423,7 +311,6 @@ function wigo_ws_PebbleAdapter(uuid) {
         });
 
         // listen for ACK messages from Pebble
-        ////20170710 if (IsPebblePluginValid())
         document.addEventListener("Pebble.ack", function (e) {
             bSendBusy = false;
             console.log('ACK', e.detail);
@@ -432,19 +319,17 @@ function wigo_ws_PebbleAdapter(uuid) {
         });
 
         // listen for data from Pebble
-        ////20170710 if (IsPebblePluginValid())  
         document.addEventListener("Pebble.data", function (e) {
             var data = JSON.parse(e.detail.data);
             console.log('DATA', e.detail);
 
             // Element 0 is cmd: 'text' or 'click' 
-            ////20170710 var cmd = data[0] && data[0].value ? data[0].value : null;
             // Helper that return a value for a key in the data array.
             // Arg:
             //  nKey: number. key value in the data array.
             // Returns: string, number, or null. null indicates key was not found.
-            function GetKeyValue(nKey) {  ////20170710 added helper function.
-                var value = null;  // data[i].key == 0 is for a cmd. data[i].value is 'text' or 'click'. ////20170710 fixed.
+            function GetKeyValue(nKey) {  
+                var value = null;  // data[i].key == 0 is for a cmd. data[i].value is 'text' or 'click'. 
                 for (let i=0; i < data.length; i++) {
                     if (data[i].key === nKey) {
                         value = data[i].value;
@@ -459,7 +344,6 @@ function wigo_ws_PebbleAdapter(uuid) {
                 cmd = ''; //  invalid pebble cmd, should not happen.
 
             if (cmd === 'text') {
-                ////20170710 var sText = data[1] ? data[1].value : null;
                 var sText = GetKeyValue(1);
                 if (sText)
                     that.onTextReceived(sText);
@@ -467,10 +351,6 @@ function wigo_ws_PebbleAdapter(uuid) {
             } else if (cmd === 'click') {
                 // Element 1 is button id, element 2 is click type.
                 var sLogMsg = "Pebble button click, ";
-                ////20170710 var nClickType = null;
-                ////20170710 var nButtonId = data[1] ? data[1].value : null;
-                ////20170710 if (nButtonId)
-                ////20170710     nClickType = data[2] ? data[2].value : null;
                 var nClickType = null;
                 var nButtonId = GetKeyValue(1);
                 if (nButtonId)
@@ -499,12 +379,11 @@ function wigo_ws_PebbleAdapter(uuid) {
         // tell java to listen for these:
         // Note: For debugging without Pebble support, check for Pebble before calling Pebble function 
         //       when constructing this object. constructor.
-        ////20170710 if (IsPebblePluginValid()) {
         Pebble.registerConnect();
         Pebble.registerDisconnect();
-        Pebble.registerAck(that.uuid);   ////20170710 was this 
-        Pebble.registerNack(that.uuid);  ////20170710 was this
-        Pebble.registerData(that.uuid);  ////20170710 was this
+        Pebble.registerAck(that.uuid);   
+        Pebble.registerNack(that.uuid);  
+        Pebble.registerData(that.uuid);  
 
         // Do not know what this TODO means?
         // TODO: unregister on pause, register on resume to prevent memory leaks
@@ -513,7 +392,6 @@ function wigo_ws_PebbleAdapter(uuid) {
         Pebble.isConnected(function (connected) {
             document.dispatchEvent(new CustomEvent('Pebble.' + (connected ? 'connect' : 'disconnect')));
         });
-       ////20170710 }
        console.log("Pebble plugin initialized.");
        bInitialized = true;
        return bInitialized;

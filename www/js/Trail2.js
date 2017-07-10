@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.027_20170710-1218"; // Constant string for App version. 
+    var sVersion = "1.1.027_20170710-1549"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3606,12 +3606,12 @@ function wigo_ws_View() {
     function DoGeoLocation() {
         // Show distance traveled if recording. 
         var sPrefixMsg = '';
-        var sPebblePrefixMsg = '';  ////20170708 added
+        var sPebblePrefixMsg = '';  
         if (!recordFSM.isOff()) {
             var mRecordDist = map.recordPath.getDistanceTraveled(true); 
             if (mRecordDist > 0.0001) {
                 sPrefixMsg = 'Distance traveled: {0}<br/>'.format(lc.to(mRecordDist));
-                sPebblePrefixMsg = 'Traveled: {0}<br/>'.format(lc.to(mRecordDist));  ////20170708 added 
+                sPebblePrefixMsg = 'Traveled: {0}<br/>'.format(lc.to(mRecordDist));  
             }
         }
         that.ShowStatus(sPrefixMsg + "Getting Geo Location ...", false); 
@@ -3619,7 +3619,7 @@ function wigo_ws_View() {
             if (positionError)
                 ShowGeoLocPositionError(positionError); 
             else 
-                ShowGeoLocUpdateStatus(updateResult, false, sPrefixMsg, sPebblePrefixMsg);  // false => no notification. ////20170708 added sPebblePrefixMsg
+                ShowGeoLocUpdateStatus(updateResult, false, sPrefixMsg, sPebblePrefixMsg);  // false => no notification. 
         });
     }
 
@@ -4009,12 +4009,6 @@ function wigo_ws_View() {
             }
         }, false);
 
-
-        /* ////20170703 Not working for input of type number on Pixel????
-        // Event handler for numberCtrl getting focus: 
-        // Handler function selects text (digits) in the numberMass control.
-        numberCtrl.addEventListener('focus', SelectNumberOnFocus, false); 
-        */
         // Event handler for numberCtrl getting focus: 
         // Handler function selects text (digits) in the numberMass control.
         numberCtrl.addEventListener('focus', SelectNumberOnFocus, false); 
@@ -4185,17 +4179,6 @@ function wigo_ws_View() {
     //  event: FocusEvent. not currently used.
     // Note: this is for an html input element of type number.
     function SelectNumberOnFocus(event) { 
-        /* ////20170703 causing exception for input of type=number on Pixel. Check into this. Used to work.
-        var iLast = this.value.length;
-        var el = this;
-        if (iLast >= 0) { 
-            // Select all the text (digits) for edition.
-            // Set selection after this ui thread ends, otherwise the selection is removed when soft keyboard appears.
-            window.setTimeout(function(){
-                el.setSelectionRange(0, iLast); 
-            }, 0);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends.
-        }
-        */
         var iLast = this.value.length;
         var el = this;
         if (iLast >= 0) { 
@@ -4208,7 +4191,7 @@ function wigo_ws_View() {
                     el.setSelectionRange(0, iLast); 
                     el.type = 'number';
                 }
-            }, 100);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends. ////20170708 0 probably works.
+            }, 100);    // Delay of 0 milliseconds means timer runs as soom as ui thread ends. 0 probably works.
         }
     }    
 
@@ -5516,8 +5499,8 @@ function wigo_ws_View() {
         }
         if (typeof sPrefixMsg !== 'string') 
             sPrefixMsg = '';       
-        if (typeof sPebblePrefixMsg !== 'string')  ////20170708 added
-            sPebblePrefixMsg = '';                    ////20170708 added
+        if (typeof sPebblePrefixMsg !== 'string')  
+            sPebblePrefixMsg = '';                   
         that.ClearStatus();
         if (!upd.bToPath) {
             if (map.IsPathDefined()) {
@@ -5526,7 +5509,7 @@ function wigo_ws_View() {
                 that.ShowStatus(sPrefixMsg + sMsg, false); // false => not an error. 
                 sMsg = "On Trail<br/>";
                 sMsg += PathDistancesPebbleMsg(upd);
-                pebbleMsg.Send(sPebblePrefixMsg + sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking. ////20170709 added sPebblePrefixMsg + 
+                pebbleMsg.Send(sPebblePrefixMsg + sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking. 
             } else {
                 // Show lat lng for the current location since there is no trail.
                 var sAt = "lat/lng({0},{1})<br/>".format(upd.loc.lat.toFixed(6), upd.loc.lng.toFixed(6));
@@ -5538,7 +5521,7 @@ function wigo_ws_View() {
                 if (upd.bCompass) {
                     sAt += "Cmps Hdg: {0}{1}\n".format(upd.bearingCompass.toFixed(0), sDegree);
                 }
-                pebbleMsg.Send(sPebblePrefixMsg + sAt, false, false); // no vibration, no timeout.  ////20170708 added sPebblePrefixMsg +
+                pebbleMsg.Send(sPebblePrefixMsg + sAt, false, false); // no vibration, no timeout.  
             }
         } else {
             // vars for off-path messages.
@@ -5592,7 +5575,7 @@ function wigo_ws_View() {
             }
             sMsg += "?P {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
             sMsg += PathDistancesPebbleMsg(upd); 
-            pebbleMsg.Send(sPebblePrefixMsg + sMsg, true, trackTimer.bOn); // vibration, timeout if tracking. ////20170708 adde sPebblePrefixMsg +
+            pebbleMsg.Send(sPebblePrefixMsg + sMsg, true, trackTimer.bOn); // vibration, timeout if tracking. 
         }
     }
 
@@ -5669,7 +5652,6 @@ function wigo_ws_View() {
         var sMsg = "Distance Alert: traveled {0}".format(sDist);
         alerter.DoAlert();
         that.ShowStatus(sMsg, false); 
-        ////20170709 Show status on Pebble too. $$$$ fix.
         pebbleMsg.Send(sMsg, true, false); // true => vibration, false not timeout check. 
     };
 
@@ -5757,7 +5739,6 @@ function wigo_ws_View() {
         } else if (dataValue === 'start_pebble') {
             // Note: pebbleMsg.IsConnected() does not work. Do not check for Pebble connected.
             if (pebbleMsg.IsEnabled()) {
-                ////20170709 NewPebbleMessage(); ////20170709 Create PebbleMessage object in case it is not working.
                 pebbleMsg.StartApp();
             } else {
                 AlertMsg("Pebble watch is not enabled. Use Menu > Settings to enable.")
@@ -6165,7 +6146,6 @@ Are you sure you want to delete the maps?";
 
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
     var alerter = new Alerter(); // Object for issusing alert to phone.
-    ////alert('Creating PebbleMessage'); ////20170708 For debug only $$$$ remove
     var pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
     // Handler for Select button single click received from Pebble.
     pebbleMsg.onSelect1Click = function () {
@@ -6176,23 +6156,6 @@ Are you sure you want to delete the maps?";
     pebbleMsg.onTextReceived = function (sText) {
         that.ShowStatus(sText, false); 
     };
-
-    /* ////20170709 Removed, used for debug. No progress.
-    var pebbleMsg; // Object for sending/receiving to/from Pebble watch.
-    function NewPebbleMessage() { ////20170709 added function for debugging and general use.
-        pebbleMsg = new PebbleMessage(); // Object for sending/receiving to/from Pebble watch.
-        // Handler for Select button single click received from Pebble.
-        pebbleMsg.onSelect1Click = function () {
-            DoGeoLocation();
-        };
-
-        // Handler for text message received from Pebble.
-        pebbleMsg.onTextReceived = function (sText) {
-            that.ShowStatus(sText, false); 
-        };
-    }
-    NewPebbleMessage(); // Create pebbleMsg object. ////20170709 added
-    */ 
 
     // Set Facebook login.
     var fb = new wigo_ws_FaceBookAuthentication('694318660701967');
