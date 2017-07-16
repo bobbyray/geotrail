@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.027_20170711-0854"; // Constant string for App version. 
+    var sVersion = "1.1.027_20170716-1505"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -5570,8 +5570,7 @@ function wigo_ws_View() {
             // Decided not to show compass degrees, just direction: N, NE, etc.
             sMsg += "Head {0}\n".format(sToPathDir);
             // Show angle to turn. Use compass if available.
-            ////20170711 sMsg += "?P {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
-            if (upd.bRefLine) {   ////20170711 added if test, body already existed.
+            if (upd.bRefLine) {   
                 sMsg += "?P {0} {1}{2}\n".format(sTurn, phi.toFixed(0), sDegree);
             }
             if (upd.bCompass) {
