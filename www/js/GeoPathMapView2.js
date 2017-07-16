@@ -2324,6 +2324,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return d;
             };
 
+            /* ////20170713 redo so that record time does not include pause time.
             // Returns deltas for distance and time to previous point of kind eRecordPt.RECORD.
             // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
             //  d: distance delta in meters.
@@ -2371,6 +2372,66 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 return result;
 
             }
+            */
+
+            // Returns deltas for distance and time to previous point of kind eRecordPt.RECORD.
+            // Returned obj:   {d: number, msDelta: number, msRecordDelta: number};
+            //  d: distance delta in meters.
+            //  msElapsedDelta: elpased time delta in millisconds, including pauses.
+            //  msRecordDelta: time delta in millisconds, excluding pauses and previous deleted points.
+            this.dt = function() {
+                var d = 0;                    // distance in meters from this pt to prevPt.
+                //// var curPt = this;             // current RecordPt while looping thru all points.
+                var prevPt = this.previous;   // previous RecordPt while looping thru all points.
+                //// var msDelta = 0;              // Time from this pt to prevPt.
+                var msElapsedDelta = 0;       // Elapased time from this pt to prevPt, inlcuding PAUSE.
+                var msRecordDelta = 0;        // Record time from this pt of kind RECORD to prevPt, excluding PAUSE.
+                
+                var bRecordDeltaValid = true;
+                // Calc distance from previous point skipping over PAUSE and RESUME point,
+                // which were saved to record timestamps.
+                // Note: Return immediately if current point (this) is not a RECORD pt.
+                while (prevPt && this.kind === that.eRecordPt.RECORD && !this.bDeleted) {   
+                    // Skip a deleted previous point.
+                    if (prevPt.bDeleted) {
+                        // Ignore previously deleted pts.
+                        prevPt = prevPt.previous;  
+                        continue;
+                    } 
+                    //// msDelta = this.msTimeStamp - prevPt.msTimeStamp;
+                    //// msElapsedDelta += msDelta; 
+                    msElapsedDelta = this.msTimeStamp - prevPt.msTimeStamp;
+                    if (prevPt.kind === that.eRecordPt.RECORD) {
+                        d = prevPt.ll.distanceTo(this.ll);
+                        if (bRecordDeltaValid) {
+                            msRecordDelta = msElapsedDelta;
+                        }
+                        //// if (this.kind === that.eRecordPt.RECORD)
+                        ////     d = prevPt.ll.distanceTo(this.ll);
+                        //// if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
+                        ////     msRecordDelta += msDelta;
+                        //// if (curPt.kind === that.eRecordPt.RESUME) 
+                        ////     msRecordDelta += msDelta;  // Should not happen.  
+                        // Quit when previous point of RECORD kind is found.
+                        break;
+                    } else if (prevPt.kind === that.eRecordPt.RESUME) {
+                        //// if (curPt.Kind === that.eRecordPt.RECORD)
+                        ////     msRecordDelta += msDelta; 
+                        // Delta is not for a RECORD pt.
+                        bRecordDeltaValid = false;
+                    } else if (prevPt.kind === that.eRecordPt.PAUSE) {
+                        //// if (curPt.kind === that.eRecordPt.RECORD) 
+                        ////     msRecordDelta += msDelta;  // Should not happen.
+                        // Delta is not for a RECORD pt.
+                        bRecordDeltaValid = false;
+                    }
+                    //// curPt = prevPt;
+                    prevPt = prevPt.previous;
+                }
+                var result = {d: d, msElapsedDelta: msElapsedDelta, msRecordDelta: msRecordDelta};
+                return result;
+            }
+
 
             // Returns velocity in meters/sec from other RecordPt.
             // Returns -1 if other RecordPt is null or is not kind of eRecord.RECORD.
@@ -2563,8 +2624,12 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     case this.eRecordPt.RECORD:
                         // Get distance and time deltas to previous RECORD point.
                         dt = pt.dt();
-                        result.dTotal += dt.d;
-                        result.msRecordTime += dt.msRecordDelta;
+                        ////20170715 result.dTotal += dt.d;
+                        ////20170715 result.msRecordTime += dt.msRecordDelta;
+                        if (dt.msRecordDelta > epsilon) {
+                            result.dTotal += dt.d;
+                            result.msRecordTime += dt.msRecordDelta;
+                        }
                         result.msElapsedTime += dt.msElapsedDelta;
                         // Set date and time for start of the recording.
                         if (result.tStart === null) 
@@ -2596,7 +2661,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             result.calories = KJoulesToLabelCalories(result.kJoules);
 
             // Calculate calories based on average velocity. 
-            if (result.msRecordTime > 0) {
+            if (result.msRecordTime > epsilon) {  ////20170715 was 0
                 var aveV = result.dTotal / (result.msRecordTime/1000);
                 var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
                 result.calories2 = KJoulesToLabelCalories(kJoules); 
