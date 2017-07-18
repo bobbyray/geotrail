@@ -2279,6 +2279,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var pathCoords = []; // Array of L.LatLng objs for path coordinates.
         var arRecordPt = []; // Array of RecordPt objs for the path. 
 
+        // ** Events generated. Set event handlers for these functions.
+        // Distance traveled alert. Handler Signature:
+        //  stats: object returns by this.getStats();
+        //  Returns: nothing.
+        this.onDistanceAlert = function (stats) { return null}; 
+        // **
+
         // Object for a point in the path.
         // Enumeration for kind of RecordPt obj.
         this.eRecordPt = {RECORD: 0, PAUSE: 1, RESUME: 2}; 
@@ -2323,47 +2330,43 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             //  msElapsedDelta: elpased time delta in millisconds, including pauses.
             //  msRecordDelta: time delta in millisconds, excluding pauses and previous deleted points.
             this.dt = function() {
-                var d = 0;
-                var curPt = this;
-                var prevPt = null;
-                var msDelta = 0;         // Time from current point to previous point.
-                var msElapsedDelta = 0;  // Elapased time from this point of kind RECORD to previous RECORD point, inlcuding PAUSE.
-                var msRecordDelta = 0;   // Record time from this point of kind RECORD to previous RECORD point, excluding PAUSE.
+                var d = 0;                    // distance in meters from this pt to prevPt.
+                var prevPt = this.previous;   // previous RecordPt while looping thru all points.
+                var msElapsedDelta = 0;       // Elapased time from this pt to prevPt, inlcuding PAUSE.
+                var msRecordDelta = 0;        // Record time from this pt of kind RECORD to prevPt, excluding PAUSE.
+                
+                var bRecordDeltaValid = true;
                 // Calc distance from previous point skipping over PAUSE and RESUME point,
-                // where were saved to record timestamps.
-                while (curPt) {   
-                    prevPt = curPt.previous;
-                    if (prevPt) {
-                        // Skip a deleted previous point.
-                        if (prevPt.bDeleted) {
-                            curPt = prevPt;
-                            continue;
-                        } 
-                        msDelta = curPt.msTimeStamp - prevPt.msTimeStamp;
-                        msElapsedDelta += msDelta; 
-                        if (prevPt.kind === that.eRecordPt.RECORD) {
-                            if (this.kind === that.eRecordPt.RECORD)
-                                d = prevPt.ll.distanceTo(this.ll);
-                            if (curPt.kind === that.eRecordPt.RECORD || curPt.kind === that.eRecordPt.PAUSE)
-                                msRecordDelta += msDelta;
-                            if (curPt.kind === that.eRecordPt.RESUME) 
-                                msRecordDelta += msDelta;  // Should not happen.  
-                            // Quit when previous point of RECORD kind is found.
-                            break;
-                        } else if (prevPt.kind === that.eRecordPt.RESUME) {
-                            if (curPt.Kind === that.eRecordPt.RECORD)
-                                msRecordDelta += msDelta; 
-                        } else if (prevPt.kind === that.eRecordPt.PAUSE) {
-                            if (curPt.kind === that.eRecordPt.RECORD) 
-                                msRecordDelta += msDelta;  // Should not happen.
-                        }
+                // which were saved to record timestamps.
+                // Note: Return immediately if current point (this) is not a RECORD pt.
+                while (prevPt && this.kind === that.eRecordPt.RECORD && !this.bDeleted) {   
+                    // Skip a deleted previous point.
+                    if (prevPt.bDeleted) {
+                        // Ignore previously deleted pts.
+                        prevPt = prevPt.previous;  
+                        continue;
                     } 
-                    curPt = prevPt;
+                    msElapsedDelta = this.msTimeStamp - prevPt.msTimeStamp;
+                    if (prevPt.kind === that.eRecordPt.RECORD) {
+                        d = prevPt.ll.distanceTo(this.ll);
+                        if (bRecordDeltaValid) {
+                            msRecordDelta = msElapsedDelta;
+                        }
+                        // Quit when previous point of RECORD kind is found.
+                        break;
+                    } else if (prevPt.kind === that.eRecordPt.RESUME) {
+                        // Delta is not for a RECORD pt.
+                        bRecordDeltaValid = false;
+                    } else if (prevPt.kind === that.eRecordPt.PAUSE) {
+                        // Delta is not for a RECORD pt.
+                        bRecordDeltaValid = false;
+                    }
+                    prevPt = prevPt.previous;
                 }
                 var result = {d: d, msElapsedDelta: msElapsedDelta, msRecordDelta: msRecordDelta};
                 return result;
-
             }
+
 
             // Returns velocity in meters/sec from other RecordPt.
             // Returns -1 if other RecordPt is null or is not kind of eRecord.RECORD.
@@ -2556,8 +2559,10 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     case this.eRecordPt.RECORD:
                         // Get distance and time deltas to previous RECORD point.
                         dt = pt.dt();
-                        result.dTotal += dt.d;
-                        result.msRecordTime += dt.msRecordDelta;
+                        if (dt.msRecordDelta > epsilon) {
+                            result.dTotal += dt.d;
+                            result.msRecordTime += dt.msRecordDelta;
+                        }
                         result.msElapsedTime += dt.msElapsedDelta;
                         // Set date and time for start of the recording.
                         if (result.tStart === null) 
@@ -2589,7 +2594,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             result.calories = KJoulesToLabelCalories(result.kJoules);
 
             // Calculate calories based on average velocity. 
-            if (result.msRecordTime > 0) {
+            if (result.msRecordTime > epsilon) {  
                 var aveV = result.dTotal / (result.msRecordTime/1000);
                 var kJoules = (aveV*aveV*kgMass/2.0) / 1000.0;
                 result.calories2 = KJoulesToLabelCalories(kJoules); 
@@ -2602,6 +2607,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Filters arRecordPts marking spurious items as deleted and redraws the record trail.
+        // Arg: 
+        //  bAll: boolean, optional. true to repeat filtering until all spurious points are filtered out.
+        //        defaults to true. 
         // Returns {bValid: boolean, bApplied: boolean}:
         //  bValid is true if there are points to filter,
         //  nDeleted  is number of points marked deleted., ie the filter was applied. 
@@ -2611,8 +2619,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Consecutive spurious points are marked as deleted provided the 
         // number of spurious consecutive points is less than the nMaxSpurious;
         // otherwise the consecutive points remain.
-        this.filter = function () { 
-            var result = filterFSM.doIt();
+        this.filter = function (bAll) {   
+            if (typeof bAll !== 'boolean')
+                bAll = true;
+            var result;
+            if (bAll)
+                result = filterFSM.doItAll();
+            else
+                result = filterFSM.doIt();
+
             var nTotalDeleted = result.nDeleted + result.nAlreadyDeleted;   
             if (result.bValid && nTotalDeleted > 0) {  
                 SetPathCoords();
@@ -2658,6 +2673,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
         
         // Appends the location point to the path of points.
+        // Returns RecordPt object that is appended to the path.
         // Arg:
         //  ll: L.LatLng object. The point to append to the path.
         //  msTimeStamp: number. timestamp for ll in milliseconds.
@@ -2680,6 +2696,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 if (pt.kind === this.eRecordPt.RECORD) {
                     arRecordPt.push(pt);
                     pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                    distanceAlerter.resetDistance(); 
                 }
             } else {
                 if (pt.kind === this.eRecordPt.RECORD) {
@@ -2688,6 +2705,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     if (d > dThres) {
                         arRecordPt.push(pt);
                         pathCoords.push(pt.ll); // Also save lat/lng for the path point in pathCoords.
+                        distanceAlerter.update(pt);  
                     }
                 } else {
                     arRecordPt.push(pt);
@@ -2757,6 +2775,27 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             return vLimit;
         };
 
+        // Set distance alert interval in meters.  
+        // Arg:
+        //  kmDistance: float. distance interval in kilometers.
+        this.setDistanceAlertInterval = function(kmDistance) {  
+            distanceAlerter.setDistanceInterval(kmDistance * 1000);
+        };
+
+        // Returns number: distance traveled in meters while recording.
+        // Arg:
+        //  bFilter: boolean, optional. true to filter all spurious points first. defaults to true.
+        this.getDistanceTraveled = function(bFilter) {  
+            if (typeof bFilter !== 'boolean')
+                bFilter = true;
+            // Filler all spurious points.
+            if (bFilter)
+                filterFSM.doItAll();
+            var stats = this.getStats();
+            return stats.dTotal;
+        }
+
+
         // Sets body mass in kilograms.
         // Arg: 
         //  mass: number. body mass in kilograms.
@@ -2764,7 +2803,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             kgMass = mass;
         };
 
-        
         // Sets the calories burned efficiency factor.
         // Arg:
         //  efficiency: number. efficiency factor, the ratio of kinetic calories : calories burned.
@@ -2835,6 +2873,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var result = {bValid: bOk, nDeleted: nDeleted, nAlreadyDeleted: nAlreadyDeleted}; 
                 return result;
             }; 
+
+            // Same as this.doIt(), except repeats until there no more points to filter out.
+            this.doItAll = function() {
+                var result = this.doIt();
+                // For safety check, try no more than 100 times.
+                for (var i=0; i < 100; i++) {
+                    if (result.bValid && result.nDeleted > 0) {
+                        result = this.doIt();
+                    } else {
+                        // Quit when there no points to deleted.
+                        break;
+                    }
+                }
+                return result;
+            }
             
             var eEvent = {validPt: 0, invalidPt: 1, done: 2}; // Events for filtering.
 
@@ -2962,6 +3015,53 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
         }
         var filterFSM = new FilterFSM(this.eRecordPt); 
+
+        // Object for detecting distance traveled when recording. 
+        function DistanceAlerter() {
+            // Sets the distance interval for generating an alert.
+            // Arg:
+            //  mDistanceIntervalArg: number. distance interval in meters.
+            //  0 indicates no alert is generated.
+            this.setDistanceInterval = function(mDistanceIntervalArg) {
+                mDistanceInterval = mDistanceIntervalArg;
+            };
+            
+            // Resets the distance traveled..
+            this.resetDistance = function() {
+                mDistance = 0; 
+                mIntervalLimit = mDistanceInterval;
+            };
+            
+            // Update after appending a RecordPt for  distance alert.
+            // Generates a distance alert when distance travel exceeds the distance interval.
+            // Arg:
+            //  recordPt: RecordPt obj. Last record pt appended to path.
+            // Event: 
+            //  that.onDistanceAlert(stats). 
+            this.update = function (recordPt) { 
+                if (mDistanceInterval > 0.0001) {
+                    mDistance += recordPt.d();
+                    if (mDistance > mIntervalLimit) {
+                        // May be time to generate an alert.
+                        // Filter the path to be sure.
+                        that.filter(); 
+                        var stats = that.getStats(); 
+                        mDistance = stats.dTotal;
+                        if (mDistance > mIntervalLimit) {
+                            mIntervalLimit += mDistanceInterval;
+                            that.onDistanceAlert(stats);
+                        }
+                    }
+                }
+            };
+
+            // Interval distance in meters for generating an alert for distance traveled.
+            // 0 indicates no alert is generated.
+            var mDistanceInterval = 0; 
+            var mDistance = 0; // Total distance traveled in meters.
+            var mIntervalLimit = 0; // Ending point generating an alert based on total distance traveled.
+        }
+        var distanceAlerter = new DistanceAlerter(); 
 
         var vLimit = 100 * 1000 / (60 * 60);  // Limit for velocity of pt to be valid. // x km/hour to m/sec.
         var bFilterEnabled = false;   // Filter is enabled. this.filter() can run.      

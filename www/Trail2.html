@@ -185,6 +185,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
             <div id='holderPhoneBeepCount' class='settingItem'>
             </div>
+            <div id='holderRecordDistanceAlert' class='settingItem'>
+                <label id='labelRecordDistanceAlert'>Record Dist Alert (miles)</label>
+                <input id='numberRecordDistanceAlert' type='number' step='.5' min='0.0' max='100.0 value='0.5' tabindex='-1'/>
+            </div>
             <div id='holderPebbleAlert' class='settingItem'>
             </div>
             <div id='holderPebbleVibeCount' class='settingItem'>
@@ -195,7 +199,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </div>
             <div id='holderBodyMass' class='settingItem'>
                 <label id='labelBodyMass'>Body Weight (lbs)</label>
-                <input id='numberBodyMass' type='number' step='5' min='100' max='250' value='150'>
+                <input id='numberBodyMass' tabindex='-1' type='number' step='5' min='100' max='250' value='150'/> 
             </div>
             <div id='holderCCE'>  
               <div id='divCCEContent'> 
@@ -457,9 +461,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <a href="#helpAllowGeoTracking">Menu > Settings > Allow Geo Tracking</a>,
             Track is not shown.<br/>
             Note: Track On will run down your battery more quickly.</li>
-            <li>Ph Alert Off | On<br/>
-            Switches between Ph Alert On or Off.
-            A phone alert is given if you are off the trail.</li>
+            <li>Alert Off | On<br/>
+            Switches between Alert On or Off.
+            A phone alert is given if you are off the trail,
+            or if recording, each time  you have traveled the alert distance interval.</li>
         </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
         You select a trail you have saved when you are viewing the Online Map. 
@@ -621,20 +626,25 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             or 1.35mi for miles.
             <li>Allow Phone Alert Yes | No<br/>
             Determines if alerts (beeps) from you phone are given.<br/> 
-            Ph Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.<br/>
+            Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.<br/>
             Note: The operating system may stop issuing alerts that are continuously occurring.</li>
             <li>Phone Alert Initially On Yes | No<br/> 
-            Yes to start with Ph Alert On when app loads.</li>
+            Yes to start with Alert On when app loads.</li>
             <li>Phone Vibration in Secs<br>
             Number of seconds phone vibrates for an alert. Set to 0 for no vibration.</li>
             <li>Phone Beep Count<br/>
             Number of beeps to give for an alert. Set to 0 for no beepings.</li>
+            <li>Record Distance Alert<br/>
+            Distance interval for which a phone alert (beep) is given periodically when recording.
+            The phone alert occurs each time you have traveled the interval distance.
+            Alert on the <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> must be On for the alert to occur.<br/>
+            A value of 0 indicates Record Distance Alert is off (not used). 
             <li class="noIosHelp">Pebble Watch Yes | No<br/>
             Yes to show messages on a Pebble Watch that is connected to the phone.</li>
             <li class="noIosHelp">Pebble Vibration Count<br/>
             Number of vibrations given on Pebble Watch for message indicating
             off trail. Count of 0 disables vibrations.<br/>
-            Note that Ph Alert Off does not inhibit vibrations for being off-trail.</li>
+            Note that Alert Off does not inhibit vibrations for being off-trail.</li>
             <li>Prev Geo Loc Thres<br/>
             Number of meters of current geolocation with respect to previous location 
             for change in location to be considered valid. (This prevents small variations in the geolocation of
