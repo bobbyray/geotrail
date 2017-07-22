@@ -218,6 +218,23 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         }
     };
 
+    // Animates current path by showing an icon traveling along the path.
+    this.AnimatePath = function() { ////20170719 added function
+        if (mapPath) {
+            if (curPathSegs) {
+                var mDistance = curPathSegs.getTotalDistance();
+                var nPoints = curPathSegs.getCount();
+                pathAnimator.setAnimationRate(mDistance, nPoints, 20);  ////20170719 was 10, may var by distance pr number of points.
+            }
+            pathAnimator.start(mapPath);
+        }
+    };
+
+    // Stops and clears trail animation in case it is running.
+    this.ClearPathAnimation = function() { ////20170721 added function.
+        pathAnimator.clear();
+    };
+
     // Creates and returns a PathSegs object.
     this.newPathSegs = function() { 
         var segs = new PathSegs();
@@ -645,6 +662,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEraseSegment(); 
         ClearCompassHeadingArrow();
         pathMarkers.clear();  
+        pathAnimator.clear();  ////20170719 added
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -3222,4 +3240,92 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         popupDiv.appendChild(popupViewBtn);
     }
     var pathMarkers = new PathMarkers();
+
+    // Object for animating a path. ////20170718 added
+    function PathAnimator() {
+        
+        // Start the animation from the beginning of the path. 
+        // Arg:
+        //  pathLayer: L.PolyLine object for the path.
+        this.start = function(pathLayer) {
+            this.stop(); // Ensure stopped and cleared.
+            this.clear(); 
+            // Create the animation marker and start it traveling traveling along the path.
+            marker = L.animatedMarker(pathLayer.getLatLngs(), {
+                        icon: travelIcon,
+                        autoStart: true,
+                        distance: pathDistance, ////20170719 added 
+                        interval: pathInterval, ////20170719 * 1000, ////20170712 
+                        onEnd: function() {
+                            //// $(this._shadow).fadeOut();
+                            //// $(this._icon).fadeOut(3000, function(){
+                            //// map.removeLayer(this);
+                            //// })
+                            ////20170721 Clear();  // Try out
+                            // Use fade out at end of trail to better show end of trail.
+                            $(this._shadow).fadeOut();
+                            $(this._icon).fadeOut(3000, function(){
+                                Clear();;
+                            });
+                            // Clear(); To not use fade out, remove fade code above and just Clear() here.
+                        }
+                    });
+            map.addLayer(marker);
+        };
+
+        // Stop animation that is traveling along the path.
+        this.stop = function() {
+            if (marker) {
+                marker.stop();
+            }
+        };
+
+        // Removes animation icon for traveling along a path from the map.
+        this.clear = function() {
+            Clear();
+        };
+
+        // Distance of path. Defaults to 300 in meters.
+        var pathDistance = 300;  
+
+        // Number of milliseconds to move from one point next along path..
+        var pathInterval = 2000; 
+        // Minimum number of milliseconds for pathInterval.
+        var minPathInterval = 10; 
+
+        // Set rate for icon traveling along the path.
+        // Args:
+        //  mDistance: number. total meters for path.
+        //  nPoints; number of points in the path.
+        //  nSecodns: number. total seconds for icon to travel the path.
+        this.setAnimationRate = function(mDistance, nPoints, nSeconds) {
+            nPoints--;
+            if (nPoints < 1) 
+                nPoints = 1;
+            pathDistance = mDistance;
+            pathInterval = nSeconds / nPoints * 1000;
+            if (pathInterval < minPathInterval)
+                pathInterval = minPathInterval;
+        }
+
+        // icon to show traveling along the path.
+        var travelIcon = L.icon({
+            iconUrl: 'img/marker-bike-green-shadowed.png',
+            iconSize: [25, 39],
+            iconAnchor: [12, 39],
+            shadowUrl: null
+        });    
+        
+        var marker = null; // L.animatedMarker object to show on map.
+
+        // Clear animator icon from map.
+        function Clear() {
+            if (marker) {
+                marker.stop();  ////20170721
+                map.removeLayer(marker);
+                marker = null;
+            }
+        }
+    }
+    var pathAnimator = new PathAnimator();
 }

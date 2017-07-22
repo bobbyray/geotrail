@@ -459,8 +459,12 @@ function wigo_ws_View() {
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
         map.GoOffline(bOffline);  
+
+        // Set default leaflet map click2 handler.
+        // Note: EditFSM sets its own map click2 handler for online_edit and online_define modes.
+        map.onMapClick2 = OnMapClick2; ////20170721 added.
          
-        // Show SignIn control, which may have been hidden by Edit or Define mode.
+        ////20170721ConfusingComment // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
@@ -682,6 +686,10 @@ function wigo_ws_View() {
     this.ShowPathInfo = function (bShow, path) {
         ShowPathInfoDiv(bShow);
         map.DrawPath(path);
+        if (nMode === this.eMode.online_view) { ////20170721 added if cond.
+            // Animate the path by showing an icon traveling from start to end of the path. ////20170717 added.
+            map.AnimatePath(); ////20170719 added
+        };
     };
 
     // Caches current map view.
@@ -5603,6 +5611,8 @@ function wigo_ws_View() {
 
     // ** Private members for Open Source map
     var map = new wigo_ws_GeoPathMap(false); // false => do not show map ctrls (zoom, map-type).
+    // Event handler for click on leaflet map when debugging using click point as Lat/Lng
+    // for a geo location update.
     map.onMapClick = function (llAt) {
         // Show map click as a geo location point only for Edit or Offline mode. Also,
         // Showing a map click is only for debug and is ignored by wigo_ws_GeoPathMap
@@ -5620,6 +5630,17 @@ function wigo_ws_View() {
             }
         }
     };
+
+    // Event handler for a click on the leaflet map.
+    // Note: EditFSM object has its own OnMapClick2 event handler.
+    function OnMapClick2(llAt) { ////20170721 added function
+        if (nMode === that.eMode.online_view || 
+            nMode === that.eMode.offline) {
+                // Clear trail animation in case it is running.
+                map.ClearPathAnimation();
+        }
+    }
+    map.onMapClick2 = OnMapClick2; ////20170721 added.
 
     // Show a path on the map due to selection from a path marker.
     // Signature of handler:
