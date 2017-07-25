@@ -219,19 +219,19 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     };
 
     // Animates current path by showing an icon traveling along the path.
-    this.AnimatePath = function() { ////20170719 added function
+    this.AnimatePath = function() { 
         if (mapPath) {
             if (curPathSegs) {
                 var mDistance = curPathSegs.getTotalDistance();
                 var nPoints = curPathSegs.getCount();
-                pathAnimator.setAnimationRate(mDistance, nPoints, 20);  ////20170719 was 10, may var by distance pr number of points.
+                pathAnimator.setAnimationRate(mDistance, nPoints, 20); 
             }
             pathAnimator.start(mapPath);
         }
     };
 
     // Stops and clears trail animation in case it is running.
-    this.ClearPathAnimation = function() { ////20170721 added function.
+    this.ClearPathAnimation = function() { 
         pathAnimator.clear();
     };
 
@@ -662,7 +662,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         ClearEraseSegment(); 
         ClearCompassHeadingArrow();
         pathMarkers.clear();  
-        pathAnimator.clear();  ////20170719 added
+        pathAnimator.clear(); 
     }
 
     // Returns true if a path has been defined (drawn) for the map.
@@ -2832,22 +2832,20 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         // Animates current path by showing an icon traveling along the path.
-        this.animatePath = function() { ////20170719 added function
-            //// $$$$ write and fix
+        this.animatePath = function() { 
             if (mapRecordPath) {
                 if (pathCoords.length > 1) {
-                    var mDistance = distanceAlerter.curDistance(); //// Was800; ////$$$$ must fix curPathSegs.getTotalDistance();
+                    var mDistance = distanceAlerter.curDistance(); 
                     var nPoints = pathCoords.length;
                     var seconds = mDistance < 2000 ? 10 : 20;
-                    animator.setAnimationRate(mDistance, nPoints, seconds);  ////20170719 was 10, may var by distance pr number of points.
+                    animator.setAnimationRate(mDistance, nPoints, seconds);  
                 }
                 animator.start(mapRecordPath);
             }
         };
 
         // Stops and clears trail animation in case it is running.
-        this.clearPathAnimation = function() { ////20170721 added function.
-            //// $$$$ check this
+        this.clearPathAnimation = function() { 
             animator.clear();
         };
 
@@ -3115,7 +3113,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var kgMass = 77.0; // Body mass in kilograms.
         var calsBurnedEfficency = 0.10; // Efficiency of converted burned calories to kinetic calories rquired to move kgMass.
     
-        var animator = new PathAnimator(); ////20170724 Added  needs to be different than pathAnimator in parent MapView2.
+        var animator = new PathAnimator(); 
     }
 
     // Object for collection of PathMarkerEl objects.
@@ -3271,7 +3269,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
     var pathMarkers = new PathMarkers();
 
-    // Object for animating a path. ////20170718 added
+    // Object for animating a path. 
     function PathAnimator() {
         
         // Start the animation from the beginning of the path. 
@@ -3284,14 +3282,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             marker = L.animatedMarker(pathLayer.getLatLngs(), {
                         icon: travelIcon,
                         autoStart: true,
-                        distance: pathDistance, ////20170719 added 
-                        interval: pathInterval, ////20170719 * 1000, ////20170712 
+                        distance: pathDistance, 
+                        interval: pathInterval, 
                         onEnd: function() {
-                            //// $(this._shadow).fadeOut();
-                            //// $(this._icon).fadeOut(3000, function(){
-                            //// map.removeLayer(this);
-                            //// })
-                            ////20170721 Clear();  // Try out
                             // Use fade out at end of trail to better show end of trail.
                             $(this._shadow).fadeOut();
                             $(this._icon).fadeOut(3000, function(){
@@ -3351,7 +3344,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Clear animator icon from map.
         function Clear() {
             if (marker) {
-                marker.stop();  ////20170721
+                marker.stop();  
                 map.removeLayer(marker);
                 marker = null;
             }

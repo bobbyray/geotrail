@@ -279,7 +279,7 @@ function Wigo_Ws_CordovaControls() {
         //  bSelected: boolean, optional. If given, sets the value div to indicate
         //             the item is selected. Only one item can be selected.
         //             For multiple selects, the last one is effective.
-        this.insertItemAtIx = function(ixAt, sDataValue, sText, bSelected) { ////20170722 added function.
+        this.insertItemAtIx = function(ixAt, sDataValue, sText, bSelected) { 
             if (ixAt < 0)
                 ixAt = 0;
             if (ixAt < list.children.length) {
@@ -308,7 +308,7 @@ function Wigo_Ws_CordovaControls() {
         // If droplist item to remove is not found, does nothing.
         // Arg:
         //  sDataValue: string for data-value attribute of droplist element to remove.
-        this.removeItem = function(sDataValue) { ////201707724 added function.
+        this.removeItem = function(sDataValue) { 
             var el = FindListEl(sDataValue);
             if (el) {
                 list.removeChild(el);

@@ -462,9 +462,8 @@ function wigo_ws_View() {
 
         // Set default leaflet map click2 handler.
         // Note: EditFSM sets its own map click2 handler for online_edit and online_define modes.
-        map.onMapClick2 = OnMapClick2; ////20170721 added.
+        map.onMapClick2 = OnMapClick2; 
          
-        ////20170721ConfusingComment // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
@@ -610,8 +609,6 @@ function wigo_ws_View() {
             });
         }
 
-        ////20170723 selectGeoTrail.empty();
-        ////20170723 selectGeoTrail.appendItem("-1", "Select a Geo Trail", true); // true => show header as value.
         // Append first time, which is Select a Geo Trail.
         selectGeoTrail.appendFirstItem();  // data-value is -1.
 
@@ -690,9 +687,9 @@ function wigo_ws_View() {
         map.DrawPath(path);
         // #### If do not want trail animation to start automatically, remove the folowwing (map.AnimatedPath()).
         /* Do not start trail automation automatically. Start trail animation from Trails droplist.
-        if (nMode === this.eMode.online_view) { ////20170721 added if cond and body.
-            // Animate the path by showing an icon traveling from start to end of the path. ////20170717 added.
-            map.AnimatePath(); ////20170719 added
+        if (nMode === this.eMode.online_view) { 
+            // Animate the path by showing an icon traveling from start to end of the path.
+            map.AnimatePath(); 
         };
         */
     };
@@ -2430,7 +2427,7 @@ function wigo_ws_View() {
             filter: 12,     
             unfilter: 13,
             save_locally: 14, // save trail offline. 
-            animate_trail: 15, ////20170724 added
+            animate_trail: 15, 
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2710,8 +2707,7 @@ function wigo_ws_View() {
                 var bSavePathValid = uploader.isSavePathValid(); 
                 if (bSavePathValid) {
                     recordCtrl.appendItem("save_trail", "Save Trail");
-                    ////20170724 append animate trail
-                    recordCtrl.appendItem("animate_trail", "Animate Trail"); ////2017070724 added
+                    recordCtrl.appendItem("animate_trail", "Animate Trail"); 
                 }
                 // Decided not use append_trail. Instead use Edit mode to insert another trail.
                 // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
@@ -2781,8 +2777,7 @@ function wigo_ws_View() {
                     //         curState = stateStopped; 
                     //     }
                     //     break;
-                    case that.event.animate_trail: ////20170724 added case 
-                        //// $$$$ write
+                    case that.event.animate_trail: 
                         map.recordPath.animatePath();
                         // Stay in same state, which is already prepared.
                         break;
@@ -5650,7 +5645,7 @@ function wigo_ws_View() {
 
     // Event handler for a click on the leaflet map.
     // Note: EditFSM object has its own OnMapClick2 event handler.
-    function OnMapClick2(llAt) { ////20170721 added function
+    function OnMapClick2(llAt) { 
         if (nMode === that.eMode.online_view || 
             nMode === that.eMode.offline) {
                 // Clear trail animation in case it is running.
@@ -5658,7 +5653,7 @@ function wigo_ws_View() {
                 map.recordPath.clearPathAnimation(); 
         }
     }
-    map.onMapClick2 = OnMapClick2; ////20170721 added.
+    map.onMapClick2 = OnMapClick2; 
 
     // Show a path on the map due to selection from a path marker.
     // Signature of handler:
@@ -5954,14 +5949,14 @@ function wigo_ws_View() {
     selectGeoTrail.getSelectPathsDataIxNum = function() {
         return -1;
     };
-    // Currently selected GeoTrail data-value. ////20170722 added 
+    // Currently selected GeoTrail data-value. 
     // Note:
     //  -1 is for droplist item Select a Geo Trail.
     //  -2 is for droplist item Animate Current Trail.
     //  -3 indicates no item currently selected item, initial state.
     //  >= 0 indicates data-value for currently selected trail.
     //   
-    selectGeoTrail.curSelectedDataValue = -3;  ////20170724 added
+    selectGeoTrail.curSelectedDataValue = -3;  
     // Clears 
     selectGeoTrail.clearSelectedDataValue = function() {
         selectGeoTrail.curSelectedDataValue = -3;
@@ -5975,7 +5970,7 @@ function wigo_ws_View() {
     // Insert item to Animate Current Trail at index position 1 in the selectGeoTrail droplist.
     selectGeoTrail.insertAnimatePathItem = function() {
         var sDataIx = selectGeoTrail.getAnimatePathDataIxNum().toFixed(0);
-        selectGeoTrail.insertItemAtIx(1, sDataIx, "Animate Current Trail");  ////20170722 added
+        selectGeoTrail.insertItemAtIx(1, sDataIx, "Animate Current Trail");  
     };
     // selectGeoTrail event handler for a droplist element clicked.
     // Arg:
@@ -5994,30 +5989,26 @@ function wigo_ws_View() {
         mapTrackingCtrl.setState(0);
         trackTimer.ClearTimer();
         that.ShowStatus("Geo tracking off.", false); // false => not an error.
-        if (listIx === selectGeoTrail.getSelectPathsDataIxNum()) {  // -1 ////20170722 was < 0   ////20170723 was -1, save value.
+        if (listIx === selectGeoTrail.getSelectPathsDataIxNum()) {  // -1 
             // No path selected.
             map.ClearPath();
             // Set current selected data-value to indicate no path is selected (set to -1);
             selectGeoTrail.curSelectedDataValue = dataValue;  
             // Remove the Animate Current Trail item from the droplist because there is no currently selected path.
-            selectGeoTrail.removeItem(selectGeoTrail.getAnimatePathDataIxNum().toFixed(0)); ////20170724 added
+            selectGeoTrail.removeItem(selectGeoTrail.getAnimatePathDataIxNum().toFixed(0)); 
             map.ShowPathMarkers(); 
-        } else if (listIx === selectGeoTrail.getAnimatePathDataIxNum()) { // -2 ////20170722 added case. ////20170723 wase -2., same value.
+        } else if (listIx === selectGeoTrail.getAnimatePathDataIxNum()) { // -2 
             map.AnimatePath();
             // Restore currently selected path that than Animate Current Path Item.
-            ////20170724 selectGeoTrail.setSelected(curSelectedGeoTrailDataValue);
-            selectGeoTrail.setSelected(selectGeoTrail.curSelectedDataValue);  ////20170724 change, but same.
+            selectGeoTrail.setSelected(selectGeoTrail.curSelectedDataValue);  
         } else {
             // Path is selected. 
-            ////20170724 curSelectedGeoTrailDataValue = selectGeoTrail.getSelectedValue(); // Save data-value for selected item.  ////20170722 added
-            selectGeoTrail.curSelectedDataValue = selectGeoTrail.getSelectedValue();  // Save data-value for selected item. ////20170724 change, but same
+            selectGeoTrail.curSelectedDataValue = selectGeoTrail.getSelectedValue();  // Save data-value for selected item.
             that.onPathSelected(that.curMode(), listIx);
-            ////20170723 selectGeoTrail.insertItemAtIx(1, "-2", "Animate Current Trail");  ////20170722 added
             selectGeoTrail.insertAnimatePathItem(); 
         }
         titleBar.scrollIntoView();
     };
-    ////20170724 var curSelectedGeoTrailDataValue = -3; // Currently selected GeoTrail data value. ////20170722 added 
 
     // Determine and return height available for selectGeoTrail droolist.
     // Returns: number. number of pixels available. <= 0 means do not change height.
