@@ -269,6 +269,52 @@ function Wigo_Ws_CordovaControls() {
             }
         };
 
+
+        // Inserts at integer index in the droplist if item is anot already present.
+        // Args:
+        //  ixAt: nunber. integer in droplist of items at which to insert the item.
+        //        if ixAt < 0, inserts at index 0. If ixAt >= length of droplist, appends item.
+        //  sDataValue: string for data-value attribute.
+        //  sText: string for text shown for item in the droplist.
+        //  bSelected: boolean, optional. If given, sets the value div to indicate
+        //             the item is selected. Only one item can be selected.
+        //             For multiple selects, the last one is effective.
+        this.insertItemAtIx = function(ixAt, sDataValue, sText, bSelected) { ////20170722 added function.
+            if (ixAt < 0)
+                ixAt = 0;
+            if (ixAt < list.children.length) {
+                var beforeListEl = list.children[ixAt];
+                var sCurDataValue = beforeListEl.getAttribute('data-value');
+                if (sCurDataValue !== sDataValue) {
+                    // Insert new item before list element.
+                    var child = this.create('div', null, 'wigo_ws_DropDownItem');
+                    child.className = 'wigo_ws_DropDownListItem';
+                    SetValueAndText(child, sDataValue, sText);
+                    child.addEventListener('click', DropDownListElClicked, false);
+                    list.insertBefore(child, beforeListEl);
+                }
+                // Set value div to the item if item is seleeted.
+                if (typeof bSelected === 'boolean') {
+                    if (bSelected) {
+                        SetValueAndText(value, sDataValue, sText)
+                    }
+                }
+            } else {
+                this.appendItem(sDataValue, sText, bSelected)
+            }
+        };
+
+        // Removes droplist item given its data-value attribute.
+        // If droplist item to remove is not found, does nothing.
+        // Arg:
+        //  sDataValue: string for data-value attribute of droplist element to remove.
+        this.removeItem = function(sDataValue) { ////201707724 added function.
+            var el = FindListEl(sDataValue);
+            if (el) {
+                list.removeChild(el);
+            }
+        };
+
         // Returns integer index in droplist for the selected value.
         // If value div does not exist, returns -1.
         // Remarks: 

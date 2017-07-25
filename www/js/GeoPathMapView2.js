@@ -829,12 +829,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.bIgnoreMapClick = true;
 
     // ** Events fired by map for container (view) to handle.
-    // Click current on the map.
+    // Click on the leaflet map.
+    // Only called if this.bIgnoreMapClick is false.
     // Signature of handler:
     //  llAt: Google LatLng object for the click.
     this.onMapClick = function (llAt) { };
 
-    // Second version of map click handler.
+    // Second version of leaflet map click handler.
+    // This is called for every map click regardless of this.bIgnoreMapClick.
     // Signature of handler:
     //  e: event data for Leaflet onMapClick.
     //      e.latlng: Leaflet LatLng object.
@@ -865,7 +867,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             that.onMapClick(e.latlng);
 
         // Always do callback for enhance map click. (Callback defaults to a no op.)
-        that.onMapClick2(e);
+        that.onMapClick2(e);  
     }
 
     // Event handler for zoomend event on map.
@@ -2829,6 +2831,27 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             calsBurnedEfficency = efficiency;
         };
 
+        // Animates current path by showing an icon traveling along the path.
+        this.animatePath = function() { ////20170719 added function
+            //// $$$$ write and fix
+            if (mapRecordPath) {
+                if (pathCoords.length > 1) {
+                    var mDistance = distanceAlerter.curDistance(); //// Was800; ////$$$$ must fix curPathSegs.getTotalDistance();
+                    var nPoints = pathCoords.length;
+                    var seconds = mDistance < 2000 ? 10 : 20;
+                    animator.setAnimationRate(mDistance, nPoints, seconds);  ////20170719 was 10, may var by distance pr number of points.
+                }
+                animator.start(mapRecordPath);
+            }
+        };
+
+        // Stops and clears trail animation in case it is running.
+        this.clearPathAnimation = function() { ////20170721 added function.
+            //// $$$$ check this
+            animator.clear();
+        };
+
+
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
         function SetPathCoords() {
             // Set pathCoords to match RECORD points that are not deleted.
@@ -3073,6 +3096,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 }
             };
 
+            // Recturns current distance traveled.
+            this.curDistance = function() {
+                return mDistance;
+            };
+
             // Interval distance in meters for generating an alert for distance traveled.
             // 0 indicates no alert is generated.
             var mDistanceInterval = 0; 
@@ -3086,6 +3114,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         var bUnfilterEnabled = false; // Unfilter is enabled. this.unfilter() can run.  
         var kgMass = 77.0; // Body mass in kilograms.
         var calsBurnedEfficency = 0.10; // Efficiency of converted burned calories to kinetic calories rquired to move kgMass.
+    
+        var animator = new PathAnimator(); ////20170724 Added  needs to be different than pathAnimator in parent MapView2.
     }
 
     // Object for collection of PathMarkerEl objects.
