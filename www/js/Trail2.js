@@ -582,7 +582,6 @@ function wigo_ws_View() {
             if (nMode === this.eMode.online_view) {
                 map.ShowPathMarkers();  
             }
-
         }
     };
 
@@ -686,12 +685,11 @@ function wigo_ws_View() {
         ShowPathInfoDiv(bShow);
         map.DrawPath(path);
         // #### If do not want trail animation to start automatically, remove the folowwing (map.AnimatedPath()).
-        /* Do not start trail automation automatically. Start trail animation from Trails droplist.
+        // Automatically start path animation if auto animation is needed.
         if (nMode === this.eMode.online_view) { 
             // Animate the path by showing an icon traveling from start to end of the path.
-            map.AnimatePath(); 
+            map.AutoAnimatePath(); /// true => auto start if auto start is enabled.  ////20170726 remove true.
         };
-        */
     };
 
     // Caches current map view.
@@ -715,6 +713,7 @@ function wigo_ws_View() {
             map.DrawPath(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
             // Fill offlineLocalData drop list for actions to take on selected path.
             offlineLocalData.setPathParams(offlineParams); 
+            map.AutoAnimatePath();  ////20170726 added
         }
     };
 
@@ -4036,6 +4035,9 @@ function wigo_ws_View() {
         var nDataDecimalPlaces = 4; 
     }
 
+    // setting UI for Auto Trail Animation. ////20170725 added
+    var holderAutoPathAnimation = document.getElementById('holderAutoPathAnimation');
+    var selectAutoPathAnimation = ctrls.NewYesNoControl(holderAutoPathAnimation, null, "Auto Trail Animation", -1);
 
     var holderPebbleAlert = document.getElementById('holderPebbleAlert');
     var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch', -1);
@@ -4367,6 +4369,7 @@ function wigo_ws_View() {
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
         settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
+        settings.bAutoPathAnimation = selectAutoPathAnimation.getState() === 1; ////20170725 added
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
@@ -4411,7 +4414,7 @@ function wigo_ws_View() {
         recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
         recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
         recordDistanceAlert.show();                                          
-        
+        selectAutoPathAnimation.setState(settings.bAutoPathAnimation ? 1 : 0); ////20170725 added
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
@@ -4494,6 +4497,8 @@ function wigo_ws_View() {
         map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
+        // Set auto animation for loading a path. ////20170725 added
+        map.EnableAutoPathAnimation(settings.bAutoPathAnimation);  ////20170725 added
         // Enable phone alerts.
         alerter.bAlertsAllowed = settings.bPhoneAlert;
         alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;

@@ -219,20 +219,46 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     };
 
     // Animates current path by showing an icon traveling along the path.
-    this.AnimatePath = function() { 
+    ////20170725 // Arg:
+    ////20170725 //  bCheckAuto: boolean, ooptional. true to start animation only if animator has auto animation enbabled.
+    ////20170725 //              Defaults to false.
+    this.AnimatePath = function() {  ////20170725 removed bCheckAuto
         if (mapPath) {
             if (curPathSegs) {
                 var mDistance = curPathSegs.getTotalDistance();
                 var nPoints = curPathSegs.getCount();
-                pathAnimator.setAnimationRate(mDistance, nPoints, 20); 
+                var seconds = mDistance < 2000 ? 10 : 20;  ////20170726 added
+                pathAnimator.setAnimationRate(mDistance, nPoints, seconds); ////20170726 seconds was 20 
             }
             pathAnimator.start(mapPath);
+            ////20170726 if (typeof bCheckAuto !== 'boolean')
+            ////20170726     bCheckAuto = false;
+            ////20170726 if (bCheckAuto)
+            ////20170726     pathAnimator.autoStart(mapPath);
+            ////20170726 else
+            ////20170726     pathAnimator.start(mapPath);
+        }
+    };
+
+    // Animates current path but only if animator has auto start for animation enabled.
+    // Note: call this.AnimatePath() instead to always show the animation.
+    this.AutoAnimatePath = function(){
+        ////20170726 pathAnimator.autoStart(mapPath); ////20170726 was this.AnimatePath(true);
+        if (pathAnimator.bAutoStart) {
+            this.AnimatePath();
         }
     };
 
     // Stops and clears trail animation in case it is running.
     this.ClearPathAnimation = function() { 
         pathAnimator.clear();
+    };
+
+    // Enable/disable automatic path animation when path is loaded.
+    // Arg:
+    //  bAuto: boolean. true to enable automatic path animation.
+    this.EnableAutoPathAnimation = function(bAuto) {  ////20170726 added function.
+        pathAnimator.bAutoStart = bAuto;
     };
 
     // Creates and returns a PathSegs object.
@@ -2849,7 +2875,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             animator.clear();
         };
 
-
         // Set pathCoords to match RECORD points that are not deleted in arRecordPt.
         function SetPathCoords() {
             // Set pathCoords to match RECORD points that are not deleted.
@@ -3307,6 +3332,22 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         this.clear = function() {
             Clear();
         };
+
+        // Boolean. flag that indicates if automation of path should start automatically
+        // when a path is loaded (displayed). 
+        // Note: Check this flag and call this.start(pathLayer) if flag is true.
+        //       Instead you may definitely want to animate path, in wich case call this.start(pathLayer) regardless.
+        this.bAutoStart = false;
+    
+        ////20170726 // Starts the animation if this.bAutoStart is true, otherwise
+        ////20170726 // does nothing.
+        ////20170726 // Arg:
+        ////20170726 //  pathLayer: L.PolyLine object for the path.
+        ////20170726 this.autoStart = function(pathLayer) {
+        ////20170726     if (this.bAutoStart) {
+        ////20170726         this.start(pathLayer)
+        ////20170726     }
+        ////20170726 };
 
         // Distance of path. Defaults to 300 in meters.
         var pathDistance = 300;  
