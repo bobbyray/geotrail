@@ -5668,7 +5668,7 @@ function wigo_ws_View() {
         that.onPathSelected(that.curMode(), nDataIx);
         selectGeoTrail.setSelected(sDataIx); 
         // Insert Animate Trail Item in selectGeoTrail droplist if needed.
-        selectGeoTrail.insertAnimatePathItem();  ////21070726 added.
+        selectGeoTrail.insertAnimatePathItem(); 
     };
 
     // Gets distance for a path.
