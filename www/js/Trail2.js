@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.028_20170720"; // Constant string for App version. 
+    var sVersion = "1.1.028_20170726-1628"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -688,7 +688,7 @@ function wigo_ws_View() {
         // Automatically start path animation if auto animation is needed.
         if (nMode === this.eMode.online_view) { 
             // Animate the path by showing an icon traveling from start to end of the path.
-            map.AutoAnimatePath(); /// true => auto start if auto start is enabled.  ////20170726 remove true.
+            map.AutoAnimatePath(); /// true => auto start if auto start is enabled.  
         };
     };
 
@@ -713,7 +713,7 @@ function wigo_ws_View() {
             map.DrawPath(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
             // Fill offlineLocalData drop list for actions to take on selected path.
             offlineLocalData.setPathParams(offlineParams); 
-            map.AutoAnimatePath();  ////20170726 added
+            map.AutoAnimatePath();  
         }
     };
 
@@ -4035,7 +4035,7 @@ function wigo_ws_View() {
         var nDataDecimalPlaces = 4; 
     }
 
-    // setting UI for Auto Trail Animation. ////20170725 added
+    // setting UI for Auto Trail Animation. 
     var holderAutoPathAnimation = document.getElementById('holderAutoPathAnimation');
     var selectAutoPathAnimation = ctrls.NewYesNoControl(holderAutoPathAnimation, null, "Auto Trail Animation", -1);
 
@@ -4369,7 +4369,7 @@ function wigo_ws_View() {
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
         settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
-        settings.bAutoPathAnimation = selectAutoPathAnimation.getState() === 1; ////20170725 added
+        settings.bAutoPathAnimation = selectAutoPathAnimation.getState() === 1; 
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
@@ -4414,7 +4414,7 @@ function wigo_ws_View() {
         recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
         recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
         recordDistanceAlert.show();                                          
-        selectAutoPathAnimation.setState(settings.bAutoPathAnimation ? 1 : 0); ////20170725 added
+        selectAutoPathAnimation.setState(settings.bAutoPathAnimation ? 1 : 0); 
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
@@ -4497,8 +4497,8 @@ function wigo_ws_View() {
         map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
-        // Set auto animation for loading a path. ////20170725 added
-        map.EnableAutoPathAnimation(settings.bAutoPathAnimation);  ////20170725 added
+        // Set auto animation for loading a path. 
+        map.EnableAutoPathAnimation(settings.bAutoPathAnimation);  
         // Enable phone alerts.
         alerter.bAlertsAllowed = settings.bPhoneAlert;
         alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
@@ -5667,6 +5667,8 @@ function wigo_ws_View() {
         var nDataIx = parseInt(sDataIx, 10);
         that.onPathSelected(that.curMode(), nDataIx);
         selectGeoTrail.setSelected(sDataIx); 
+        // Insert Animate Trail Item in selectGeoTrail droplist if needed.
+        selectGeoTrail.insertAnimatePathItem();  ////21070726 added.
     };
 
     // Gets distance for a path.

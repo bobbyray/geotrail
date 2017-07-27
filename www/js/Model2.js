@@ -43,8 +43,8 @@ function wigo_ws_GeoTrailSettings() {
     // Distance in kilometers to issue periodic alert that specified distance interval 
     // has been travel when recording. 
     this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  //0.5  miles convert to meters. 
-    // Boolean to indicate amination of a path is started automatically when a path is loaded. ////20170725 added
-    this.bAutoPathAnimation = false;  ////20170725 added
+    // Boolean to indicate amination of a path is started automatically when a path is loaded. 
+    this.bAutoPathAnimation = false;  
     // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
     this.bPebbleAlert = true;
     // Integer for number of times to vibrate Pebble on a Pebble alert. 0 indicates no vibration.
