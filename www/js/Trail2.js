@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.028_20170720"; // Constant string for App version. 
+    var sVersion = "1.1.028_20170726-1628"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -459,8 +459,11 @@ function wigo_ws_View() {
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
         map.GoOffline(bOffline);  
+
+        // Set default leaflet map click2 handler.
+        // Note: EditFSM sets its own map click2 handler for online_edit and online_define modes.
+        map.onMapClick2 = OnMapClick2; 
          
-        // Show SignIn control, which may have been hidden by Edit or Define mode.
         switch (nMode) {
             case this.eMode.online_view:
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
@@ -579,7 +582,6 @@ function wigo_ws_View() {
             if (nMode === this.eMode.online_view) {
                 map.ShowPathMarkers();  
             }
-
         }
     };
 
@@ -606,8 +608,8 @@ function wigo_ws_View() {
             });
         }
 
-        selectGeoTrail.empty();
-        selectGeoTrail.appendItem("-1", "Select a Geo Trail", true); // true => show header as value.
+        // Append first time, which is Select a Geo Trail.
+        selectGeoTrail.appendFirstItem();  // data-value is -1.
 
         // Add the list of geo paths.
         var name, dataIx;
@@ -682,6 +684,12 @@ function wigo_ws_View() {
     this.ShowPathInfo = function (bShow, path) {
         ShowPathInfoDiv(bShow);
         map.DrawPath(path);
+        // #### If do not want trail animation to start automatically, remove the folowwing (map.AnimatedPath()).
+        // Automatically start path animation if auto animation is needed.
+        if (nMode === this.eMode.online_view) { 
+            // Animate the path by showing an icon traveling from start to end of the path.
+            map.AutoAnimatePath(); /// true => auto start if auto start is enabled.  
+        };
     };
 
     // Caches current map view.
@@ -705,6 +713,7 @@ function wigo_ws_View() {
             map.DrawPath(offlineParams.gpxPath, offlineParams.zoom, offlineParams.center); 
             // Fill offlineLocalData drop list for actions to take on selected path.
             offlineLocalData.setPathParams(offlineParams); 
+            map.AutoAnimatePath();  
         }
     };
 
@@ -2417,6 +2426,7 @@ function wigo_ws_View() {
             filter: 12,     
             unfilter: 13,
             save_locally: 14, // save trail offline. 
+            animate_trail: 15, 
         }; 
 
         // Initialize the RecordFSM (this object).
@@ -2694,8 +2704,10 @@ function wigo_ws_View() {
                 recordCtrl.setLabel("Stopped");
                 recordCtrl.empty();
                 var bSavePathValid = uploader.isSavePathValid(); 
-                if (bSavePathValid)
+                if (bSavePathValid) {
                     recordCtrl.appendItem("save_trail", "Save Trail");
+                    recordCtrl.appendItem("animate_trail", "Animate Trail"); 
+                }
                 // Decided not use append_trail. Instead use Edit mode to insert another trail.
                 // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
                 recordCtrl.appendItem("show_stats", "Show Stats");
@@ -2764,6 +2776,10 @@ function wigo_ws_View() {
                     //         curState = stateStopped; 
                     //     }
                     //     break;
+                    case that.event.animate_trail: 
+                        map.recordPath.animatePath();
+                        // Stay in same state, which is already prepared.
+                        break;
                     case that.event.show_stats:
                         ShowStats();
                         stateStopped.prepare();
@@ -3261,6 +3277,9 @@ function wigo_ws_View() {
             var sMsg = "{0}<br/>{1}".format(s, pathName);
             view.ShowStatus(sMsg, !bOk);
         }
+
+        // Object to animate recording trail. $$$$ write     var pathAnimator = new PathAnimator();
+
     }
 
     // Object for offline local data.
@@ -4016,6 +4035,9 @@ function wigo_ws_View() {
         var nDataDecimalPlaces = 4; 
     }
 
+    // setting UI for Auto Trail Animation. 
+    var holderAutoPathAnimation = document.getElementById('holderAutoPathAnimation');
+    var selectAutoPathAnimation = ctrls.NewYesNoControl(holderAutoPathAnimation, null, "Auto Trail Animation", -1);
 
     var holderPebbleAlert = document.getElementById('holderPebbleAlert');
     var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch', -1);
@@ -4347,6 +4369,7 @@ function wigo_ws_View() {
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
         settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
+        settings.bAutoPathAnimation = selectAutoPathAnimation.getState() === 1; 
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
         settings.dPrevGeoLocThres = parseFloat(numberPrevGeoLocThresMeters.getSelectedValue());
@@ -4391,7 +4414,7 @@ function wigo_ws_View() {
         recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
         recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
         recordDistanceAlert.show();                                          
-        
+        selectAutoPathAnimation.setState(settings.bAutoPathAnimation ? 1 : 0); 
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
         numberPrevGeoLocThresMeters.setSelected(settings.dPrevGeoLocThres.toFixed(0));
@@ -4474,6 +4497,8 @@ function wigo_ws_View() {
         map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
+        // Set auto animation for loading a path. 
+        map.EnableAutoPathAnimation(settings.bAutoPathAnimation);  
         // Enable phone alerts.
         alerter.bAlertsAllowed = settings.bPhoneAlert;
         alerter.bPhoneEnabled = settings.bPhoneAlert && settings.bOffPathAlert;
@@ -5603,6 +5628,8 @@ function wigo_ws_View() {
 
     // ** Private members for Open Source map
     var map = new wigo_ws_GeoPathMap(false); // false => do not show map ctrls (zoom, map-type).
+    // Event handler for click on leaflet map when debugging using click point as Lat/Lng
+    // for a geo location update.
     map.onMapClick = function (llAt) {
         // Show map click as a geo location point only for Edit or Offline mode. Also,
         // Showing a map click is only for debug and is ignored by wigo_ws_GeoPathMap
@@ -5621,6 +5648,18 @@ function wigo_ws_View() {
         }
     };
 
+    // Event handler for a click on the leaflet map.
+    // Note: EditFSM object has its own OnMapClick2 event handler.
+    function OnMapClick2(llAt) { 
+        if (nMode === that.eMode.online_view || 
+            nMode === that.eMode.offline) {
+                // Clear trail animation in case it is running.
+                map.ClearPathAnimation();
+                map.recordPath.clearPathAnimation(); 
+        }
+    }
+    map.onMapClick2 = OnMapClick2; 
+
     // Show a path on the map due to selection from a path marker.
     // Signature of handler:
     //  sDataIx: string. index of data element for the path to shown.
@@ -5628,6 +5667,8 @@ function wigo_ws_View() {
         var nDataIx = parseInt(sDataIx, 10);
         that.onPathSelected(that.curMode(), nDataIx);
         selectGeoTrail.setSelected(sDataIx); 
+        // Insert Animate Trail Item in selectGeoTrail droplist if needed.
+        selectGeoTrail.insertAnimatePathItem(); 
     };
 
     // Gets distance for a path.
@@ -5904,6 +5945,43 @@ function wigo_ws_View() {
     // Select GeoTrail control
     parentEl = document.getElementById('divTrailInfo');
     var selectGeoTrail = new ctrls.DropDownControl(parentEl, "selectGeoTrailDropDown", "Trails", "Select a Geo Trail", "img/ws.wigo.menuicon.png");
+    // Provide additional function properties for selectGeoTrail. 
+    // Returns number for droplist element data-value attribute for Animate Current Path item.
+    selectGeoTrail.getAnimatePathDataIxNum = function()
+    {
+        return -2;
+    };
+    // Returns number for droplist element data-value attribute for Select a Geo Trail, 
+    // which is first item in droplist.
+    selectGeoTrail.getSelectPathsDataIxNum = function() {
+        return -1;
+    };
+    // Currently selected GeoTrail data-value. 
+    // Note:
+    //  -1 is for droplist item Select a Geo Trail.
+    //  -2 is for droplist item Animate Current Trail.
+    //  -3 indicates no item currently selected item, initial state.
+    //  >= 0 indicates data-value for currently selected trail.
+    //   
+    selectGeoTrail.curSelectedDataValue = -3;  
+    // Clears 
+    selectGeoTrail.clearSelectedDataValue = function() {
+        selectGeoTrail.curSelectedDataValue = -3;
+    };
+    // Empty selectGeoTrail droplist and append first item.
+    selectGeoTrail.appendFirstItem = function() {
+        selectGeoTrail.empty();
+        var sDataIx = selectGeoTrail.getSelectPathsDataIxNum();
+        selectGeoTrail.appendItem(sDataIx, "Select a Geo Trail", true); // true => show header as value.
+    };
+    // Insert item to Animate Current Trail at index position 1 in the selectGeoTrail droplist.
+    selectGeoTrail.insertAnimatePathItem = function() {
+        var sDataIx = selectGeoTrail.getAnimatePathDataIxNum().toFixed(0);
+        selectGeoTrail.insertItemAtIx(1, sDataIx, "Animate Current Trail");  
+    };
+    // selectGeoTrail event handler for a droplist element clicked.
+    // Arg:
+    //  dataValue: string. data-value attributed of droplist element clicked.
     selectGeoTrail.onListElClicked = function(dataValue) { 
         var listIx = parseInt(dataValue)
         that.ClearStatus();
@@ -5918,13 +5996,23 @@ function wigo_ws_View() {
         mapTrackingCtrl.setState(0);
         trackTimer.ClearTimer();
         that.ShowStatus("Geo tracking off.", false); // false => not an error.
-        if (listIx < 0) {   
+        if (listIx === selectGeoTrail.getSelectPathsDataIxNum()) {  // -1 
             // No path selected.
             map.ClearPath();
+            // Set current selected data-value to indicate no path is selected (set to -1);
+            selectGeoTrail.curSelectedDataValue = dataValue;  
+            // Remove the Animate Current Trail item from the droplist because there is no currently selected path.
+            selectGeoTrail.removeItem(selectGeoTrail.getAnimatePathDataIxNum().toFixed(0)); 
             map.ShowPathMarkers(); 
+        } else if (listIx === selectGeoTrail.getAnimatePathDataIxNum()) { // -2 
+            map.AnimatePath();
+            // Restore currently selected path that than Animate Current Path Item.
+            selectGeoTrail.setSelected(selectGeoTrail.curSelectedDataValue);  
         } else {
-            // Path is selected
+            // Path is selected. 
+            selectGeoTrail.curSelectedDataValue = selectGeoTrail.getSelectedValue();  // Save data-value for selected item.
             that.onPathSelected(that.curMode(), listIx);
+            selectGeoTrail.insertAnimatePathItem(); 
         }
         titleBar.scrollIntoView();
     };
