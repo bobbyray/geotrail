@@ -500,7 +500,7 @@ function wigo_ws_Model() {
     // Manages an array of wigo_ws_GeoPathMap.OfflineParams objects.
     function OfflineParamsAry() {
         // Searches for element in this array.
-        // Returns wigo_ws_GeoPath.OfflineParams object of the element found, or null for no match.
+        // Returns wigo_ws_GeoPathMap.OfflineParams object of the element found, or null for no match.
         // Arg:
         //  nId: integer for unique record id of Gpx element in this array.
         this.findId = function (nId) {

@@ -443,7 +443,8 @@ function wigo_ws_View() {
     this.setModeUI = function (newMode) {
         // Helper to hide all bars.
         function HideAllBars() {
-                ShowElement(pathDescrBar, false);
+                ////20170802 ShowElement(pathDescrBar, false);
+                ShowPathDescrBar(false); ////20170802 changed from  ShowElement(pathDescrBar, false);
                 ShowElement(editDefineBar2, false);
                 ShowElement(editDefineCursorsBar, false);
                 ShowElement(onlineOfflineEditBar, false);
@@ -900,9 +901,9 @@ function wigo_ws_View() {
             return text.length === 0;
         }
 
-        // Remove any single quote char or double quote char with notifying user.
-        // A single quote or double quote in the path name in an object posted
-        // to a server causes a transfer error. 
+        ////20170801ApiEncodes/DecodesToPassThru // Remove any single quote char or double quote char with notifying user.
+        ////20170801ApiEncodes/DecodesToPassThru // A single quote or double quote in the path name in an object posted
+        ////20170801ApiEncodes/DecodesToPassThru // to a server causes a transfer error. 
 
         var bEnterKey = IsEnterKey(event);
         if (that.curMode() === that.eMode.offline) {
@@ -986,7 +987,7 @@ function wigo_ws_View() {
     var mapGeoLocate = document.getElementById('mapGeoLocate');
     mapGeoLocate.addEventListener('click', function() {
         DoGeoLocation();
-    }, false)
+    }, false);
 
     // Returns ref to div for the map-canvas element.
     // Note: The div element seems to change dynamically. 
@@ -1005,9 +1006,51 @@ function wigo_ws_View() {
 
         var sSelectedDataIx = selectGeoTrail.getSelectedValue();
         var selectedDataIx = parseInt(sSelectedDataIx); 
-        if ( selectedDataIx < 0) {    
-            that.ShowStatus("Select a Geo Trail first before saving.")
-        } else if (nMode === that.eMode.online_view) {
+        ////20170802 if ( selectedDataIx < 0) {    
+        ////20170802     ////20170801that.ShowStatus("Select a Geo Trail first before saving.");
+        ////20170802     ////20170801 added saving screen area offline.
+        ////20170802     // Create a path of only one point, which is at center of screen, and
+        ////20170802     // save the path offline. First prompt user for a path name of cancel.
+        ////20170802 } else 
+        if (nMode === that.eMode.online_view) {
+            if ( selectedDataIx < 0) { ////20170802 add if cond and body
+                // Save current map displayed as path with single point at the center.
+                that.ShowStatus("Enter a name for the map area to save offline.", false);
+                // Show the path description bar for user to enter a name for the area.
+                ShowPathDescrBarForOnlineSaveAreaOffline(true);
+                // Note: Saving the area offline is done after users enters a name.
+            } else { ////20170802 else cond added, but body already existed.
+                var oMap = map.getMap();
+                var params = new wigo_ws_GeoPathMap.OfflineParams();
+                params.nIx = selectedDataIx;
+                var bounds = oMap.getBounds();
+                params.bounds.ne.lat = bounds.getNorthEast().lat;
+                params.bounds.ne.lon = bounds.getNorthEast().lng;
+                params.bounds.sw.lat = bounds.getSouthWest().lat;
+                params.bounds.sw.lon = bounds.getSouthWest().lng;
+                var center = oMap.getCenter();
+                params.center.lat = center.lat;
+                params.center.lon = center.lng;
+                params.zoom = oMap.getZoom();
+                // Save new params object because local params is reused.
+                var oParams = new wigo_ws_GeoPathMap.OfflineParams(); 
+                oParams.assign(params); 
+                that.onSavePathOffline(nMode, oParams);  
+            }
+        } else {
+            that.ShowStatus("Must be in online mode to save for offline.");
+        }
+    }
+
+    // Refactor code from OnlineSaveOfflineClicked(event) handler to share
+    // with event handler for buSaveAreaOffline. 
+    // Returns new wigo_ws_GeoPathMap.OfflineParams object for offline
+    // parameters for the currently displayed map area.
+    // Arg:
+    //  selectedDataIx: number. integer for currently data index
+    //                  Note: the currently selected value in selectGeoTrail droplist
+    //                  has the string for the data idex.
+    function FormOfflinePathParams(selectedDataIx) {  ////20170801 added.
             var oMap = map.getMap();
             var params = new wigo_ws_GeoPathMap.OfflineParams();
             params.nIx = selectedDataIx;
@@ -1020,14 +1063,34 @@ function wigo_ws_View() {
             params.center.lat = center.lat;
             params.center.lon = center.lng;
             params.zoom = oMap.getZoom();
-            // Save new params object because local params is reused.
-            var oParams = new wigo_ws_GeoPathMap.OfflineParams(); 
-            oParams.assign(params); 
-            that.onSavePathOffline(nMode, oParams);  
-        } else {
-            that.ShowStatus("Must be in online mode to save for offline.");
-        }
+            return params; 
     }
+
+    var buSaveAreaOffline = document.getElementById("buSaveAreaOffline"); ////20170801 added
+    buSaveAreaOffline.addEventListener('click', function(evt){
+        //// $$$$ write
+        // Show only happen in online mode, but check to be sure.
+        var nMode = that.curMode();
+        if (nMode === that.eMode.online_view) {
+            var sName = txbxPathName.value.trim(); 
+            var bOk = sName.length > 0;
+            if (bOk) {
+                // Form offline params to save locally for the screan area.
+                // Make a path that is only one geo pt at the center of map screen area.
+                // This path should work like any other real path to be saved offline.
+                ////$$$$ write this.
+                var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+                var selectedDataIx = parseInt(sSelectedDataIx);                
+                var params = FormOfflinePathParams(selectedDataIx);
+                params.name = sName;
+                that.onSavePathOffline(nMode, params);
+            } else {
+                that.ShowStatus("Online View must be active to save the displayed map area offline.");
+            }
+        }
+
+    }, false);   
+
 
     var divHomeArea = document.getElementById('divHomeArea'); 
 
@@ -3512,15 +3575,30 @@ function wigo_ws_View() {
     }
 
     // Shows path description bar, which has textbox for trail name.
-    // Always hides upload, cancel, and delete button.
+    // Always hides upload, cancel, delete buttons.
     // Arg:
-    //  bShow: boolean. true to show path descr bar.
+    //  bShow: boolean. true to show path descr bar and recordShare droplist.
     // Note: Shared by RecordFSM and OfflineLocalData.
     function ShowPathDescrBar(bShow) {   
         ShowElement(pathDescrBar, bShow);
         ShowElement(recordShare, bShow);  
         ShowUploadButton(false);  
         ShowCancelButton(false);  
+        ShowDeleteButton(false);
+        ShowElement(buSaveAreaOffline, false); ////20170802 added.
+    }
+
+    // Shows path description bar, which has textbox for trail name.
+    // Always hides upload, delete, and recordShare buttons.
+    // Arg:
+    //  bShow: boolean. true to show path descr bar, buSaveAreaOffline, and Canccel buttons.
+    // Note: Only expected to be call in Online View to save map area wht not trail selected.
+    function ShowPathDescrBarForOnlineSaveAreaOffline(bShow) { ////20170802 added function.
+        ShowElement(pathDescrBar, bShow);
+        ShowElement(buSaveAreaOffline, bShow); 
+        ShowCancelButton(bShow);  
+        ShowElement(recordShare, false);  
+        ShowUploadButton(false);  
         ShowDeleteButton(false);
     }
 
@@ -5099,12 +5177,12 @@ function wigo_ws_View() {
 
     // Shows or hides divPathDescr, which contains controls for
     // path name, sharing, and server action.
-    function ShowPathDescrCtrls(bShow) {
+    function ShowPathDescrCtrls(bShow) {  ////20170801 I dont this function is used if HidePathDescrCtrls is not used. $$$$ check
         ShowElement(pathDescrBar, bShow);
     }
 
     // Shows or hides textbox for Path Name and its label.
-    function ShowPathNameCtrl(bShow) {
+    function ShowPathNameCtrl(bShow) {        ////20170801 I dont think this functin is used. $$$$ check.
         ShowElement(labelPathName, bShow);
         ShowElement(txbxPathName, bShow);
     }
@@ -5144,7 +5222,7 @@ function wigo_ws_View() {
     }
 
     // Hide controls for editing path.
-    function HidePathEditCtrls() {
+    function HidePathEditCtrls() {   ////20170801 I dont think function is used. $$$$ this.
         ShowPathDescrCtrls(false);
         ShowPathCursors(false);
         ShowPathIxButtons(false);
@@ -6272,6 +6350,19 @@ function wigo_ws_Controller() {
                 params.name = gpx.sName;
                 params.nId = gpx.nId;
                 params.gpxPath = model.ParseGpxXml(gpx.xmlData);
+            } else { ////20170802 added else body
+                ////$$$$ write else body for saving map area instead of a trail.
+                ////     need to create wigo_ws_GeoPath obj to assign to params.gpxPath.
+                ////     params.gpxPath = new wigo_ws_GpxPath(); Fill for path of single geo pt at center of other params.
+                params.gpxPath = new wigo_ws_GpxPath();
+                params.gpxPath.gptSW = params.bounds.sw;
+                params.gpxPath.gptNE = params.bounds.ne;
+                params.gpxPath.gptBegin = params.center;
+                params.gpxPath.gptEnd = params.center;
+                params.gpxPath.arGeoPt  = []; // Array of wigo_ws_GeoPt objs. Single point for center of map on screen.
+                params.gpxPath.arGeoPt.push(params.gpxPath.gptBegin);
+                params.gpxPath.arGeoPt.push(params.gpxPath.gptEnd);
+                params.gpxPath.bOk = true;
             }
 
             // Cache the map tiles.
