@@ -219,7 +219,7 @@ label {
     right: 0px;
 }
 
-#buUpload, #buCancel, #buDelete {  
+#buUpload, #buCancel, #buDelete, #buSaveAreaOffline {  /* ////20170803 added buSaveAreaOffline */  
     clear: none;
     float: left;
     margin-left: 5px;

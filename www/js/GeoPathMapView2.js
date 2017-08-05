@@ -682,8 +682,20 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
 
     // Returns true if a path has been defined (drawn) for the map.
-    this.IsPathDefined = function () {
+    this.IsPathDefined = function () { 
         var bDefined = mapPath !== null;
+        // Also check for a path that has only two pts that are the same.
+        if (bDefined) {  ////20170803 added if and body.
+            var arPt = mapPath.getLatLngs();
+            if (arPt.length === 2 ) {
+                if (arPt[0].lat === arPt[1].lat && arPt[0].lng === arPt[1].lng) {
+                    // Path has exactly two identical points. 
+                    // NOT a path but is instead an area for an offline map which has center at the poitn.
+                    // Note: the path will draw as a single point with same beginning and end.
+                    bDefined = false;
+                }
+            }
+        }
         return bDefined;
     }
 
