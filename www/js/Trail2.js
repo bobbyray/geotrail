@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.028_20170726-1628"; // Constant string for App version. 
+    var sVersion = "1.1.028_20170811-1515"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -704,15 +704,18 @@ function wigo_ws_View() {
         map.CacheMap(onStatusUpdate);
     };
 
+    /* ////20170810 Not Needed 
     // Sets UI after map caching has completed.
     // Hides path descr bar (used to define path name).
     // Shows the online/offline/edit bar (selectTrai droplist and action ctrls)
     this.MapCachingCompleted = function() {  ////20170803 added function
         // Hide path descr bar.
-        ShowPathDescrBarForOnlineSaveAreaOffline(false);  
+        // Show online/offline/edit bar.
+        offlineMapAreaSaver.clearPathNameUI(); ////$$$$ 
         // Show online/offline/edit bar. 
         ShowElement(onlineOfflineEditBar, true);  
     }
+    */
 
     // Shows geo path info for an offline map.
     // Args:
@@ -904,18 +907,21 @@ function wigo_ws_View() {
             // Ensure soft keyboard is removed after the change.
             txbxPathName.blur();
             ////20170805 that.ShowStatus("Select Record > Upload to complete saving.", false);
-            if (recordFSM.isDefiningTrailName()) { ////20170805 added if, body existed.
-                that.ShowStatus("Select Record > Upload to complete saving.", false);
-            }
+            ////20170805 if (recordFSM.isDefiningTrailName()) { ////20170805 added if, body existed.
+            ////20170805     that.ShowStatus("Select Record > Upload to complete saving.", false);
+            ////20170805 }
+            ShowRecordUploadMsgIfNeeded(); ////20170805 share refactored code.
         } else if (that.curMode() === that.eMode.offline) { 
             // Note: This happens because of Record trail.
             // Ensure soft keyboard is removed after the change.
             txbxPathName.blur();
             // Show message for saving a trail locally, or for uploading a saved Record trail.
-            if (recordFSM.isDefiningTrailName()) 
-                that.ShowStatus("Select Record > Save Locally to complete saving.", false);
-            if (offlineLocalData.isDefiningTrailName()) 
-                that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
+            ////20170805 if (recordFSM.isDefiningTrailName()) 
+            ////20170805     that.ShowStatus("Select Record > Save Locally to complete saving.", false);
+            ////20170805 if (offlineLocalData.isDefiningTrailName()) 
+                ////20170805 that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
+            ShowRecordUploadMsgIfNeeded(); ////20170805 share refactored code.
+            ShowLocalDataUploadIfNeeded(); ////20170805 share refactored code.
         }
     }, false); 
 
@@ -931,6 +937,7 @@ function wigo_ws_View() {
 
         var bEnterKey = IsEnterKey(event);
         if (that.curMode() === that.eMode.offline) {
+            /* ////20170805 refactored
             if (bEnterKey && recordFSM.isDefiningTrailName())  {
                 if (!IsTextEmpty()) {
                     // Save recorded trail locally.
@@ -945,12 +952,38 @@ function wigo_ws_View() {
                     event.target.blur(); 
                 }
             } 
+            */ 
+            ////20170805 use refactored code.
+            if (bEnterKey) {
+                if (!IsTextEmpty()) {
+                    ShowRecordUploadMsgIfNeeded(); // Status msg needed in case there is no change to textbox.
+                    ShowLocalDataUploadIfNeeded(); 
+                    event.target.blur();  // ensure soft keyboard is removed.
+                } else { ////20170807 added else body
+                    that.ShowStatus("Trail name cannot be blank.", false);
+                }
+            }
         } else if (that.curMode() === that.eMode.online_view) { 
             var bEnterKey = IsEnterKey(event);
-            if (bEnterKey && recordFSM.isDefiningTrailName())  {
-                // Upload to server.
-                recordFSM.nextState(recordFSM.event.upload);
-                event.target.blur();
+            ////20170805 if (bEnterKey && recordFSM.isDefiningTrailName())  {
+            ////20170805     // Upload to server.
+            ////20170805     recordFSM.nextState(recordFSM.event.upload);
+            ////20170805     event.target.blur();
+            ////20170805 }
+            // Use blur and let txbxPathName change event handler show a message
+            // rather than trying to upload due to Enter key.  
+            if (bEnterKey)  {
+                // Show status to Upload to server.
+                ////2017recordFSM.nextState(recordFSM.event.upload);
+                ////20170807 ShowRecordUploadMsgIfNeeded(); // Status msg needed in case there is no change to textbox.
+                ////20170807 event.target.blur(); // blur() ensures soft keyboard is removed.
+                if (!IsTextEmpty()) {
+                    ShowRecordUploadMsgIfNeeded(); // Status msg needed in case there is no change to textbox.
+                    ////$$$$ fix Need to show msg if needed of saving map area locally.
+                    event.target.blur(); // blur() ensures soft keyboard is removed.
+                } else { ////20170807 added else body
+                    that.ShowStatus("Trail name cannot be blank.", false);
+                }
             }
         }
     }, false); // Try true to use capture instead of bubble. true does not capture.
@@ -973,11 +1006,47 @@ function wigo_ws_View() {
         return bYes;
     }
 
+    function ShowRecordUploadMsgIfNeeded() { ////20170805 refactor
+        if (recordFSM.isDefiningTrailName()) { ////20170805 added if, body existed.
+            ////20170807 that.ShowStatus("Select Record > Upload to complete saving.", false);
+            that.ShowStatus("Touch Upload to complete saving.", false);
+            var nMode = that.curMode();
+            if (nMode === that.eMode.online_view) {
+                that.ShowStatus("Touch Upload to complete saving.", false);
+            } else if (nMode === that.eMode.offline) {
+                that.ShowStatus("Touch Save Offline to complete saving.", false);
+            } 
+        }
+    }
+    
+    function ShowLocalDataUploadIfNeeded() { ////20170805 refactor
+        if (offlineLocalData.isDefiningTrailName()) 
+            ////20170807 that.ShowStatus("Select Local Data > Upload to complete uploading.", false);
+            that.ShowStatus("Touch Upload to complete uploading.", false);
+    }
+
+    function ShowLocalDataSaveOfflineIfNeeded() {  ////20170807 added
+        ////$$$$ write
+        thsi.ShowStatus("Touch Save Offline to complete saving.");
+    }
+
     var labelPathName = document.getElementById('labelPathName');
 
     var buUpload = document.getElementById('buUpload');
     buUpload.addEventListener('click', function(event){
-        fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
+        ////20170806Reo  fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
+        var nMode = that.curMode();
+        if (nMode === that.eMode.online_view) { 
+            if (recordFSM.isDefiningTrailName()) {
+                recordFSM.nextState(recordFSM.event.upload);
+            }
+        } else if (nMode === that.eMode.online_edit || nMode === that.eMode.online_define)  {
+            fsmEdit.DoEditTransition(fsmEdit.eventEdit.Upload);
+        } else if (nMode === that.eMode.offline) {
+             if ( offlineLocalData.isDefiningTrailName()) {
+                offlineLocalData.do(offlineLocalData.event.upload); 
+             }
+        }
     }, false);
     var buDelete = document.getElementById('buDelete');
     buDelete.addEventListener('click', function(event){
@@ -986,18 +1055,26 @@ function wigo_ws_View() {
     var buCancel = document.getElementById('buCancel');
     buCancel.addEventListener('click', function(event){
         ////20170803 fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);
-        ////$$$$ fix for Save area offline
-        var nMode = that.curMode();
-        if (nMode === that.eMode.online_view) { 
-            // Cancel saving map area offline when no path is selected.
-            ShowPathDescrBarForOnlineSaveAreaOffline(false); 
-            ShowElement(onlineOfflineEditBar, true); ////20170803 added
-            that.ClearStatus(); 
-        } else { ////20170803 else cond added, body was only code.
-            fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);
+        // Note: This cancel handler is only for editing or defining a new trail.
+        //       The cancel handlers for record uploadd, local data upload, and
+        //       saving a map area pff;ome without a trail selected are added when defining 
+        //       the trail name and removed as so as defining the trail name ends.
+        //       Only one of these handlers is attached at any time. 
+        if (nMode === that.eMode.online_edit || nMode === that.eMode.online_define) { ////$$$$check  ////20170803 else cond added, body was only code.
+            fsmEdit.DoEditTransition(fsmEdit.eventEdit.Cancel);        
         }
-
     }, false);
+
+
+    // Resturns number: the integer for data index attr of selected item in selectGeoTrail droplist.
+    // Note: return value is NOT index of selected item in droplist, but rather the data-index attrib
+    // of the selected item.
+    function GetSelectedDataIx() {  ////20170806 Added function.
+        var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+        var selectedDataIx = parseInt(sSelectedDataIx); 
+        return selectedDataIx;        
+    }
+
 
     var onlineOfflineEditBar = document.getElementById('onlineOfflineEditBar');
     var onlineAction = document.getElementById('onlineAction');
@@ -1049,14 +1126,22 @@ function wigo_ws_View() {
         ////20170802 } else 
         if (nMode === that.eMode.online_view) {
             if ( selectedDataIx < 0) { ////20170802 add if cond and body
+                /* ////20170809 Use offlineMapAreaSaver object.
                 // Save current map displayed as path with single point at the center.
                 that.ShowStatus("Enter a name for the map area to save offline.", false);
                 // Hide the online/offline/edit bar that has trail name and action ctrls.
-                ShowElement(onlineOfflineEditBar, false); ////20170803
+                ////20170807 ShowElement(onlineOfflineEditBar, false); ////20170803
+                ShowPathAndMapBars(false); ////20170807 changed.                
                 // Show the path description bar for user to enter a name for the area.
                 ShowPathDescrBarForOnlineSaveAreaOffline(true);
                 // Note: Saving the area offline is done after users enters a name.
+                */
+                // No trail is selected. Cache map area displayed offline.
+                // Note: User is prompted for an area name first.
+                offlineMapAreaSaver.setPathNameUI(); 
             } else { ////20170802 else cond added, but body already existed.
+                /* ////20170809 Redo, move to OfflineMapAreaSaver object as this.saveTrail().
+                // Save selected trail and cache map area displayed offline.
                 var oMap = map.getMap();
                 var params = new wigo_ws_GeoPathMap.OfflineParams();
                 params.nIx = selectedDataIx;
@@ -1073,12 +1158,156 @@ function wigo_ws_View() {
                 var oParams = new wigo_ws_GeoPathMap.OfflineParams(); 
                 oParams.assign(params); 
                 that.onSavePathOffline(nMode, oParams);  
+                */
+
+                offlineMapAreaSaver.saveTrail();
             }
         } else {
             that.ShowStatus("Must be in online mode to save for offline.");
         }
     }
 
+    
+    // Object for saving screen map area viewed online for use offline. 
+    // If a trail is currenlty selected it is saved also by the
+    // saveTrail(selectedDataIx) method.
+    function OfflineMapAreaSaver(view) { ////20170807 added object ////$$$$ 
+        ////$$$$ write this.
+        var that = this;
+
+        // Shows UI for defining the name name, which allows canceling.
+        this.setPathNameUI = function() {
+            ////20170810 bSaving = true;
+            AddCancelHandler();
+            // Save current map displayed as path with single point at the center.
+            view.ShowStatus("Enter a name for the map area to save offline.", false);
+            // Hide the online/offline/edit bar that has trail name and action ctrls.
+            ////20170807 ShowElement(onlineOfflineEditBar, false); ////20170803
+            txbxPathName.value = ""; // Clear path name. ////20170810 added
+            ShowPathAndMapBars(false); ////20170807 changed.                
+            // Show the path description bar for user to enter a name for the area.
+            ShowPathDescrBarWithSaveAreaOfflineButton(true);
+            // Note: Saving the area offline is done after users enters a name.
+        };
+
+
+        // Saves the displayed map area without a trail.
+        // If path name is proper, cleard the path name UI.
+        // Note: Saves is trail of only a single point at the center of the area.
+        // Arge: 
+        //  selectedDataIx: integer < 0.  
+        this.saveNoTrail = function(selectedDataIx) {
+            // Only call in online mode, but check to be sure.
+            var nMode = view.curMode();
+            if (nMode === view.eMode.online_view) {
+                var sName = txbxPathName.value.trim(); 
+                var bOk = sName.length > 0;
+                if (bOk) {
+                    // Form offline params to save locally for the screan area.
+                    // Make a path that is only one geo pt at the center of map screen area.
+                    // This path should work like any other real path to be saved offline.
+                    ////$$$$ write this.
+                    ////20170809NowArg var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+                    ////20170809NowArg var selectedDataIx = parseInt(sSelectedDataIx);   
+                    this.clearPathNameUI();              
+                    var params = FormOfflinePathParamsNoTrail(selectedDataIx);
+                    ///20170804 params.nId = -1; // Is 0. // -1 saves as next sequential negative id indicating offline data id.
+                    params.name = sName;
+                    view.onSavePathOffline(nMode, params);
+                } else { // else not expected.
+                    ////20170807 that.ShowStatus("Online View must be active to save the displayed map area offline.");
+                    view.ShowStatus("Trail name cannot be blank.", false); ////20170807 fixed 
+                }
+            }
+        };
+
+        // Saves the display map area and trail.
+        // Arg:
+        //  selectedDataIx: integer >= 0. data index of currently selected trail.
+        this.saveTrail = function(selectedDataIx){
+            ////$$$$ write
+            // Only call in online mode, but check to be sure.
+            var nMode = view.curMode();
+            if (nMode === view.eMode.online_view) {
+                // Save selected trail and cache map area displayed offline.
+                var oMap = map.getMap();
+                var params = new wigo_ws_GeoPathMap.OfflineParams();
+                params.nIx = selectedDataIx;
+                var bounds = oMap.getBounds();
+                params.bounds.ne.lat = bounds.getNorthEast().lat;
+                params.bounds.ne.lon = bounds.getNorthEast().lng;
+                params.bounds.sw.lat = bounds.getSouthWest().lat;
+                params.bounds.sw.lon = bounds.getSouthWest().lng;
+                var center = oMap.getCenter();
+                params.center.lat = center.lat;
+                params.center.lon = center.lng;
+                params.zoom = oMap.getZoom();
+                // Save new params object because local params is reused.
+                var oParams = new wigo_ws_GeoPathMap.OfflineParams(); 
+                oParams.assign(params); 
+                view.onSavePathOffline(nMode, oParams);  
+            }
+        }
+
+        // Hides the UI shown for defining a path name.
+        this.clearPathNameUI = function() {
+            ////20170810 bSaving = false;
+            RemoveCancelHandler(); 
+            ShowPathDescrBarWithSaveAreaOfflineButton(false); // Hide trail name and action ctrls.
+            ShowPathAndMapBars(true); // Show the path selection droplist with actions and map bar.
+            view.ClearStatus();  ////20170810 added
+        };
+        
+        /* ////20170810 not used
+        // Returns boolean: true indicates saving is active.
+        this.isSaving = function() {
+            return bSaving; 
+        };
+        */
+
+        function AddCancelHandler() {
+            RemoveCancelHandler(); // Ensure only add once.
+            buCancel.addEventListener('click', OnCancel, false);
+        }
+
+        function RemoveCancelHandler() {
+            buCancel.removeEventListener('click', OnCancel, false);
+        }
+
+        // Returns new wigo_ws_GeoPathMap.OfflineParams object for offline
+        // parameters for the currently displayed map area when there is no trail.
+        // Arg:
+        //  selectedDataIx: number. integer for currently data index
+        //                  Note: the currently selected value in selectGeoTrail droplist
+        //                  has the string for the data index.
+        function FormOfflinePathParamsNoTrail(selectedDataIx) {  ////20170801 added.
+                var oMap = map.getMap();
+                var params = new wigo_ws_GeoPathMap.OfflineParams();
+                params.nId = 0; // 0 indicates a new data object to add to offline data.
+                params.nIx = selectedDataIx;
+                var bounds = oMap.getBounds();
+                params.bounds.ne.lat = bounds.getNorthEast().lat;
+                params.bounds.ne.lon = bounds.getNorthEast().lng;
+                params.bounds.sw.lat = bounds.getSouthWest().lat;
+                params.bounds.sw.lon = bounds.getSouthWest().lng;
+                var center = oMap.getCenter();
+                params.center.lat = center.lat;
+                params.center.lon = center.lng;
+                params.zoom = oMap.getZoom();
+                return params; 
+        }
+        
+        // Event handler for buCancel.
+        // Hides the UI for defining a path name.
+        function OnCancel(evt) {
+            that.clearPathNameUI();
+        }
+
+        ////20100810 var bSaving = false;
+    }
+    var offlineMapAreaSaver = new OfflineMapAreaSaver(this); 
+
+    /* ////20170809 move OfflineMapAreaSaver()
     // Refactor code from OnlineSaveOfflineClicked(event) handler to share
     // with event handler for buSaveAreaOffline. 
     // Returns new wigo_ws_GeoPathMap.OfflineParams object for offline
@@ -1087,7 +1316,7 @@ function wigo_ws_View() {
     //  selectedDataIx: number. integer for currently data index
     //                  Note: the currently selected value in selectGeoTrail droplist
     //                  has the string for the data index.
-    function FormOfflinePathParams(selectedDataIx) {  ////20170801 added.
+    function FormOfflinePathParamsNoTrail(selectedDataIx) {  ////20170801 added.
             var oMap = map.getMap();
             var params = new wigo_ws_GeoPathMap.OfflineParams();
             params.nId = 0; // 0 indicates a new data object to add to offline data.
@@ -1103,10 +1332,13 @@ function wigo_ws_View() {
             params.zoom = oMap.getZoom();
             return params; 
     }
+    */
+
 
     var buSaveAreaOffline = document.getElementById("buSaveAreaOffline"); ////20170801 added
     buSaveAreaOffline.addEventListener('click', function(evt){
         //// $$$$ write
+        /* ////20170809 move to OfflineMapAreaSaver objecct.
         // Show only happen in online mode, but check to be sure.
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view) {
@@ -1124,10 +1356,21 @@ function wigo_ws_View() {
                 params.name = sName;
                 that.onSavePathOffline(nMode, params);
             } else { // else not expected.
-                that.ShowStatus("Online View must be active to save the displayed map area offline.");
+                ////20170807 that.ShowStatus("Online View must be active to save the displayed map area offline.");
+                that.ShowStatus("Trail name cannot be blank.", false); ////20170807 fixed 
             }
         }
-
+        */
+        var nMode = that.curMode();
+        if (nMode === that.eMode.online_view) { ///20170810 added if cond, body existed as always executed.
+            // For online view, save the map area on screen without a trail.
+            var sSelectedDataIx = selectGeoTrail.getSelectedValue();
+            var selectedDataIx = parseInt(sSelectedDataIx);                
+            offlineMapAreaSaver.saveNoTrail(selectedDataIx);
+        } else if (nMode === that.eMode.offline) { ////20170810 added else body.
+            // For offline view, save locally the recorded trail.
+            recordFSM.nextState(recordFSM.event.save_locally);
+        }
     }, false);   
 
 
@@ -2970,6 +3213,7 @@ function wigo_ws_View() {
         // Define name of the trail.
         function StateDefineTrailName() {
             this.prepare = function() {
+                SetPathNameUI(); ////20170810 added
                 recordCtrl.setLabel("TrName");
                 recordCtrl.empty();
                 view.ShowStatus("Enter a name for the trail", false);
@@ -2978,7 +3222,6 @@ function wigo_ws_View() {
                 else                                                         
                     recordCtrl.appendItem("save_locally", "Save Locally");   
                 recordCtrl.appendItem("cancel", "Cancel");
-                ShowPathDescrBar(true); 
                 if (bOnline)               
                     signin.showIfNeedBe(); 
                 txbxPathName.focus();  // Set focus to textbox so keyboard is presented. 
@@ -2990,12 +3233,11 @@ function wigo_ws_View() {
                         // Get trail name and upload 
                         var ok = UploadNewPath();
                         if (ok.empty) {
-                            ShowPathDescrBar(false); 
                             stateStopped.prepare();
                             curState = stateStopped;
                             view.ShowStatus("The recorded trail is empty.");
                         } else if (ok.upload) {
-                            ShowPathDescrBar(false);  
+                            ClearPathNameUI(); ////20170810 added
                             stateStopped.prepare();
                             curState = stateStopped;
                         }
@@ -3009,7 +3251,7 @@ function wigo_ws_View() {
                             bOk = localSaver.save();
                         ShowOfflineSavePathResult(bOk); 
                         if (bOk) {
-                            ShowPathDescrBar(false);
+                            ClearPathNameUI(); ////20170810                         
                             stateStopped.prepare();
                             curState = stateStopped;
                         } 
@@ -3018,6 +3260,7 @@ function wigo_ws_View() {
                     case that.event.cancel:
                         stateStopped.prepare();
                         view.ClearStatus();    
+                        ClearPathNameUI();  // Clear UI for defining path name.
                         curState = stateStopped;
                         break;
                 }
@@ -3054,6 +3297,42 @@ function wigo_ws_View() {
                 ok.upload = true;
                 bNewUploadPath  = true;
                 return ok;
+            }
+
+            // Shows the UI for defining a path name enabling cancel.
+            function SetPathNameUI() { ////201708010 added
+                txbxPathName.value = ""; // Clear path name. ////20170810 added
+                AddCancelHandler();
+                ShowPathAndMapBars(false);
+                ////20170811 ShowPathDescrBar(true);
+                if (bOnline) {
+                    // For online, show path descr bar with Upload button.
+                    ShowPathDescrBar(true);
+                } else {
+                    // For offline, show path descr bar with Save Offline button.
+                    ShowPathDescrBarWithSaveAreaOfflineButton(true);
+                }
+            }
+
+            // Hides the UI for defining a path name disabling cancel,
+            function ClearPathNameUI() { ////20170810 added
+                RemoveCancelHandler();
+                ShowPathAndMapBars(true);
+                ShowPathDescrBar(false); // Note: Hides path descr bar and all ctrls. Samo for online or offline.
+            }
+
+            function AddCancelHandler() { ////20170810 added
+                RemoveCancelHandler(); // Ensure only add once.
+                buCancel.addEventListener('click', OnCancel, false);
+            }
+
+            function RemoveCancelHandler() {  ////20170810 added
+                buCancel.removeEventListener('click', OnCancel, false);
+            }
+
+            // Event handler for the cancel button.
+            function OnCancel(evt) {  ////20170810 added
+                that.nextState(that.event.cancel);
             }
         }
         var stateDefineTrailName = new StateDefineTrailName();
@@ -3473,7 +3752,7 @@ function wigo_ws_View() {
                 }
 
                 view.ShowStatus("Enter a name for the trail", false);
-                ShowPathDescrBar(true); 
+                SetPathNameUI(); ////20170810 added
                 // Set path name and share for editing.
                 txbxPathName.value = offlineParams.name;
                 selectRecordShareDropDown.setSelected('private'); 
@@ -3483,6 +3762,34 @@ function wigo_ws_View() {
                 dropList.appendItem("upload", "Upload");
                 dropList.appendItem("cancel", "Cancel");
             }
+
+            function AddCancelHandler() { ////20170810 added
+                RemoveCancelHandler(); // Ensure only add once.
+                buCancel.addEventListener('click', OnCancel, false);
+            }
+
+            function RemoveCancelHandler() {  ////20170810 added
+                buCancel.removeEventListener('click', OnCancel, false);
+            }
+
+            function SetPathNameUI() {   ////20170810 added
+                txbxPathName.value = ""; // Clear path name. ////20170810 added
+                ShowPathAndMapBars(false); 
+                ShowPathDescrBar(true); 
+                AddCancelHandler(); 
+            }
+
+            function ClearPathNameUI() {
+                ShowPathAndMapBars(true); 
+                ShowPathDescrBar(false); 
+                RemoveCancelHandler(); 
+            }
+
+            // Event handler for the cancel button.
+            function OnCancel(evt) {  ////20170810 added
+                that.do(that.event.cancel);
+            }
+            
 
             switch (eventValue) {
                 case this.event.begin_upload:
@@ -3513,17 +3820,21 @@ function wigo_ws_View() {
                         var sNote = offlineParams.nId > 0 ? "\n\nNote: Trail is NOT deleted from web server, only from local data." : "";
                         var sPrompt = "Ok to delete trail\n{0}?{1}".format(offlineParams.name, sNote);
                         view.ShowConfirm(sPrompt, function(bConfirm){
-                            if (bConfirm) 
+                            if (bConfirm) {
+                                // Note: No need to ClearPathNameUI() because Delete is only invoked from droplist.
                                 Delete();
+                            }
                         },
                         "Delete Trail", "Ok, Cancel");
                     }
                     break;
                 case this.event.upload:
+                    ClearPathNameUI(); ////20170810 added
                     Upload(); 
                     view.ShowStatus("Uploading trail to server.", false);
                     break;
                 case this.event.cancel: // Upload canceled.
+                    ClearPathNameUI(); ////20170810 added 
                     view.ShowStatus("Canceled uploading.", false);
                     offlineParamsUploading = null;
                     FillDropListForParams();
@@ -3628,16 +3939,16 @@ function wigo_ws_View() {
         var eventProcessed = this.event.unknown; // Current event that was processed.
     }
 
-    // Shows path description bar, which has textbox for trail name.
-    // Always hides upload, cancel, delete buttons.
+    // Shows path description bar, which has textbox for trail name and action controls.
     // Arg:
-    //  bShow: boolean. true to show path descr bar and recordShare droplist.
+    //  bShow: boolean. true to show path descr text box, recordShare droplist, Upload button, and Cancel button.
+    //         Always hides Delete button and Save Area Offline button..
     // Note: Shared by RecordFSM and OfflineLocalData.
     function ShowPathDescrBar(bShow) {   
         ShowElement(pathDescrBar, bShow);
         ShowElement(recordShare, bShow);  
-        ShowUploadButton(false);  
-        ShowCancelButton(false);  
+        ShowUploadButton(bShow);  ////20170806 was false  
+        ShowCancelButton(bShow);  ////20170806 was false
         ShowDeleteButton(false);
         ShowElement(buSaveAreaOffline, false); ////20170802 added.
     }
@@ -3647,7 +3958,7 @@ function wigo_ws_View() {
     // Arg:
     //  bShow: boolean. true to show path descr bar, buSaveAreaOffline, and Canccel buttons.
     // Note: Only expected to be call in Online View to save map area wht not trail selected.
-    function ShowPathDescrBarForOnlineSaveAreaOffline(bShow) { ////20170802 added function.
+    function ShowPathDescrBarWithSaveAreaOfflineButton(bShow) { ////20170802 added function.
         ShowElement(pathDescrBar, bShow);
         ShowElement(buSaveAreaOffline, bShow); 
         ShowCancelButton(bShow);  
@@ -3655,6 +3966,15 @@ function wigo_ws_View() {
         ShowUploadButton(false);  
         ShowDeleteButton(false);
     }
+    
+    // Shows/hides bars related to a path: selectGeoTrail droplist with action and map bar. 
+    // Arg:
+    //  bShow: boolean. true to show the bars.
+    function ShowPathAndMapBars(bShow) { ////20170806 added function
+        ShowElement(onlineOfflineEditBar, bShow);
+        ShowElement(mapBar, bShow);
+    }
+
 
     // ** More private members
     
@@ -6228,7 +6548,7 @@ function wigo_ws_View() {
         offlineLocalData.do(nEvent);
     };     
     var offlineLocalData = new OfflineLocalData(this, offlineLocalDataCtrl, recordFSM.refUploader()); 
-    offlineLocalData.do(offlineLocalData.event.fill_record_trail); 
+    ////20170806NotUsed offlineLocalData.do(offlineLocalData.event.fill_record_trail); 
 
     // OnOffControl for Phone Alert on map bar.
     var holderMapPhAlertToggle = document.getElementById('mapPhAlertToggle');
@@ -6500,8 +6820,8 @@ function wigo_ws_Controller() {
                         // using trail offline from cache.
                         model.setOfflineParams(params);
                     }
-                    // Set UI to for map caching completed.
-                    view.MapCachingCompleted();  ////20170803 added
+                    ////20170810 // Set UI to for map caching completed.
+                    ////20170810 view.MapCachingCompleted();  ////20170803 added
                 }
             });
         } else if (nMode === view.eMode.offline) {  
