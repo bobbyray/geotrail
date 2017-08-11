@@ -685,7 +685,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.IsPathDefined = function () { 
         var bDefined = mapPath !== null;
         // Also check for a path that has only two pts that are the same.
-        if (bDefined) {  ////20170803 added if and body.
+        if (bDefined) {  
             var arPt = mapPath.getLatLngs();
             if (arPt.length === 2 ) {
                 if (arPt[0].lat === arPt[1].lat && arPt[0].lng === arPt[1].lng) {

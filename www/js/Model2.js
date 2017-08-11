@@ -539,7 +539,7 @@ function wigo_ws_Model() {
         // Otherwise the element is added.
         // Arg:
         //  oParams: a wigo_ws_GeoPathMap.OfflineParams object.
-        ///          oParams.nId: integer. Has a special case as follows:
+        //           oParams.nId: integer. Has a special case as follows:
         //              === 0:  Indicates new object to add to the array. 
         //                      Find min nId in array: 
         //                          For min nId negative, convert oParams.nId to 1 less
@@ -550,7 +550,6 @@ function wigo_ws_Model() {
         //                      Note: For first oParams.nId of 0 added, oParams.nId is converted to -1.
         //              otherwise: Replace existing oParams object or add a new one if no match.
         this.setId = function(oParams) {
-            ////20170804Redo var iFound = this.findIxOfId(oParams.nId);
             var iFound = 0;
             if(oParams.nId === 0) {
                 // Add new oParams object.
@@ -558,9 +557,6 @@ function wigo_ws_Model() {
                 var nIdMin = FindnIdMin();
                 oParams.nId = nIdMin < 0 ? nIdMin - 1 : -1;
             } 
-            ////20170805 else {
-            ////20170805     iFound = this.findIxOfId(oParams.nId)
-            ////20170805 }
             iFound = this.findIxOfId(oParams.nId)
             if (iFound >= 0) {
                 arParams[iFound] = oParams;
@@ -641,7 +637,7 @@ function wigo_ws_Model() {
         
         // Returns minium nId found in the array.
         // Returns 0 if array is empty.
-        function FindnIdMin() { ////20170804 added function.
+        function FindnIdMin() { 
             var nIdMin = 0;
             for (var i = 0; i >= 0 && i < arParams.length; i++) {
                 if (i === 0) {
