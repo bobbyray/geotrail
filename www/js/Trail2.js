@@ -5347,22 +5347,6 @@ function wigo_ws_View() {
         ShowElement(selectFind, bShow);
     }
 
-    /* ////20170811 
-    // Shows or hides divPathDescr, which contains controls for
-    // path name, sharing, and server action.
-    function ShowPathDescrCtrls(bShow) {  ////20170801 I dont this function is used if HidePathDescrCtrls is not used. $$$$ check
-        ShowElement(pathDescrBar, bShow);
-    }
-    */
-
-    /* ////20170811
-    // Shows or hides textbox for Path Name and its label.
-    function ShowPathNameCtrl(bShow) {        ////20170801 I dont think this functin is used. $$$$ check.
-        ShowElement(labelPathName, bShow);
-        ShowElement(txbxPathName, bShow);
-    }
-    */
-
     // Show or hide Delete button.
     function ShowDeleteButton(bShow) {
         ShowElement(buDelete, bShow);
@@ -5396,15 +5380,6 @@ function wigo_ws_View() {
     function ShowPtDeleteDoButton(bShow) {
         ShowElement(buPtDeleteDo, bShow);
     }
-
-    /* ////20170811
-    // Hide controls for editing path.
-    function HidePathEditCtrls() {   ////20170801 I dont think function is used. $$$$ this.
-        ShowPathDescrCtrls(false);
-        ShowPathCursors(false);
-        ShowPathIxButtons(false);
-    }
-    */
 
     // Shows or hides sectEditMode.
     // Arg:
