@@ -342,8 +342,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var iLast = path.arGeoPt.length -1;
             if (iLast >= 0) {
                 var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
-                var zoom = map.getZoom();                
-                map.setZoomAround(llEnd, zoom); 
+                map.setZoom(12);
+                // Delay map.panTo() for map to display properly.
+                // I think the delay gives time to load map tiles
+                // 1000 milliseconds seems to work, 50 does not.
+                // Calling again helps if first time does not pan correctly.
+                setTimeout(function(){
+                    map.panTo(llEnd);
+                }, 1000);  // 1000 millisec seems to work,  50 does not. 
             }
         }
     }
