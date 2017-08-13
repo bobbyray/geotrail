@@ -408,6 +408,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     Saves the recorded trail to the web server. If the recorded trail is 
                     new, enters the TrName State for you to enter a trail name. Otherwise
                     uploads the recorded trail to the web server and remains in the Stopped State.
+                    <br/>Note: If in Offline View, saves the recorded trail locally instead of
+                    uploading to the web server.
                     </li>
                     <!-- Append Trail no longer used. Provide insert trail in Edit mode instead
                     <li>Append Trail<br/>
@@ -446,10 +448,15 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Enter the name for a new trail in the textbox shown. 
             Also select Public or Private from the Share DropList.
             <ul>
-                <li>Upload<br/>
+                <li>Upload Button<br/>
                 Uploads the recorded trail to the web server and returns to the Stopped State.
+                The button is shown in the Online View and hidden the Offline View.
                 </li>
-                <li>Cancel<br/>
+                <li>Save Offline<br/>
+                Saves the recorded trail locally. The button is shown in the Offline View and
+                hidden in the Online View.
+                </li>
+                <li>Cancel Button<br/>
                 Does not upload to the server. Returns to the Stopped State.
                 </li>
             </ul>
@@ -499,11 +506,21 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <h3>Local Data DropList</h3>
         Manages the data saved locally.<br/>
         <ul>
-            <li>Upload<br/>
-            Uploads the selected trail to the server. The option is only shown
+            <li>Begin Upload<br/>
+            Uploads the selected trail to the web server. The option is only shown
             if the local trail has not been uploaded to the web server. Also, the
             upload can only be done if there is an Internet connection; if not
-            a message is shown to indicate the upload cannot be done.
+            a message is shown to indicate the upload cannot be done.<br/>
+            <ul>
+                <li>In the textbox change the name of the trail if desired. 
+                Likely the current name for the trail is fine.</li>
+                <li>Share DropList<br>
+                Select the share, Public or Private.</li>
+                <li>Upload Button<br/>
+                Touch Upload to upload to the web server.</li>
+                <li>Cancel Button<br/>
+                Touch Cancl to cancel the upload.</li>
+            </ul>
             </li>
             <li>Delete<br/>
             Deletes the selected trail. The trail is only deleted locally.

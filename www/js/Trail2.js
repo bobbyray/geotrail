@@ -1058,7 +1058,7 @@ function wigo_ws_View() {
                 // Note: User is prompted for an area name first.
                 offlineMapAreaSaver.setPathNameUI(); 
             } else { 
-                offlineMapAreaSaver.saveTrail();
+                offlineMapAreaSaver.saveTrail(selectedDataIx);  
             }
         } else {
             that.ShowStatus("Must be in online mode to save for offline.");
