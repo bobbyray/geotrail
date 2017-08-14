@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.028_20170812-1243"; // Constant string for App version. 
+    var sVersion = "1.1.028_20170814-1053"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -1076,15 +1076,16 @@ function wigo_ws_View() {
         this.setPathNameUI = function() {
             AddCancelHandler();
             // Save current map displayed as path with single point at the center.
-            view.ShowStatus("Enter a name for the map area to save offline.", false);
+            view.ShowStatus("Enter a name for the map area to save offline.<br/>Then touch Save Offline to save.", false); 
             // Hide the online/offline/edit bar that has trail name and action ctrls.
             txbxPathName.value = ""; // Clear path name. 
             ShowPathAndMapBars(false); 
             // Show the path description bar for user to enter a name for the area.
             ShowPathDescrBarWithSaveAreaOfflineButton(true);
             // Note: Saving the area offline is done after users enters a name.
+            // Set focus to txbxPathName to show keyboard. 
+            txbxPathName.focus();  
         };
-
 
         // Saves the displayed map area without a trail.
         // If path name is proper, cleard the path name UI.

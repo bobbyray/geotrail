@@ -7,13 +7,12 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 <html style="height: 100%">
 <head>
     <title>GeoTrail</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none';
-          script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
-          connect-src 'self' https://www.wigo.ws;
-          img-src *;
-          style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
-          frame-src 'self' gap:;">
+         script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
+         connect-src 'self' https://www.wigo.ws;
+         img-src 'self' data: *;
+         style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
+         frame-src 'self' gap:;">
 
     <script charset="utf-8" src="cordova.js"></script>
 
@@ -354,7 +353,18 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         or loops. If there is no trail currently selected, the <i>Animate Current Trail</i> item is not in the droplist.</p>
         <h3>Save Offline Button</h3>
         <p>Touch the Save Offline button to save a trail you are viewing so that you can
-        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
+        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)
+        The map tiles on screen are cached so they are available offline. There are two cases:</p>
+        <ul>
+            <li>A selected trail is displayed.<br/>
+            The trail name is known so the trail is saved and caching begins immediately.</li>
+            <li>There is no trail selected.<br/>
+            You are prompted to enter a Trail Name. Once a name is entered, touch the Save Offline button to 
+            continue and cache the map tiles offline.<br/>
+            A trail of a single point is defined at the center of the displayed map. A single point shows as a red
+            dot when the trail is selected in the Offline View.
+        </li>
+        </ul>
         <h3>Find Trails DropList</h3>
         <p>Select an option from the droplist to search for trails to view.
         The Trails droplist is filled with the trails found.</p>
@@ -457,7 +467,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 hidden in the Online View.
                 </li>
                 <li>Cancel Button<br/>
-                Does not upload to the server. Returns to the Stopped State.
+                Does not upload or save. Returns to the Stopped State.
                 </li>
             </ul>
             </li>
@@ -519,7 +529,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <li>Upload Button<br/>
                 Touch Upload to upload to the web server.</li>
                 <li>Cancel Button<br/>
-                Touch Cancl to cancel the upload.</li>
+                Touch Cancel to cancel the upload.</li>
             </ul>
             </li>
             <li>Delete<br/>
