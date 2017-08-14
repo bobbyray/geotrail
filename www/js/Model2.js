@@ -343,10 +343,15 @@ function wigo_ws_Model() {
         localStorage[sAccessHandleKey] = sAccessHandle;
     };
 
-    // Sets offline params object for a map in local storage.
+    // Sets offline params object for a trail map in local storage.
     // Args:
     //  oParams: wigo_ws_GeoPathMap.OfflineParams object for a geo path.
     //           oParams.nId is used to find an existing object in the array.
+    //           For oParams.nId === 0, oParam.nId is converted to next
+    //           least negative integer in the array of params so that a unique 
+    //           params object is set.  The first negative id is -1.
+    //           Note: A negative params.nId inicates the trail for the object 
+    //                 has not been uploaded to the web server, but could be.
     //           On a match the oParams replaces the array element, otherwise 
     //           oParams is added to the array.
     this.setOfflineParams = function (oParams) {
@@ -502,7 +507,7 @@ function wigo_ws_Model() {
     // Manages an array of wigo_ws_GeoPathMap.OfflineParams objects.
     function OfflineParamsAry() {
         // Searches for element in this array.
-        // Returns wigo_ws_GeoPath.OfflineParams object of the element found, or null for no match.
+        // Returns wigo_ws_GeoPathMap.OfflineParams object of the element found, or null for no match.
         // Arg:
         //  nId: integer for unique record id of Gpx element in this array.
         this.findId = function (nId) {
@@ -530,12 +535,29 @@ function wigo_ws_Model() {
         };
 
         // Sets an element of this array to oParams.
-        // If element already exits base on oParams.nId, the element is replaced.
+        // If element already exits based on oParams.nId, the element is replaced.
         // Otherwise the element is added.
         // Arg:
         //  oParams: a wigo_ws_GeoPathMap.OfflineParams object.
+        //           oParams.nId: integer. Has a special case as follows:
+        //              === 0:  Indicates new object to add to the array. 
+        //                      Find min nId in array: 
+        //                          For min nId negative, convert oParams.nId to 1 less
+        //                          For min nId >= 0, convert oParams.nId to -1.
+        //                      Negative oParams.nId is used to indicate a data object
+        //                      that could be uploaded to server, but has not been.
+        //                      The negative nId's need to be unique.
+        //                      Note: For first oParams.nId of 0 added, oParams.nId is converted to -1.
+        //              otherwise: Replace existing oParams object or add a new one if no match.
         this.setId = function(oParams) {
-            var iFound = this.findIxOfId(oParams.nId);
+            var iFound = 0;
+            if(oParams.nId === 0) {
+                // Add new oParams object.
+                // Use least negative oParams.nId, or -1 if no existing negative nId.
+                var nIdMin = FindnIdMin();
+                oParams.nId = nIdMin < 0 ? nIdMin - 1 : -1;
+            } 
+            iFound = this.findIxOfId(oParams.nId)
             if (iFound >= 0) {
                 arParams[iFound] = oParams;
             } else {
@@ -611,6 +633,20 @@ function wigo_ws_Model() {
         // Saves this object to local storage.
         this.SaveToLocalStorage = function () {
             localStorage[sOfflineParamsKey] = JSON.stringify(arParams);
+        }
+        
+        // Returns minium nId found in the array.
+        // Returns 0 if array is empty.
+        function FindnIdMin() { 
+            var nIdMin = 0;
+            for (var i = 0; i >= 0 && i < arParams.length; i++) {
+                if (i === 0) {
+                    nIdMin = arParams[0].nId;
+                } else if (arParams[i].nId < nIdMin) {
+                    nIdMin = arParams[i].nId;
+                }
+            }
+            return nIdMin;
         }
         var arParams = new Array(); // Array of wigo_ws_GeoPathMap.OfflineParams.
 

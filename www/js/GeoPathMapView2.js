@@ -342,8 +342,14 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var iLast = path.arGeoPt.length -1;
             if (iLast >= 0) {
                 var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
-                var zoom = map.getZoom();                
-                map.setZoomAround(llEnd, zoom); 
+                map.setZoom(12);
+                // Delay map.panTo() for map to display properly.
+                // I think the delay gives time to load map tiles
+                // 1000 milliseconds seems to work, 50 does not.
+                // Calling again helps if first time does not pan correctly.
+                setTimeout(function(){
+                    map.panTo(llEnd);
+                }, 1000);  // 1000 millisec seems to work,  50 does not. 
             }
         }
     }
@@ -682,8 +688,20 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     }
 
     // Returns true if a path has been defined (drawn) for the map.
-    this.IsPathDefined = function () {
+    this.IsPathDefined = function () { 
         var bDefined = mapPath !== null;
+        // Also check for a path that has only two pts that are the same.
+        if (bDefined) {  
+            var arPt = mapPath.getLatLngs();
+            if (arPt.length === 2 ) {
+                if (arPt[0].lat === arPt[1].lat && arPt[0].lng === arPt[1].lng) {
+                    // Path has exactly two identical points. 
+                    // NOT a path but is instead an area for an offline map which has center at the poitn.
+                    // Note: the path will draw as a single point with same beginning and end.
+                    bDefined = false;
+                }
+            }
+        }
         return bDefined;
     }
 

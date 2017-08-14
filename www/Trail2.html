@@ -7,13 +7,12 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 <html style="height: 100%">
 <head>
     <title>GeoTrail</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none';
-          script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
-          connect-src 'self' https://www.wigo.ws;
-          img-src *;
-          style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
-          frame-src 'self' gap:;">
+         script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
+         connect-src 'self' https://www.wigo.ws;
+         img-src 'self' data: *;
+         style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
+         frame-src 'self' gap:;">
 
     <script charset="utf-8" src="cordova.js"></script>
 
@@ -92,7 +91,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                         <!-- Container for dropdown list control with id="offlineRecordDropDown" -->
                     </div>
                     <div id="offlineLocalData">
-                        <!-- Container for dropdow list control with id='offlineLocalDataDropDown' -->
+                        <!-- Container for dropdown list control with id='offlineLocalDataDropDown' -->
                     </div>
                 </div>
             </div>
@@ -101,6 +100,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <div id="pathDescrBar" class="wigo_ws_Bar wigo_ws_NoShow"> 
             <div id=labelPathName>Trail Name</div>
             <div id="editAction" >
+                <input id="buSaveAreaOffline" type="button" class="wigo_ws_NoShow" value="Save Offine"/> 
                 <input id="buUpload" type="button" value="Upload"/> 
                 <input id="buDelete" type="button" value="Delete"/> 
                 <input id="buCancel" type="button" value="Cancel"/> 
@@ -353,7 +353,18 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         or loops. If there is no trail currently selected, the <i>Animate Current Trail</i> item is not in the droplist.</p>
         <h3>Save Offline Button</h3>
         <p>Touch the Save Offline button to save a trail you are viewing so that you can
-        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)</p>
+        view it when you are offline. (See <a href="#helpOfflineMap">Offline Map</a> below.)
+        The map tiles on screen are cached so they are available offline. There are two cases:</p>
+        <ul>
+            <li>A selected trail is displayed.<br/>
+            The trail name is known so the trail is saved and caching begins immediately.</li>
+            <li>There is no trail selected.<br/>
+            You are prompted to enter a Trail Name. Once a name is entered, touch the Save Offline button to 
+            continue and cache the map tiles offline.<br/>
+            A trail of a single point is defined at the center of the displayed map. A single point shows as a red
+            dot when the trail is selected in the Offline View.
+        </li>
+        </ul>
         <h3>Find Trails DropList</h3>
         <p>Select an option from the droplist to search for trails to view.
         The Trails droplist is filled with the trails found.</p>
@@ -407,6 +418,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     Saves the recorded trail to the web server. If the recorded trail is 
                     new, enters the TrName State for you to enter a trail name. Otherwise
                     uploads the recorded trail to the web server and remains in the Stopped State.
+                    <br/>Note: If in Offline View, saves the recorded trail locally instead of
+                    uploading to the web server.
                     </li>
                     <!-- Append Trail no longer used. Provide insert trail in Edit mode instead
                     <li>Append Trail<br/>
@@ -445,11 +458,16 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Enter the name for a new trail in the textbox shown. 
             Also select Public or Private from the Share DropList.
             <ul>
-                <li>Upload<br/>
+                <li>Upload Button<br/>
                 Uploads the recorded trail to the web server and returns to the Stopped State.
+                The button is shown in the Online View and hidden the Offline View.
                 </li>
-                <li>Cancel<br/>
-                Does not upload to the server. Returns to the Stopped State.
+                <li>Save Offline<br/>
+                Saves the recorded trail locally. The button is shown in the Offline View and
+                hidden in the Online View.
+                </li>
+                <li>Cancel Button<br/>
+                Does not upload or save. Returns to the Stopped State.
                 </li>
             </ul>
             </li>
@@ -498,11 +516,21 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <h3>Local Data DropList</h3>
         Manages the data saved locally.<br/>
         <ul>
-            <li>Upload<br/>
-            Uploads the selected trail to the server. The option is only shown
+            <li>Begin Upload<br/>
+            Uploads the selected trail to the web server. The option is only shown
             if the local trail has not been uploaded to the web server. Also, the
             upload can only be done if there is an Internet connection; if not
-            a message is shown to indicate the upload cannot be done.
+            a message is shown to indicate the upload cannot be done.<br/>
+            <ul>
+                <li>In the textbox change the name of the trail if desired. 
+                Likely the current name for the trail is fine.</li>
+                <li>Share DropList<br>
+                Select the share, Public or Private.</li>
+                <li>Upload Button<br/>
+                Touch Upload to upload to the web server.</li>
+                <li>Cancel Button<br/>
+                Touch Cancel to cancel the upload.</li>
+            </ul>
             </li>
             <li>Delete<br/>
             Deletes the selected trail. The trail is only deleted locally.
