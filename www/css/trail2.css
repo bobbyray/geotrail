@@ -222,8 +222,12 @@ label {
 #buUpload, #buCancel, #buDelete, #buSaveAreaOffline {  
     clear: none;
     float: left;
+    /* ////20170818
     margin-left: 5px;
     margin-right: 10px;
+    */
+    padding-left: 5px;
+    padding-right: 10px; 
 }
 
 #onlineOfflineEditBackIcon {
@@ -547,17 +551,17 @@ label {
 #recordShare .wigo_ws_DropDownValue {
     left: inherit;
     right: 0.2em;
-    width: 5.0em;  
+    width: 4.0em;  /* ////20170818 was 5.0 */
 }
 #recordShare .wigo_ws_DropDownIcon {
     left: inherit;
-    right: 5.3em;
+    right: 4.3em;  /* ////20170818 was 5.3 */
     width: 3.0em;
     height: 1.2em;
 }
 #recordShare .wigo_ws_DropDownLabel {
     right: 8.1em;
-    width: 4em;
+    width: 0.5em;   /* ////20170818 was 4em */
     padding-right: 0.3em;
 }
 
@@ -565,7 +569,7 @@ label {
     left: inherit;
     right: 0.0em;
     top: 1.2em;
-    width: 8.0em;
+    width: 4.0em;  /* ////20170818 was 8.0 */
 }
 
 #pathDescrBarBackIcon {

@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.029-20170814"; // Constant string for App version. 
+    var sVersion = "1.1.030-201708181447"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3411,6 +3411,8 @@ function wigo_ws_View() {
                     var oParams = new wigo_ws_GeoPathMap.OfflineParams(); 
                     oParams.assign(params); 
                     view.onSavePathOffline(view.curMode(), oParams); 
+                    // oParams.nId is update is a new object is saved, so set params.nId to new nId.
+                    params.nId = oParams.nId;  ////20170819 added. 
                 } else {
                     view.ShowStatus("Enter a Trail Name", false);
                 }
@@ -3537,6 +3539,15 @@ function wigo_ws_View() {
         //  sEventName: string. property name of event enumeration object. 
         this.do = function(eventValue) {
             // Helper to prepare for user to enter Path name and share.
+            // Returns true if signin is needed, in which case a signin 
+            // status msg is shown.
+            function IsShowSigninNeeded() { ////20170819
+                var signin = recordFSM.refSignIn();
+                var sOwnerId = signin.showIfNeedBe(); 
+                var bNo = sOwnerId.length > 0;
+                return !bNo; 
+            }
+
             function PreparePathName() {
                 // Quit if offlienParams does not exists.
                 if (!offlineParams) {
@@ -3622,6 +3633,13 @@ function wigo_ws_View() {
                     }
                     break;
                 case this.event.upload:
+                    if (IsShowSigninNeeded()) { ////20170819 added if body.
+                        // Show signin status msg has been shown. Quit.
+                        // Set eventValue arg to begin_upload because trail name needs to be defined.
+                        eventValue = that.event.begin_upload; ////20170821 added.
+                        break; 
+                    }
+
                     ClearPathNameUI(); 
                     Upload(); 
                     view.ShowStatus("Uploading trail to server.", false);
@@ -6427,7 +6445,8 @@ Are you sure you want to delete the maps?";
 
     // DropDownControl for share state for trail when recording a trail.
     var recordShare = parentEl = document.getElementById('recordShare');  
-    var selectRecordShareDropDown = new ctrls.DropDownControl(parentEl, "selectRecordShareDropDown", "Share", 'private', "img/ws.wigo.dropdownhorizontalicon.png");
+    ////20170818 var selectRecordShareDropDown = new ctrls.DropDownControl(parentEl, "selectRecordShareDropDown", "Share", 'private', "img/ws.wigo.dropdownhorizontalicon.png");
+    var selectRecordShareDropDown = new ctrls.DropDownControl(parentEl, "selectRecordShareDropDown", "", 'private', "img/ws.wigo.dropdownhorizontalicon.png");
     selectRecordShareDropDown.fill(selectShareDropDownValues);
     //NotNeeded selectRecordShareDropDown.onListElClicked = function(dataValue) {
     //NotNeeded };
