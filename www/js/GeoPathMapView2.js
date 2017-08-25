@@ -56,7 +56,6 @@ L.LatLng.prototype.bearingWordTo = function(other) {
 //        For y, North is +, South is -.
 L.LatLng.prototype.offsetXY = function(mX, mY) {
     // note: ll.toBounds(mToCorner) is documented, but does not exist.
-    // Find ne and se corner of square bounding first coordinate.
     var yDelta = L.latLng(this.lat + 1.0, this.lng); // y latlng one degree away.
     var mYperDeg = this.distanceTo(yDelta);   // y distance in one degree.
     var xDelta = L.latLng(this.lat, this.lng + 1.0); // x latng one degree away.
@@ -2570,6 +2569,64 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             bZoomToFirstCoordOnce = true;
         };
         var bZoomToFirstCoordOnce = false;
+
+        // Zooms to the recorded trail.
+        // Arg:
+        //  mToSideMin: number. minimum meters from center of trail to each side
+        //              of the bounding rectangle. If distance from center to any side
+        //              is less than mToSideMin, mToSide min is used for distance from
+        //              the center to the side.
+        // Returns: boolean. true when zoom is done. 
+        //                   false when zoom is not done because there is no trail. 
+        this.zoomToTrail = function(mToSideMin) { 
+            // Helper that returns SW and NE corners for the recorded trail.
+            // Returns: wigo_ws_GeoPt.Corners object.
+            function GetCorners() {
+                var corners = new wigo_ws_GeoPt.Corners();
+                var geoPt = new wigo_ws_GeoPt();
+                for (var i=0; i < pathCoords.length; i++) {
+                    geoPt.lat = pathCoords[i].lat;
+                    geoPt.lon = pathCoords[i].lng;
+                    corners.Update(geoPt);
+                }
+                return corners; 
+            }
+
+            if (pathCoords.length === 0)
+                return false;
+
+            var gptCorners = GetCorners();
+            // calc center of gptCorners.
+            var gptCenter = new wigo_ws_GeoPt();
+            gptCenter.lat = (gptCorners.gptSW.lat + gptCorners.gptNE.lat) / 2;
+            gptCenter.lon = (gptCorners.gptSW.lon + gptCorners.gptNE.lon) / 2;
+            var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
+ 
+            // Update gptCorners for minimum side from center.
+            // Test East (right) side for min.
+            var llSideMin = llCenter.offsetXY(mToSideMin, 0);
+            if (llSideMin.lng > gptCorners.gptNE.lon)
+                gptCorners.gptNE.lon = llSideMin.lng;
+            // Test North (top) side for min.
+            llSideMin = llCenter.offsetXY(0, mToSideMin);
+            if (llSideMin.lat > gptCorners.gptNE.lat)
+                gptCorners.gptNE.lat = llSideMin.lat;
+            // Test West (left) side for min.
+            llSideMin = llCenter.offsetXY(-mToSideMin, 0);
+            if (llSideMin.lng < gptCorners.gptSW.lon)
+                gptCorners.gptSW.lon = llSideMin.lng;
+            // Test South (bottom) side for min.
+            llSideMin = llCenter.offsetXY(0, -mToSideMin);
+            if (llSideMin.lat < gptCorners.gptSW.lat)
+                gptCorners.gptSW.lat = llSideMin.lat;
+            
+            // Fit map to the corners.
+            var llNE = L.latLng(gptCorners.gptNE.lat, gptCorners.gptNE.lon);
+            var llSW = L.latLng(gptCorners.gptSW.lat, gptCorners.gptSW.lon)
+            var bounds = L.latLngBounds(llSW, llNE);
+            map.fitBounds(bounds);
+            return true;
+        };
 
         // Returns stats for the record path.
         // Returns literal Obj with these fields:

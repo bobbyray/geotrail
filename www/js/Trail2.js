@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-201708181447"; // Constant string for App version. 
+    var sVersion = "1.1.030-201708251642"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -1009,7 +1009,6 @@ function wigo_ws_View() {
         return selectedDataIx;        
     }
 
-
     var onlineOfflineEditBar = document.getElementById('onlineOfflineEditBar');
     var onlineAction = document.getElementById('onlineAction');
     var offlineAction = document.getElementById('offlineAction');
@@ -1025,9 +1024,16 @@ function wigo_ws_View() {
     mapGoToPath.addEventListener('click', function(event ) {
         that.ClearStatus();
         titleBar.scrollIntoView(); 
+        map.ClearPathMarkers(); 
         var bOk = map.PanToPathCenter();
         if (!bOk) {
-            that.ShowStatus("No Geo Trail currently defined to pan-to.");
+            // Try zooming to recorded trail. 
+            bOk = !recordFSM.isOff();
+            if (bOk) {
+                bOk = map.recordPath.zoomToTrail(500); 
+            }
+            if (!bOk)
+                that.ShowStatus("No Geo Trail or Recorded Trail currently defined to pan-to.")                
         }
     }, false);
     var mapGeoLocate = document.getElementById('mapGeoLocate');
