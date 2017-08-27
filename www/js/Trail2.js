@@ -42,7 +42,6 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-201708251642"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -279,6 +278,10 @@ function wigo_ws_View() {
                 if (bConfirm) {
                     version.bTermsOfUseAccepted = true;
                     that.onSaveVersion(version);
+                    // For new version always reset click for geo location testing.
+                    var settings = that.onGetSettings();
+                    settings.bClickForGeoLoc = false;
+                    that.onSaveSettings(settings);
                     DoInitialization();
                 } else {
                     var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
@@ -3455,9 +3458,6 @@ function wigo_ws_View() {
             var sMsg = "{0}<br/>{1}".format(s, pathName);
             view.ShowStatus(sMsg, !bOk);
         }
-
-        // Object to animate recording trail. $$$$ write     var pathAnimator = new PathAnimator();
-
     }
 
     // Object for offline local data.
