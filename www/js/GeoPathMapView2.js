@@ -3153,6 +3153,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             //  0 indicates no alert is generated.
             this.setDistanceInterval = function(mDistanceIntervalArg) {
                 mDistanceInterval = mDistanceIntervalArg;
+                // Set distance limit wrt to current distance also. 
+                var nIntervals = Math.floor(mDistance / mDistanceInterval); 
+                if (nIntervals < 0)
+                    nIntervals = 0;
+                mIntervalLimit = mDistanceInterval * (nIntervals + 1);
             };
             
             // Resets the distance traveled..
