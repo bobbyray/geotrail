@@ -3154,6 +3154,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.setDistanceInterval = function(mDistanceIntervalArg) {
                 mDistanceInterval = mDistanceIntervalArg;
                 // Set distance limit wrt to current distance also. 
+                // First filter the path and set distance traveled.
+                that.filter(); 
+                var stats = that.getStats(); 
+                mDistance = stats.dTotal;
+                // Set distance limit wrt to current distance.
                 var nIntervals = Math.floor(mDistance / mDistanceInterval); 
                 if (nIntervals < 0)
                     nIntervals = 0;

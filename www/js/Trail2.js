@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-201708271605"; // Constant string for App version. 
+    var sVersion = "1.1.030-201708291320"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -213,15 +213,22 @@ function wigo_ws_View() {
 
     // ** Public members
 
-    // Initializes the view.
+    // Initializes the view. 
     // Remarks:
-    //  Call once after event handlers have been set.
+    //  Call once when app is loaded after event handlers have been set.
     this.Initialize = function () {
         // Helper to complete initialization after map has been initialized.
         function CompleteInitialization(bOk, sMsg) {
             that.ShowStatus(sMsg, !bOk)
             if (bOk) { 
+                // Reset click for geo location testing when initializing
+                // due to loading this app. 
+                // Note: settings.bClickForGeoLoc can be set later by user in Main Menu > Settings.
                 var settings = that.onGetSettings();
+                if (settings.bClickForGeoLoc) {
+                    settings.bClickForGeoLoc = false;
+                    that.onSaveSettings(settings);
+                }
                 SetSettingsParams(settings);
                 // Set view find paramters for search for geo paths to the home area.
                 viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
@@ -279,10 +286,6 @@ function wigo_ws_View() {
                 if (bConfirm) {
                     version.bTermsOfUseAccepted = true;
                     that.onSaveVersion(version);
-                    // For new version always reset click for geo location testing.
-                    var settings = that.onGetSettings();
-                    settings.bClickForGeoLoc = false;
-                    that.onSaveSettings(settings);
                     DoInitialization();
                 } else {
                     var sMsg = "GeoTrail cannot be used unless you accept the Terms of Use.<br/><br/>";
@@ -3819,7 +3822,7 @@ function wigo_ws_View() {
 
     var nMode = that.eMode.online_view; // Current mode.
     
-    // Initial home are to rectangle area around Oregon.
+    // Initial home area is rectangle area around Oregon.
     var homeArea = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
     homeArea.gptSW.lat = 38.03078569382296;
     homeArea.gptSW.lon = -123.8818359375;
