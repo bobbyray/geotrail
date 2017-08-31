@@ -313,6 +313,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
             var bounds = L.latLngBounds(sw, ne);
             map.fitBounds(bounds);
+            /* I don't like this either. Live with a trail occasionally off screen. 
+               User can touch Ctr Trail to get trail completely on screen.
             // Adjust bounds to account for map-canvas extending beyond bottom of screen.
             var pxBounds = map.getPixelBounds();
             var mapCanvas = that.getMapCanvas();
@@ -320,6 +322,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 var ptOffset = L.point(0, mapCanvas.offsetTop/2);
                 map.panBy(ptOffset);
             }
+            */
             /* // This does not work. I think needing to know zoom is the reason. 
             var sw = L.latLng(path.gptSW.lat, path.gptSW.lon);
             var ne = L.latLng(path.gptNE.lat, path.gptNE.lon);
@@ -337,21 +340,53 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             map.fitBounds(bounds);
             */
         } else {
-            // Set zoom around last point of path.            
-            var iLast = path.arGeoPt.length -1;
-            if (iLast >= 0) {
-                var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
-                map.setZoom(12);
-                // Delay map.panTo() for map to display properly.
-                // I think the delay gives time to load map tiles
-                // 1000 milliseconds seems to work, 50 does not.
-                // Calling again helps if first time does not pan correctly.
-                setTimeout(function(){
-                    map.panTo(llEnd);
-                }, 1000);  // 1000 millisec seems to work,  50 does not. 
+            if (IsSinglePointArea(path)) { ////20170830 added if and body
+                // Note: A single point area does not have a valid path boundary,
+                //       but it is used to define an area whose map tiles
+                //       can be cached offline without a trail selected.
+                // Calc corners for rect about the single point.
+                var mToSideMin = 500; // Number of meters to side of rect.
+                var llCenter = L.latLng(path.arGeoPt[0].lat, path.arGeoPt[0].lon);
+                var llNE = L.latLng(0,0);
+                var llSW = L.latLng(0,0);
+                var llSide;
+                // East (right) side.
+                llSide = llCenter.offsetXY(mToSideMin, 0);
+                llNE.lng = llSide.lng;
+                // North (top) side.
+                llSide = llCenter.offsetXY(0, mToSideMin);
+                llNE.lat = llSide.lat;
+                // West (left) side.
+                llSide = llCenter.offsetXY(-mToSideMin, 0);
+                llSW.lng = llSide.lng;
+                // South (bottom) side.
+                llSide = llCenter.offsetXY(0, -mToSideMin);
+                llSW.lat = llSide.lat;
+                // Fit map to the corners.
+                var bounds = L.latLngBounds(llSW, llNE);
+                map.fitBounds(bounds);
+            } else { ////20170803 else added, but body existed 
+                // Set zoom around last point of path.
+                // Note: this case is used for View > Draw to append or update points.            
+                var iLast = path.arGeoPt.length -1;
+                if (iLast >= 0) {
+                    var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
+                    var zoom = map.getZoom();          ////20170830 Putback               
+                    map.setZoomAround(llEnd, zoom);    ////20170830 Putback
+                    ////20170830 Oops, problem for Edit or Draw mode.
+                    ////20170830 map.setZoom(12);
+                    ////20170830 // Delay map.panTo() for map to display properly.
+                    ////20170830 // I think the delay gives time to load map tiles
+                    ////20170830 // 1000 milliseconds seems to work, 50 does not.
+                    ////20170830 // Calling again helps if first time does not pan correctly.
+                    ////20170830 setTimeout(function(){
+                    ////20170830     map.panTo(llEnd);
+                    ////20170830 }, 1000);  // 1000 millisec seems to work,  50 does not. 
+                }
             }
         }
     }
+
 
     // Sets geo location update figures on map for shortest distance to geo path, 
     // but only if current location is off the geo path by a specified amount.
@@ -905,7 +940,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
     // Event handler for zoomend event on map.
     function onMapZoomEnd(e) { 
-        if (degCompassHeading !== null)
+        if (degCompassHeading !== null) ////20170830Undo  added && compassHeadingArrow, do not set if compass is not visible.
             SetCompassHeadingArrow(degCompassHeading);
     }
 
@@ -1328,6 +1363,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     
     // Clears from map the compass heading arrow.
     function ClearCompassHeadingArrow() {
+        degCompassHeading = null;  ////20170830 added stmt.
         if (compassHeadingArrow)
             map.removeLayer(compassHeadingArrow);
         
@@ -1677,6 +1713,22 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             bValid = true;
         return bValid;
     };
+
+    
+    // Returns true if path is for areas of a single point.
+    // Arg:
+    //  path: wigo_ws_GpxPath containing path to check.
+    // Note: true iff path.arGeoPt has length 2 and element 0 equals element 1..
+    function IsSinglePointArea(path) {  ////20170830 added
+        var bYes = path.arGeoPt.length === 2;
+        if (bYes) {
+            var el0 = path.arGeoPt[0];
+            var el1 = path.arGeoPt[1];
+            bYes = el0.lat === el1.lat && el0.lon === el1.lon; 
+        }
+        return bYes;
+    }
+    
 
     // Note: See SVN tags/20150915 for simpler pervious version that did not
     //       try to account for overlapping segments in the path.
