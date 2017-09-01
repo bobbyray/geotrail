@@ -52,7 +52,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 .wigo_ws_StatusMsg {
     background-color: aliceblue;    
     font-size: 1.12em;  
-    width: 100%;
+    width: 95%;  
     top: 0px;
     left: 0px;
     cursor: none;
@@ -64,7 +64,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
     top: 0.2em;
     right: 0px;
 
-    width: 1.5em;
+    width: 4.5%;  
     height: 1.5em;
     text-align: center;
     background-color: gray;

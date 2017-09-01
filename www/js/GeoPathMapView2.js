@@ -185,28 +185,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     //  case the display is set to the bounds of the path with zoom set accordingly.
     //  (Using current zoom does not work well because it is for the previous trail.)
     this.DrawPath = function (path, zoom, gptCenter) {
-        if (!IsMapLoaded())
-            return; // Quit if map has not been loaded.
-        //var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
-        // Clear any current path before drawing another path.
-        this.ClearPath();
+        if (!DrawPath0(path)) 
+            return; 
 
-        // Quit if path is not defined.  
-        if (!path) {
-            curPath = null;
-            return;
-        }
-
-        curPathSegs.Init(path);
-        var pathCoords = curPathSegs.getPathCoords();
-
-        mapPath = L.polyline(pathCoords, { color: this.color.path, opacity: 0.5 });
-        mapPath.addTo(map);
-
-        // Draw start and end of path shape on the path.
-        SetStartEndOfPathShape();  
-
-        curPath = path; // Save current gpx path object.
         if (typeof(zoom) === 'number' && typeof(gptCenter) === 'object') {
             var llCenter = L.latLng(gptCenter.lat, gptCenter.lon);
             map.setZoomAround(llCenter, zoom); 
@@ -216,6 +197,45 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             this.PanToPathCenter()
         }
     };
+
+    // Draws geo path on the map object.
+    // Useful for Edit and Draw view.
+    // Args:
+    //  path: wigo_ws_GpxPath object for the path.
+    this.DrawEditPath = function(path) { 
+        DrawPath0(path);
+    };
+
+    // Helper for this.DrawPath() and this.DrawEditPath().
+    // Draws geo path on the map object.
+    // Args:
+    //  path: wigo_ws_GpxPath object for the path.
+    // Returns: boolean. false for failure.
+    function DrawPath0(path) { 
+        if (!IsMapLoaded())
+            return false; // Quit if map has not been loaded.
+        //var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
+        // Clear any current path before drawing another path.
+        that.ClearPath();
+
+        // Quit if path is not defined.  
+        if (!path) {
+            curPath = null;
+            return false;
+        }
+
+        curPathSegs.Init(path);
+        var pathCoords = curPathSegs.getPathCoords();
+
+        mapPath = L.polyline(pathCoords, { color: that.color.path, opacity: 0.5 });
+        mapPath.addTo(map);
+
+        // Draw start and end of path shape on the path.
+        SetStartEndOfPathShape();  
+
+        curPath = path; // Save current gpx path object.
+        return true;
+    }
 
     // Animates current path by showing an icon traveling along the path.
     this.AnimatePath = function() {  
@@ -340,7 +360,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             map.fitBounds(bounds);
             */
         } else {
-            if (IsSinglePointArea(path)) { ////20170830 added if and body
+            if (IsSinglePointArea(path)) { 
                 // Note: A single point area does not have a valid path boundary,
                 //       but it is used to define an area whose map tiles
                 //       can be cached offline without a trail selected.
@@ -365,23 +385,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 // Fit map to the corners.
                 var bounds = L.latLngBounds(llSW, llNE);
                 map.fitBounds(bounds);
-            } else { ////20170803 else added, but body existed 
+            } else { 
                 // Set zoom around last point of path.
-                // Note: this case is used for View > Draw to append or update points.            
                 var iLast = path.arGeoPt.length -1;
                 if (iLast >= 0) {
                     var llEnd = L.latLng(path.arGeoPt[iLast].lat, path.arGeoPt[iLast].lon);
-                    var zoom = map.getZoom();          ////20170830 Putback               
-                    map.setZoomAround(llEnd, zoom);    ////20170830 Putback
-                    ////20170830 Oops, problem for Edit or Draw mode.
-                    ////20170830 map.setZoom(12);
-                    ////20170830 // Delay map.panTo() for map to display properly.
-                    ////20170830 // I think the delay gives time to load map tiles
-                    ////20170830 // 1000 milliseconds seems to work, 50 does not.
-                    ////20170830 // Calling again helps if first time does not pan correctly.
-                    ////20170830 setTimeout(function(){
-                    ////20170830     map.panTo(llEnd);
-                    ////20170830 }, 1000);  // 1000 millisec seems to work,  50 does not. 
+                    var zoom = map.getZoom();          
+                    map.setZoomAround(llEnd, zoom);    
                 }
             }
         }
@@ -940,7 +950,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
     // Event handler for zoomend event on map.
     function onMapZoomEnd(e) { 
-        if (degCompassHeading !== null) ////20170830Undo  added && compassHeadingArrow, do not set if compass is not visible.
+        if (degCompassHeading !== null) 
             SetCompassHeadingArrow(degCompassHeading);
     }
 
@@ -1363,7 +1373,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     
     // Clears from map the compass heading arrow.
     function ClearCompassHeadingArrow() {
-        degCompassHeading = null;  ////20170830 added stmt.
+        degCompassHeading = null;  
         if (compassHeadingArrow)
             map.removeLayer(compassHeadingArrow);
         
@@ -1719,7 +1729,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Arg:
     //  path: wigo_ws_GpxPath containing path to check.
     // Note: true iff path.arGeoPt has length 2 and element 0 equals element 1..
-    function IsSinglePointArea(path) {  ////20170830 added
+    function IsSinglePointArea(path) {  
         var bYes = path.arGeoPt.length === 2;
         if (bYes) {
             var el0 = path.arGeoPt[0];

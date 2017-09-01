@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-201708291320"; // Constant string for App version. 
+    var sVersion = "1.1.030-201708311705"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -684,9 +684,10 @@ function wigo_ws_View() {
         return sValue;
     }
 
-    // Shows geo path information.
+    // Draws geo path on map and shows the information about it.
+    // Useful for drawing an existing path.
     // Args:
-    //  bShow: boolean. Show or hide displaying the geo path info.
+    //  bShow: boolean. Show or hide displaying the info about the path (droplist of trail names.)
     //  path: wigo_ws_GpxPath object defining the path. null indicates do not set. 
     this.ShowPathInfo = function (bShow, path) {
         ShowPathInfoDiv(bShow);
@@ -697,6 +698,16 @@ function wigo_ws_View() {
             // Animate the path by showing an icon traveling from start to end of the path.
             map.AutoAnimatePath(); 
         };
+    };
+
+    // Draws geo path on map and shows the information about it.
+    // Useful when drawing a path for Draw or Edit view.
+    // Args:
+    //  bShow: boolean. Show or hide displaying the geo path info.
+    //  path: wigo_ws_GpxPath object defining the path. null indicates do not set. 
+    this.ShowEditPathInfo = function(bShow, path) { 
+        ShowPathInfoDiv(bShow);
+        map.DrawEditPath(path);
     };
 
     // Caches current map view.
@@ -2056,7 +2067,7 @@ function wigo_ws_View() {
                         that.gpxPath.arGeoPt.push(gpt);
                         // Clear touch point from map.
                         // Draw the updated path on the map (touch point is cleared from map).
-                        view.ShowPathInfo(false, that.gpxPath);
+                        view.ShowEditPathInfo(false, that.gpxPath);  
                         // Draw edit circle for last point on path.
                         map.DrawEditPt(that.gpxPath.arGeoPt.length - 1);
                         // Pan to the append point. This avoids problem of next touch being off.
@@ -2219,7 +2230,7 @@ function wigo_ws_View() {
                         gptEdit.lat = gpt.lat;
                         gptEdit.lon = gpt.lon;
                         // Draw the updated path on the map (touch point is cleared from map).
-                        view.ShowPathInfo(false, that.gpxPath);  
+                        view.ShowEditPathInfo(false, that.gpxPath);  
                         // Pan to the append point. This avoids problem of next touch being off.
                         map.PanTo(gpt);
                         PrepareForSelectingPt();
@@ -2267,7 +2278,7 @@ function wigo_ws_View() {
                         // Insert touch point before selected point on the path.
                         that.gpxPath.arGeoPt.splice(ixPath, 0, gpt);
                         // Draw the updated path on the map (touch point is cleared from map).
-                        view.ShowPathInfo(false, that.gpxPath);  
+                        view.ShowEditPathInfo(false, that.gpxPath);  
                         // Pan to the append point. This avoids problem of next touch being off.
                         map.PanTo(gpt);
                         PrepareForSelectingPt();
@@ -2313,7 +2324,7 @@ function wigo_ws_View() {
                         // Delete selected point on the path.
                         that.gpxPath.arGeoPt.splice(ixPath, 1);
                         // Draw the updated path on the map (touch point is cleared from map).
-                        view.ShowPathInfo(false, that.gpxPath);  
+                        view.ShowEditPathInfo(false, that.gpxPath);  
                         // Pan to the append point. This avoids problem of next touch being off.
                         map.PanTo(gpt);
                         if (IsPathEmpty()) {

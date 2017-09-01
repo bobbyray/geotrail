@@ -387,7 +387,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
                     sStatus = base.FormCompletionStatus(req);
                     gpxList = new Array();
                     if (req && req.readyState == 4 && req.status === 403) { 
-                        sStatus = "Authentication failed. Log out and Sign In again because authorization has probably expired.";
+                        sStatus = "Authentication failed. Sign In again because authorization has probably expired.";
                     }
                 }
                 onGpxGetList(bOk, gpxList, sStatus);
@@ -407,7 +407,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
                     sStatus = base.FormCompletionStatus(req);
                     gpxList = new Array();
                     if (req && req.readyState == 4 && req.status === 403) {
-                        sStatus = "Authentication failed. Log out and Sign In again because authorization has probably expired.";
+                        sStatus = "Authentication failed. Sign In again because authorization has probably expired.";
                     }
                 }
                 onGpxGetListByLatLon(bOk, gpxList, sStatus);
