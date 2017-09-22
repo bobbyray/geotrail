@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-20170901"; // Constant string for App version. 
+    var sVersion = "1.1.030-20170922_1441"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2743,8 +2743,14 @@ function wigo_ws_View() {
             var that = this;
 
             // Start watching changes in location for recording.
+            // Note: Clears a previous watch if one exists.
             this.watch = function() {
                 var prevPosition = null;  
+                // Ensure a previous watch is cleared. This might prevent getting a stale position if 
+                // previous watch has not been cleared. Maybe not, but can't hurt.
+                this.clear();  
+                // Save start time for watch to filter out a stale position that might be reported.
+                msWatchStart = Date.now();  
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
                         // Success.
@@ -2753,11 +2759,24 @@ function wigo_ws_View() {
                         //       Therefore add a test, && myWatchId !== null, just in case this function is called
                         //       when trying to clear watch. The test should not hurt and might help.
                         if (!bTesting && myWatchId !== null) {  
-                            // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
-                            if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
-                                prevPosition = position;                                        
-                                var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
-                                AppendAndDrawPt(llNext, position.timestamp);
+                            // Check for stale position whose time stamp is before start time of watching.
+                            if (position.timestamp >= msWatchStart) { 
+                                // Ignore position if its timestamp is invalid wrt timestamp of the previous position.
+                                if (!prevPosition || prevPosition.timestamp < position.timestamp) { 
+                                    prevPosition = position;                                        
+                                    var llNext = new L.LatLng(position.coords.latitude, position.coords.longitude);
+                                    AppendAndDrawPt(llNext, position.timestamp);
+                                }
+                            } else {
+                                // Log the stale position
+                                var dateStale = new Date(position.timestamp);
+                                var dateWatchStart = new Date(msWatchStart);
+                                var sStaleDate = dateStale.toLocaleDateString();
+                                var sStaleTime = dateStale.toLocaleTimeString();
+                                var sWatchStartDate = dateWatchStart.toLocaleDateString();
+                                var sWatchStartTime = dateWatchStart.toLocaleTimeString(); 
+                                var sConsoleMsg = "Stale Watch: {0} {1} < start {2} {3}".format(sStaleDate, sStaleTime, sWatchStartDate, sWatchStartTime);
+                                console.log(sConsoleMsg);             
                             }
                         }
                     },
@@ -2800,6 +2819,7 @@ function wigo_ws_View() {
                 map.recordPath.zoomToFirstCoordOnce(500); 
             }
             var myWatchId = null;
+            var msWatchStart = 0;  // Current time in milliseconds when watch is started.
         } 
         var recordWatcher = new RecordWatcher(); 
 
@@ -5290,7 +5310,7 @@ function wigo_ws_View() {
 
     // Opitons for getting current geolocation.
     // geoLocationOptions.maximumAge is 0 to always get new geolocation, Otherwise it is max time to use cached location in milliseconds.
-    var geoLocationOptions = { enableHighAccuracy: true, timeout: Infinity, maximumAge: 10000 };  
+    var geoLocationOptions = { enableHighAccuracy: true, timeout: Infinity, maximumAge: 0 }; // maximumAge of 0 means no caching.
 
     // Gets current geo location and shows the location figures on the map.
     // Args:
