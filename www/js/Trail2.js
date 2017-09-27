@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-20170922_1441"; // Constant string for App version. 
+    var sVersion = "1.1.030-20170927_1604"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -248,6 +248,7 @@ function wigo_ws_View() {
                 var sLogMsg = "View Map: {0}, {1}".format(bOk ? "Ok" : "FAILED", sMsg);
                 console.log(sLogMsg); 
                 // Initialize to use background mode.
+                backgroundMode.initialize();  
             }
         }
         
@@ -2787,11 +2788,13 @@ function wigo_ws_View() {
                     },
                     geoLocationOptions    
                 );
+                backgroundMode.enableRecord(); 
             };
 
             // Clear watching the geolocation.
             this.clear = function() {
                 if (myWatchId) {
+                    backgroundMode.disableRecord(); 
                     navigator.geolocation.clearWatch(myWatchId); 
                 }
                 myWatchId = null;
@@ -5056,6 +5059,7 @@ function wigo_ws_View() {
         //    Return: not used.
         this.SetTimer = function (callback) {
             if (this.bOn) {
+                backgroundMode.enableTrack(); 
                 // Set new timer id as integer for current time.
                 myTimerId = Date.now();
                 // Set wake wake for time interval.
@@ -5075,6 +5079,7 @@ function wigo_ws_View() {
                     );
                 }
             } else {
+                backgroundMode.disableTrack(); 
                 // Clear timer.
                 myTimerId = null;
                 myTimerCallback = null;
@@ -5194,6 +5199,7 @@ function wigo_ws_View() {
         // current geolocation.
         this.SetTimer = function(callback) {
             if (this.bOn) {
+                backgroundMode.enableTrack(); 
                 myWatchCallback = callback;
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
@@ -5216,6 +5222,7 @@ function wigo_ws_View() {
                     geoLocationOptions    
                 );
             } else {
+                backgroundMode.disableTrack(); 
                 // Clear watch.
                 if (myWatchId)
                     navigator.geolocation.clearWatch(myWatchId); 
@@ -5720,7 +5727,9 @@ function wigo_ws_View() {
         };
     }
 
+    // Object to control backgound mode. 
     // Wrapper for cordova-plugin-background-mode.
+    function BackgroundMode() { 
         // Enable background mode for recording a trail.
         this.enableRecord = function() {
             enabled.bRecord = true;
