@@ -6114,7 +6114,7 @@ function wigo_ws_View() {
                           // ['start_pebble', 'Start Pebble'],          // No Pebble
                           ['help', 'Help - Guide'],                                
                           ['back_to_trail', 'Help - Back To Trail'],              
-                          ['battery_drain', 'Help - Reducing Battery Drain'],  ////20170929 change text from Help - Tracking vs Battery Drain.  
+                          ['battery_drain', 'Help - Reducing Battery Drain'],  
                           ['about', 'About'],                                     
                           ['license', 'Licenses'],
                           // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
@@ -6131,7 +6131,7 @@ function wigo_ws_View() {
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
-                          ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 ////20170929 was Help Tracking vs Battery Drain
+                          ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses'],                                // 7
                           // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      
