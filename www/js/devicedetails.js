@@ -13,6 +13,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 // to build for android or ios, but the file content is different.
 function Wigo_Ws_InitDeviceDetails(deviceDetails) {
     // Set type of device, android or iPhone.
-    deviceDetails.setDevice(deviceDetails.DeviceEnum().android);
-    //deviceDetails.setDevice(deviceDetails.DeviceEnum().iPhone); // For testing iPhone 
+    deviceDetails.setDevice(deviceDetails.DeviceEnum().android); 
+    // deviceDetails.setDevice(deviceDetails.DeviceEnum().iPhone); // For testing iPhone 
 }

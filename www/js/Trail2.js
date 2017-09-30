@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-20170927_1604"; // Constant string for App version. 
+    var sVersion = "1.1.031-20170930_1207"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -5800,8 +5800,37 @@ function wigo_ws_View() {
                         }
                       };
         
-    };
+    }
     var backgroundMode = new BackgroundMode(); 
+
+    // Object to use if background mode is unavailable.
+    // Note: Does nothing, does not use background plugin.
+    //       All the properties must be same as properites for BackgroundMode() object.
+    function BackgroundModeUnavailable() {
+        // Enable background mode for recording a trail.
+        this.enableRecord = function() {
+        };
+        
+        // Disable background mode for recording a trail.
+        this.disableRecord = function() {
+        };
+
+        // Enable background mode for tracking geo location.
+        this.enableTrack = function() {
+        };
+
+        // Disable background mode for tracking geo location.
+        this.disableTrack = function() {
+        };
+
+        // Initializes the object.
+        // Note: Currently handlers simply log event that is raised to console.
+        this.initialize = function() {
+        };
+    }
+    // For iPhone, background mode does not work.
+    if (window.app.deviceDetails.isiPhone())
+        backgroundMode = new BackgroundModeUnavailable(); 
     
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
     // Arg:
@@ -6085,7 +6114,7 @@ function wigo_ws_View() {
                           // ['start_pebble', 'Start Pebble'],          // No Pebble
                           ['help', 'Help - Guide'],                                
                           ['back_to_trail', 'Help - Back To Trail'],              
-                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  
+                          ['battery_drain', 'Help - Reducing Battery Drain'],  ////20170929 change text from Help - Tracking vs Battery Drain.  
                           ['about', 'About'],                                     
                           ['license', 'Licenses'],
                           // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
@@ -6102,7 +6131,7 @@ function wigo_ws_View() {
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
-                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
+                          ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 ////20170929 was Help Tracking vs Battery Drain
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses'],                                // 7
                           // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      
