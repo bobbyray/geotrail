@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.030-20170922_1441"; // Constant string for App version. 
+    var sVersion = "1.1.031-20170930_1207"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -247,6 +247,8 @@ function wigo_ws_View() {
                 // Log message indicating if map initialized ok.  
                 var sLogMsg = "View Map: {0}, {1}".format(bOk ? "Ok" : "FAILED", sMsg);
                 console.log(sLogMsg); 
+                // Initialize to use background mode.
+                backgroundMode.initialize();  
             }
         }
         
@@ -2786,12 +2788,15 @@ function wigo_ws_View() {
                     },
                     geoLocationOptions    
                 );
+                backgroundMode.enableRecord(); 
             };
 
             // Clear watching the geolocation.
             this.clear = function() {
-                if (myWatchId)
+                if (myWatchId) {
+                    backgroundMode.disableRecord(); 
                     navigator.geolocation.clearWatch(myWatchId); 
+                }
                 myWatchId = null;
             };
 
@@ -4921,9 +4926,6 @@ function wigo_ws_View() {
         ShowHelpDiv(divTermsOfUse, bShow);    
     }
 
-
-
-
     // Shows or hides the divTermsOfUse with confirmDialogBar at the bottom.
     // Arg:
     //  bShow: boolean to indicate to show.
@@ -5057,6 +5059,7 @@ function wigo_ws_View() {
         //    Return: not used.
         this.SetTimer = function (callback) {
             if (this.bOn) {
+                backgroundMode.enableTrack(); 
                 // Set new timer id as integer for current time.
                 myTimerId = Date.now();
                 // Set wake wake for time interval.
@@ -5076,6 +5079,7 @@ function wigo_ws_View() {
                     );
                 }
             } else {
+                backgroundMode.disableTrack(); 
                 // Clear timer.
                 myTimerId = null;
                 myTimerCallback = null;
@@ -5195,6 +5199,7 @@ function wigo_ws_View() {
         // current geolocation.
         this.SetTimer = function(callback) {
             if (this.bOn) {
+                backgroundMode.enableTrack(); 
                 myWatchCallback = callback;
                 myWatchId = navigator.geolocation.watchPosition(
                     function (position) {
@@ -5217,7 +5222,8 @@ function wigo_ws_View() {
                     geoLocationOptions    
                 );
             } else {
-                // Cleer watch.
+                backgroundMode.disableTrack(); 
+                // Clear watch.
                 if (myWatchId)
                     navigator.geolocation.clearWatch(myWatchId); 
                 myWatchId = null;
@@ -5227,9 +5233,7 @@ function wigo_ws_View() {
 
                 curMapUpdateLocation = null;  // L.latLng(..) object defined in Leaflet for current location shown on map.
             }
-
         };
-
 
         // Gets current geo location and shows the location figures on the map.
         // Args:
@@ -5299,7 +5303,6 @@ function wigo_ws_View() {
         var minMapUpdateDistance = 50;    // Minimum distance in meters from previous map update location to update again. 
         var curMapUpdateLocation = null;  // L.latLng(..) object defined in Leaflet for current location shown on map.
     }
-
     
     var geoTrackTimerBase = new GeoTrackTimer();
     GeoTrackWatcher.prototype = geoTrackTimerBase;
@@ -5724,7 +5727,111 @@ function wigo_ws_View() {
         };
     }
 
+    // Object to control backgound mode. 
+    // Wrapper for cordova-plugin-background-mode.
+    function BackgroundMode() { 
+        // Enable background mode for recording a trail.
+        this.enableRecord = function() {
+            enabled.bRecord = true;
+            cordova.plugins.backgroundMode.enable();
+        };
+        
+        // Disable background mode for recording a trail.
+        this.disableRecord = function() {
+            enabled.bRecord = false;
+            if (!enabled.isEnabled()) {
+                cordova.plugins.backgroundMode.disable();
+            }
+        };
 
+        // Enable background mode for tracking geo location.
+        this.enableTrack = function() {
+            enabled.bTrack = true;
+            cordova.plugins.backgroundMode.enable();
+        };
+
+        // Disable background mode for tracking geo location.
+        this.disableTrack = function() {
+            enabled.bTrack = false;
+            if (!enabled.isEnabled()) {
+                cordova.plugins.backgroundMode.disable();
+            }
+        };
+
+        // Initializes the object.
+        // Note: Currently handlers simply log event that is raised to console.
+        this.initialize = function() {
+            // local helper function.
+            // Define handler to log event that is raised to console.
+            // Also, only for activate event, enable gps by disabling web view optimizations.
+            function setHandler(sBkMode) {
+                cordova.plugins.backgroundMode.on(sBkMode, 
+                    function(){
+                        console.log("Background mode event: " + sBkMode)
+                        if (sBkMode === 'activate') {
+                            cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+                        }
+                    });
+
+            }
+
+            setHandler('enable');
+            setHandler('disable');
+            setHandler('activate');
+            setHandler('deactivate');
+        };
+
+        // Private members
+        // Object for state of tracking and/or recording enabled.
+        var enabled = { bRecord: false,  // Indicates recording a trail is enabled.
+                        bTrack: false,   // Indicates tracking a trail is enabled.
+                        // Returns true if any boolean property is enabled.
+                        isEnabled: function() {
+                            var bEnabled = false;
+                            for (var prop in this) {
+                                if (this.hasOwnProperty(prop) && typeof this[prop] === 'boolean') {
+                                    if (this[prop]) {
+                                        bEnabled = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            return bEnabled;
+                        }
+                      };
+        
+    }
+    var backgroundMode = new BackgroundMode(); 
+
+    // Object to use if background mode is unavailable.
+    // Note: Does nothing, does not use background plugin.
+    //       All the properties must be same as properites for BackgroundMode() object.
+    function BackgroundModeUnavailable() {
+        // Enable background mode for recording a trail.
+        this.enableRecord = function() {
+        };
+        
+        // Disable background mode for recording a trail.
+        this.disableRecord = function() {
+        };
+
+        // Enable background mode for tracking geo location.
+        this.enableTrack = function() {
+        };
+
+        // Disable background mode for tracking geo location.
+        this.disableTrack = function() {
+        };
+
+        // Initializes the object.
+        // Note: Currently handlers simply log event that is raised to console.
+        this.initialize = function() {
+        };
+    }
+    // For iPhone, background mode does not work.
+    if (window.app.deviceDetails.isiPhone())
+        backgroundMode = new BackgroundModeUnavailable(); 
+    
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
     // Arg:
     //  upd is {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: float, bearingRefLine: float,
@@ -6007,7 +6114,7 @@ function wigo_ws_View() {
                           // ['start_pebble', 'Start Pebble'],          // No Pebble
                           ['help', 'Help - Guide'],                                
                           ['back_to_trail', 'Help - Back To Trail'],              
-                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  
+                          ['battery_drain', 'Help - Reducing Battery Drain'],  
                           ['about', 'About'],                                     
                           ['license', 'Licenses'],
                           // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
@@ -6024,7 +6131,7 @@ function wigo_ws_View() {
                           ['start_pebble', 'Start Pebble'],                       // 2
                           ['help', 'Help - Guide'],                               // 3 
                           ['back_to_trail', 'Help - Back To Trail'],              // 4
-                          ['battery_drain', 'Help - Tracking vs Battery Drain'],  // 5
+                          ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses'],                                // 7
                           // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      

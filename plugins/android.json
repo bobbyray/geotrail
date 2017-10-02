@@ -171,6 +171,9 @@
         },
         "cordova-plugin-network-information": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-background-mode": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     },
     "dependent_plugins": {
@@ -178,6 +181,9 @@
             "PACKAGE_NAME": "ws.wigo.geotrail"
         },
         "cordova-plugin-file": {
+            "PACKAGE_NAME": "ws.wigo.geotrail"
+        },
+        "cordova-plugin-device": {
             "PACKAGE_NAME": "ws.wigo.geotrail"
         }
     }

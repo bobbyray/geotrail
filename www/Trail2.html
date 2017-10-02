@@ -376,7 +376,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Find Trails > On Screen<br/>
             Searches for trails that are in the area displayed on the screen. 
             First, pan, zoom, and pinch to select the area you see on the screen.</li>
-            <li>Find Trails > All Trails<br>
+            <li>Find Trails > All Trails<br/>
             Searches for all public trails and your private trails.</li>
             <li>Find Trails > All Mine<br/>
             Searches for all your trails, both public and private.
@@ -389,10 +389,25 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <h3 id="helpOnlineRecord">Record DropList</h3>
         You can record your travel on the map along with your travel time.
         This is useful to keep track of the time and distance for a run.
-        Also recording can be helpful if you are trying to return to a trail.<br/>
-        Basically you can start, stop, and resume recording a trail. The droplist shows
+        Also recording can be helpful if you are trying to return to a trail.
+        <p>Basically you can start, stop, and resume recording a trail.</p>
+        
+        <p class="noIosHelp">  
+        When recording is active, it continues when GeoTrail is in the background 
+        due to turning the display off or switching to a different app.
+        Be sure you stop recording when no longer needed to reduce battery drain.           
+        </p>
+        
+        <p class="noAndroidHelp">
+        Recording is only active if GeoTrail is in the foreground.
+        Dimming the display helps reduce battery drain when recording.
+        If GeoTrail is in the background due to turning the display off or switching to a different app,
+        recording is discontinued. 
+        </p>
+
+        <p>The droplist shows
         the current recording state. Touching the droplist presents options
-        to control recording:
+        to control recording:</p>
         <ul>
             <li>Off State
                 <ul>
@@ -681,7 +696,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             the <i>Animate Current Trail</i> item from the Trails droplist.<br/>
             Touching the map stops an animation that is running.</li>
             <li class="noIosHelp">Pebble Watch Yes | No<br/>
-            Yes to show messages on a Pebble Watch that is connected to the phone.</li>
+            Yes to show messages on a Pebble Watch that is connected to the phone.
+            The Select (middle) button on the Pebble gets the current geolocation from the phone.</li>
             <li class="noIosHelp">Pebble Vibration Count<br/>
             Number of vibrations given on Pebble Watch for message indicating
             off trail. Count of 0 disables vibrations.<br/>
@@ -766,8 +782,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         Display instructions for returning to the trail when you are off the trail. Explains why the instructions 
         may be inaccurate and that you need to use your judgement.
         <div class="noIosHelp">
-        <h3>Menu > Help - Tracking vs Battery Drain</h3>
-        Explains that automatic tracking causes faster battery drain.
+        <h3>Menu > Help - Reducing Battery Drain</h3>
+        Explains that automatic tracking or recording cause faster battery drain.
         </div>
         <h3>Menu > About</h3>
         Displays app version number and copyright.
@@ -816,9 +832,27 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         The turning suggestions are only an aid if you do not know accurate compass directions.</p>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
-    <!-- Help Tracking vs Battery Drain, only shown when selected from mainMenu -->
-    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow noIosHelp'>
-        <h1>Help - Tracking vs Battery Drain</h1>
+
+    <div id='divHelpTrackingVsBattery' class='wigo_ws_NoShow '>  
+        <h1>Help - Reducing Battery Drain</h1>
+        <p>Automatic Tracking and Recording increase the battery drain.</p>
+        
+        <p class='noIosHelp'>
+        If the GeoTrail app is put in the background by turning the display off or by switching to another app,
+        automatic tracking or recording continue in the background consuming power. So be sure to turn Track Off
+        on the Map Bar and stop recording (Record > Stop), when you do not need these features.
+        You can turn off the display when automatic tracking or recording is active to reduce
+        the power needed by the display. Also this prevents accidental touches from interfering with GeoTrail.<br/>
+        Note: If GeoTrail is consuming power when in the background, a warning appears in the notifications allowing
+        you to force GeoTrail to stop. 
+        </p>
+
+        <p class="noAndroidHelp">
+            When the GeoTrail app is in the background (display turned off or another app is in the foreground), GeoTrail is not draining the battery,
+            but it is also NOT tracking or recording. If you want to track automatically or record, GeoTrail must be in the foreground. 
+            Dimming the display brightness reduces the power consumed by the display.</p>
+        </p>
+            
         <p>Menu > Settings > Allow Geo Tracking enables or disables automatic tracking.</p>
         <p>When automatic tracking is enabled, the battery in the phone is drained more quickly.
         The shorter the interval for automatic tracking, the quicker the battery drains. 
@@ -829,20 +863,14 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         which minimizes the battery drain.</p> 
         <p>You can still check your geo location manually by touching
         the MyLoc button on the bottom of the map.
-        <span class="noIosHelp"> Also, if using a Pebble watch, the Select (middle) button does the same thing.</span></p>
+        <span class="noIosHelp"> Also, if using a Pebble watch, the Select (middle) button does the same thing when GeoTrail is in the foreground.
+        However, if GeoTrail is in the background, the Pebble Select button only works if Tracking or Recording is on.
+        </span></p>
         <p>The Track control on the bottom of the map lets you toggle automatic tracking On or Off.</p>
-        <span class="noIosHelp">
-        When this app is in the background (not showing) with automatic tracking Off, the app is not draining the battery.
-        However, if the app is in the background with automatic tracking On, the app is draining the battery.</p>
-        <p>Note that if the phone screen is turned off (phone not powered totally off, just the screen turned off),
-        automatic tracking when On
-        is still occurring, which is draining the battery.</p>
-        </span>
-        <p class='noAndroidHelp'> 
-        Automatic tracking does NOT occur if the app is in the background (not showing).</p>
-        <p>When automatic tracking is Off, the drain on the battery is minimal.</p>
+        <p>Record > Stop stops recording. If Record shows as On, you are recording, otherwise recording is stopped.</p>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
+
     <!-- Help License, only shown wehn selected from mainMenu -->
     <div id='divHelpLicense' class='wigo_ws_NoShow'>
         <h1>Licenses</h1>
@@ -871,6 +899,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>cordova-plugin-network-information 1.3.2 "Network Information"</li>
         <li>github.com/jawj/OverlappingMarkerSpiderfier-Leaflet, May 10, 2016</li>
         <li>github.com/openplans/Leaflet.AnimatedMarker, v1.0.0, December 19, 2016</li>
+        <li>cordova-plugin-background-mode 0.7.2 "BackgroundMode"</li>
         </ul>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>
