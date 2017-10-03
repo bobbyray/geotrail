@@ -149,7 +149,14 @@ function wigo_ws_GeoPathsRESTfulApi() {
             onLogout = function (bOk) { };
         // Post ajax to geopaths server.
         var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
-    }
+    };
+
+    // Resets flag that indicates http request (get or post) is still in progress.
+    // Note: May be needed if trying to issue subsequent requests fails due to 
+    //       a previous request not completed. 
+    this.ResetRequest = function() {  ////20171002 added property.
+        base.ResetRequest();
+    };
 
     // Returns ref to enumeration object for sharing state of a record.
     // Returned obj: { public: 0, protected: 1, private: 2 }

@@ -211,6 +211,12 @@ function wigo_ws_View() {
     //      by EAuthStatus in Service.cs.
     this.onAuthenticationCompleted = function (result) { };
 
+    
+    // Reset http request that may be in progress.
+    // Handler Signature:
+    //  nMode: byte value of this.eMode enumeration.
+    this.onResetRequest = function(nMode) { }; ////20171002 added. 
+
     // ** Public members
 
     // Initializes the view. 
@@ -6279,10 +6285,18 @@ function wigo_ws_View() {
     parentEl = document.getElementById('selectSignInHolder');
     var selectSignIn = new ctrls.DropDownControl(parentEl, "signinDropDown", "Sign-In", null, "img/ws.wigo.dropdownhorizontalicon.png"); 
     selectSignIn.fill([['facebook', 'Facebook'],
-                       ['logout', 'Logout']
+                       ['logout', 'Logout'],
+                       ['reset','Reset Server Access'], ////20171002 added
                       ]);
 
     selectSignIn.onListElClicked = function(dataValue) {
+
+        // Check for resetting http access first. 
+        if (dataValue === 'reset') {  ////20171002 added if and body
+            that.onResetRequest(nMode);
+            return;
+        }
+
         // Quit if there is no internet access. 
         if (!networkInfo.isOnline()) {
             var sAction = dataValue === 'facebook' ? 'sign in' :
@@ -6312,7 +6326,7 @@ function wigo_ws_View() {
             that.ClearStatus();
         }
         selectSignIn.setSelected('set'); // Select Signin element.
-    }
+    };
 
     // ** Initialize online bar.
     // Select GeoTrail control
@@ -6880,12 +6894,12 @@ function wigo_ws_Controller() {
                 });
             if (!bPutOk) {
                 var sError = "Cannot upload GPX trail to server because another transfer is already in progress.";
-                view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload. 
+                view.uploadPathCompleted(nMode, false, sError, path.nId, path.sPathName, true); // false => not ok, true => upload.  ////20171002 fix bOk
             }
         } else { 
             var sError = "Owner must be signed in to upload GPX trail to server.";
             view.ShowStatus(sError);
-            view.uploadPathCompleted(nMode, bOk, sError, path.nId, path.sPathName, true); // true => upload.
+            view.uploadPathCompleted(nMode, false, sError, path.nId, path.sPathName, true); // false => not ok, true => upload. ////20171002 fix bOk.
         }        
     };
 
@@ -7081,6 +7095,13 @@ function wigo_ws_Controller() {
         }
     };
 
+
+    // Reset http request that may be in progress.
+    // Handler Signature:
+    //  nMode: byte value of this.eMode enumeration.
+    view.onResetRequest = function(nMode) {  ////20171002 added. 
+        model.resetRequest();
+    };
 
     // ** More private members
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
