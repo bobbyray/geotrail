@@ -2906,7 +2906,8 @@ function wigo_ws_View() {
 
         }
         var stateOn = new StateOn();
-
+        
+        /* ////20171003 redo to retry on upload and add save locally.
         // Record trail is completed.
         function StateStopped() {
             this.prepare = function() {
@@ -3079,6 +3080,191 @@ function wigo_ws_View() {
             }
 
         }
+        */
+
+
+        // Record trail is completed.
+        function StateStopped() {
+            this.prepare = function() {
+                recordWatcher.clear(); // Ensure watching for location change is stopped.
+                recordCtrl.setLabel("Stopped");
+                recordCtrl.empty();
+                var bSavePathValid = uploader.isSavePathValid(); 
+                if (bSavePathValid) {
+                    recordCtrl.appendItem("save_trail", "Save Trail");
+                    recordCtrl.appendItem("animate_trail", "Animate Trail"); 
+                }
+                // Decided not use append_trail. Instead use Edit mode to insert another trail.
+                // var bAppendPathValid = bOnline && uploader.isAppendPathValid();
+                recordCtrl.appendItem("show_stats", "Show Stats");
+                recordCtrl.appendItem("resume", "Resume");
+                recordCtrl.appendItem("clear", "Clear");
+                recordCtrl.appendItem("filter", "Filter");
+                if (map.recordPath.isUnfilterEnabled()) {
+                        recordCtrl.appendItem("unfilter", "Unfilter");
+                }
+
+                // Ensure signin ctrl is hidden.
+                signin.hide();
+                ShowPathDescrBar(false); 
+                if (bOnline && !bSavePathValid) {  // Removed && !bAppendPathValid
+                    view.ShowAlert("There is no recorded trail.");
+                }
+            };
+
+            this.nextState = function(event) {
+                switch (event) {
+                    case that.event.save_trail: 
+                        if (bOnline) {  
+                            if (uploader.isUploadInProgress() && nUploadWaitBeforeRetryCountDown > 0 ) { ////2017103 Add check for waiting before retrying upload.
+                                // Issue warning that uploading is in progress, but after max tries try to upload again.
+                                nUploadWaitBeforeRetryCountDown--;  ////20171003 added
+                                view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
+                            } else if (uploader.isPathAlreadyDefined()) {
+                                nUploadWaitBeforeRetryCountDown = nUploadWaitBeforeRetryMax; ////20171003 added.
+                                // Update existing Record trail that has already been uploaded.
+                                uploader.setArGeoPt(); 
+                                uploader.upload();
+                                stateStopped.prepare();
+                                curState = stateStopped;
+                            } else {
+                                nUploadWaitBeforeRetryCountDown = nUploadWaitBeforeRetryMax; ////20171003 added.
+                                // Define params for a new recorded trail.
+                                if (networkInfo.isOnline()) {   
+                                    // Define params for a new recorded trail.
+                                    stateDefineTrailName.prepare();
+                                    curState = stateDefineTrailName;
+                                } else {
+                                    // Indicate indicate is not available, stay in same state.
+                                    view.ShowStatus("Internet access is not available. Cannot upload."); 
+                                }
+                            }
+                        } else {  
+                            // Save record trail offline locally.
+                            if (localSaver.isPathNameDefined()) {
+                                // Update Record trail amd save it locally.
+                                var bSaveOk = localSaver.save();
+                                ShowOfflineSavePathResult(bSaveOk); 
+                                // Stay in same state.
+                                stateStopped.prepare();
+                                curState = stateStopped;
+                            } else {
+                                // Define trail name  for a new recorded trail.
+                                stateDefineTrailName.prepare();
+                                curState = stateDefineTrailName;
+                            }
+                        }
+                        break;
+                    // case that.event.append_trail: // Note: this case is no longer used.
+                    //     if (uploader.isUploadInProgress() ) { 
+                    //         view.ShowAlert("Uploading recording of trail has not completed.<br/>Please wait.");
+                    //     } else {
+                    //         // Upload recorded trail appended to main trail.
+                    //         // Note: If later decide to use append_trail, change to present confirm dialog, view.ShowConfirm(..).
+                    //         uploader.uploadMainPath();
+                    //         stateStopped.prepare();
+                    //         curState = stateStopped; 
+                    //     }
+                    //     break;
+                    case that.event.animate_trail: 
+                        map.recordPath.animatePath();
+                        // Stay in same state, which is already prepared.
+                        break;
+                    case that.event.show_stats:
+                        ShowStats();
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
+                    case that.event.resume: 
+                        var msTimeStamp = Date.now();
+                        map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.RESUME); 
+                        stateOn.prepare();
+                        curState = stateOn;
+                        break;
+                    case that.event.clear:
+                        stateInitial.prepare();
+                        curState = stateInitial;
+                        break;
+                    case that.event.filter: 
+                        var filterResult = map.recordPath.filter();
+                        var sMsg;
+                        var sAdditional = filterResult.nAlreadyDeleted > 0 ? "additional " : "";
+                        if (filterResult.nDeleted <= 0)
+                            sMsg = "No {0}points filtered out.".format(sAdditional);    
+                        else if (filterResult.nDeleted === 1)
+                            sMsg = "1 {0}point filtered out.".format(sAdditional);      
+                        else 
+                            sMsg = "{0} {1}points filtered out.".format(filterResult.nDeleted, sAdditional); 
+                        view.ShowStatus(sMsg, false);
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
+                    case that.event.unfilter: 
+                        map.recordPath.unfilter();
+                        view.ShowStatus("Filter removed.", false);  
+                        stateStopped.prepare();
+                        curState = stateStopped;
+                        break;
+                }
+            };
+            
+            // Shows current stats. 
+            function ShowStats() {
+                // Helper that returns minutes and seconds for a time interval.
+                // Returns string for minutes and  seconds.
+                // Arg: 
+                //  msInterval: number of milliseconds in the interval.
+                function TimeInterval(msInterval) {
+                    var nSecs = msInterval / 1000;
+                    var nMins = Math.floor(nSecs/60);
+                    var nSecs = nSecs % 60; 
+                    // Note: Must use  nSecs < 9.5, not <= 9.5 because 9.5.toFixed(0) rounds to 10 and 9.5 < 9.5 is false.
+                    var sSecs = nSecs < 9.5 ? "0" + nSecs.toFixed(0) : nSecs.toFixed(0);  
+                    sSecs = "{0} : {1}".format(nMins, sSecs); 
+                    return sSecs;
+                }
+                var stats = map.recordPath.getStats();
+                var sMsg = "";
+                if (stats.bOk) {
+                    var sStartDate = stats.tStart.toLocaleDateString();
+                    var sStartTime = stats.tStart.toLocaleTimeString();
+                    var s = "Stats for {0} {1}<br/>".format(sStartDate, sStartTime);
+                    sMsg += s;
+                    var sLen = lc.to(stats.dTotal); // lc is LengthConvert() object in view.
+                    s = "Distance: {0}<br/>".format(sLen);
+                    sMsg += s;
+                    s = "Run Time (mins:secs): {0}<br/>".format(TimeInterval(stats.msRecordTime));
+                    sMsg += s;
+                    // Show speed in miles per hour (MPH) or kilometers per hour (KPH). 
+                    var speed = lc.toSpeed(stats.dTotal, stats.msRecordTime/1000.0);    
+                    s = "Speed: {0}<br/>".format(speed.text);                           
+                    sMsg += s;                                                          
+                    // Elapsed time does not seem useful, probably confusing.
+                    // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
+                    // sMsg += s;
+                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(1)); 
+                    sMsg += s;
+                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0));  
+                    sMsg += s;   
+                    if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
+                        s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
+                        sMsg += s;
+                    }
+                    view.ShowStatus(sMsg, false);
+                    view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. 
+                    view.onSetRecordStats(stats); // Save stats data. 
+                } else {
+                    view.ShowStatus("Failed to calculate stats!");
+                }
+            }
+            
+            var nUploadWaitBeforeRetryMax = 3;  // Max number of times to wait on upload when upload is in progress.
+            var nUploadWaitBeforeRetryCountDown = nUploadWaitBeforeRetryMax; // Current count down for waiting on upload before retrying to upload.
+        }
+
+
+        
+
         var stateStopped = new StateStopped();
 
 
@@ -3321,6 +3507,7 @@ function wigo_ws_View() {
                 this.uploadPath.arGeoPt = null; 
                 bNewUploadPath = false;  
                 txbxPathName.value = ""; 
+                bUploadInProgress = false; ////20171003 added
             };
 
             // Indicates the upload has completed.
@@ -3368,7 +3555,7 @@ function wigo_ws_View() {
 
             // Returns true if an upload is still in progress.
             this.isUploadInProgress = function() {
-                return bUploadInProgress;
+                return bUploadInProgress;   
             };
 
             // Returns true if it is valid to save the recorded path.
@@ -6294,6 +6481,7 @@ function wigo_ws_View() {
         // Check for resetting http access first. 
         if (dataValue === 'reset') {  ////20171002 added if and body
             that.onResetRequest(nMode);
+            that.ShowStatus("Reset server access.", false);
             return;
         }
 
