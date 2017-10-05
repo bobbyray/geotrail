@@ -63,7 +63,7 @@ function wigo_ws_Ajax(sBaseUri) {
     // is in progress.
     // Note: This may be needed if a request fails and there is no acknowlegement
     //       from the server that the request has completed.
-    this.ResetRequest = function() { ////20171002 added property.
+    this.ResetRequest = function() { 
         bRequestInProgress = false;
     };
 

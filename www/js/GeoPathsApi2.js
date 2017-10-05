@@ -154,7 +154,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
     // Resets flag that indicates http request (get or post) is still in progress.
     // Note: May be needed if trying to issue subsequent requests fails due to 
     //       a previous request not completed. 
-    this.ResetRequest = function() {  ////20171002 added property.
+    this.ResetRequest = function() {  
         base.ResetRequest();
     };
 

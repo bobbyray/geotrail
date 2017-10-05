@@ -188,7 +188,7 @@ function wigo_ws_Model() {
     // Resets flag that indicates http request (get or post) is still in progress.
     // Note: May be needed if trying to issue subsequent requests fails due to 
     //       a previous request not completed. 
-    this.resetRequest = function() { ////20171002 added property.
+    this.resetRequest = function() { 
         api.ResetRequest();     
     };
 
