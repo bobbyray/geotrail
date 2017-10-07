@@ -987,7 +987,11 @@ function wigo_ws_View() {
             that.ShowStatus("Touch Upload to complete saving.", false);
             var nMode = that.curMode();
             if (nMode === that.eMode.online_view) {
-                that.ShowStatus("Touch Upload to complete saving.", false);
+                if (recordFSM.isDefineTrailNameUploading()) {
+                    that.ShowStatus("Touch Upload to complete saving.", false);
+                } else {
+                    that.ShowStatus("Touch Save Offline to complete saving.", false);
+                }
             } else if (nMode === that.eMode.offline) {
                 that.ShowStatus("Touch Save Offline to complete saving.", false);
             } 
@@ -2711,6 +2715,18 @@ function wigo_ws_View() {
             return bYes; 
         };
 
+        // Returns true if current state is DefineTrailName and uploading the trail.
+        // false indicates saving the trail locally (offline) or current state
+        // is not DefineTrailName.
+        this.isDefineTrailNameUploading = function() {
+            var bUploading = this.isDefiningTrailName();
+            if (bUploading) {
+                bUploading = stateDefineTrailName.isUploading();
+            }
+            return bUploading;
+        };
+
+
         // Returns true if given psuedo Reccord path id matches that of the currently saved
         // Record trail.
         // Arg:
@@ -2986,7 +3002,7 @@ function wigo_ws_View() {
                     case that.event.save_locally:  
                         // Save record trail offline locally.
                         if (localSaver.isPathNameDefined()) {
-                            // Update Record trail amd save it locally.
+                            // Update Record trail and save it locally.
                             var bSaveOk = localSaver.save();
                             ShowOfflineSavePathResult(bSaveOk); 
                             // Stay in same state.
@@ -3113,6 +3129,7 @@ function wigo_ws_View() {
             // Arg:
             //  bUpload: boolean. true for upload trail to server, false to save trail locally.
             this.prepare = function(bUpload) { 
+                bUploading = bUpload;
                 SetPathNameUI(bUpload); 
                 recordCtrl.setLabel("TrName");
                 recordCtrl.empty();
@@ -3120,8 +3137,9 @@ function wigo_ws_View() {
                 if (bUpload)                                                 
                     recordCtrl.appendItem("upload", "Upload");               
                 else                                                         
-                    recordCtrl.appendItem("save_locally", "Save Locally");   
+                    recordCtrl.appendItem("save_locally", "Save Offline");   
                 recordCtrl.appendItem("cancel", "Cancel");
+                // Note: the above items for recordCtrl droplist are not actually used because SetPathNameUI() shows two buttons to use instead.
                 if (bUpload)        
                     signin.showIfNeedBe(); 
                 txbxPathName.focus();  // Set focus to textbox so keyboard is presented. 
@@ -3165,6 +3183,15 @@ function wigo_ws_View() {
                         break;
                 }
             };
+
+            // Return boolean indicating if StateDefineTrailName is for uploading.
+            // true indicates uploading, false indicates saving.
+            this.isUploading = function() {
+                return bUploading;
+            }
+
+            var bUploading = false; 
+
             // Helper to upload new recorded trail. Shows a status message for the result.
             // Returns {empty: boolean, upload: boolean}:
             //  empty: boolean. true if path coords are empty (one or no points).
