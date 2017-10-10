@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171009_1732"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171010"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3014,11 +3014,12 @@ function wigo_ws_View() {
                                 // Indicate internet is not available, stay in same state.
                                 view.ShowStatus("Internet access is not available. Cannot upload."); 
                                 view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  
-                                var sMsg = "If Internet access is stiil not available:"
+                                var sMsg = "Alternatively you can:"
                                 sMsg += "<ul><li>Use Record > Save Offline to save locally.</li>"
-                                sMsg += "<li>Then later upload: View > Offline.</li>"
-                                sMsg += "<li>Select trail from Trails droplist.</li>"
-                                sMsg += "<li>Local Data > Begin Upload.</li></ul>";
+                                sMsg += "<li>Then later upload:<ul>";
+                                sMsg += "<li>View > Offline.</li>"
+                                sMsg += "<li>Select saved trail from Trails droplist.</li>"
+                                sMsg += "<li>Local Data > Begin Upload.</li></ul></ul>";
                                 view.AppendStatusDiv(sMsg, false);
                             }
                         }

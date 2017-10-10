@@ -30,7 +30,7 @@ function wigo_ws_NetworkInformation() {
     // Returns string that describes things to try to get the internet connected.
     // Note: string uses html.
     this.getBackOnlineInstr = function() {  
-        var sInstr = "To get online, try the following in your phone settings.";
+        var sInstr = "If the internet should be available, try the following in your phone settings.";
         sInstr += "<ul>";
         sInstr += "<li>Turn off WiFi and then turn WiFi on again, or</li>";
         sInstr += "<li>if this did not work, leave WiFi off and use your cell network instead.</li>";
