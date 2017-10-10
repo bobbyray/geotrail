@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171008_1721"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171009_1732"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -432,7 +432,7 @@ function wigo_ws_View() {
     //  sStatus: string of html to display.
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     // Note: appens a div element, whereas this.AppendStatus appends a span element.
-    this.AppendStatusDiv = function (sStatus, bError) {  ////20171009 added
+    this.AppendStatusDiv = function (sStatus, bError) {  
         if (!divStatus.isEmpty()) {
             sStatus = "<br/>" + sStatus;
         }
@@ -3013,7 +3013,7 @@ function wigo_ws_View() {
                             } else {
                                 // Indicate internet is not available, stay in same state.
                                 view.ShowStatus("Internet access is not available. Cannot upload."); 
-                                view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added
+                                view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  
                                 var sMsg = "If Internet access is stiil not available:"
                                 sMsg += "<ul><li>Use Record > Save Offline to save locally.</li>"
                                 sMsg += "<li>Then later upload: View > Offline.</li>"
@@ -3750,7 +3750,7 @@ function wigo_ws_View() {
                         }
                     } else { 
                         view.ShowStatus("Internet is not available, cannot upload.");
-                        view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added 
+                        view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  
                     }
                     break;
                 case this.event.delete:
@@ -6388,7 +6388,7 @@ function wigo_ws_View() {
                             dataValue === 'logout' ? 'log out' : 'action'; 
             var sError = "Facebook {0} failed.<br/>Internet access is not available.".format(sAction);
             that.ShowStatus(sError);
-            that.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added 
+            that.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  
             return;
         }
 

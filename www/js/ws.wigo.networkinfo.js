@@ -29,7 +29,7 @@ function wigo_ws_NetworkInformation() {
 
     // Returns string that describes things to try to get the internet connected.
     // Note: string uses html.
-    this.getBackOnlineInstr = function() {  ////20171009 added function.
+    this.getBackOnlineInstr = function() {  
         var sInstr = "To get online, try the following in your phone settings.";
         sInstr += "<ul>";
         sInstr += "<li>Turn off WiFi and then turn WiFi on again, or</li>";
@@ -80,7 +80,7 @@ function wigo_ws_NewNetworkInformation(bIos) {
     var networkInfo;
     if (bIos) {
         networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, 
-        isWiFiOnline: function(){return true;}, getBackOnlineInstr: function(){return ""}};  ////20171009 added getBackOnlineInstr
+        isWiFiOnline: function(){return true;}, getBackOnlineInstr: function(){return ""}};  
     } else { 
         networkInfo = new wigo_ws_NetworkInformation(); 
     }

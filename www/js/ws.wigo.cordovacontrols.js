@@ -924,7 +924,7 @@ function Wigo_Ws_CordovaControls() {
         //  text: string. text to add.
         //  bError: boolean. true indicated error highlighting.
         // Note: appends div element to status, whereas this.add appends a span element.
-        this.addDiv = function(text, bError) {  ////20171009 added function
+        this.addDiv = function(text, bError) {  
             var item = this.create('div', null, 'wigo_ws_status_item');
             item.innerHTML = text;
             statusDiv.appendChild(item);
