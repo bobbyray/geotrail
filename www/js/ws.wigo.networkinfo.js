@@ -27,6 +27,17 @@ function wigo_ws_NetworkInformation() {
         return bOnline;
     }; 
 
+    // Returns string that describes things to try to get the internet connected.
+    // Note: string uses html.
+    this.getBackOnlineInstr = function() {  ////20171009 added function.
+        var sInstr = "To get online, try the following in your phone settings.";
+        sInstr += "<ul>";
+        sInstr += "<li>Turn off WiFi and then turn WiFi on again, or</li>";
+        sInstr += "<li>if this did not work, leave WiFi off and use your cell network instead.</li>";
+        sInstr += "</ul>";
+        return sInstr;
+    };
+
     // Returns string describing current network state.
     // Note: Returns empty state is current network state is not defined.
     function GetTypeDescr() {
@@ -68,7 +79,8 @@ function wigo_ws_NewNetworkInformation(bIos) {
         bIos = false;
     var networkInfo;
     if (bIos) {
-        networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, isWiFiOnline: function(){return true;}};
+        networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, 
+        isWiFiOnline: function(){return true;}, getBackOnlineInstr: function(){return ""}};  ////20171009 added getBackOnlineInstr
     } else { 
         networkInfo = new wigo_ws_NetworkInformation(); 
     }

@@ -425,6 +425,23 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
 
+
+    // Appends a status messages starting on a new line to current status message and
+    // shows the full message.
+    // Arg:
+    //  sStatus: string of html to display.
+    //  bError: boolean, optional. Indicates an error msg. Default to true.
+    // Note: appens a div element, whereas this.AppendStatus appends a span element.
+    this.AppendStatusDiv = function (sStatus, bError) {  ////20171009 added
+        if (!divStatus.isEmpty()) {
+            sStatus = "<br/>" + sStatus;
+        }
+
+        divStatus.addDiv(sStatus, bError);
+        titleBar.scrollIntoView(); 
+    };
+    
+
     // Shows the signin control bar. 
     // Arg:
     //  bShow: boolean. true to show. 
@@ -2994,8 +3011,15 @@ function wigo_ws_View() {
                                 stateDefineTrailName.prepare(bUpload);  
                                 curState = stateDefineTrailName;
                             } else {
-                                // Indicate indicate is not available, stay in same state.
+                                // Indicate internet is not available, stay in same state.
                                 view.ShowStatus("Internet access is not available. Cannot upload."); 
+                                view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added
+                                var sMsg = "If Internet access is stiil not available:"
+                                sMsg += "<ul><li>Use Record > Save Offline to save locally.</li>"
+                                sMsg += "<li>Then later upload: View > Offline.</li>"
+                                sMsg += "<li>Select trail from Trails droplist.</li>"
+                                sMsg += "<li>Local Data > Begin Upload.</li></ul>";
+                                view.AppendStatusDiv(sMsg, false);
                             }
                         }
                         break;
@@ -3726,6 +3750,7 @@ function wigo_ws_View() {
                         }
                     } else { 
                         view.ShowStatus("Internet is not available, cannot upload.");
+                        view.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added 
                     }
                     break;
                 case this.event.delete:
@@ -6363,6 +6388,7 @@ function wigo_ws_View() {
                             dataValue === 'logout' ? 'log out' : 'action'; 
             var sError = "Facebook {0} failed.<br/>Internet access is not available.".format(sAction);
             that.ShowStatus(sError);
+            that.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  ////20171009 added 
             return;
         }
 
