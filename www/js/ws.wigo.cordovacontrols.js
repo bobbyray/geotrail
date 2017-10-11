@@ -917,7 +917,21 @@ function Wigo_Ws_CordovaControls() {
             item.scrollIntoView(false);  // false => align to bottom of parent.
             this.hiliteError(item, bError);
             this.show(statusDiv, true);
-        }
+        };
+
+        // Adds text (maybe HTML) to status div.
+        // Args:
+        //  text: string. text to add.
+        //  bError: boolean. true indicated error highlighting.
+        // Note: appends div element to status, whereas this.add appends a span element.
+        this.addDiv = function(text, bError) {  
+            var item = this.create('div', null, 'wigo_ws_status_item');
+            item.innerHTML = text;
+            statusDiv.appendChild(item);
+            item.scrollIntoView(false);  // false => align to bottom of parent.
+            this.hiliteError(item, bError);
+            this.show(statusDiv, true);
+        };
         
         // Sets content of status div to a line.
         // Args:

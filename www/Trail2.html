@@ -332,7 +332,12 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             you do not need to sign in again unless you log out.</li>
             <li>Select Logout to logout of Facebook.<br/>
             Note: Facebook can be tenacious about keeping you logged in. You may need to go
-            to Facebook to force a logout.</li> 
+            to Facebook to force a logout.</li>
+            <li>Reset Server Access<br/>
+            Resets server access in case access to the web server has hung. 
+            It not likely you need to do this. However if accessing the web server seem stuck,
+            try resetting. 
+        </li> 
         </ul>
         <h2 id="helpOnlineMap">Online Map</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
@@ -429,12 +434,25 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </li>
             <li>Stopped State
                 <ul>
-                    <li>Save Trail<br/>
-                    Saves the recorded trail to the web server. If the recorded trail is 
+                    <li>Upload<br/>
+                    Uploads the recorded trail to the web server. If the recorded trail is 
                     new, enters the TrName State for you to enter a trail name. Otherwise
                     uploads the recorded trail to the web server and remains in the Stopped State.
-                    <br/>Note: If in Offline View, saves the recorded trail locally instead of
-                    uploading to the web server.
+                    <br/>Note: If in Offline View, this option is not available.
+                    </li>
+                    <li>Save Offline<br/>
+                    Saves the recorded trail locally (offline) on the phone.
+                    If the recorded trail is 
+                    new, enters the TrName State for you to enter a trail name. Otherwise
+                    saves the recorded trail locally and remains in the Stopped State.<br/><br/>
+                    Saving locally (offline) is useful if you are not signed or if uploading
+                    to the web server is not working.
+                    The recorded trail saved locally can later be uploaded to the web server:
+                    <ul>
+                        <li>View > Offline</li>
+                        <li>Select trail from Trails droplist.</li>
+                        <li>Local Data > Begin Upload</li>
+                    </ul>
                     </li>
                     <!-- Append Trail no longer used. Provide insert trail in Edit mode instead
                     <li>Append Trail<br/>
@@ -526,8 +544,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <h3>Record DropList</h3>
         Records a trail as you travel. This works the same as described in 
         <a href="#helpOnlineRecord">Online Record DropList</a>, except 
-        the option to save a trail saves locally to the phone instead of
-        to the web server.
+        the option to Upload the recorded trail to the web server is not available.
         <h3>Local Data DropList</h3>
         Manages the data saved locally.<br/>
         <ul>

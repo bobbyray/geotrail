@@ -183,7 +183,14 @@ function wigo_ws_Model() {
         }
         var bOk = api.GpxGetListByLatLon(sOwnerId, nShare, gptSW, gptNE, this.getAccessHandle(), onDone);
         return bOk;
-    }
+    };
+
+    // Resets flag that indicates http request (get or post) is still in progress.
+    // Note: May be needed if trying to issue subsequent requests fails due to 
+    //       a previous request not completed. 
+    this.resetRequest = function() { 
+        api.ResetRequest();     
+    };
 
     // Authenticates user with database server.
     // Returns true for request to server started, 

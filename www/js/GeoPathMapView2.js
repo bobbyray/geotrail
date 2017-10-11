@@ -243,7 +243,8 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             if (curPathSegs) {
                 var mDistance = curPathSegs.getTotalDistance();
                 var nPoints = curPathSegs.getCount();
-                var seconds = mDistance < 2000 ? 10 : 20;  
+                var seconds = mDistance < 1000 ? 10 : mDistance < 2000 ? 20 : 30;
+                // Note: If animation is stuterring, may need to adjust assigning seconds above.
                 pathAnimator.setAnimationRate(mDistance, nPoints, seconds); 
             }
             pathAnimator.start(mapPath);
