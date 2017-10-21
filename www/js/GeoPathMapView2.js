@@ -127,8 +127,23 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
-            if (tileLayer)
+            if (tileLayer) {
                 tileLayer.addTo(map);
+                // Add snow cover layer to map.  ////20171017 added
+                if (bSnowCoverLayer) {
+                    var NASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
+                        attribution: 'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
+                        bounds: [[-85.0511287776, -179.999999975], [85.0511287776, 179.999999975]],
+                        minZoom: 1,
+                        maxZoom: 8, // Fails for maxZoom > 8 
+                        format: 'png',
+                        time: '', // '2017-10-16', // '', // '' is current date.
+                        tilematrixset: 'GoogleMapsCompatible_Level',
+                        opacity: 0.75
+                    });
+                    map.addLayer(NASAGIBS_ModisTerraSnowCover);  
+                }
+            }
 
             if (map) { // For safety check that map has been created successfully. 
                 // Add a listener for the click event.
@@ -159,6 +174,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.SetCompassHeadingVisibleState = function(bVisible) {
         bCompassHeadingVisible = bVisible;
     };
+
+    
+    // Sets flag to indicate if a snow cover layer is shown on the map.
+    // Arg:
+    //  bSnowCoverLayerArg: boolean. true to shown snow cover layer on the map.
+    this.setSnowCoverLayerFlag = function(bSnowCoverLayerArg) { ////20171017 added
+        bSnowCoverLayer = bSnowCoverLayerArg;
+    };
+    var bSnowCoverLayer = true; // boolean flag to indicate a snow cover layer is on the map.
 
     // Returns true if the device has enabled data storage.
     // Note: The device settings for an app may need to give permission to used data storage.
