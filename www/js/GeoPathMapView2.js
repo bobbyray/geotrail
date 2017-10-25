@@ -129,6 +129,15 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             tileLayer = layer;
             if (tileLayer) {
                 tileLayer.addTo(map);
+                // Add topographical layer to map.
+                if (bTopoLayerFlag) { ////20171021 added topo layer
+                    var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 17,
+                        opacity: 30,
+                        attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                    }); 
+                    map.addLayer(OpenTopoMap);               
+                }
                 // Add snow cover layer to map.  ////20171017 added
                 if (bSnowCoverLayer) {
                     var NASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
@@ -182,7 +191,16 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.setSnowCoverLayerFlag = function(bSnowCoverLayerArg) { ////20171017 added
         bSnowCoverLayer = bSnowCoverLayerArg;
     };
-    var bSnowCoverLayer = true; // boolean flag to indicate a snow cover layer is on the map.
+    var bSnowCoverLayer = true; // boolean flag to indicate a snow cover layer is added to the map.
+
+    // Sets flag to indicate if a topographical layer is shown on the map.
+    // Arg:
+    //  bTopoLayerFlagArg: boolean. true to shown topographical layer on the map.
+    this.setTopoLayerFlag = function(bTopoLayerFlagArg) {  ////20171021 added
+        bTopoLayerFlag = bTopoLayerFlagArg;
+
+    };
+    var bTopoLayerFlag = true; // boolean flag to indicate topographic layer is added to the map.
 
     // Returns true if the device has enabled data storage.
     // Note: The device settings for an app may need to give permission to used data storage.

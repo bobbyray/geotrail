@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171010"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171021"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -425,13 +425,12 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
 
-
     // Appends a status messages starting on a new line to current status message and
     // shows the full message.
     // Arg:
     //  sStatus: string of html to display.
     //  bError: boolean, optional. Indicates an error msg. Default to true.
-    // Note: appens a div element, whereas this.AppendStatus appends a span element.
+    // Note: appends a div element, whereas this.AppendStatus appends a span element.
     this.AppendStatusDiv = function (sStatus, bError) {  
         if (!divStatus.isEmpty()) {
             sStatus = "<br/>" + sStatus;
@@ -441,7 +440,16 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
     
-
+    // Replaces last status message in the status div.
+    // Args:
+    //  sStatus: string of html to display.
+    //  bError: boolean, optional. Indicates an error msg. Default to true.
+    // Note: Replacement is a div element, not a span element.
+    this.ReplaceLastStatus = function(sStatus, bError) { ////20171024 added
+        divStatus.replaceLast(sStatus, bError);
+        titleBar.scrollIntoView(); 
+    };
+        
     // Shows the signin control bar. 
     // Arg:
     //  bShow: boolean. true to show. 
@@ -4094,6 +4102,8 @@ function wigo_ws_View() {
     // Remarks: Provides the callback function that is called after each timer period completes.
     function RunTrackTimer() {
         if (trackTimer.bOn) {
+            // Enable detecting motion for tracking.
+            deviceMotion.enableForTracking(); ////20171022 added
             trackTimer.SetTimer(function (result) {
                 if (result.bError) {
                     trackTimer.ClearTimer();
@@ -4119,6 +4129,8 @@ function wigo_ws_View() {
                 }
             });
         } else {
+            // Disable detecting motion for tracking.
+            deviceMotion.disableForTracking();  ////20171022
             trackTimer.ClearTimer();
             ShowGeoTrackingOff();
         }
@@ -5850,7 +5862,8 @@ function wigo_ws_View() {
         };
 
         // Initializes the object.
-        // Note: Currently handlers simply log event that is raised to console.
+        // Note: Handlers log event that is raised to console.
+        //       For activate event only, background mode is allowed by disabling web view optimizations.
         this.initialize = function() {
             // local helper function.
             // Define handler to log event that is raised to console.
@@ -5923,6 +5936,184 @@ function wigo_ws_View() {
     if (window.app.deviceDetails.isiPhone())
         backgroundMode = new BackgroundModeUnavailable(); 
     
+
+    // Object for detection device motion.
+    // Constructor arg:
+    //  view: ref to wigo_ws_View.
+    function DeviceMotion(view) { ////20171022 added object
+        // Enables receiving device motion events for tracking.
+        this.enableForTracking = function() {
+            if (!bRecording && !bTracking) {
+                HandleDeviceMotion();
+            }
+            bTracking = true;
+        };
+
+        // Disables receiving device motion events for tracking.
+        this.disableForTracking = function() {
+            if (bTracking && !bRecording) {
+                UnHandleDeviceMotion();
+            }
+            bTracking = false;
+        };
+
+        // Event handler for calibrating compass.
+        function OnCompassNeedsCalibration(event) {
+            // ask user to wave device in a figure-eight motion.  
+            if (!ackCalibrationNeededPending) {
+                ackCalibrationNeededPending = true;
+                AlertMsg('Your compass needs calibrating! Wave your device in a figure-eight motion', function() {
+                    ackCalibrationNeededPending = false;
+                }); 
+            }
+            event.preventDefault();
+        }
+        var ackCalibrationNeededPending = false; // Boolean flag indicating calibration by user is pending.
+
+        // Event handler for device motion.
+        // Checks for excessive acceleration.
+        function OnDeviceMotion(event) {
+            var sMsg;
+            var now = Date.now();
+            var deltaTime = now - curTimeStamp;
+            if (deltaTime > 10 * curInterval) { ////20171024???? Check does not work, events keep happening with no motion.
+                // Motion dection is starting, reset velocity to 0.
+                sMsg = "Resetting velocity, vAtRestart={0}m/sec".format(Magnitude(velocity).toFixed(1));
+                ////sMsg = "Reset velocity in OnDeviceMotion";
+                view.AppendStatus(sMsg);
+                console.log(sMsg);
+                ResetVelocity();
+            }
+            curTimeStamp = now;
+
+            prevAcceleration = curAcceleration; 
+            curAcceleration = event.acceleration;
+            curInterval = event.interval;
+            if (!ackCalibrationNeededPending) {
+                ////20171024Redo var magAccel = AveAccelerationMagnitude();
+                ////20171024Redo if (magAccel > maxAccelerationMagnitude) {
+                ////20171024Redo     var speed = Speed(magAccel);
+                ////20171024Redo     var sMsg = "A of {0} exceeds {1}m/sec^2, v={2}m/sec dt={3}ms".format(magAccel.toFixed(1), 
+                ////20171024Redo                                                                              maxAccelerationMagnitude.toFixed(1),
+                ////20171024Redo                                                                              speed.toFixed(1),
+                ////20171024Redo                                                                              curInterval.toFixed(1));
+                ////20171024Redo     view.AppendStatus(sMsg);
+                ////20171024Redo }
+                var deltaV = VelocityDelta();
+                velocity.x += deltaV.x;
+                velocity.y += deltaV.y;
+                velocity.z += deltaV.z;
+
+                var speed = Magnitude(velocity); 
+                var accel = Magnitude(curAcceleration);
+                if (accel > 3 && speed > 2) {
+                    nAlertCount++; 
+                    sMsg = "a={0}m/sec^2, v={1}m/sec i={2}ms, dt={3}ms".format(accel.toFixed(1), speed.toFixed(1), 
+                                                                                curInterval.toFixed(1), deltaTime.toFixed(1)); 
+                    ////20171024 view.AppendStatus(sMsg);
+                    view.ReplaceLastStatus(sMsg, false);
+                    console.log(sMsg);
+                    alerter.DoAlert(); ////20171024 Do two alerts.
+                    pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true); // true => vibrate.
+                } else {
+                    nAlertCount = 0;
+                }
+            }
+        }
+        var nAlertCount = 0; // Number of consecutive alerts issued. ////20171024
+
+        var bTracking = false;  // Boolean to enable event handling for tracking.
+        var bRecording = false; // Boolean to enable event handling for recording.
+
+        // Start handling events for device motion.
+        function HandleDeviceMotion() {
+            window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            ////20171023 curTimeStamp = 0;
+            ResetDeviceMotion();
+            window.addEventListener("devicemotion", OnDeviceMotion, true);
+        }
+
+        // Stop handling events for device motion.
+        function UnHandleDeviceMotion() {
+            window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            window.removeEventListener("devicemotion", OnDeviceMotion, true);
+            ResetDeviceMotion();
+        }
+
+        // Resets variables for device motion.
+        function ResetDeviceMotion() {
+            curAcceleration = {x: 0, y: 0, z: 0};
+            curInterval = 0;
+            ResetVelocity(); ////20171024 added
+        }
+
+        // Sets all components of velocity vector to 0.
+        function ResetVelocity() {
+            velocity = {x: 0, y: 0, z: 0};
+            return velocity;
+        }
+
+        ////20171023 var curTimeStamp = 0; // Current time stamp for device motion in milliseconds.
+        ////20171023 var curTimeDelta = 0; // Current delta in milliseconds from previous time stamp.
+        var curAcceleration = {x: 0, y: 0, z: 0} ; // current acceleration vector in meters/sec. (z = -9.81 is free fall due to gravity)
+        var curInterval = 0;  // Current interval in milliseconds wrt to previous. Note should be constant set by event handler.
+        var curTimeStamp = Date.now(); // Current timestamp updated when device motion event is handled.
+        var velocity = ResetVelocity(); // Velocity vector.
+        var prevAcceleration = {x: 0, y: 0, z: 0}; // previous acceleration vector.
+        var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
+        
+        /* ////20171024 not used
+        // Returns float for average acceleration magnitude.
+        function AveAccelerationMagnitude() {
+            ////20171023 var mag = Math.sqrt(curAcceleration.x*curAcceleration.x + curAcceleration.y * curAcceleration.y + curAcceleration.z*curAcceleration.z);
+            var prevMag = Magnitude(prevAcceleration);
+            var curMag = Magnitude(curAcceleration);
+            var mag = (prevMag + curMag)/2;
+            return mag; 
+        }
+        */
+
+        // Returns vector for the change in velocity from current acceleration wrt previous acceleration.
+        // Returns obj: {x: float, y: float, z: float}. Units for each component is meters/sec.
+        function VelocityDelta() {
+            // Helper to calculation area under acceleration segment for time delta, which change in velocity.
+            // Args:
+            // a, b: vectors wiith x, y, z components as floats.
+            // dt: float. delta time in seconds.
+            function DeltaArea(b, a, dt) {
+                var c = {x: dt*(b.x + a.x)/2, y: dt*(b.y + a.y)/2, z: dt*(b.z + a.z)/2};
+                return c;
+            }
+            var deltaV = DeltaArea(curAcceleration, prevAcceleration, curInterval/1000);
+            return deltaV;
+        }
+
+        /* ////210171025 not used.
+        // Return current speed in meters / second.
+        // Arg:
+        //  magAccel: float for magnitude of acceleration.
+        // Note: time interval is curInterval in milliseconds, which should be a constant for sampling period of the device.
+        //       if curInterval is not defined, speed return is 0. 
+        function Speed(magAccel) {
+            var speed = 0;
+            if (typeof(curInterval) === 'number') {
+                speed = (magAccel) * (curInterval/1000); 
+            }
+            return speed; 
+        }
+        */
+
+        // Returns float for magnitude of a vector.
+        // Arg:
+        //  av: object with x, y, and z members of a vector.
+        function Magnitude(av) {
+            var mag = Math.sqrt(av.x*av.x + av.y*av.y + av.z*av.z);
+            return mag;
+        }
+    }
+    var deviceMotion = new DeviceMotion(this); // Object to detect acceleration.
+
+
     // Shows Status msg for result from map.SetGeoLocUpdate(..).
     // Arg:
     //  upd is {bToPath: boolean, dToPath: float, bearingToPath: float, bRefLine: float, bearingRefLine: float,
