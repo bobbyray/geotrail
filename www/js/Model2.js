@@ -44,11 +44,11 @@ function wigo_ws_GeoTrailSettings() {
     // has been travel when recording. 
     this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  //0.5  miles convert to meters. 
     // Boolean to indicate excessive acceleration alert is enabled.
-    this.bAccelAlert = false; ////20171026 added
+    this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
-    this.nAccelThres = 9.8;   ////20171027 added
+    this.nAccelThres = 9.8;  
     // Float for excessive acceleration velocity in m/sec.
-    this.nAccelVThres = 6.0;  ////20171027 added
+    this.nAccelVThres = 6.0; 
     // Boolean to indicate amination of a path is started automatically when a path is loaded. 
     this.bAutoPathAnimation = false;  
     // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
@@ -835,7 +835,7 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('kmRecordDistancAlertInterval', 5, 2.0*1.60934);
                 UpdateIfNeeded('bAutoPathAnimation', 5, false);
 
-                // ** Changes for nSchema 6.  ////20171026 added
+                // ** Changes for nSchema 6. 
                 UpdateIfNeeded('bAccelAlert', 6, false); 
                 UpdateIfNeeded('nAccelThres', 6, 9.8);
                 UpdateIfNeeded('nAccelVThres', 6, 6.0);

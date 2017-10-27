@@ -462,8 +462,8 @@ label {
 }
 
 #divSettings #labelBodyMass,
-#divSettings #labelRecordDistanceAlert,  /* ////20171027 was labelRecordDistanceAlert */
-#divSettings #labelAccelThres,      /* ////20171027 was labelAccelAlertThres */ 
+#divSettings #labelRecordDistanceAlert,  
+#divSettings #labelAccelThres,     
 #divSettings #labelAccelVThres {
     padding-top: 0.4em;
 }

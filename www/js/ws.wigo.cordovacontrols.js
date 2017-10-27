@@ -933,20 +933,6 @@ function Wigo_Ws_CordovaControls() {
             this.show(statusDiv, true);
         };
 
-        /* ////20171026 not used
-        // Replaces last child (item) added to status div.
-        // Args:
-        //  text: string. text to add.
-        //  bError: boolean. true indicated error highlighting.
-        // Note: Replacement is a div element, not a span element.
-        this.replaceLast = function(text, bError) { ////20171024 added.
-            if (statusDiv.lastChild) {
-                statusDiv.removeChild(statusDiv.lastChild);
-            }
-            this.addDiv(text, bError);
-        };
-        */
-        
         // Sets content of status div to a line.
         // Args:
         //  text: string. Line of text that replaces div content.

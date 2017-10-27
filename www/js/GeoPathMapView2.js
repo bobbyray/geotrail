@@ -129,7 +129,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
             tileLayer = layer;
             if (tileLayer) {
                 // Add topographical layer to map.
-                if (bTopoLayerFlag) { ////20171021 added topo layer
+                if (bTopoLayerFlag) { 
                     var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                         maxZoom: 17,
                         opacity: 30,
@@ -138,7 +138,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     map.addLayer(OpenTopoMap);               
                 }
                 tileLayer.addTo(map);
-                // Add snow cover layer to map.  ////20171017 added
+                // Add snow cover layer to map. 
                 if (bSnowCoverLayer) {
                     var NASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
                         attribution: 'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
@@ -148,7 +148,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         format: 'png',
                         time: '', // '2017-10-16', // '', // '' is current date.
                         tilematrixset: 'GoogleMapsCompatible_Level',
-                        opacity: 0.30 ////20171025 0.75
+                        opacity: 0.30 
                     });
                     map.addLayer(NASAGIBS_ModisTerraSnowCover);  
                 }
@@ -188,7 +188,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Sets flag to indicate if a snow cover layer is shown on the map.
     // Arg:
     //  bSnowCoverLayerArg: boolean. true to shown snow cover layer on the map.
-    this.setSnowCoverLayerFlag = function(bSnowCoverLayerArg) { ////20171017 added
+    this.setSnowCoverLayerFlag = function(bSnowCoverLayerArg) { 
         bSnowCoverLayer = bSnowCoverLayerArg;
     };
     var bSnowCoverLayer = true; // boolean flag to indicate a snow cover layer is added to the map.
@@ -196,7 +196,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Sets flag to indicate if a topographical layer is shown on the map.
     // Arg:
     //  bTopoLayerFlagArg: boolean. true to shown topographical layer on the map.
-    this.setTopoLayerFlag = function(bTopoLayerFlagArg) {  ////20171021 added
+    this.setTopoLayerFlag = function(bTopoLayerFlagArg) { 
         bTopoLayerFlag = bTopoLayerFlagArg;
 
     };
@@ -2149,7 +2149,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 } else {
                     // Create regular OpenStreetMap tile layer without title caching.
                     layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   
-                        opacity: 0.30, ////20171025 added
+                        opacity: 0.30, 
                         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     });
                 }
