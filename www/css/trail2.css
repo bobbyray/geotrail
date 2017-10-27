@@ -462,11 +462,15 @@ label {
 }
 
 #divSettings #labelBodyMass,
-#divSettings labelRecordDistanceAlert {
+#divSettings #labelRecordDistanceAlert,  /* ////20171027 was labelRecordDistanceAlert */
+#divSettings #labelAccelThres,      /* ////20171027 was labelAccelAlertThres */ 
+#divSettings #labelAccelVThres {
     padding-top: 0.4em;
 }
 #divSettings #numberBodyMass,
-#divSettings #numberRecordDistanceAlert {
+#divSettings #numberRecordDistanceAlert, 
+#divSettings #numberAccelThres, 
+#divSettings #numberAccelVThres {
     float: right;
     background-color: lightgray;
     width: 3em;

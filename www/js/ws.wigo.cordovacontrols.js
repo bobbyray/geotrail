@@ -933,6 +933,7 @@ function Wigo_Ws_CordovaControls() {
             this.show(statusDiv, true);
         };
 
+        /* ////20171026 not used
         // Replaces last child (item) added to status div.
         // Args:
         //  text: string. text to add.
@@ -944,6 +945,7 @@ function Wigo_Ws_CordovaControls() {
             }
             this.addDiv(text, bError);
         };
+        */
         
         // Sets content of status div to a line.
         // Args:

@@ -128,7 +128,6 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
             if (tileLayer) {
-                tileLayer.addTo(map);
                 // Add topographical layer to map.
                 if (bTopoLayerFlag) { ////20171021 added topo layer
                     var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
@@ -138,6 +137,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                     }); 
                     map.addLayer(OpenTopoMap);               
                 }
+                tileLayer.addTo(map);
                 // Add snow cover layer to map.  ////20171017 added
                 if (bSnowCoverLayer) {
                     var NASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
@@ -148,7 +148,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         format: 'png',
                         time: '', // '2017-10-16', // '', // '' is current date.
                         tilematrixset: 'GoogleMapsCompatible_Level',
-                        opacity: 0.75
+                        opacity: 0.30 ////20171025 0.75
                     });
                     map.addLayer(NASAGIBS_ModisTerraSnowCover);  
                 }
@@ -2149,6 +2149,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 } else {
                     // Create regular OpenStreetMap tile layer without title caching.
                     layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   
+                        opacity: 0.30, ////20171025 added
                         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     });
                 }

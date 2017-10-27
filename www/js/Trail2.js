@@ -440,6 +440,7 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
     
+    /* ////20171026 not used
     // Replaces last status message in the status div.
     // Args:
     //  sStatus: string of html to display.
@@ -449,6 +450,7 @@ function wigo_ws_View() {
         divStatus.replaceLast(sStatus, bError);
         titleBar.scrollIntoView(); 
     };
+    */
         
     // Shows the signin control bar. 
     // Arg:
@@ -2950,6 +2952,8 @@ function wigo_ws_View() {
                 map.ClearPathMarkers();  // Ensure path markers are cleared when recording. 
                 // Start watching for location change.
                 recordWatcher.watch();
+                // Check device motion for excessive acceleration.
+                deviceMotion.enableForRecording();  ////20171025 added.
             };
 
             this.nextState = function(event) {
@@ -2969,6 +2973,7 @@ function wigo_ws_View() {
         function StateStopped() {
             this.prepare = function() {
                 recordWatcher.clear(); // Ensure watching for location change is stopped.
+                deviceMotion.disableForRecording(); // Stop checking device motion. ////20171025 added
                 recordCtrl.setLabel("Stopped");
                 recordCtrl.empty();
                 var bSavePathValid = uploader.isSavePathValid(); 
@@ -4336,6 +4341,92 @@ function wigo_ws_View() {
     }
     var recordDistanceAlert = new RecordDistanceAlert(); // Record Distance Alert object.
 
+
+    ////20171026 Added accel alert
+    // Acceleration Alert composite control.
+    var labelAccelThres = document.getElementById('labelAccelThres');
+    var numberAccelThres = document.getElementById('numberAccelThres');
+    function AccelAlertThresCtrl() { // Object for Accel Alert composite label, number control.
+        // Call base class.
+        LabelNumberCtrl.call(this, labelAccelThres, numberAccelThres);
+
+        // **  Over-ride properties for this derived class.
+        // Show only one decimal place for number.
+        this.nDecimalPlaces = 1; 
+        
+        // Note: English units not used, only metric.
+        this.labelTextMetric = "Accel Alert Thres (m/sec^2)";
+        this.labelTextEnglish = "Accel Alert Thres (m/sec^2)";
+        
+        // Returns float. acceleration in m/sec^2 in metric units. 
+        // Note: English units not used. Use base class, which just returns number.
+        // Arg:
+        //  nNumber. float. acceleration in m/sec^2.
+        // this.metricToEnglish = function(nNumber) {return nNumber;};
+
+        // Returns float. acceleration in m/sec^2.
+        // Note: English units not used. Use base class which just returns number.
+        // Arg:
+        //  nNumber: float. number value in English units to convert to Metric units.
+        // this.englishToMetric = function(nNumber) {return nNumber;};
+        
+        // ** Members for this object.
+        // Enables alert for excessive acceleration.
+        this.enable = function(){ 
+            enabledCtrl.setState(1);
+        };
+
+        // Disables alert for excessive acceleration.
+        this.disable = function() {
+            enabledCtrl.setState(0);
+        };
+
+        // Returns true if accel alert is enabled.
+        this.isEnabled = function() {
+            var bEnabled = enabledCtrl.getState() === 1;
+            return bEnabled;
+        };
+
+        // ** private members
+        var holderAccelAlert = document.getElementById('holderAccelAlert');
+        var enabledCtrl = ctrls.NewYesNoControl(holderAccelAlert, null, "Accel Alert", -1);
+    }
+    var accelAlertThres = new AccelAlertThresCtrl();
+
+    ////20171026 Added accel velocity alert
+    // Acceleration Alert Velocity composite control.
+    var labelAccelVThres = document.getElementById('labelAccelVThres');
+    var numberAccelVThres = document.getElementById('numberAccelVThres');
+    function AccelAlertVThresCtrl() { // Object for Accel Alert Velocity composite label, number control.
+        // Call base class.
+        LabelNumberCtrl.call(this, labelAccelVThres, numberAccelVThres);
+
+        // **  Over-ride properties for this derived class.
+        // Show only one decimal place for number.
+        this.nDecimalPlaces = 1; 
+        
+        // Note: English units not used, only metric.
+        this.labelTextMetric = "Accel Velocity Thres (m/sec)";
+        this.labelTextEnglish = "Accel Velocity Thres (m/sec)";
+        
+        // Returns float. acceleration in m/sec^2 in metric units. 
+        // Note: English units not used. Use base class, which just returns number.
+        // Arg:
+        //  nNumber. float. acceleration in m/sec^2.
+        // this.metricToEnglish = function(nNumber) {return nNumber;};
+
+        // Returns float. acceleration in m/sec^2.
+        // Note: English units not used. Use base class which just returns number.
+        // Arg:
+        //  nNumber: float. number value in English units to convert to Metric units.
+        // this.englishToMetric = function(nNumber) {return nNumber;};
+        
+        // **
+
+    }
+    var accelAlertVThres = new AccelAlertVThresCtrl();  ////20171026 added
+    
+
     // Composite Control object for label and a number.
     // Constructor args:
     //  labelCtrl: HTMLElement. a label control.
@@ -4348,7 +4439,7 @@ function wigo_ws_View() {
         // boolean. true for UI value shown in metric. false for UI value shown in English units. 
         this.bMetric = false;
 
-        // ** Propertis to over-ride 
+        // ** Properties to over-ride 
         // Number of decimal places for showing number.
         this.nDecimalPlaces = 2;
 
@@ -4424,6 +4515,17 @@ function wigo_ws_View() {
         // Event handler for numberCtrl getting focus: 
         // Handler function selects text (digits) in the numberMass control.
         numberCtrl.addEventListener('focus', SelectNumberOnFocus, false); 
+
+
+        ////20171026 added handler
+        // Evant handler for Enter Key for numberCtrl.
+        // Kills focus for numberCtrl is key is Enter.
+        numberCtrl.addEventListener('keydown', function(event) {
+            var bEnterKey = IsEnterKey(event);
+            if (bEnterKey) {
+                numberCtrl.blur();
+            }
+        }, false); 
 
         var nDataDecimalPlaces = 4; 
     }
@@ -4762,6 +4864,12 @@ function wigo_ws_View() {
         settings.secsPhoneVibe = parseFloat(numberPhoneVibeSecs.getSelectedValue());
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
         settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
+
+        ////20171026 add acceleration alert settings.
+        settings.bAccelAlert = accelAlertThres.isEnabled(); 
+        settings.nAccelThres = accelAlertThres.getNumber(); 
+        settings.nAccelVThres = accelAlertVThres.getNumber();
+
         settings.bAutoPathAnimation = selectAutoPathAnimation.getState() === 1; 
         settings.bPebbleAlert = selectPebbleAlert.getState() === 1;
         settings.countPebbleVibe = parseInt(numberPebbleVibeCount.getSelectedValue());
@@ -4806,7 +4914,18 @@ function wigo_ws_View() {
 
         recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
         recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
-        recordDistanceAlert.show();                                          
+        recordDistanceAlert.show();      
+        
+        ////20171026 Add accel alert params.
+        if (settings.bAccelAlert)
+            accelAlertThres.enable();
+        else
+            accelAlertThres.disable();
+        accelAlertThres.setNumber(settings.nAccelThres);
+        accelAlertThres.show();
+        accelAlertVThres.setNumber(settings.nAccelVThres);
+        accelAlertVThres.show();
+        
         selectAutoPathAnimation.setState(settings.bAutoPathAnimation ? 1 : 0); 
         selectPebbleAlert.setState(settings.bPebbleAlert ? 1 : 0);
         numberPebbleVibeCount.setSelected(settings.countPebbleVibe.toFixed(0));
@@ -4884,6 +5003,16 @@ function wigo_ws_View() {
         map.recordPath.setVLimit(settings.vSpuriousVLimit); 
         // Set record distance alert interal. 
         map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
+
+        ////20171026 set excessive acceleration parameters.
+        // Set parameters for excessive acceleration.
+        if (settings.bAccelAlert)
+            deviceMotion.allow();
+        else
+            deviceMotion.disallow();
+        deviceMotion.setAccelThres(settings.nAccelThres);
+        deviceMotion.setAccelVThres(settings.nAccelVThres); 
+
         // Set body mass. (Used to calculate calories for a recorded path.)
         map.recordPath.setBodyMass(settings.kgBodyMass);  
         // Set calorie conversion efficiency factor for RecordFSM 
@@ -5941,8 +6070,40 @@ function wigo_ws_View() {
     // Constructor arg:
     //  view: ref to wigo_ws_View.
     function DeviceMotion(view) { ////20171022 added object
+        // Allows device motion to be detected.
+        this.allow = function() {
+            bAllow = true;
+        };
+        var bAllow = false;
+
+        // Disallows detecting device motion.
+        this.disallow = function() {
+            bAllow = false;
+            bTracking = false;
+            bRecording = false;
+            UnHandleDeviceMotion();
+        };
+
+        // Sets the accessive acceleration threshold.
+        // Arg:
+        //  thres: float. acceleration in m/sec%2.
+        this.setAccelThres = function(thres) {
+            nAccelThres = thres;
+        };
+        var nAccelThres = 9.8;
+
+        // Sets the accessive acceleration velocity threshold.
+        // Arg:
+        //  thres: float. velocity in m/sec.
+        this.setAccelVThres = function(thres) {
+            nAccelVThres = thres;
+        };
+        var nAccelVThres = 6.0; 
+
         // Enables receiving device motion events for tracking.
         this.enableForTracking = function() {
+            if (!bAllow)
+                return;  // Quit if not allowed.
             if (!bRecording && !bTracking) {
                 HandleDeviceMotion();
             }
@@ -5955,6 +6116,24 @@ function wigo_ws_View() {
                 UnHandleDeviceMotion();
             }
             bTracking = false;
+        };
+
+        // Enables receiving device motion events for recording.
+        this.enableForRecording = function() {  ////20171025 added
+            if (!bAllow)
+                return;  // Quit if not allowed.
+            if (!bRecording && !bTracking) {
+                HandleDeviceMotion();
+            }
+            bRecording = true;
+        };
+
+        // Disables receiving device motion events for tracking.
+        this.disableForRecording = function() {  ////20171025 added
+            if (!bTracking && bRecording) {
+                UnHandleDeviceMotion();
+            }
+            bRecording = false;
         };
 
         // Event handler for calibrating compass.
@@ -5974,17 +6153,19 @@ function wigo_ws_View() {
         // Checks for excessive acceleration.
         function OnDeviceMotion(event) {
             var sMsg;
-            var now = Date.now();
-            var deltaTime = now - curTimeStamp;
-            if (deltaTime > 10 * curInterval) { ////20171024???? Check does not work, events keep happening with no motion.
-                // Motion dection is starting, reset velocity to 0.
-                sMsg = "Resetting velocity, vAtRestart={0}m/sec".format(Magnitude(velocity).toFixed(1));
-                ////sMsg = "Reset velocity in OnDeviceMotion";
-                view.AppendStatus(sMsg);
-                console.log(sMsg);
-                ResetVelocity();
-            }
-            curTimeStamp = now;
+            ////20171025 var now = Date.now();
+            ////20171025 var deltaTime = now - curTimeStamp;
+            ////20171025 (deltaTime > 10 * curInterval) { ////20171024???? Check does not work, events keep happening with no motion.
+            ////20171025     // Motion dection is starting, reset velocity to 0.
+            ////20171025     sMsg = "Resetting velocity, vAtRestart={0}m/sec".format(Magnitude(velocity).toFixed(1));
+            ////20171025     ////sMsg = "Reset velocity in OnDeviceMotion";
+            ////20171025     view.AppendStatus(sMsg);
+            ////20171025     console.log(sMsg);
+            ////20171025     ResetVelocity();
+            ////20171025 }
+            ////20171025curTimeStamp = now;
+            // Note: Events occur even if motion is not occurring. Cannot detect previously stationary by
+            //       testing for long duration since previous event.
 
             prevAcceleration = curAcceleration; 
             curAcceleration = event.acceleration;
@@ -6000,27 +6181,33 @@ function wigo_ws_View() {
                 ////20171024Redo     view.AppendStatus(sMsg);
                 ////20171024Redo }
                 var deltaV = VelocityDelta();
-                velocity.x += deltaV.x;
-                velocity.y += deltaV.y;
-                velocity.z += deltaV.z;
+                alertVelocity.x += deltaV.x;
+                alertVelocity.y += deltaV.y;
+                alertVelocity.z += deltaV.z;
 
-                var speed = Magnitude(velocity); 
+                var speed = Magnitude(alertVelocity); 
                 var accel = Magnitude(curAcceleration);
-                if (accel > 3 && speed > 2) {
-                    nAlertCount++; 
-                    sMsg = "a={0}m/sec^2, v={1}m/sec i={2}ms, dt={3}ms".format(accel.toFixed(1), speed.toFixed(1), 
-                                                                                curInterval.toFixed(1), deltaTime.toFixed(1)); 
+                if (accel > nAccelThres && speed > nAccelVThres) {  /////20171026 was (accel > 3 && speed > 2)
+                    ////20171025 nAlertCount++; 
+                    ////20171025 sMsg = "a={0}m/sec^2, v={1}m/sec i={2}ms, dt={3}ms".format(accel.toFixed(1), speed.toFixed(1), 
+                    ////20171025                                                            curInterval.toFixed(1)); ////20171025 deltaTime.toFixed(1)); 
                     ////20171024 view.AppendStatus(sMsg);
-                    view.ReplaceLastStatus(sMsg, false);
+                    ////20171025 view.ReplaceLastStatus(sMsg, false);
+                    ////20171025 sMsg = "a={0}m/sec^2, v={1}m/sec i={2}ms, dt={3}ms".format(accel.toFixed(1), speed.toFixed(1), 
+                    ////20171025      
+                    // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
+                    ResetAlertVelocity(); 
+                    sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
+                    view.ShowStatus(sMsg, false);
                     console.log(sMsg);
-                    alerter.DoAlert(); ////20171024 Do two alerts.
-                    pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true); // true => vibrate.
-                } else {
-                    nAlertCount = 0;
-                }
+                    alerter.DoAlert(); 
+                    pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
+                } ////20171025 else {
+                    ////20171025 nAlertCount = 0;
+                ////20171025 }
             }
         }
-        var nAlertCount = 0; // Number of consecutive alerts issued. ////20171024
+        ////20171025 var nAlertCount = 0; // Number of consecutive alerts issued. ////20171024
 
         var bTracking = false;  // Boolean to enable event handling for tracking.
         var bRecording = false; // Boolean to enable event handling for recording.
@@ -6044,21 +6231,21 @@ function wigo_ws_View() {
         function ResetDeviceMotion() {
             curAcceleration = {x: 0, y: 0, z: 0};
             curInterval = 0;
-            ResetVelocity(); ////20171024 added
+            ResetAlertVelocity(); ////20171024 added
         }
 
-        // Sets all components of velocity vector to 0.
-        function ResetVelocity() {
-            velocity = {x: 0, y: 0, z: 0};
-            return velocity;
+        // Sets all components of alert velocity vector to 0.
+        function ResetAlertVelocity() {
+            alertVelocity = {x: 0, y: 0, z: 0};
+            return alertVelocity;
         }
 
         ////20171023 var curTimeStamp = 0; // Current time stamp for device motion in milliseconds.
         ////20171023 var curTimeDelta = 0; // Current delta in milliseconds from previous time stamp.
         var curAcceleration = {x: 0, y: 0, z: 0} ; // current acceleration vector in meters/sec. (z = -9.81 is free fall due to gravity)
         var curInterval = 0;  // Current interval in milliseconds wrt to previous. Note should be constant set by event handler.
-        var curTimeStamp = Date.now(); // Current timestamp updated when device motion event is handled.
-        var velocity = ResetVelocity(); // Velocity vector.
+        ////20171025 var curTimeStamp = Date.now(); // Current timestamp updated when device motion event is handled.
+        var alertVelocity = ResetAlertVelocity(); // Velocity vector.
         var prevAcceleration = {x: 0, y: 0, z: 0}; // previous acceleration vector.
         var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
         
