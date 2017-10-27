@@ -46,7 +46,7 @@ function wigo_ws_GeoTrailSettings() {
     // Boolean to indicate excessive acceleration alert is enabled.
     this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
-    this.nAccelThres = 9.8;  
+    this.nAccelThres = 19.6;  
     // Float for excessive acceleration velocity in m/sec.
     this.nAccelVThres = 6.0; 
     // Boolean to indicate amination of a path is started automatically when a path is loaded. 
@@ -837,7 +837,7 @@ function wigo_ws_Model() {
 
                 // ** Changes for nSchema 6. 
                 UpdateIfNeeded('bAccelAlert', 6, false); 
-                UpdateIfNeeded('nAccelThres', 6, 9.8);
+                UpdateIfNeeded('nAccelThres', 6, 19.6);
                 UpdateIfNeeded('nAccelVThres', 6, 6.0);
 
                 // ** Changes for next nSchema x goes here.
