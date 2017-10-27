@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171021"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171027-1356"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -6146,14 +6146,17 @@ function wigo_ws_View() {
 
                 var speed = Magnitude(alertVelocity); 
                 var accel = Magnitude(curAcceleration);
-                if (accel > nAccelThres && speed > nAccelVThres) {  
+                if (accel > nAccelThres) {  
                     // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
+                    if (speed > nAccelVThres) {
+                        sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
+                        view.ShowStatus(sMsg, false);
+                        console.log(sMsg);
+                        alerter.DoAlert(); 
+                        pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
+                    }
+                } else {
                     ResetAlertVelocity(); 
-                    sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
-                    view.ShowStatus(sMsg, false);
-                    console.log(sMsg);
-                    alerter.DoAlert(); 
-                    pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
                 }
             }
         }
@@ -6184,13 +6187,14 @@ function wigo_ws_View() {
 
         // Sets all components of alert velocity vector to 0.
         function ResetAlertVelocity() {
-            alertVelocity = {x: 0, y: 0, z: 0};
-            return alertVelocity;
+            alertVelocity.x = 0;
+            alertVelocity.y = 0;
+            alertVelocity.z = 0; 
         }
 
         var curAcceleration = {x: 0, y: 0, z: 0} ; // current acceleration vector in meters/sec. (z = -9.81 is free fall due to gravity)
         var curInterval = 0;  // Current interval in milliseconds wrt to previous. Note should be constant set by event handler.
-        var alertVelocity = ResetAlertVelocity(); // Velocity vector.
+        var alertVelocity = {x: 0, y: 0, z: 0}; // Velocity vector.
         var prevAcceleration = {x: 0, y: 0, z: 0}; // previous acceleration vector.
         var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
         
