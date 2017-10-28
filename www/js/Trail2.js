@@ -6149,6 +6149,7 @@ function wigo_ws_View() {
                 if (accel > nAccelThres) {  
                     // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
                     if (speed > nAccelVThres) {
+                        ResetAlertVelocity(); 
                         sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
                         view.ShowStatus(sMsg, false);
                         console.log(sMsg);
