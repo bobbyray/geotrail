@@ -65,6 +65,12 @@ function wigo_ws_GeoTrailSettings() {
     // Float for converting kinetic Calories to burned calories, equals kinetic calories / burned calories.
     // Note: burned calories are calculated as follows: kinetic calories / this conversion factor.
     this.calorieConversionEfficiency = 0.10; 
+    ////20171102Always // Boolean to show open streets layer on map. ////20171101 
+    ////20171102Always this.bStreetLayer = true;                      
+    // Boolean to show topology layer on map.     ////20171101
+    this.bTopologyLayer = true;
+    // Boolean to show snow cover layer on map.   ////20171101
+    this.bSnowCoverLayer = true; 
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;
@@ -840,6 +846,11 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('nAccelThres', 6, 10.0);
                 UpdateIfNeeded('nAccelVThres', 6, 6.0);
 
+                // ** Changes for nSchema 7. ////20171101
+                ////20171102Always UpdateIfNeeded('bStreetLayer', 7, true);
+                UpdateIfNeeded('bTopologyLayer', 7, true);
+                UpdateIfNeeded('bSnowCoverLayer', 7, true); 
+
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
@@ -850,7 +861,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 6;  // Must be set to new number when nSchema change is added.
+        var nSchemaSaved = 7;  // Must be set to new number when nSchema change is added.
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 

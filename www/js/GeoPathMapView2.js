@@ -86,7 +86,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         bTileCaching = true;
     var map = null;     // Underlying map object.
     var mapPath = null; // Map overlay for current path.
-    var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
+    var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline. Open streets layer for map.
+    var layerOpenTopologyMap = null; //  L.TileLayer.Cordova obj. Open topology layer for map.
+    var layerNASAGIBS_ModisTerraSnowCover = null; //  L.TileLayer.Cordova obj. Snow cover layer for map.
     
     // ** Public members
     // Colors to use for drawing. 
@@ -128,19 +130,21 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
             if (tileLayer) {
+                tileLayer.addTo(map);
+                /* ////20171102 redo,take out. add/remove map layers in this.updateMapLayer().
                 // Add topographical layer to map.
-                if (bTopoLayerFlag) { 
-                    var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                if (bTopologyLayer) { 
+                    layerOpenTopologyMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                         maxZoom: 17,
                         opacity: 30,
                         attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
                     }); 
-                    map.addLayer(OpenTopoMap);               
+                    map.addLayer(layerOpenTopologyMap);               
                 }
                 tileLayer.addTo(map);
                 // Add snow cover layer to map. 
                 if (bSnowCoverLayer) {
-                    var NASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
+                    layerNASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
                         attribution: 'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
                         bounds: [[-85.0511287776, -179.999999975], [85.0511287776, 179.999999975]],
                         minZoom: 1,
@@ -150,8 +154,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                         tilematrixset: 'GoogleMapsCompatible_Level',
                         opacity: 0.30 
                     });
-                    map.addLayer(NASAGIBS_ModisTerraSnowCover);  
+                    map.addLayer(layerNASAGIBS_ModisTerraSnowCover);  
                 }
+                */
             }
 
             if (map) { // For safety check that map has been created successfully. 
@@ -184,6 +189,13 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         bCompassHeadingVisible = bVisible;
     };
 
+    ////20171102NotUsed // Sets flag to indicate if open streets layer is shown on the map.
+    ////20171102NotUsed // Arg:
+    ////20171102NotUsed //  bStreetsLayerArg: boolean. true to show streets layer on the map.
+    ////20171102NotUsed this.setStreetsLayer = function(bStreetsLayerArg) { ////20171102 added
+    ////20171102NotUsed     bStreetsLayer = bStreetsLayerArg;
+    ////20171102NotUsed };
+    ////20171102NotUsed var bStreetsLayer = true;
     
     // Sets flag to indicate if a snow cover layer is shown on the map.
     // Arg:
@@ -196,11 +208,67 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     // Sets flag to indicate if a topographical layer is shown on the map.
     // Arg:
     //  bTopoLayerFlagArg: boolean. true to shown topographical layer on the map.
-    this.setTopoLayerFlag = function(bTopoLayerFlagArg) { 
-        bTopoLayerFlag = bTopoLayerFlagArg;
-
+    this.setTopologyLayerFlag = function(bTopoLayerArg) { 
+        bTopologyLayer = bTopoLayerArg;
     };
-    var bTopoLayerFlag = true; // boolean flag to indicate topographic layer is added to the map.
+    var bTopologyLayer = true; // boolean flag to indicate topographic layer is added to the map.
+
+    // Adds or removes tile layers for to the map based on state of layer flags.
+    this.updateMapLayers = function() { ////20171102 added
+        ////20171102 
+        ////20171102 // Helper to remove layer from map.
+        ////20171102 function RemoveLayer(layer) {
+        ////20171102     if (layer) 
+        ////20171102         map.removeLayer(layer);
+        ////20171102     layer = null;
+        ////20171102 }
+        ////20171102 
+        // Remove all layers, then add back as appropiate.
+        ////20171102 RemoveLayer(tileLayer);
+        ////20171102 RemoveLayer(layerOpenTopologyMap);
+        ////20171102 RemoveLayer(layerNASAGIBS_ModisTerraSnowCover);
+        ////20171102 
+        ////20171102 // Add streets layer to map.
+        ////20171102 if (bStreetsLayer) {
+        ////20171102     // Create regular OpenStreetMap tile layer without title caching.
+        ////20171102     tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   
+        ////20171102         opacity: 0.30, 
+        ////20171102         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        ////20171102     });
+        ////20171102 }
+        ////20171102 
+        // Add topographical layer to map.
+        if (bTopologyLayer && !layerOpenTopologyMap) { 
+            layerOpenTopologyMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                maxZoom: 17,
+                opacity: 30,
+                attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+            }); 
+            map.addLayer(layerOpenTopologyMap);               
+        } else if (!bTopologyLayer && layerOpenTopologyMap) {
+            map.removeLayer(layerOpenTopologyMap); 
+            layerOpenTopologyMap = null; 
+        }
+
+        // Add snow cover layer to map. 
+        if (bSnowCoverLayer && !layerNASAGIBS_ModisTerraSnowCover) {
+            layerNASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
+                attribution: 'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
+                bounds: [[-85.0511287776, -179.999999975], [85.0511287776, 179.999999975]],
+                minZoom: 1,
+                maxZoom: 8, // Fails for maxZoom > 8 
+                format: 'png',
+                time: '', // '2017-10-16', // '', // '' is current date.
+                tilematrixset: 'GoogleMapsCompatible_Level',
+                opacity: 0.30 
+            });
+            map.addLayer(layerNASAGIBS_ModisTerraSnowCover);  
+        } 
+        else if (!bSnowCoverLayer && layerNASAGIBS_ModisTerraSnowCover) {
+            map.removeLayer(layerNASAGIBS_ModisTerraSnowCover);
+            layerNASAGIBS_ModisTerraSnowCover = null;
+        }
+    }
 
     // Returns true if the device has enabled data storage.
     // Note: The device settings for an app may need to give permission to used data storage.
