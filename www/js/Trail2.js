@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171027-1356"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171103-1223"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -236,7 +236,7 @@ function wigo_ws_View() {
     //  Call once when app is loaded after event handlers have been set.
     this.Initialize = function () {
         // Helper to complete initialization after map has been initialized.
-        function CompleteInitialization(bOk, sMsg) {   ////20171102Undo added settings arg
+        function CompleteInitialization(bOk, sMsg) {  
             that.ShowStatus(sMsg, !bOk)
             if (bOk) { 
                 // Reset click for geo location testing when initializing
@@ -248,7 +248,6 @@ function wigo_ws_View() {
                     that.onSaveSettings(settings);
                 }
                 SetSettingsParams(settings);
-                ////DoneInSetSettingsParams map.updateMapLayers(); ////20171102
 
                 // Set view find paramters for search for geo paths to the home area.
                 viewFindParams.setRect(that.eFindIx.home_area, settings.gptHomeAreaSW, settings.gptHomeAreaNE);
@@ -283,21 +282,13 @@ function wigo_ws_View() {
 
         // Helper to do initialization. Completes asynchronously. 
         function DoInitialization() {
-            // Set parameters from settings before initializing the map. ////20171102 Moved from helper CompleteInitialization(..).
+            // Set parameters from settings before initializing the map. 
             // Reset click for geo location testing when initializing
             // due to loading this app. 
             // Note: settings.bClickForGeoLoc can be set later by user in Main Menu > Settings.
-            ////20171102Undo var settings = that.onGetSettings();
-            ////20171102Undo if (settings.bClickForGeoLoc) {
-            ////20171102Undo     settings.bClickForGeoLoc = false;
-            ////20171102Undo     that.onSaveSettings(settings);
-            ////20171102Undo }
-            ////20171102Undo SetSettingsParams(settings);
-            ////20171102Undo // Set flags for adding map layers. ////20171102
-
             map.GoOffline(false);
             map.InitializeMap(function (bOk, sMsg) {
-                CompleteInitialization(bOk, sMsg);  ////20171102Undo added settings arg
+                CompleteInitialization(bOk, sMsg);  
             });
         }
 
@@ -4684,9 +4675,7 @@ function wigo_ws_View() {
         };
     }
 
-    // Flags for showing layers on map.  ////20171101
-    ////20171102NotUsed var holderStreetLayer = document.getElementById('holderStreetLayer');
-    ////20171102NotUsed var selectStreetLayer = ctrls.NewYesNoControl(holderStreetLayer, null, 'Show Street Layer', -1);
+    // Flags for showing layers on map. 
     var holderTopologyLayer = document.getElementById('holderTopologyLayer');
     var selectTopologyLayer = ctrls.NewYesNoControl(holderTopologyLayer, null, 'Show Topology Layer', -1);
     var holderSnowCoverLayer = document.getElementById('holderSnowCoverLayer');
@@ -4789,28 +4778,15 @@ function wigo_ws_View() {
             var bOk = lon >= -181.9 && lon < 180.1;
             return bOk;
         }
-        // Helper to check that at least one map layer is selected. ////20171101
+        // Helper to check that at least one map layer is selected. 
         function IsLayerSelectionOk() {
             // Check that layer ctrls have valid state.    
-            ////20171102NotUsed let bStreetOk = IsYesNoCtrlOk(selectStreetLayer);
-            ////20171102NotUsed if (!bStreetOk)    
-            ////20171102NotUsed     return false;
             let bTopoOk = IsYesNoCtrlOk(selectTopologyLayer);
             if (!bTopoOk)
                 return false;
             let bSnowCoverOk = IsYesNoCtrlOk(selectSnowCoverLayer);
             if (!bSnowCoverOk)
                 return false;
-            ////20171102NotUsed // Check if each layer is enabled to show.
-            ////20171102NotUsed ////20171102 bStreetOk = selectStreetLayer.getState() === 1;
-            ////20171102NotUsed bTopoOk = selectTopologyLayer.getState() === 1;
-            ////20171102NotUsed bSnowCoverOk = selectSnowCoverLayer.getState() === 1;
-            ////20171102NotUsed let bOk = bTopoOk || bSnowCoverOk;    ////20171102 not using bStreetOk
-            ////20171102NotUsed if (!bOk) {
-            ////20171102NotUsed     let sMsg = "Select one or more layers to show on the map.";
-            ////20171102NotUsed     AlertMsg(sMsg);
-            ////20171102NotUsed }
-            ////20171102NotUsed return bOk;
             return true;
         }
 
@@ -4863,7 +4839,7 @@ function wigo_ws_View() {
         if (IsSettingCCEActive())  
             return false;
 
-        // Check map layers. ////20171101
+        // Check map layers. 
         if (!IsLayerSelectionOk())
             return false;
         return true;
@@ -4906,9 +4882,8 @@ function wigo_ws_View() {
         settings.vSpuriousVLimit = parseFloat(numberSpuriousVLimit.getSelectedValue()); 
         settings.kgBodyMass = bodyMass.getMass(); 
         settings.calorieConversionEfficiency = cceLabelValue.get(); 
-        ////20171102Always settings.bStreetLayer = selectStreetLayer.getState() === 1;      ////20171101
-        settings.bTopologyLayer = selectTopologyLayer.getState() === 1;  ////20171101
-        settings.bSnowCoverLayer = selectSnowCoverLayer.getState() === 1; ////20171101
+        settings.bTopologyLayer = selectTopologyLayer.getState() === 1;  
+        settings.bSnowCoverLayer = selectSnowCoverLayer.getState() === 1; 
         settings.bCompassHeadingVisible = selectCompassHeadingVisible.getState() === 1; 
         settings.bClickForGeoLoc = selectClickForGeoLoc.getState() === 1;
         settings.gptHomeAreaSW.lat = numberHomeAreaSWLat.value;
@@ -5012,7 +4987,6 @@ function wigo_ws_View() {
         cceCurEfficiencyLabel.showParent(bShowCCERow);
 
         // Set ctrls for showing layers on map.
-        ////20171102 selectStreetLayer.setState(settings.bStreetLayer ? 1 : 0);
         selectTopologyLayer.setState(settings.bTopologyLayer ? 1 : 0);
         selectSnowCoverLayer.setState(settings.bSnowCoverLayer ? 1: 0); 
 
@@ -5063,11 +5037,11 @@ function wigo_ws_View() {
         alerter.msPhoneVibe = Math.round(settings.secsPhoneVibe * 1000);
         alerter.countPhoneBeep = settings.countPhoneBeep;
 
-        // Set flags for map layers. ////20171101
+        // Set flags for map layers. 
         map.setSnowCoverLayerFlag(settings.bSnowCoverLayer); 
         map.setTopologyLayerFlag(settings.bTopologyLayer); 
         // Update which layers show on the map.
-        map.updateMapLayers(); ////20171102 added
+        map.updateMapLayers();
 
         // Set boolean for showing compass heading on the map.
         map.SetCompassHeadingVisibleState(settings.bCompassHeadingVisible); // 20160609 added. 

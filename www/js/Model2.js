@@ -65,11 +65,9 @@ function wigo_ws_GeoTrailSettings() {
     // Float for converting kinetic Calories to burned calories, equals kinetic calories / burned calories.
     // Note: burned calories are calculated as follows: kinetic calories / this conversion factor.
     this.calorieConversionEfficiency = 0.10; 
-    ////20171102Always // Boolean to show open streets layer on map. ////20171101 
-    ////20171102Always this.bStreetLayer = true;                      
-    // Boolean to show topology layer on map.     ////20171101
+    // Boolean to show topology layer on map.     
     this.bTopologyLayer = true;
-    // Boolean to show snow cover layer on map.   ////20171101
+    // Boolean to show snow cover layer on map.   
     this.bSnowCoverLayer = true; 
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
@@ -846,8 +844,7 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('nAccelThres', 6, 10.0);
                 UpdateIfNeeded('nAccelVThres', 6, 6.0);
 
-                // ** Changes for nSchema 7. ////20171101
-                ////20171102Always UpdateIfNeeded('bStreetLayer', 7, true);
+                // ** Changes for nSchema 7. 
                 UpdateIfNeeded('bTopologyLayer', 7, true);
                 UpdateIfNeeded('bSnowCoverLayer', 7, true); 
 
