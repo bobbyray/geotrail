@@ -1471,6 +1471,14 @@ function wigo_ws_View() {
         var efficency = kineticCalories / actualCalories;
         cceNewEfficiencyNumber.set(efficency);
     }, false);
+    // Evant handler for Enter Key for cceActualCaloriesNumber.
+    // Kills focus for cceActualCaloriesNumber if key is Enter.
+    cceActualCaloriesNumber.ctrl.addEventListener('keydown', function(event) { 
+        var bEnterKey = IsEnterKey(event);
+        if (bEnterKey) {
+            this.blur();
+        }
+    }, false); 
     
     var cceNewEfficiencyNumber = new CCENumber('cceNewEfficiency', 3, true); // true => percentage
     cceNewEfficiencyNumber.ctrl.addEventListener('focus', SelectNumberOnFocus, false);  
@@ -1481,6 +1489,15 @@ function wigo_ws_View() {
         var actualCalories = kineticCalories / newEfficincy;
         cceActualCaloriesNumber.set(actualCalories);
     }, false);
+    // Evant handler for Enter Key for cceNewEfficiencyNumber.
+    // Kills focus for cceNewEfficiencyNumber if key is Enter.
+    cceNewEfficiencyNumber.ctrl.addEventListener('keydown', function(event) { 
+        var bEnterKey = IsEnterKey(event);
+        if (bEnterKey) {
+            this.blur();
+        }
+    }, false); 
+
     var cceCurEfficiencyLabel = new CCELabel('cceCurEfficiency', 3, true);  // true => percentage
 
     // Selects state for Tracking on/off and runs the tract timer accordingly.
@@ -4136,7 +4153,7 @@ function wigo_ws_View() {
 
     // ** Controls for Settings
     var holderAllowGeoTracking = document.getElementById('holderAllowGeoTracking');
-    var selectAllowGeoTracking = new ctrls.DropDownControl(holderAllowGeoTracking, null, 'Allow Tracking', '', 'img/ws.wigo.dropdownhorizontalicon.png');
+    var selectAllowGeoTracking = new ctrls.DropDownControl(holderAllowGeoTracking, null, 'Allow Geo Tracking', '', 'img/ws.wigo.dropdownhorizontalicon.png');
     var selectAllowGeoTrackingValues; 
     if (app.deviceDetails.isAndroid() )
         selectAllowGeoTrackingValues =  
@@ -4270,10 +4287,10 @@ function wigo_ws_View() {
 
 
     parentEl = document.getElementById('holderPhoneAlert');
-    var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert', -1);
+    var selectPhoneAlert = ctrls.NewYesNoControl(parentEl, null, 'Allow Phone Alert?', -1);
 
     parentEl = document.getElementById('holderOffPathAlert');
-    var selectOffPathAlert = ctrls.NewYesNoControl(parentEl, null, 'Phone Alert Initially On', -1);
+    var selectOffPathAlert = ctrls.NewYesNoControl(parentEl, null, 'Phone Alert Initially On?', -1);
 
     parentEl = document.getElementById('holderPhoneVibeSecs');
     var numberPhoneVibeSecs = new ctrls.DropDownControl(parentEl, null, 'Phone Vibration in Secs', '',  'img/ws.wigo.dropdownhorizontalicon.png');
@@ -4380,7 +4397,7 @@ function wigo_ws_View() {
 
         // ** private members
         var holderAccelAlert = document.getElementById('holderAccelAlert');
-        var enabledCtrl = ctrls.NewYesNoControl(holderAccelAlert, null, "Accel Alert", -1);
+        var enabledCtrl = ctrls.NewYesNoControl(holderAccelAlert, null, "Accel Alert?", -1);
     }
     var accelAlertThres = new AccelAlertThresCtrl();
 
@@ -4519,10 +4536,10 @@ function wigo_ws_View() {
 
     // setting UI for Auto Trail Animation. 
     var holderAutoPathAnimation = document.getElementById('holderAutoPathAnimation');
-    var selectAutoPathAnimation = ctrls.NewYesNoControl(holderAutoPathAnimation, null, "Auto Trail Animation", -1);
+    var selectAutoPathAnimation = ctrls.NewYesNoControl(holderAutoPathAnimation, null, "Auto Trail Animation?", -1);
 
     var holderPebbleAlert = document.getElementById('holderPebbleAlert');
-    var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch', -1);
+    var selectPebbleAlert = ctrls.NewYesNoControl(holderPebbleAlert, null, 'Pebble Watch?', -1);
 
     var holderPebbleVibeCount = document.getElementById('holderPebbleVibeCount');
     var numberPebbleVibeCount = new ctrls.DropDownControl(holderPebbleVibeCount, null, 'Pebble Vibration Count', '',  'img/ws.wigo.dropdownhorizontalicon.png');;
@@ -4677,9 +4694,9 @@ function wigo_ws_View() {
 
     // Flags for showing layers on map. 
     var holderTopologyLayer = document.getElementById('holderTopologyLayer');
-    var selectTopologyLayer = ctrls.NewYesNoControl(holderTopologyLayer, null, 'Show Topology Layer', -1);
+    var selectTopologyLayer = ctrls.NewYesNoControl(holderTopologyLayer, null, 'Show Topology Layer?', -1);
     var holderSnowCoverLayer = document.getElementById('holderSnowCoverLayer');
-    var selectSnowCoverLayer = ctrls.NewYesNoControl(holderSnowCoverLayer, null, 'Show Snow Cover Layer', -1);
+    var selectSnowCoverLayer = ctrls.NewYesNoControl(holderSnowCoverLayer, null, 'Show Snow Cover Layer?', -1);
 
     // ** Helper for Settings
 
