@@ -482,6 +482,11 @@ label {
     padding-left: 0.5em;
     width: initial;
 }
+
+.cceRow input {   
+    background-color: lightgray;
+}
+
 #buCCESet {  
     padding-top: 0.3em;
     float: right;

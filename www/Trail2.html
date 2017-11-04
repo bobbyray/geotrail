@@ -511,16 +511,26 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>MyLoc Button<br/>
             Displays your current location on the map. If a trail is selected, checks if you are off trail.</li>
             <li>Track Off | On<br/>
-            Switches between geolocation tracking On or Off. 
-            When Track is On, checking is done automatically to determine if you are off trail.<br/>
+            Switches between tracking On or Off. 
+            When Track is On, checking is done for the following:
+            <ul>
+                <li>Geolocation is off of the selected trail.</li>
+                <li><a href='#helpAccelAlert'>Excessive acceleration</a> (if enabled).</li>
+            </ul>
+            <br/>
             If Geo Tracking Allowed is No in
             <a href="#helpAllowGeoTracking">Menu > Settings > Allow Geo Tracking</a>,
             Track is not shown.<br/>
             Note: Track On will run down your battery more quickly.</li>
             <li>Alert Off | On<br/>
             Switches between Alert On or Off.
-            A phone alert is given if you are off the trail,
-            or if recording, each time  you have traveled the alert distance interval.</li>
+            A phone alert is given for any of these events:
+            <ul>
+                <li>Off the selected trail when tracking is on.</li>
+                <li>Distance alert when <a href='#helpOnlineRecord'>recording a trail</a> is in the On state.</li>
+                <li>Excessive acceleration alert when tracking or recording is in the On state.</li>
+            </ul>
+            </li>
         </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
         You select a trail you have saved when you are viewing the Online Map. 
@@ -538,7 +548,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>Clear<br/>Select to empty the cache of map files. Clearing the cache deletes all 
             the offline trails from the phone.</li>
         </ul>
-        <h3>Record DropList</h3>
+        <h3 id='helpRecordDropList'>Record DropList</h3>
         Records a trail as you travel. This works the same as described in 
         <a href="#helpOnlineRecord">Online Record DropList</a>, except 
         the option to Upload the recorded trail to the web server is not available.
@@ -689,11 +699,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             or 3.15km for kilometers.<br/>
             For English, distances are displayed in English units, e.g 43ft for feet
             or 1.35mi for miles.
-            <li>Allow Phone Alert Yes | No<br/>
+            <li>Allow Phone Alert? Yes | No<br/>
             Determines if alerts (beeps) from you phone are given.<br/> 
             Alert is on the bar of <a href="#helpControlsAtBottom">Controls at Bottom of Map</a>.<br/>
             Note: The operating system may stop issuing alerts that are continuously occurring.</li>
-            <li>Phone Alert Initially On Yes | No<br/> 
+            <li>Phone Alert Initially On? Yes | No<br/> 
             Yes to start with Alert On when app loads.</li>
             <li>Phone Vibration in Secs<br>
             Number of seconds phone vibrates for an alert. Set to 0 for no vibration.</li>
@@ -704,12 +714,35 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The phone alert occurs each time you have traveled the interval distance.
             Alert on the <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> must be On for the alert to occur.<br/>
             A value of 0 indicates Record Distance Alert is off (not used). 
-            <li>Auto Trail Animation Yes | No<br/>
+            <li id='helpAccelAlert'>Accel Alert? Yes | No<br/>
+            No means checking for excessive acceletion is NOT done.<br/>
+            Yes causes an excessive acceleration alert to be issued (phone beep and/or Pebble vibration).
+            Checking occurs only if Track on <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> is On 
+            or Record is in the On state.
+            Also Alert on the Controls at Bottom of Map must be On.<br/>            
+            Checking for excessive acceleration is useful for biking to warn a rider of going too fast down a trail. 
+            The parameters used to detect excessive acceleration follow.
+            <ul>
+                <li>Accel Alert Thres (m/sec^2)<br/>
+                Once this acceleration threshold is reached, a check for a threshold for the change in velocity is done.
+                If the velocity threshold is exceeded an alert is issued.<br/>
+                The acceleration is given in meters per second squared. For reference the acceleration due to earth's gravity
+                is 9.81 m/sec^2.</li>
+                <li>Accel Velocity Thres (m/sec)<br/>
+                The threshold in meter per second for the change in velocity after which an acceleration alert is issued.
+                Also the acceleration must remain above the Accel Alert Thres. 
+                If the acceleration drops below its threshold, the change in velocity is reset to 0.
+                Also once the velocity threshold is reached, it is reset to 0 resulting in another alert
+                if the velocity threshold is reached again.<br/>
+                For reference, 5 m/sec is 11 miles/hour.</li>
+            </ul>
+            </li>
+            <li>Auto Trail Animation? Yes | No<br/>
             Yes automatically animates a trail when it is displayed. 
             If No is selected, the current trail can still be animated by selecting
             the <i>Animate Current Trail</i> item from the Trails droplist.<br/>
             Touching the map stops an animation that is running.</li>
-            <li class="noIosHelp">Pebble Watch Yes | No<br/>
+            <li class="noIosHelp">Pebble Watch? Yes | No<br/>
             Yes to show messages on a Pebble Watch that is connected to the phone.
             The Select (middle) button on the Pebble gets the current geolocation from the phone.</li>
             <li class="noIosHelp">Pebble Vibration Count<br/>
@@ -746,6 +779,21 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Estimated Calories =  Kinetic Calories / Current Efficiency.<br/>
             <br/>Calories are in units of US Food Calories:<br/>1 US Food Calorie = 4.184 kiloJoules.
             </li>
+            <li>Show Topology Layer on map? Yes | No<br/>
+            Shows a topology layer on the map.
+            Not showing the topology layer makes the snow cover layer clearer.</li>
+            <li>Show Snow Cover Layer on map? Yes | No<br/>
+            Shows a snow cover layer on the the map.<br>
+            A color scale indicates how much of an area is covered by snow; 
+            it does NOT indicate snow depth:
+            <img src='img/snowcoverscale.png'><br/>
+            <ul>
+                <li><span style='background-color: rgb(30,0,234)'>&nbsp;&nbsp;&nbsp;&nbsp;</span> - 10% snow cover.</li>
+                <li><span style='background-color:rgb(81,201,0)'>&nbsp;&nbsp;&nbsp;&nbsp;</span> - 50% to 60% snow cover.</li>
+                <li><span style='background-color: rgb(207,5,0)'>&nbsp;&nbsp;&nbsp;&nbsp;</span> - 100% snow cover.</li>
+            </ul>
+            The snow cover layer has low resolution
+            and is only visible when the map is zoomed out a lot.</li>
             <li>Show Compass Heading on Map?<br/>Yes | No<br/>
             An arrow for the compass heading from your current location may be shown on the map.</li>
             <li>Touch Map for Geo Location Testing?<br/>Yes | No<br/>
