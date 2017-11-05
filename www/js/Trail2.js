@@ -5152,6 +5152,8 @@ function wigo_ws_View() {
     var divHelpGuide = document.getElementById('divHelpGuide');
     function ShowHelpGuide(bShow) {
         ShowHelpDiv(divHelpGuide, bShow);
+        if (bShow)
+            linkBackNavigationHelpGuide.showBackButtonIfNeeded(); 
     }
 
     // Shows or hides the divHelpBackToTrail.
@@ -5236,7 +5238,7 @@ function wigo_ws_View() {
         titleBar.scrollIntoView();   
     }
 
-    // ** More function 
+    // ** More functions 
 
     // Returns true if HTML el is hiddent.
     // Note: Do not use for a fixed position element, which is not used anyway.
@@ -7080,8 +7082,60 @@ Are you sure you want to delete the maps?";
 
     // Object for network (internet) connection state.
     var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
-}
 
+    // Object for navigating back from a link that has been followed in an HTML description. 
+    // Construct Arg:
+    //  jqsDiv: string for jquery selector of html div element containing the html to be navigated.
+    //         Note: For an id, must include # prefix for jquery selector.
+    //  jqsBackButton: string for jquery selector of back button. May select multiple buttons.
+    //         Note: For an id, must include # prefix for jquery selector.
+    //               Any html element that raises a click event can be used.
+    function LinkBackNavigation(jqsDiv, jqsBackButton) {  
+
+        // Shows the back button(s) if needed, otherwise hides.
+        this.showBackButtonIfNeeded = function() {
+            ShowBackButtonIfNeeded();
+        };
+
+        // Find all the links in the div.
+        var div = $(jqsDiv)[0]; 
+        var jqLinks = $(jqsDiv + " a"); // list of jquery elements for HTML link elements.
+        jqLinks.on('click', function(event) {
+            // Event handler for a link clicked.
+            arScrollTop.push(div.scrollTop);
+            ShowBackButtonIfNeeded();
+
+        });
+
+        var jqBackButton = $(jqsBackButton);
+        jqBackButton.on('click', function(event) {
+            // Event handler for back button.
+            if (arScrollTop.length > 0) {
+                var scrollTop = arScrollTop.pop();
+                ShowBackButtonIfNeeded();
+                if (div) {
+                    div.scrollTop = scrollTop;
+                }
+            }
+        });
+
+        // Shows the back button(s) if needed, otherwise hides.
+        function ShowBackButtonIfNeeded() {
+            var bVisible = arScrollTop.length > 0;
+            if (bVisible)
+                jqBackButton.show();
+            else 
+                jqBackButton.hide();
+        }
+
+        // Stack of scroll top number. When link is clicked, 
+        // the current scroll top is pushed to stack.
+        var arScrollTop = []; 
+        // Initially hide the back button when object is constructed.
+        ShowBackButtonIfNeeded(); 
+    }
+    var linkBackNavigationHelpGuide = new LinkBackNavigation('#divHelpGuide','#buBackDialogBar'); 
+}
 
 // Object for controller of the page.
 function wigo_ws_Controller() {
