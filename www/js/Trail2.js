@@ -6318,9 +6318,10 @@ function wigo_ws_View() {
         //  thres: float. acceleration in m/sec%2.
         this.setAccelThres = function(thres) {
             ////20171116 nAccelThres = thres;
-            nAccelThres = thres + 9.81;
+            ////20171116 nAccelThres = thres + ACCEL_GRAVITY;
+            nAccelThres = thres;
         };
-        var nAccelThres = 9.81;
+        var nAccelThres = ACCEL_GRAVITY;
 
         // Sets the accessive acceleration velocity threshold.
         // Arg:
@@ -6398,7 +6399,8 @@ function wigo_ws_View() {
                 alertVelocity.z += deltaV.z;
 
                 var speed = Magnitude(alertVelocity); 
-                var accel = Magnitude(curAcceleration);
+                ////201711 var accel = Magnitude(curAcceleration);
+                var accel = Magnitude(curAcceleration) - ACCEL_GRAVITY; // Note: accel thres does not include acceleration due to gravit.
                 if (accel > nAccelThres) {  
                     // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
                     if (speed > nAccelVThres) {
@@ -6452,7 +6454,7 @@ function wigo_ws_View() {
 
         // Resets variables for device motion.
         function ResetDeviceMotion() {
-            curAcceleration = {x: 0, y: 0, z: 9.81};  ////20171116 z was 0
+            curAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY};  ////20171116 z was 0
             ////20171116 curInterval = 0;
             ResetAlertVelocity(); 
         }
@@ -6461,13 +6463,14 @@ function wigo_ws_View() {
         function ResetAlertVelocity() {
             alertVelocity.x = 0;
             alertVelocity.y = 0;
-            alertVelocity.z = 9.81; 
+            alertVelocity.z = ACCEL_GRAVITY; 
         }
-
-        var curAcceleration = {x: 0, y: 0, z: 9.81} ; // current acceleration vector in meters/sec. (z was 0). 
+        
+        var ACCEL_GRAVITY = 9.81; // Constant for earth's gravity acceleration in meters/second^2.
+        var curAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY} ; // current acceleration vector in meters/sec. (z was 0). 
         var curInterval = 30;  // Current interval in milliseconds wrt to previous. Constant for the sample period.
         var alertVelocity = {x: 0, y: 0, z: 0}; // Velocity vector.
-        var prevAcceleration = {x: 0, y: 0, z: 9.81}; // previous acceleration vector.  ////20171116 z was 0.
+        var prevAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY}; // previous acceleration vector.  ////20171116 z was 0.
         var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
         
         // Returns vector for the change in velocity from current acceleration wrt previous acceleration.
