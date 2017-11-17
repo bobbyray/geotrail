@@ -5032,7 +5032,7 @@ function wigo_ws_View() {
         map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
 
         // Set parameters for excessive acceleration.
-        if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. ////20171110
+        if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. 
             deviceMotion.allow();
         else
             deviceMotion.disallow();
@@ -5124,7 +5124,7 @@ function wigo_ws_View() {
             // Do not show settings for tracking nor Pebble.
             ShowElement(holderPebbleAlert, false);
             ShowElement(holderPebbleVibeCount, false);
-            // Accel Alert is not available for iPhone. ////20171110
+            // Accel Alert is not available for iPhone. 
             ShowElement(document.getElementById('holderAccelAlert'), false);
             ShowElement(document.getElementById('holderAccelThres'), false);
             ShowElement(document.getElementById('holderAccelVThres'), false);
@@ -6231,18 +6231,14 @@ function wigo_ws_View() {
 
         // Start handling events for device motion.
         function HandleDeviceMotion() {
-            ////20171113 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
             window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
             ResetDeviceMotion();
-            ////20171113 window.addEventListener("devicemotion", OnDeviceMotion, true);
             window.addEventListener("devicemotion", OnDeviceMotion, false);
         }
 
         // Stop handling events for device motion.
         function UnHandleDeviceMotion() {
-            ////20171113 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
             window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
-            ////20171113 window.removeEventListener("devicemotion", OnDeviceMotion, true);
             window.removeEventListener("devicemotion", OnDeviceMotion, false);
             ResetDeviceMotion();
         }
@@ -6317,8 +6313,6 @@ function wigo_ws_View() {
         // Arg:
         //  thres: float. acceleration in m/sec%2.
         this.setAccelThres = function(thres) {
-            ////20171116 nAccelThres = thres;
-            ////20171116 nAccelThres = thres + ACCEL_GRAVITY;
             nAccelThres = thres;
         };
         var nAccelThres = ACCEL_GRAVITY;
@@ -6367,54 +6361,35 @@ function wigo_ws_View() {
             bRecording = false;
         };
 
-        /* ////20171116 not used
-        // Event handler for calibrating compass.
-        function OnCompassNeedsCalibration(event) {
-            // ask user to wave device in a figure-eight motion.  
-            if (!ackCalibrationNeededPending) {
-                ackCalibrationNeededPending = true;
-                AlertMsg('Your compass needs calibrating! Wave your device in a figure-eight motion', function() {
-                    ackCalibrationNeededPending = false;
-                }); 
-            }
-            event.preventDefault();
-        }
-        var ackCalibrationNeededPending = false; // Boolean flag indicating calibration by user is pending.
-        */
-
         // Event handler (callback) for successfully checking device motion.
         // Checks for excessive acceleration.
-        function OnDeviceMotion(acceleration) {  ////2017116 was event.
+        function OnDeviceMotion(acceleration) { 
             var sMsg;
             // Note: Events occur even if motion is not occurring. Cannot detect previously stationary by
             //       testing for long duration since previous event.
 
             prevAcceleration = curAcceleration; 
             curAcceleration = acceleration;
-            ////20171116 curInterval = event.interval;
-            ////20171116 if (!ackCalibrationNeededPending) {
-                var deltaV = VelocityDelta();
-                alertVelocity.x += deltaV.x;
-                alertVelocity.y += deltaV.y;
-                alertVelocity.z += deltaV.z;
+            var deltaV = VelocityDelta();
+            alertVelocity.x += deltaV.x;
+            alertVelocity.y += deltaV.y;
+            alertVelocity.z += deltaV.z;
 
-                var speed = Magnitude(alertVelocity); 
-                ////201711 var accel = Magnitude(curAcceleration);
-                var accel = Magnitude(curAcceleration) - ACCEL_GRAVITY; // Note: accel thres does not include acceleration due to gravit.
-                if (accel > nAccelThres) {  
-                    // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
-                    if (speed > nAccelVThres) {
-                        ResetAlertVelocity(); 
-                        sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
-                        view.ShowStatus(sMsg, false);
-                        console.log(sMsg);
-                        alerter.DoAlert(); 
-                        pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
-                    }
-                } else {
+            var speed = Magnitude(alertVelocity); 
+            var accel = Magnitude(curAcceleration) - ACCEL_GRAVITY; // Note: accel thres does not include acceleration due to gravity.
+            if (accel > nAccelThres) {  
+                // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
+                if (speed > nAccelVThres) {
                     ResetAlertVelocity(); 
+                    sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
+                    view.ShowStatus(sMsg, false);
+                    console.log(sMsg);
+                    alerter.DoAlert(); 
+                    pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
                 }
-            ////20171116 }
+            } else {
+                ResetAlertVelocity(); 
+            }
         }
 
         // Event handler (callback) for an error when checking device motion.
@@ -6428,11 +6403,7 @@ function wigo_ws_View() {
 
         // Start handling events for device motion.
         function HandleDeviceMotion() {
-            ////20171113 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
-            ////10171116 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
             ResetDeviceMotion();
-            ////20171113 window.addEventListener("devicemotion", OnDeviceMotion, true);
-            ////20171116 window.addEventListener("devicemotion", OnDeviceMotion, false);
             watchID = navigator.accelerometer.watchAcceleration(
                 OnDeviceMotion, // accelerometerSuccess,
                 OnDeviceMotionError, // accelerometerError,
@@ -6443,10 +6414,6 @@ function wigo_ws_View() {
 
         // Stop handling events for device motion.
         function UnHandleDeviceMotion() {
-            ////20171113 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
-            ////20171116 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
-            ////20171113 window.removeEventListener("devicemotion", OnDeviceMotion, true);
-            ////20171116 window.removeEventListener("devicemotion", OnDeviceMotion, false);
             navigator.accelerometer.clearWatch(watchID);
             watchID = 0;
             ResetDeviceMotion();
@@ -6454,8 +6421,7 @@ function wigo_ws_View() {
 
         // Resets variables for device motion.
         function ResetDeviceMotion() {
-            curAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY};  ////20171116 z was 0
-            ////20171116 curInterval = 0;
+            curAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY};  
             ResetAlertVelocity(); 
         }
 
@@ -6470,7 +6436,7 @@ function wigo_ws_View() {
         var curAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY} ; // current acceleration vector in meters/sec. (z was 0). 
         var curInterval = 30;  // Current interval in milliseconds wrt to previous. Constant for the sample period.
         var alertVelocity = {x: 0, y: 0, z: 0}; // Velocity vector.
-        var prevAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY}; // previous acceleration vector.  ////20171116 z was 0.
+        var prevAcceleration = {x: 0, y: 0, z: ACCEL_GRAVITY}; // previous acceleration vector. 
         var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
         
         // Returns vector for the change in velocity from current acceleration wrt previous acceleration.
