@@ -516,7 +516,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             When Track is On, checking is done for the following:
             <ul>
                 <li>Geolocation is off of the selected trail.</li>
-                <li><a href='#helpAccelAlert'>Excessive acceleration</a> (if enabled).</li>
+                <li class='noIosHelp'><a href='#helpAccelAlert'>Excessive acceleration</a> (if enabled).</li>
             </ul>
             <br/>
             If Geo Tracking Allowed is No in
@@ -529,7 +529,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <ul>
                 <li>Off the selected trail when tracking is on.</li>
                 <li>Distance alert when <a href='#helpOnlineRecord'>recording a trail</a> is in the On state.</li>
-                <li>Excessive acceleration alert when tracking or recording is in the On state.</li>
+                <li class='noIosHelp'>Excessive acceleration alert when tracking or recording is in the On state.</li>
             </ul>
             </li>
         </ul>
@@ -715,7 +715,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The phone alert occurs each time you have traveled the interval distance.
             Alert on the <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> must be On for the alert to occur.<br/>
             A value of 0 indicates Record Distance Alert is off (not used). 
-            <li id='helpAccelAlert'>Accel Alert? Yes | No<br/>
+            <li id='helpAccelAlert' class='noIosHelp'>Accel Alert? Yes | No<br/>
             No means checking for excessive acceletion is NOT done.<br/>
             Yes causes an excessive acceleration alert to be issued (phone beep and/or Pebble vibration).
             Checking occurs only if Track on <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> is On 
@@ -963,6 +963,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>github.com/jawj/OverlappingMarkerSpiderfier-Leaflet, May 10, 2016</li>
         <li>github.com/openplans/Leaflet.AnimatedMarker, v1.0.0, December 19, 2016</li>
         <li>cordova-plugin-background-mode 0.7.2 "BackgroundMode"</li>
+        <li>cordova-plugin-device-motion 1.2.5 "Device Motion"</li>
         </ul>
         <br/> <!-- space for the Close diaglog bar to overlay -->
     </div>

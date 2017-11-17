@@ -50,6 +50,9 @@
     </feature>
     <preference name="KeepRunning" value="true" />
     <preference name="AndroidLaunchMode" value="singleInstance" />
+    <feature name="Accelerometer">
+        <param name="android-package" value="org.apache.cordova.devicemotion.AccelListener" />
+    </feature>
     <allow-intent href="market:*" />
     <name>GeoTrail</name>
     <description>

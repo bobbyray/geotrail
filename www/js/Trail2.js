@@ -5032,7 +5032,7 @@ function wigo_ws_View() {
         map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
 
         // Set parameters for excessive acceleration.
-        if (settings.bAccelAlert)
+        if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. ////20171110
             deviceMotion.allow();
         else
             deviceMotion.disallow();
@@ -5124,6 +5124,10 @@ function wigo_ws_View() {
             // Do not show settings for tracking nor Pebble.
             ShowElement(holderPebbleAlert, false);
             ShowElement(holderPebbleVibeCount, false);
+            // Accel Alert is not available for iPhone. ////20171110
+            ShowElement(document.getElementById('holderAccelAlert'), false);
+            ShowElement(document.getElementById('holderAccelThres'), false);
+            ShowElement(document.getElementById('holderAccelVThres'), false);
         }
 
         var sShowSettings = bShow ? 'block' : 'none';
@@ -6099,7 +6103,12 @@ function wigo_ws_View() {
     if (window.app.deviceDetails.isiPhone())
         backgroundMode = new BackgroundModeUnavailable(); 
     
-
+    /* //20171116 redo to use plugin.
+    // This worked once but quite working.
+    // Tried hard to get working but failed.
+    // The plugin is deprecated and may not be supported
+    // in the future. Leave code commented out 
+    // in case it is needed in the future.
     // Object for detection device motion.
     // Constructor arg:
     //  view: ref to wigo_ws_View.
@@ -6222,15 +6231,19 @@ function wigo_ws_View() {
 
         // Start handling events for device motion.
         function HandleDeviceMotion() {
-            window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            ////20171113 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
             ResetDeviceMotion();
-            window.addEventListener("devicemotion", OnDeviceMotion, true);
+            ////20171113 window.addEventListener("devicemotion", OnDeviceMotion, true);
+            window.addEventListener("devicemotion", OnDeviceMotion, false);
         }
 
         // Stop handling events for device motion.
         function UnHandleDeviceMotion() {
-            window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
-            window.removeEventListener("devicemotion", OnDeviceMotion, true);
+            ////20171113 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
+            ////20171113 window.removeEventListener("devicemotion", OnDeviceMotion, true);
+            window.removeEventListener("devicemotion", OnDeviceMotion, false);
             ResetDeviceMotion();
         }
 
@@ -6252,6 +6265,209 @@ function wigo_ws_View() {
         var curInterval = 0;  // Current interval in milliseconds wrt to previous. Note should be constant set by event handler.
         var alertVelocity = {x: 0, y: 0, z: 0}; // Velocity vector.
         var prevAcceleration = {x: 0, y: 0, z: 0}; // previous acceleration vector.
+        var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
+        
+        // Returns vector for the change in velocity from current acceleration wrt previous acceleration.
+        // Returns obj: {x: float, y: float, z: float}. Units for each component is meters/sec.
+        function VelocityDelta() {
+            // Helper to calculation area under acceleration segment for time delta, which change in velocity.
+            // Args:
+            // a, b: vectors wiith x, y, z components as floats.
+            // dt: float. delta time in seconds.
+            function DeltaArea(b, a, dt) {
+                var c = {x: dt*(b.x + a.x)/2, y: dt*(b.y + a.y)/2, z: dt*(b.z + a.z)/2};
+                return c;
+            }
+            var deltaV = DeltaArea(curAcceleration, prevAcceleration, curInterval/1000);
+            return deltaV;
+        }
+
+        // Returns float for magnitude of a vector.
+        // Arg:
+        //  av: object with x, y, and z members of a vector.
+        function Magnitude(av) {
+            var mag = Math.sqrt(av.x*av.x + av.y*av.y + av.z*av.z);
+            return mag;
+        }
+    }
+    */
+    // Note: The webview support for the DeviceMotionEvent is supposed to work.
+    //       It does work for mobile Chrome, but I could not get it to work for GeoTrail
+    //       The DeviceEvent did work at one time for GeoTrail, but I cannot get it 
+    //       to work now. I tried hard, but no luck. Cannnot image what changed.
+    // Object for detection device motion.
+    // Constructor arg:
+    //  view: ref to wigo_ws_View.
+    function DeviceMotion(view) { 
+        // Allows device motion to be detected.
+        this.allow = function() {
+            bAllow = true;
+        };
+        var bAllow = false;
+
+        // Disallows detecting device motion.
+        this.disallow = function() {
+            bAllow = false;
+            bTracking = false;
+            bRecording = false;
+            UnHandleDeviceMotion();
+        };
+
+        // Sets the exccessive acceleration threshold.
+        // Arg:
+        //  thres: float. acceleration in m/sec%2.
+        this.setAccelThres = function(thres) {
+            ////20171116 nAccelThres = thres;
+            nAccelThres = thres + 9.81;
+        };
+        var nAccelThres = 9.81;
+
+        // Sets the accessive acceleration velocity threshold.
+        // Arg:
+        //  thres: float. velocity in m/sec.
+        this.setAccelVThres = function(thres) {
+            nAccelVThres = thres;
+        };
+        var nAccelVThres = 6.0; 
+
+        // Enables receiving device motion events for tracking.
+        this.enableForTracking = function() {
+            if (!bAllow)
+                return;  // Quit if not allowed.
+            if (!bRecording && !bTracking) {
+                HandleDeviceMotion();
+            }
+            bTracking = true;
+        };
+
+        // Disables receiving device motion events for tracking.
+        this.disableForTracking = function() {
+            if (bTracking && !bRecording) {
+                UnHandleDeviceMotion();
+            }
+            bTracking = false;
+        };
+
+        // Enables receiving device motion events for recording.
+        this.enableForRecording = function() {  
+            if (!bAllow)
+                return;  // Quit if not allowed.
+            if (!bRecording && !bTracking) {
+                HandleDeviceMotion();
+            }
+            bRecording = true;
+        };
+
+        // Disables receiving device motion events for tracking.
+        this.disableForRecording = function() { 
+            if (!bTracking && bRecording) {
+                UnHandleDeviceMotion();
+            }
+            bRecording = false;
+        };
+
+        /* ////20171116 not used
+        // Event handler for calibrating compass.
+        function OnCompassNeedsCalibration(event) {
+            // ask user to wave device in a figure-eight motion.  
+            if (!ackCalibrationNeededPending) {
+                ackCalibrationNeededPending = true;
+                AlertMsg('Your compass needs calibrating! Wave your device in a figure-eight motion', function() {
+                    ackCalibrationNeededPending = false;
+                }); 
+            }
+            event.preventDefault();
+        }
+        var ackCalibrationNeededPending = false; // Boolean flag indicating calibration by user is pending.
+        */
+
+        // Event handler (callback) for successfully checking device motion.
+        // Checks for excessive acceleration.
+        function OnDeviceMotion(acceleration) {  ////2017116 was event.
+            var sMsg;
+            // Note: Events occur even if motion is not occurring. Cannot detect previously stationary by
+            //       testing for long duration since previous event.
+
+            prevAcceleration = curAcceleration; 
+            curAcceleration = acceleration;
+            ////20171116 curInterval = event.interval;
+            ////20171116 if (!ackCalibrationNeededPending) {
+                var deltaV = VelocityDelta();
+                alertVelocity.x += deltaV.x;
+                alertVelocity.y += deltaV.y;
+                alertVelocity.z += deltaV.z;
+
+                var speed = Magnitude(alertVelocity); 
+                var accel = Magnitude(curAcceleration);
+                if (accel > nAccelThres) {  
+                    // Set alert velocity to zero. Alert velocity will need to exceed threshold before alert is issued again.
+                    if (speed > nAccelVThres) {
+                        ResetAlertVelocity(); 
+                        sMsg = "Accel alert: a={0}m/sec^2, v={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)); 
+                        view.ShowStatus(sMsg, false);
+                        console.log(sMsg);
+                        alerter.DoAlert(); 
+                        pebbleMsg.Send("Accel alert\nA={0}m/sec^2\nV={1}m/sec".format(accel.toFixed(1), speed.toFixed(1)),true,false); // true => vibrate, false => no timeout
+                    }
+                } else {
+                    ResetAlertVelocity(); 
+                }
+            ////20171116 }
+        }
+
+        // Event handler (callback) for an error when checking device motion.
+        function OnDeviceMotionError() {
+            view.ShowStatus("Error checking acceleration.", true); // true hightlites an error.
+        }
+
+        var bTracking = false;  // Boolean to enable event handling for tracking.
+        var bRecording = false; // Boolean to enable event handling for recording.
+        var watchID = 0; // ID set when watching acceration.  Needed to clear watching.
+
+        // Start handling events for device motion.
+        function HandleDeviceMotion() {
+            ////20171113 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            ////10171116 window.addEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
+            ResetDeviceMotion();
+            ////20171113 window.addEventListener("devicemotion", OnDeviceMotion, true);
+            ////20171116 window.addEventListener("devicemotion", OnDeviceMotion, false);
+            watchID = navigator.accelerometer.watchAcceleration(
+                OnDeviceMotion, // accelerometerSuccess,
+                OnDeviceMotionError, // accelerometerError,
+                // accelerometerOptions
+                {frequency: 30 } // Update every 30 milliseconds.
+            );            
+        }
+
+        // Stop handling events for device motion.
+        function UnHandleDeviceMotion() {
+            ////20171113 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, true);
+            ////20171116 window.removeEventListener("compassneedscalibration", OnCompassNeedsCalibration, false);
+            ////20171113 window.removeEventListener("devicemotion", OnDeviceMotion, true);
+            ////20171116 window.removeEventListener("devicemotion", OnDeviceMotion, false);
+            navigator.accelerometer.clearWatch(watchID);
+            watchID = 0;
+            ResetDeviceMotion();
+        }
+
+        // Resets variables for device motion.
+        function ResetDeviceMotion() {
+            curAcceleration = {x: 0, y: 0, z: 9.81};  ////20171116 z was 0
+            ////20171116 curInterval = 0;
+            ResetAlertVelocity(); 
+        }
+
+        // Sets all components of alert velocity vector to 0.
+        function ResetAlertVelocity() {
+            alertVelocity.x = 0;
+            alertVelocity.y = 0;
+            alertVelocity.z = 9.81; 
+        }
+
+        var curAcceleration = {x: 0, y: 0, z: 9.81} ; // current acceleration vector in meters/sec. (z was 0). 
+        var curInterval = 30;  // Current interval in milliseconds wrt to previous. Constant for the sample period.
+        var alertVelocity = {x: 0, y: 0, z: 0}; // Velocity vector.
+        var prevAcceleration = {x: 0, y: 0, z: 9.81}; // previous acceleration vector.  ////20171116 z was 0.
         var maxAccelerationMagnitude =  3.0; // Magnitude of acceleration beyond which and alert is given.
         
         // Returns vector for the change in velocity from current acceleration wrt previous acceleration.
