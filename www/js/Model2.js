@@ -841,7 +841,7 @@ function wigo_ws_Model() {
 
                 // ** Changes for nSchema 6. 
                 UpdateIfNeeded('bAccelAlert', 6, false); 
-                UpdateIfNeeded('nAccelThres', 6, 10.0);
+                UpdateIfNeeded('nAccelThres', 6, 20.0);
                 UpdateIfNeeded('nAccelVThres', 6, 6.0);
 
                 // ** Changes for nSchema 7. 
