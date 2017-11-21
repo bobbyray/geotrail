@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.031-20171119-1319"; // Constant string for App version. 
+    var sVersion = "1.1.031-20171120-1625"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -448,7 +448,7 @@ function wigo_ws_View() {
     // Show status change.
     // A status change occurs when Track changes or Record starts or stops.
     // Shows the status change in the status div and on Pebble.
-    this.ShowStatusChange = function() { ////20171120 added function
+    this.ShowStatusChange = function() { 
         let sStatus = '';
         let sStatusPebble = '';
 
@@ -2996,7 +2996,7 @@ function wigo_ws_View() {
                         stateOn.prepare();
                         map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. ////20171120 added
+                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
                         break;
                     case that.event.unclear:
                         // Display the trail that has been restored.
@@ -3029,8 +3029,8 @@ function wigo_ws_View() {
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.PAUSE); 
                         stateStopped.prepare();
                         curState = stateStopped;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. ////20171120 added
-                        break; ////20171120 added
+                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
+                        break; 
                 }
             }
 
@@ -3146,7 +3146,7 @@ function wigo_ws_View() {
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.RESUME); 
                         stateOn.prepare();
                         curState = stateOn;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. ////20171120 added
+                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
                         break;
                     case that.event.clear:
                         stateInitial.prepare();
@@ -5091,7 +5091,7 @@ function wigo_ws_View() {
         map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
 
         // Set parameters for excessive acceleration.
-        deviceMotion.bAvailable = settings.bAccelAlert; ////20171120 added.
+        deviceMotion.bAvailable = settings.bAccelAlert; 
         if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. 
             deviceMotion.allow();
         else
@@ -7222,18 +7222,9 @@ function wigo_ws_View() {
         that.ClearStatus(); 
         // Save state of flag to track geo location.
         trackTimer.bOn = nState === 1;    // Allow/disallow geo-tracking.
-        ////20171120 if (!trackTimer.bOn) {
-        ////20171120     // Send message to Pebble that tracking is off.
-        ////20171120     pebbleMsg.Send("Tracking Off", false, false); // no vibration, no timeout.
-        ////20171120 } else {
-        ////20171120     // Show status that tracking is on. 
-        ////20171120     that.ShowStatus("Tracking On", false); 
-        ////20171120     pebbleMsg.Send("Tracking On", false, false); // no vibration, no timeout.
-        ////20171120 }
-        ////20171120MoveToBottom that.ShowStatusChange(); 
         // Start or clear trackTimer.
         RunTrackTimer();
-        that.ShowStatusChange(); 
+        that.ShowStatusChange(); // Show status for Track, Record, and Accel.
     };
 
     // Sets values for the Track and Alert OnOffCtrls on the mapBar.
