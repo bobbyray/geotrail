@@ -445,10 +445,12 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
 
-    // Show status change.
-    // A status change occurs when Track changes or Record starts or stops.
-    // Shows the status change in the status div and on Pebble.
-    this.ShowStatusChange = function() { 
+    // Forms current status message.
+    // Current status indicates Track On/Off, Record On/Off, and Acccel Sensing On/Off/Disabled.
+    // Returns {phone: string, pebble: string}
+    //  phone is message to display on phone.
+    //  pebble is message to sent to Pebble.
+    this.FormCurrentStatus = function() {   ////20171121 was ShowCurrentStatus
         let sStatus = '';
         let sStatusPebble = '';
 
@@ -494,11 +496,21 @@ function wigo_ws_View() {
         RecordStatus();
         AccelStatus();
 
-        // Show status change.
-        this.ShowStatus(sStatus, false);
-        // Show status change on Pebble.
-        pebbleMsg.Send(sStatusPebble, false, false); // no vibe, no timeout.
+        ////20171121 // Show status change.
+        ////20171121 this.ShowStatus(sStatus, false);
+        ////20171121 // Show status change on Pebble.
+        ////20171121 pebbleMsg.Send(sStatusPebble, false, false); // no vibe, no timeout.
+        return {phone: sStatus, pebble: sStatusPebble};
     };
+
+    // Shows current  status.
+    // Current status indicates Track On/Off, Record On/Off, and Acccel Sensing On/Off/Disabled.
+    // Shows the status change in the status div and on Pebble.
+    this.ShowCurrentStatus = function() {  ////20171121 added function
+        var msg = this.FormCurrentStatus();
+        this.ShowStatus(msg.phone, false);
+        pebbleMsg.Send(msg.pebble, false, false);
+    };    
     
     // Shows the signin control bar. 
     // Arg:
@@ -1555,7 +1567,7 @@ function wigo_ws_View() {
 
     var cceCurEfficiencyLabel = new CCELabel('cceCurEfficiency', 3, true);  // true => percentage
 
-    // Selects state for Tracking on/off and runs the tract timer accordingly.
+    // Selects state for Tracking on/off and runs the track timer accordingly.
     // Arg: 
     //  bTracking: boolean to indicate tracking is on (true) or off (false).
     function SelectAndRunTrackTimer(bTracking) {
@@ -2996,7 +3008,7 @@ function wigo_ws_View() {
                         stateOn.prepare();
                         map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
+                        view.ShowCurrentStatus(); // Show status for Record, Track, and Accel. 
                         break;
                     case that.event.unclear:
                         // Display the trail that has been restored.
@@ -3029,7 +3041,7 @@ function wigo_ws_View() {
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.PAUSE); 
                         stateStopped.prepare();
                         curState = stateStopped;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
+                        view.ShowCurrentStatus(); // Show status for Record, Track, and Accel. 
                         break; 
                 }
             }
@@ -3146,7 +3158,7 @@ function wigo_ws_View() {
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.RESUME); 
                         stateOn.prepare();
                         curState = stateOn;
-                        view.ShowStatusChange(); // Show status for Record, Track, and Accel. 
+                        view.ShowCurrentStatus(); // Show status for Record, Track, and Accel. 
                         break;
                     case that.event.clear:
                         stateInitial.prepare();
@@ -4097,11 +4109,12 @@ function wigo_ws_View() {
             }
         }
         that.ShowStatus(sPrefixMsg + "Getting Geo Location ...", false); 
+        var curStatus = that.FormCurrentStatus(); // Get current status as suffix for pebble msg. ////20171121 added
         TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult, positionError) {
             if (positionError)
                 ShowGeoLocPositionError(positionError); 
             else 
-                ShowGeoLocUpdateStatus(updateResult, false, sPrefixMsg, sPebblePrefixMsg);  // false => no notification. 
+                ShowGeoLocUpdateStatus(updateResult, false, sPrefixMsg, sPebblePrefixMsg, curStatus.pebble);  // false => no notification.  ////20171121 added curStatus.pebble
         });
     }
 
@@ -4206,6 +4219,7 @@ function wigo_ws_View() {
             // Disable detecting motion for tracking.
             deviceMotion.disableForTracking();  
             trackTimer.ClearTimer();
+            ////20171124UndoDoneUp2 deviceMotion.disableForTracking();  
             ShowGeoTrackingOff();
         }
     }
@@ -6093,6 +6107,7 @@ function wigo_ws_View() {
         // Note: Handlers log event that is raised to console.
         //       For activate event only, background mode is allowed by disabling web view optimizations.
         this.initialize = function() {
+            /* ////20171123 redo 
             // local helper function.
             // Define handler to log event that is raised to console.
             // Also, only for activate event, enable gps by disabling web view optimizations.
@@ -6111,6 +6126,30 @@ function wigo_ws_View() {
             setHandler('disable');
             setHandler('activate');
             setHandler('deactivate');
+            */
+
+            cordova.plugins.backgroundMode.on('enable', 
+                function(){
+                    console.log("Background mode event: enable");
+                });
+
+            cordova.plugins.backgroundMode.on('disable', 
+            function(){
+                console.log("Background mode event: disable");
+            });
+
+            cordova.plugins.backgroundMode.on('activate', 
+            function(){
+                console.log("Background mode event: activate");
+                cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+            });
+
+            cordova.plugins.backgroundMode.on('deactivate', 
+            function(){
+                console.log("Background mode event: deactivate");
+            });
+
+
         };
 
         // Private members
@@ -6545,8 +6584,10 @@ function wigo_ws_View() {
     //    by the method. 
     //  bNotifyToo boolean, optional. true to indicate that a notification is given in addition to a beep 
     //             when an alert is issued because geolocation is off track. Defaults to false.
-    //  sPrefixMsg string, optional. prefix message for update status msg. defaults to empty string.
-    function ShowGeoLocUpdateStatus(upd, bNotifyToo, sPrefixMsg, sPebblePrefixMsg) { 
+    //  sPrefixMsg string, optional. prefix message for update status msg. Defaults to empty string.
+    //  sPebblePrefixMsg string, optional. prefix for update status msg sent to Pebble. Defaults to empty string.
+    //  sPebbleSuffixMsg string, optional. suffix for update status msg sent to Pebble. Defaults to empty string. ////20171121 added
+    function ShowGeoLocUpdateStatus(upd, bNotifyToo, sPrefixMsg, sPebblePrefixMsg, sPebbleSuffixMsg) { 
         // Return msg for paths distances from start and to end for phone.
         function PathDistancesMsg(upd) {
             // Set count for number of elements in dFromStart or dToEnd arrays.
@@ -6603,7 +6644,9 @@ function wigo_ws_View() {
         if (typeof sPrefixMsg !== 'string') 
             sPrefixMsg = '';       
         if (typeof sPebblePrefixMsg !== 'string')  
-            sPebblePrefixMsg = '';                   
+            sPebblePrefixMsg = '';    
+        if (typeof sPebbleSuffixMsg !== 'string')  ////20171121 added if and body
+            sPebbleSuffixMsg = '';    
         that.ClearStatus();
         if (!upd.bToPath) {
             if (map.IsPathDefined()) {
@@ -6612,7 +6655,7 @@ function wigo_ws_View() {
                 that.ShowStatus(sPrefixMsg + sMsg, false); // false => not an error. 
                 sMsg = "On Trail<br/>";
                 sMsg += PathDistancesPebbleMsg(upd);
-                pebbleMsg.Send(sPebblePrefixMsg + sMsg, false, trackTimer.bOn) // no vibration, timeout if tracking. 
+                pebbleMsg.Send(sPebblePrefixMsg + sMsg + sPebbleSuffixMsg, false, trackTimer.bOn) // no vibration, timeout if tracking. ////20171121 added sPebbleSuffixMsg
             } else {
                 // Show lat lng for the current location since there is no trail.
                 var sAt = "lat/lng({0},{1})<br/>".format(upd.loc.lat.toFixed(6), upd.loc.lng.toFixed(6));
@@ -6624,7 +6667,7 @@ function wigo_ws_View() {
                 if (upd.bCompass) {
                     sAt += "Cmps Hdg: {0}{1}\n".format(upd.bearingCompass.toFixed(0), sDegree);
                 }
-                pebbleMsg.Send(sPebblePrefixMsg + sAt, false, false); // no vibration, no timeout.  
+                pebbleMsg.Send(sPebblePrefixMsg + sAt + sPebbleSuffixMsg, false, false); // no vibration, no timeout. ////20171121 added sPebbleSuffixMsg 
             }
         } else {
             // vars for off-path messages.
@@ -6680,7 +6723,8 @@ function wigo_ws_View() {
                 sMsg += "?C {0} {1}{2}\n".format(sTurnCompass, phiCompass.toFixed(0), sDegree);
             }
             sMsg += PathDistancesPebbleMsg(upd); 
-            pebbleMsg.Send(sPebblePrefixMsg + sMsg, true, trackTimer.bOn); // vibration, timeout if tracking. 
+            ////20171121 pebbleMsg.Send(sPebblePrefixMsg + sMsg, true, trackTimer.bOn); // vibration, timeout if tracking. 
+            pebbleMsg.Send(sPebblePrefixMsg + sMsg + sPebbleSuffixMsg, true, trackTimer.bOn); // vibration, timeout if tracking. 
         }
     }
 
@@ -7080,10 +7124,11 @@ function wigo_ws_View() {
         // must be drawn after this thread has ocmpleted in order for scaling to be 
         // correct for the drawing polygons on the map.
         // Also, it makes sense to ensure tracking is off when selecting a different trail.
-        pebbleMsg.Send("GeoTrail", false, false); // Clear pebble message, no vibration, no timeout.
+        ////20171122 pebbleMsg.Send("GeoTrail", false, false); // Clear pebble message, no vibration, no timeout.
         mapTrackingCtrl.setState(0);
         trackTimer.ClearTimer();
-        that.ShowStatus("Geo tracking off.", false); // false => not an error.
+        ////20171122 that.ShowStatus("Geo tracking off.", false); // false => not an error.
+        that.ShowCurrentStatus(); // Show status for Track Off, Record, and Accel.////20171122 added 
         if (listIx === selectGeoTrail.getSelectPathsDataIxNum()) {  // -1 
             // No path selected.
             map.ClearPath();
@@ -7224,7 +7269,7 @@ function wigo_ws_View() {
         trackTimer.bOn = nState === 1;    // Allow/disallow geo-tracking.
         // Start or clear trackTimer.
         RunTrackTimer();
-        that.ShowStatusChange(); // Show status for Track, Record, and Accel.
+        that.ShowCurrentStatus(); // Show status for Track, Record, and Accel.
     };
 
     // Sets values for the Track and Alert OnOffCtrls on the mapBar.
