@@ -46,9 +46,9 @@ function wigo_ws_GeoTrailSettings() {
     // Boolean to indicate excessive acceleration alert is enabled.
     this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
-    this.nAccelThres = 10.0;  
+    this.nAccelThres = 35.0;  
     // Float for excessive acceleration velocity in m/sec.
-    this.nAccelVThres = 6.0; 
+    this.nAccelVThres = 10.0; 
     // Boolean to indicate amination of a path is started automatically when a path is loaded. 
     this.bAutoPathAnimation = false;  
     // Boolean to indicate a Pebble watch alert (vibration) is given when off-path.
@@ -841,8 +841,8 @@ function wigo_ws_Model() {
 
                 // ** Changes for nSchema 6. 
                 UpdateIfNeeded('bAccelAlert', 6, false); 
-                UpdateIfNeeded('nAccelThres', 6, 20.0);
-                UpdateIfNeeded('nAccelVThres', 6, 6.0);
+                UpdateIfNeeded('nAccelThres', 6, 35.0);
+                UpdateIfNeeded('nAccelVThres', 6, 10.0);
 
                 // ** Changes for nSchema 7. 
                 UpdateIfNeeded('bTopologyLayer', 7, true);
