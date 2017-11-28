@@ -470,9 +470,15 @@ function wigo_ws_View() {
             if (recordFSM.isRecording()) {
                 sStatus += 'Record On<br/>';
                 sStatusPebble += 'Record On\n';
-            } else {
+            } else if (recordFSM.isOff()) {  
                 sStatus += 'Record Off<br/>';
                 sStatusPebble += 'Record Off\n';
+            } else if (recordFSM.isStopped()) {  
+                sStatus += 'Record Stopped<br/>';
+                sStatusPebble += 'Recrd Stopped\n'; // Shorten to Recrd to fit on one line.
+            } else {                             
+                sStatus += 'Record Pended<br/>';
+                sStatusPebble += 'Record Pended\n';
             }
         }
         
@@ -2791,11 +2797,17 @@ function wigo_ws_View() {
         };
 
 
-        // Returns true recording point for path is active.
+        // Returns true if recording points for path is active.
         this.isRecording = function() {
             var bYes = curState === stateOn;
             return bYes;
         };
+
+        // Returns true if recording points for a path is stopped.
+        this.isStopped = function() {
+            var bYes = curState === stateStopped;
+            return bYes; 
+        }; 
 
         // Reeturns true if in state for defining a trail name.
         this.isSignInActive = function() { 
@@ -4106,6 +4118,9 @@ function wigo_ws_View() {
         }
         that.ShowStatus(sPrefixMsg + "Getting Geo Location ...", false); 
         var curStatus = that.FormCurrentStatus(); // Get current status as suffix for pebble msg.
+        // Getting geolocation may wait forever because timeout is set to be infinite.
+        // Therefore show current status for Pebble now expecting it to be updated shortly showing loc plus current status.
+        pebbleMsg.Send("Getting loc...\n" + curStatus.pebble, false); // false => no vibe.
         TrackGeoLocation(trackTimer.dCloseToPathThres, function (updateResult, positionError) {
             if (positionError)
                 ShowGeoLocPositionError(positionError); 
