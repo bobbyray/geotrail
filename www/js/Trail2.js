@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.032-20171128"; // Constant string for App version. 
+    var sVersion = "1.1.032-20171129"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2901,7 +2901,7 @@ function wigo_ws_View() {
                 var prevPosition = null;  
                 // Ensure a previous watch is cleared. This might prevent getting a stale position if 
                 // previous watch has not been cleared. Maybe not, but can't hurt.
-                this.clear();  
+                ClearOnly(); // Only clears the watch and does not disable background mode, which is enabled below. Avoids a conflict.
                 // Save start time for watch to filter out a stale position that might be reported.
                 msWatchStart = Date.now();  
                 myWatchId = navigator.geolocation.watchPosition(
@@ -2959,9 +2959,20 @@ function wigo_ws_View() {
                     AppendAndDrawPt(llNext, msTimeStamp);
                 }
                 return bTesting
-            }
+            };
 
             // ** Private members
+            // Clears watch without affecting background mode.
+            // Note: this.watch() calls this function and then 
+            //       enables background mode. There was a conflict (race?)
+            //       if background was disabled and then enabled immediately.
+            function ClearOnly() {
+                if (myWatchId) {
+                    navigator.geolocation.clearWatch(myWatchId); 
+                }
+                myWatchId = null;
+            }
+
             // Helper to draw and append a recorded point.
             // Args:
             //  llNext: L.LatLng. point to append to map.recordPath.
@@ -2997,6 +3008,7 @@ function wigo_ws_View() {
             };
 
             this.prepare = function() {
+                recordWatcher.clear(); // Ensure watching for gps is cleared. ////20171130
                 recordCtrl.setLabel("Off")
                 recordCtrl.empty();
                 recordCtrl.appendItem("start", "Start");
