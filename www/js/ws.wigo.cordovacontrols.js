@@ -932,7 +932,7 @@ function Wigo_Ws_CordovaControls() {
             this.hiliteError(item, bError);
             this.show(statusDiv, true);
         };
-        
+
         // Sets content of status div to a line.
         // Args:
         //  text: string. Line of text that replaces div content.

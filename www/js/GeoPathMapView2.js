@@ -86,7 +86,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         bTileCaching = true;
     var map = null;     // Underlying map object.
     var mapPath = null; // Map overlay for current path.
-    var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline.
+    var tileLayer = null; // L.TileLayer.Cordova obj for caching map tiles offline. Open streets layer for map.
+    var layerOpenTopologyMap = null; //  L.TileLayer.Cordova obj. Open topology layer for map.
+    var layerNASAGIBS_ModisTerraSnowCover = null; //  L.TileLayer.Cordova obj. Snow cover layer for map.
     
     // ** Public members
     // Colors to use for drawing. 
@@ -127,8 +129,9 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
 
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
-            if (tileLayer)
+            if (tileLayer) {
                 tileLayer.addTo(map);
+            }
 
             if (map) { // For safety check that map has been created successfully. 
                 // Add a listener for the click event.
@@ -159,6 +162,61 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
     this.SetCompassHeadingVisibleState = function(bVisible) {
         bCompassHeadingVisible = bVisible;
     };
+
+    // Sets flag to indicate if a snow cover layer is shown on the map.
+    // Arg:
+    //  bSnowCoverLayerArg: boolean. true to shown snow cover layer on the map.
+    this.setSnowCoverLayerFlag = function(bSnowCoverLayerArg) { 
+        bSnowCoverLayer = bSnowCoverLayerArg;
+    };
+    var bSnowCoverLayer = true; // boolean flag to indicate a snow cover layer is added to the map.
+
+    // Sets flag to indicate if a topographical layer is shown on the map.
+    // Arg:
+    //  bTopoLayerFlagArg: boolean. true to shown topographical layer on the map.
+    this.setTopologyLayerFlag = function(bTopoLayerArg) { 
+        bTopologyLayer = bTopoLayerArg;
+    };
+    var bTopologyLayer = true; // boolean flag to indicate topographic layer is added to the map.
+
+    // Adds or removes tile layers for to the map based on state of layer flags.
+    this.updateMapLayers = function() { 
+        // Remove any existing map layer first. This way map layers are 
+        // always added in the same order for consistency of display.
+        if (layerOpenTopologyMap) {
+            map.removeLayer(layerOpenTopologyMap); 
+            layerOpenTopologyMap = null; 
+        }
+        if (layerNASAGIBS_ModisTerraSnowCover) {
+            map.removeLayer(layerNASAGIBS_ModisTerraSnowCover);
+            layerNASAGIBS_ModisTerraSnowCover = null;
+        }
+
+        // First add topographical layer to map if enabled.
+        if (bTopologyLayer) { 
+            layerOpenTopologyMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                maxZoom: 17,
+                opacity: 30,
+                attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+            }); 
+            map.addLayer(layerOpenTopologyMap);               
+        }
+
+        // Next add snow cover layer to map if enabled.
+        if (bSnowCoverLayer) {
+            layerNASAGIBS_ModisTerraSnowCover = L.tileLayer('https://map1.vis.earthdata.nasa.gov/wmts-webmerc/MODIS_Terra_Snow_Cover/default/{time}/{tilematrixset}{maxZoom}/{z}/{y}/{x}.{format}', {
+                attribution: 'Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (<a href="https://earthdata.nasa.gov">ESDIS</a>) with funding provided by NASA/HQ.',
+                bounds: [[-85.0511287776, -179.999999975], [85.0511287776, 179.999999975]],
+                minZoom: 1,
+                maxZoom: 8, // Fails for maxZoom > 8 
+                format: 'png',
+                time: '', // '2017-10-16', // '', // '' is current date.
+                tilematrixset: 'GoogleMapsCompatible_Level',
+                opacity: 0.30 
+            });
+            map.addLayer(layerNASAGIBS_ModisTerraSnowCover);  
+        } 
+    }
 
     // Returns true if the device has enabled data storage.
     // Note: The device settings for an app may need to give permission to used data storage.
@@ -2107,6 +2165,7 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
                 } else {
                     // Create regular OpenStreetMap tile layer without title caching.
                     layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {   
+                        opacity: 0.30, 
                         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     });
                 }

@@ -462,11 +462,15 @@ label {
 }
 
 #divSettings #labelBodyMass,
-#divSettings labelRecordDistanceAlert {
+#divSettings #labelRecordDistanceAlert,  
+#divSettings #labelAccelThres,     
+#divSettings #labelAccelVThres {
     padding-top: 0.4em;
 }
 #divSettings #numberBodyMass,
-#divSettings #numberRecordDistanceAlert {
+#divSettings #numberRecordDistanceAlert, 
+#divSettings #numberAccelThres, 
+#divSettings #numberAccelVThres {
     float: right;
     background-color: lightgray;
     width: 3em;
@@ -478,6 +482,11 @@ label {
     padding-left: 0.5em;
     width: initial;
 }
+
+.cceRow input {   
+    background-color: lightgray;
+}
+
 #buCCESet {  
     padding-top: 0.3em;
     float: right;
@@ -809,6 +818,12 @@ label {
 #buCloseDialogBar {
     margin-left: 40%;
     width: 20%;
+}
+#buBackDialogBar {  
+    float: right;
+    margin-right: 3%;
+    font-weight: 900;   
+    width: 10%; 
 }
 #buAcceptConfirmDialogBar {
     margin-left: 20%;
