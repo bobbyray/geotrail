@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.032-20171129"; // Constant string for App version. 
+    var sVersion = "1.1.032-20171130"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -3008,7 +3008,7 @@ function wigo_ws_View() {
             };
 
             this.prepare = function() {
-                recordWatcher.clear(); // Ensure watching for gps is cleared. ////20171130
+                recordWatcher.clear(); // Ensure watching for gps is cleared. 
                 recordCtrl.setLabel("Off")
                 recordCtrl.empty();
                 recordCtrl.appendItem("start", "Start");
@@ -5432,18 +5432,21 @@ function wigo_ws_View() {
                 // Set wake wake for time interval.
                 var nSeconds = Math.round(msInterval / 1000);
                 myTimerCallback = callback;
-                if (window.wakeuptimer) {
-                    window.wakeuptimer.snooze(
-                        SnoozeWakeUpSuccess,
-                        SnoozeWakeUpError,
-                        {
-                            alarms: [{
-                                type: 'snooze',
-                                time: { seconds: nSeconds }, // snooze for nSeconds 
-                                extra: { id: myTimerId } // json containing app-specific information to be posted when alarm triggers
-                            }]
-                        }
-                    );
+                // Only set timer if a path exists. 
+                if (map.IsPathDefined()) { 
+                    if (window.wakeuptimer) {
+                        window.wakeuptimer.snooze(
+                            SnoozeWakeUpSuccess,
+                            SnoozeWakeUpError,
+                            {
+                                alarms: [{
+                                    type: 'snooze',
+                                    time: { seconds: nSeconds }, // snooze for nSeconds 
+                                    extra: { id: myTimerId } // json containing app-specific information to be posted when alarm triggers
+                                }]
+                            }
+                        );
+                    }
                 }
             } else {
                 backgroundMode.disableTrack(); 
@@ -5568,26 +5571,29 @@ function wigo_ws_View() {
             if (this.bOn) {
                 backgroundMode.enableTrack(); 
                 myWatchCallback = callback;
-                myWatchId = navigator.geolocation.watchPosition(
-                    function (position) {
-                        // Success.
-                        curPositionError = null;
-                        curPosition = position;
-                        if (myWatchCallback)
-                            myWatchCallback(that.newUpdateResult());
-                    },
-                    function (positionError) {
-                        // Error. 
-                        curPositionError = positionError;
-                        curPosition = null;
-                        if (myWatchCallback) {
-                            // Note: Return successful result, evern though there is an error.
-                            //       The error is indicated when  this.showCurGeoLocation(..) is called.
-                            myWatchCallback(that.newUpdateResult());
-                        }
-                    },
-                    geoLocationOptions    
-                );
+                // Only set watch (timer) if a path exists. 
+                if (map.IsPathDefined() ) { 
+                    myWatchId = navigator.geolocation.watchPosition(
+                        function (position) {
+                            // Success.
+                            curPositionError = null;
+                            curPosition = position;
+                            if (myWatchCallback)
+                                myWatchCallback(that.newUpdateResult());
+                        },
+                        function (positionError) {
+                            // Error. 
+                            curPositionError = positionError;
+                            curPosition = null;
+                            if (myWatchCallback) {
+                                // Note: Return successful result, evern though there is an error.
+                                //       The error is indicated when  this.showCurGeoLocation(..) is called.
+                                myWatchCallback(that.newUpdateResult());
+                            }
+                        },
+                        geoLocationOptions    
+                    );
+                }  
             } else {
                 backgroundMode.disableTrack(); 
                 // Clear watch.
