@@ -677,7 +677,7 @@ function wigo_ws_Model() {
     function RecordStatsAry() { 
         // Sets a record stats element in this array and saves array to localStorage. 
         // Arg: 
-        //  stats wigo_ws_RecordStats. stats element to set.
+        //  stats wigo_ws_GeoTrailRecordStats. stats element to set.
         //        stats.nTimeStamp is the unique id for the element.
         //        If stats.nTimeStamp matches an existing element, the
         //        element is replaced; otherwise it is added.
@@ -689,7 +689,7 @@ function wigo_ws_Model() {
             arRecordStats[iAt] = stats;
             this.SaveToLocalStorage();    
         };
-        // Returns ref to array of all the wigo_ws_RecordStats objects.
+        // Returns ref to array of all the wigo_ws_GeoTrailRecordStats objects.
         this.getAll = function() {
             return arRecordStats;
         };

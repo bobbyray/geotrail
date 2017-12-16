@@ -43,6 +43,8 @@ Class Names for CSS
     wigo_ws_TitleBarHelp
 
     wigo_ws_BackIcon  // Image for back arrow icon.
+
+    wigo_ws_celln  // n = 0, 1, 2, ... for cell within a div.
 */
 'use strict';
 // Function that returns an object of controls.
@@ -173,7 +175,7 @@ function Wigo_Ws_CordovaControls() {
         var that = this; 
 
         // Html div created as container for this dropdown control.
-        // NOte: Likely not accessed by owner of this object.        
+        // Note: Likely not accessed by owner of this object.        
         this.ctrl = this.create("div", idName, 'wigo_ws_DropDownControl');
 
         // Set to Event handler function called when user clicks on an item in the drop down list.
@@ -1135,6 +1137,112 @@ function Wigo_Ws_CordovaControls() {
     TitleBar2.prototype = controlBase;
     TitleBar2.constructor = TitleBar2;
 
+    // Object for displaying a scrollable list.
+    // Note: Probably used as prototype for a derived scrollable list.
+    function ScrollableListBase() {  ////20171211 added object
+        // Creates a scrollable list.
+        // Initializes with a headerDiv and an empty listDiv.
+        // Args:
+        //  holderDiv: div to contain the scrollable list control.
+        //  nCells: number of child cells added to headerDiv. May be 0.
+        // Returns: {headerDiv: HTMLElement, listDiv: HTMLElement}
+        //  headerDiv: HTMLElement for the header div.
+        //  listDiv: HTMLElement for the list div, which is empty initially. 
+        this.createList = function(holderDiv, nCells) {
+            if (!(holderDiv instanceof HTMLElement))
+                throw new Error("Container for ScrollableListBase must be a div.");
+
+            var ctrl = {headerDiv: null, listDiv: null}
+            ctrl.headerDiv = this.create("div");
+            if (typeof nCells === 'number') {
+                var className;
+                for (let i=0; i < nCells; i++) {
+                    className = "wigo_ws_cell{0}".format(i);
+                    ctrl.listDiv.appendChild(this.create("div", null, className));
+                }
+            }
+            ctrl.listDiv = this.create("div");
+            return ctrl;
+        };
+
+        // Adds an item to the listDiv.
+        // Args:
+        // listDiv: ref to HTMLElement for listDiv.
+        // nCells: number of child divs added to listDiv. May be 0.
+        // Returns: HTMLElement. ref to element  that has been created and added to listDiv.
+        this.addItem = function(listDiv, nCells) {
+            if (!(listDiv instanceof HTMLElement))
+                throw new Error("Container list item must be a div.");
+            
+            var item = this.create("div");
+            if (typeof nCells === 'number') {
+                var className;
+                for (let i=0; i < nCells; i++) {
+                    className = "wigo_ws_cell{0}".format(i);
+                    item.appendChild(this.create('div', null, className));
+                }
+            }
+            listDiv.appendChild(item);
+            return item;
+        };
+
+        // Creates a ScrollComplete object for handling scroll events on listDiv.
+        // Arg:
+        //  listDiv: HTMLElement. the scrollable div.
+        // Returns: {onScrollComplete: function}, a ScrollComplete object.
+        //  onScrollComplete: callback function assigned by user, which is called when 
+        //  scrolling has completed.
+        this.newOnScrollComplete = function(listDiv) {
+            return new ScrollComplete(listDiv);
+        };
+
+        // Object that detects when scrolling has completed.
+        function ScrollComplete(listDiv) {
+            // Copnstructor Arg:
+            //  listDiv: HTMLElement: ref to div that is being scrolled.
+            // 
+            // User assigned callback that is called after scrolling for listDiv completes.
+            // Arg:
+            //  pxScrollTop: integer. scroll top in pixels for listDiv
+            //  Note: User can set to null if no callback is needed, otherwise user
+            //  needs to implement the callback.
+            this.onScrollComplete = function(pxScrollTop) {};
+
+            // Stops listening for scroll events on listDiv.
+            this.stop = function() {
+                listDiv.removeEventListener('scroll', OnScrollEvent, false);
+            };
+
+            // ** Private members
+            // Event handler for the scroll event on listDiv.
+            // Remarks:
+            // Successive scroll events can occur quickly.
+            // If no subsequent scroll event occurs after a timerDelay (say 333 milliseconds),
+            // scrolling is considered to have completed.
+            function OnScrollEvent(event) {
+                if (timerId) {
+                    window.clearTimeout(timerId);
+                }
+                timerId = window.setTimeout(function(){
+                    timerId = null; // Reset timer id.
+                    if (typeof (that.onScrollComplete) === 'function') {
+                        that.onScrollComplete(event.target.scrollTop);
+                    }
+                }, timerDelay);
+            }
+
+
+            // Constructor initialization.
+            var that = this;
+            var timerDelay = 333; // Timeout in milliseconds to detect that scrolling has stopped.
+            var timerId = null;
+
+            // Start listening for scroll events.
+            listDiv.addEventListener('scroll', OnScrollEvent, false);
+        }
+    }
+    ScrollableListBase.prototype = controlBase;
+    ScrollableListBase.constructor = ScrollableListBase;
 
     return {
         DropDownControl: DropDownControl,
@@ -1144,9 +1252,9 @@ function Wigo_Ws_CordovaControls() {
         TitleBar: TitleBar,
         TitleBar2: TitleBar2,
         NewYesNoControl: NewYesNoControl,
+        ScrollableListBase: ScrollableListBase, 
     }
 }
-
 
 // Object for customization details about a device.
 // Ideally an app will not needed any device customization,
