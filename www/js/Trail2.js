@@ -658,9 +658,9 @@ function wigo_ws_View() {
                 ShowMapCanvas(false);
                 break;
             case this.eMode.record_stats_view: ////20171214 added case
-                //// $$$$ write
                 HideAllBars();
-                ////!!!!Fix titleBar.setTitle("Record Stats History");
+                titleBar.setTitle("Record Stats History");
+                recordStatsHistory(that.onGetRecordStatsList());
                 ShowElement(recordStatsHistory, true);
                 break;
         }
@@ -7382,7 +7382,10 @@ Are you sure you want to delete the maps?";
     };
 
     // Composite control for displaying history of recorded stats. ////20171212 added
-    function RecordStatsHistory(holderDiv) {
+    // Constructor args:
+    //  holderDiv: HTMLElement. container for the record stats list.
+    //  tile: string, optional. Title for the recorded stats list. Defaults to no title.
+    function RecordStatsHistory(holderDiv, title) {
 
         // Set month/year in header to date.
         // Arg:
@@ -7483,6 +7486,19 @@ Are you sure you want to delete the maps?";
             return itemCount;
         };
 
+        // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
+        // Arg: 
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
+        this.update = function(arRecStats) {
+            // Add stats items that are not aready in this list.
+            if (!arRecStats)
+                return; // Quit if arRecStats is not defined or is null.
+            var recStats;
+            for (var i=this.itemCount; i < arRecStats.length; i++) {
+                recStats = this.addStatsItem(arRecStats[i]);
+            }
+        };
+
         // Private members
         var that = this;
         // Handler for scroll completed event.
@@ -7543,7 +7559,12 @@ Are you sure you want to delete the maps?";
                             }
                             };
 
+        
         // Constructor initialization.
+        if (title) {
+            this.create('div', null, 'stats_')
+        }
+        
         // Create empty, scrollable list.
         var stats = this.createList(holderDiv, 5); // stats is {headerDiv: div, listDiv: div} obj.
         // Ref to divs for month and year in header.
@@ -7556,9 +7577,6 @@ Are you sure you want to delete the maps?";
     }
     RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
     RecordStatsHistory.constructor = RecordStatsHistory;
-
-    
-    
 
     // Object for sending message to Pebble watch.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
