@@ -44,6 +44,8 @@ Class Names for CSS
 
     wigo_ws_BackIcon  // Image for back arrow icon.
 
+    wigo_ws_list_header
+    wigo_ws_list
     wigo_ws_celln  // n = 0, 1, 2, ... for cell within a div.
 */
 'use strict';
@@ -1152,16 +1154,16 @@ function Wigo_Ws_CordovaControls() {
             if (!(holderDiv instanceof HTMLElement))
                 throw new Error("Container for ScrollableListBase must be a div.");
 
-            var ctrl = {headerDiv: null, listDiv: null}
-            ctrl.headerDiv = this.create("div");
+            var ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
             if (typeof nCells === 'number') {
                 var className;
                 for (let i=0; i < nCells; i++) {
                     className = "wigo_ws_cell{0}".format(i);
-                    ctrl.listDiv.appendChild(this.create("div", null, className));
+                    ctrl.headerDiv.appendChild(this.create("div", null, className));
                 }
             }
-            ctrl.listDiv = this.create("div");
+            holderDiv.appendChild(ctrl.headerDiv);
+            holderDiv.appendChild(ctrl.listDiv);
             return ctrl;
         };
 

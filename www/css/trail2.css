@@ -849,4 +849,82 @@ label {
     overflow-y: scroll;  
 }
 
+/* Stats History List */
+#divRecordStatsHistory {
+    width: 100%;
+}
+
+.wigo_ws_list_header .wigo_ws_cell1 {
+    font-size: 2em;
+    padding-left: 20%;
+    padding-right: 5%;
+    float: left;
+}
+.wigo_ws_list_header .wigo_ws_cell2 {
+    font-size: 2em;
+    float: left;
+}
+
+.wigo_ws_list {
+    clear: both;
+    float: left;
+    /* ////20171221 background-color: lightcyan; */
+}
+/* ////20171221 
+.wigo_ws_list > div:nth-of-type(odd) { //// stripe alternate rows
+    background-color: lavender;
+}
+*/
+.stats_item {
+    width: 100%;
+    height: 6em;
+    float: left;
+    /* ////20171221 background-color: lightcyan; */
+}
+.stats_item:nth-of-type(odd) {
+    background-color: lavender;
+}
+.stats_item:nth-of-type(even) {
+    background-color: lightcyan;
+}
+.stats_date {
+    width: 20%;
+    height: 100%;
+    clear: both;
+    float: left;
+    /* ////20171221 background-color: lightcyan; */
+    box-sizing: border-box;
+}
+.stats_time {
+    clear: both;
+    float: left;
+    width: 100%;
+    font-size: 1.0em;
+}
+.stats_month_day {
+    clear: both;
+    float: left;
+    width: 100%;
+    font-size: 2.5em;
+}
+.stats_week_day {
+    clear: both;
+    float: left;
+    width: 100%;
+    font-size: 1.0em;
+}
+.stats_runtime, .stats_speed, .stats_calories {
+    float: left;
+    width: 22%;
+    height: 100%;
+    padding-top: 5%;
+    padding-right: 3%;
+    padding-bottom: 5%;
+    font-size: 1.3em;
+    overflow-x: hidden;
+    text-align: right;
+    /* ////20171221 background-color: lightcyan; */
+    box-sizing: border-box;
+}
+
 

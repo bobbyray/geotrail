@@ -574,7 +574,7 @@ function wigo_ws_View() {
                 ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false);
                 ShowPathInfoDiv(false);  
-                ShowElement(recordStatsHistory, false); ////20171214 added
+                ShowElement(divRecordStatsHistory, false); ////20171214 added
         }
 
         var nPrevMode = nMode; 
@@ -660,8 +660,10 @@ function wigo_ws_View() {
             case this.eMode.record_stats_view: ////20171214 added case
                 HideAllBars();
                 titleBar.setTitle("Record Stats History");
-                recordStatsHistory(that.onGetRecordStatsList());
-                ShowElement(recordStatsHistory, true);
+                if (!recordStatsHistory)  ////20171215 probably remove.
+                    recordStatsHistory = new RecordStatsHistory(divRecordStatsHistory);    
+                recordStatsHistory.update(that.onGetRecordStatsList());
+                ShowElement(divRecordStatsHistory, true);
                 break;
         }
     };
@@ -1195,7 +1197,7 @@ function wigo_ws_View() {
 
     // Stats History List for record_stats_view. ////20171214 added
     var divRecordStatsHistory = document.getElementById('divRecordStatsHistory');
-    var recordStatsHistory = new RecordStatsHistory(divRecordStatsHistory);
+    var recordStatsHistory = null; ////20171215Putback new RecordStatsHistory(divRecordStatsHistory);
     
     // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
@@ -3266,7 +3268,7 @@ function wigo_ws_View() {
                         sMsg += s;
                     }
                     view.ShowStatus(sMsg, false);
-                    view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. 
+                    ////20171219 view.onClearRecordStats(); // May want to remove later when there is a place to clear stats. 
                     view.onSetRecordStats(stats); // Save stats data. 
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
@@ -5780,7 +5782,7 @@ function wigo_ws_View() {
                 el.classList.add('wigo_ws_NoShow');
             }
         } else {
-            ShowStatus("element to show is undefined.");
+            that.ShowStatus("element to show is undefined.");
         }
     }
 
@@ -7425,10 +7427,11 @@ Are you sure you want to delete the maps?";
             // Initialize current month, year object for empty list.
             if (itemCount === 0) {
                 curMonthYear.init(dt); 
+                this.setMonthYear(dt); 
             }
 
             // Check for change in the month.
-            var bMonthChanged = curMonthYear.checkChange(date.getMonth(), date.getFullYear());
+            var bMonthChanged = curMonthYear.checkChange(dt.getMonth(), dt.getFullYear());
             if (bMonthChanged) {
                 // append a div for month, year row separator.
                 var separator = this.create('div', null, 'stats_separator');
@@ -7448,11 +7451,11 @@ Are you sure you want to delete the maps?";
             ////20171214 var cellDateWeekDay = this.create('div', null, 'stats_week_day');
             ////20171214 cellDate.appendChild(cellDateWeekDay);
             item.appendChild(cellDate);
-            var cellRunTime = this.create('div', null, 'stats_runtime');
+            var cellRunTime = this.create('div', null, 'stats_runtime');    /* ////20171219 was span */
             item.appendChild(cellRunTime);
-            var cellSpeed = this.create('div', null, 'stats_speed');
+            var cellSpeed = this.create('div', null, 'stats_speed');        /* ////20171219 was span */
             item.appendChild(cellSpeed);
-            var cellCalories = this.create('div', null, 'stats_calories');
+            var cellCalories = this.create('div', null, 'stats_calories');  /* ////20171219 was span */
             item.appendChild(cellCalories);
 
             // Display date example: // 01:30p, 10 Nov, Fri 
@@ -7461,7 +7464,7 @@ Are you sure you want to delete the maps?";
             ////20171214 cellDateDayMonth.innerHTML = "{0} {1}".format(dt.toLocaleString('en-US', {day: '2-digit'}),
             ////20171214                                               dt.toLocaleString('en-US', {month: 'short'}));
             ////20171214 cellDateWeekDay.innerHTML = dt.toLocaleString('en-US', {weekday: 'short'});
-            var sTime = dt.toLocaleTimeString();
+            var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
             var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
             // var sMonth = dt.toLocaleString('en-US', {month: 'short'});
             var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
@@ -7469,9 +7472,9 @@ Are you sure you want to delete the maps?";
             // Display runTime cell.
             var runTimeMins = recStats.msRunTime /(1000 * 60);
             var runTimeSecs = (runTimeMins - Math.floor(runTimeMins))*60; // Convert fractional minute to seconds.
-            cellRunTime.innerHTML = "{0}:{1} m:s}".format(runTimeMins.toFixed(0), runTimeSecs.toFixed(2));
+            cellRunTime.innerHTML = "{0}:{1} m:s".format(runTimeMins.toFixed(0), runTimeSecs.toFixed(0));
             // Display speedCell.
-            cellSpeed.innerHTML = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000); // speed in metric or english units..
+            cellSpeed.innerHTML = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.
             // Display cellCalories.
             cellCalories.innerHTML = "{0} cals".format(recStats.caloriesBurnedCalc.toFixed(0));
 
@@ -7494,7 +7497,7 @@ Are you sure you want to delete the maps?";
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
             var recStats;
-            for (var i=this.itemCount; i < arRecStats.length; i++) {
+            for (var i=itemCount; i < arRecStats.length; i++) {
                 recStats = this.addStatsItem(arRecStats[i]);
             }
         };
@@ -7526,7 +7529,7 @@ Are you sure you want to delete the maps?";
         // Object to detect change in current month and year.
         var curMonthYear = {month: -1, year: -1,
                             isValid: function(){
-                                return month >= 0 && month <= 11 && year >= 1970;
+                                return this.month >= 0 && this.month <= 11 && this.year >= 1970;
                             },
                             // Checks for a change. If true, sets this object for new  date.
                             // Args: nMonth, nYear: number for month and year to check.
@@ -7537,7 +7540,7 @@ Are you sure you want to delete the maps?";
                             checkChange: function(nMonth, nYear) {
                                 var bChange = false;
                                 if (this.isValid()) {
-                                    bChange = this.month && nMonth && this.year === nYear;
+                                    bChange = !(this.month === nMonth && this.year === nYear);
                                     if (bChange) {
                                         this.month = nMonth;
                                         this.year = nYear;
@@ -7572,7 +7575,7 @@ Are you sure you want to delete the maps?";
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
 
         // New ScrollComplete object. See ScrollableListBase in ws.wigo.cordovacontrols.js.
-        var scrollComplete = this.newOnScrollComplete(); 
+        var scrollComplete = this.newOnScrollComplete(stats.listDiv); 
         scrollComplete.OnScrollComplete = OnScrollComplete; // Attach callback for scroll complete event.
     }
     RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
