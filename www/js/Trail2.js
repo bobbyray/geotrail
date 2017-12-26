@@ -660,22 +660,15 @@ function wigo_ws_View() {
             case this.eMode.record_stats_view: 
                 HideAllBars();
                 titleBar.setTitle("Record Stats History");
-                let bSetHeight = false; ////20171224 added
+                let bSetHeight = false; 
                 if (!recordStatsHistory)  {
                     bSetHeight = true;
                     recordStatsHistory = new RecordStatsHistory(divRecordStatsHistory);    
-                    ////20171224 recordStatsHistory.setListHeight(200); ////20171223 added. !!!! temp shrink 200.
-                    ////20171224 recordStatsHistory.setListHeight(titleHolder.offsetHeight + 10); ////20171223 added. 
-                    /* ////20171224Woked 
-                    setTimeout(function(){
-                        recordStatsHistory.setListHeight(titleHolder.offsetHeight + 10); ////20171223 added. 
-                    }, 10);
-                    */
                 }
                 recordStatsHistory.update(that.onGetRecordStatsList());
                 ShowElement(divRecordStatsHistory, true);
-                if (bSetHeight) { ////20171224 added if and then
-                    recordStatsHistory.setListHeight(titleHolder.offsetHeight); ////20171223 added. 
+                if (bSetHeight) { 
+                    recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
                 }
                 break;
         }
@@ -5985,7 +5978,7 @@ function wigo_ws_View() {
                 nFixed = this.mileFixedPoint;
             else if (result.unit === 'km')
                 nFixed = this.kmeterFixedPoint;
-            var s = result.n.toFixed(nFixed) + " " + result.unit; ////2017122 added middle space
+            var s = result.n.toFixed(nFixed) + " " + result.unit; 
             return s; 
         };
 
@@ -6001,17 +5994,17 @@ function wigo_ws_View() {
         //  mLen: number. Length (distance) in meters.
         //  secTime: number. Elapsed time in seconds.
         this.toSpeed = function(mLen, secTime) { 
-            var result = {speed: 0, unit: "mph", text: ""};  ////20171222 was MPH
+            var result = {speed: 0, unit: "mph", text: ""};  
             var dist;
             var hrTime = secTime / 3600; // 3600 seconds in an hour.
             if (this.bMetric) {
                 // Concvert meters to kilometes.
                 dist = mLen / 1000.0;
-                result.unit = "kph";   ////20171222 was KPH
+                result.unit = "kph";   
             } else {
                 // Convert meters to miles.
                 dist = mLen / 1609.34;
-                result.unit = "mph";   ////20171222 was MPH
+                result.unit = "mph";   
             }
             result.speed = dist / hrTime;
             if (Number.isFinite(result.speed)) {
@@ -6875,7 +6868,7 @@ function wigo_ws_View() {
     //      divMode area contains the bars and other user interface.
     divMode.addEventListener('touchmove', function(event){
         // Allow scrolling of selectGoTrail dropdown list.
-        if (!(selectGeoTrail.isDropDownListScrolling() || nMode === that.eMode.record_stats_view)) {  ////20171224 added || nMode === for stats history view.
+        if (!(selectGeoTrail.isDropDownListScrolling() || nMode === that.eMode.record_stats_view)) {  
             // Scrolling is prevented except for selectGeoTrail droplist or Stats History View.
             event.preventDefault();
             event.stopPropagation();
@@ -7431,9 +7424,6 @@ Are you sure you want to delete the maps?";
         //      stats_time       - start time, eg 01:15 pm
         //      stats_month_day  - day of month, eg 19
         //      stats_week_day   - day of week, eg Wed
-        ////20171221 //  stats_runtime - run time in mins, secs, eg 39:12 m:s
-        ////20171221 //  stats_speed - speed in english or metric units
-        ////20171221 //  stats_calories - calculated calories burned, eg 106 cals
         //  stats_distance_time - distance in english or metric units and runtime in mins:secs.
         //  stats_speed_calories - speed in english or metreic units and calories.
         // Class names for formatting stats month, year row separator:
@@ -7462,16 +7452,6 @@ Are you sure you want to delete the maps?";
             var cellDate = this.create('div', null, 'stats_date');
             item.appendChild(cellDate);
 
-
-            /* ////20171221 redo
-            var cellRunTime = this.create('div', null, 'stats_runtime');    
-            item.appendChild(cellRunTime);
-            var cellSpeed = this.create('div', null, 'stats_speed');        
-            item.appendChild(cellSpeed);
-            var cellCalories = this.create('div', null, 'stats_calories'); 
-            item.appendChild(cellCalories);
-            */
-
             var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
             item.appendChild(cellDistanceRunTime);
             var cellSpeedCalories = this.create('div', null, 'stats_speed_calories');  
@@ -7486,7 +7466,6 @@ Are you sure you want to delete the maps?";
             var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
             cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
             // Display display distance, runtime cell and speed, calories cell.
-            //// $$$$ start here Format distance to display. Set innerHTML for distance, runtime in cell. Set innerHTML for speed, calories in a cell.
             var sDistance = lc.to(recStats.mDistance);
             var runTimeMins = recStats.msRunTime /(1000 * 60);
             var sRunTimeMins = runTimeMins.toFixed(0);
@@ -7496,18 +7475,10 @@ Are you sure you want to delete the maps?";
                 sRunTimeSecs = '0' + sRunTimeSecs;
             var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
             var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            /* ////20171221 redo 
-            cellRunTime.innerHTML = "{0}:{1} m:s".format(runTimeMins.toFixed(0), sRunTimeSecs);
-            // Display speedCell.
-            cellSpeed.innerHTML = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.
-            // Display cellCalories.
-            cellCalories.innerHTML = "{0} cals".format(recStats.caloriesBurnedCalc.toFixed(0));
-            */
             cellDistanceRunTime.innerHTML = "{0}<br/>{1}:{2} m:s".format(sDistance, sRunTimeMins, sRunTimeSecs);
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
-            ////20171222 $$$$ fix insert at beginning.
-            // Append the item to the list.
+            // Add the item to the list.
 
             if (typeof(bTop) !== 'boolean') 
                 bTop = true;
@@ -7553,28 +7524,13 @@ Are you sure you want to delete the maps?";
                 if (timestamp && row.offsetTop > stats.listDiv.scrollTop) {
                     // Found first visible item.
                     // Set scroll top of list to top of first visbile item.
-                    ////20171224???? stats.listDiv.scrollTop = row.offsetTop;
                     // Display month, date in header for first visible item.
-                    ////20171224 that.setMonthYear(timestamp.toFixed(0)); 
                     that.setMonthYear(Number(timestamp)); 
-                    stats.listDiv.scrollTop = prevRowOffsetTop;  ////20171224 try here
+                    stats.listDiv.scrollTop = prevRowOffsetTop;  
                     break;
                 } else {
                     prevRowOffsetTop = row.offsetTop;
                 }
-                /* ////20171226 redo slightly again.
-                rowOffsetTop = row.offsetTop; 
-                if (timestamp && rowOffsetTop >= stats.listDiv.scrollTop) {
-                    // Found first visible item.
-                    // Set scroll top of list to top of first visbile item.
-                    ////20171224???? stats.listDiv.scrollTop = row.offsetTop;
-                    // Display month, date in header for first visible item.
-                    ////20171224 that.setMonthYear(timestamp.toFixed(0)); 
-                    that.setMonthYear(Number(timestamp)); 
-                    stats.listDiv.scrollTop = rowOffsetTop - row.offsetHeight; 
-                    break;
-                }
-                */
             }
         }
 

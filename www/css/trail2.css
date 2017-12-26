@@ -854,7 +854,7 @@ label {
     width: 100%;
 }
 
-.wigo_ws_list_header {  /* ////20171224 added */
+.wigo_ws_list_header {  
     height: 2.5em;
 }
 .wigo_ws_list_header .wigo_ws_cell1 {
@@ -871,8 +871,7 @@ label {
 .wigo_ws_list {
     clear: both;
     float: left;
-    /* ////20171224 height: 500px; */      /* ////20171222 set height temporarily */
-    position: relative;  /* ////20171224 added ???? */
+    position: relative;  
     overflow-y: scroll;
 }
 .stats_item {
@@ -911,20 +910,6 @@ label {
     width: 100%;
     font-size: 1.0em;
 }
-/* ////20171222 redo 
-.stats_runtime, .stats_speed, .stats_calories {
-    float: left;
-    width: 22%;
-    height: 100%;
-    padding-top: 5%;
-    padding-right: 3%;
-    padding-bottom: 5%;
-    font-size: 1.3em;
-    overflow-x: hidden;
-    text-align: right;
-    box-sizing: border-box;
-}
-*/
 .stats_distance_time, .stats_speed_calories {
     float: left;
     width: 40%;

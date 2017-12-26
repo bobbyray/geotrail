@@ -1173,21 +1173,14 @@ function Wigo_Ws_CordovaControls() {
         //  nShrinkPels: number, optional. number of pels to reduce calculated height..
         //                    Defaults to 0.
         // Note: Calculates list height = height of body - nShrinkPels.
-        this.setListHeight = function(nShrinkPels) {  ////20171223
+        this.setListHeight = function(nShrinkPels) {  
             if (!ctrl)
-                return; //// Quit if list has not been created.
-            // Set height for scrolling ////20172223 added
+                return; 
+            // Set height for scrolling 
             if (typeof(nShrinkPels) !== 'number')
                 nShrinkPels = 0;
             var yBody = document.body.offsetHeight;
-            ////20171224 finding yListTop does not work because listDiv is not visible.
-            ////20171224 var yListTop = ctrl.listDiv.offsetTop;
-            ////20171224 while (ctrl.listDiv.offsetParent) {
-            ////20171224     yListTop += ctrl.listDiv.offParent.offsetTop;
-            ////20171224 }
-
             var yHeader = ctrl.headerDiv.offsetHeight;
-            ////20171224 var yScroll = yBody - yListTop - yHeader - nShrinkPels;
             var yScroll = yBody - yHeader - nShrinkPels;
             ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
         };
@@ -1243,12 +1236,6 @@ function Wigo_Ws_CordovaControls() {
                 listDiv.removeEventListener('scroll', OnScrollEvent, false);
             };
 
-            ////20171226NotUsed // Returns number of scroll events that have occurred before scrolling completes.
-            ////20171226NotUsed this.getEventCount = function() {  ////20171226 added function.
-            ////20171226NotUsed     return nScrollEventCount;
-            ////20171226NotUsed };
-            ////20171226NotUsed 
-
             // ** Private members
             // Event handler for the scroll event on listDiv.
             // Remarks:
@@ -1275,7 +1262,7 @@ function Wigo_Ws_CordovaControls() {
             var timerDelay = 200; // 333; // Timeout in milliseconds to detect that scrolling has stopped.
             var timerId = null;
 
-            var nScrollEventCount = 0; // Number of scroll events that have occurred before scrolling stops. ////20171226 added.
+            var nScrollEventCount = 0; // Number of scroll events that have occurred before scrolling stops. 
 
             // Start listening for scroll events.
             listDiv.addEventListener('scroll', OnScrollEvent, false);
