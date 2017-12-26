@@ -1141,7 +1141,7 @@ function Wigo_Ws_CordovaControls() {
 
     // Object for displaying a scrollable list.
     // Note: Probably used as prototype for a derived scrollable list.
-    function ScrollableListBase() {  ////20171211 added object
+    function ScrollableListBase() {  
         // Creates a scrollable list.
         // Initializes with a headerDiv and an empty listDiv.
         // Args:
@@ -1154,7 +1154,7 @@ function Wigo_Ws_CordovaControls() {
             if (!(holderDiv instanceof HTMLElement))
                 throw new Error("Container for ScrollableListBase must be a div.");
 
-            var ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
+            ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
             if (typeof nCells === 'number') {
                 var className;
                 for (let i=0; i < nCells; i++) {
@@ -1165,6 +1165,31 @@ function Wigo_Ws_CordovaControls() {
             holderDiv.appendChild(ctrl.headerDiv);
             holderDiv.appendChild(ctrl.listDiv);
             return ctrl;
+        };
+        var ctrl; // Set by this.createList(..)
+        
+        // Sets height of list. Needs to be set for scrolling to occur.
+        // Args:
+        //  nShrinkPels: number, optional. number of pels to reduce calculated height..
+        //                    Defaults to 0.
+        // Note: Calculates list height = height of body - nShrinkPels.
+        this.setListHeight = function(nShrinkPels) {  ////20171223
+            if (!ctrl)
+                return; //// Quit if list has not been created.
+            // Set height for scrolling ////20172223 added
+            if (typeof(nShrinkPels) !== 'number')
+                nShrinkPels = 0;
+            var yBody = document.body.offsetHeight;
+            ////20171224 finding yListTop does not work because listDiv is not visible.
+            ////20171224 var yListTop = ctrl.listDiv.offsetTop;
+            ////20171224 while (ctrl.listDiv.offsetParent) {
+            ////20171224     yListTop += ctrl.listDiv.offParent.offsetTop;
+            ////20171224 }
+
+            var yHeader = ctrl.headerDiv.offsetHeight;
+            ////20171224 var yScroll = yBody - yListTop - yHeader - nShrinkPels;
+            var yScroll = yBody - yHeader - nShrinkPels;
+            ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
         };
 
         // Adds an item to the listDiv.
@@ -1206,14 +1231,23 @@ function Wigo_Ws_CordovaControls() {
             // User assigned callback that is called after scrolling for listDiv completes.
             // Arg:
             //  pxScrollTop: integer. scroll top in pixels for listDiv
+            //  nScrollEventCount: integer. number of scroll events that occurred before scrolling completes.
+            //                     scroll event occur continuously during scrolling,
+            //                     but this.onScrollComplete(...) is only called after scrolling completes.
             //  Note: User can set to null if no callback is needed, otherwise user
             //  needs to implement the callback.
-            this.onScrollComplete = function(pxScrollTop) {};
+            this.onScrollComplete = function(pxScrollTop, nScrollEventCount) {};
 
             // Stops listening for scroll events on listDiv.
             this.stop = function() {
                 listDiv.removeEventListener('scroll', OnScrollEvent, false);
             };
+
+            ////20171226NotUsed // Returns number of scroll events that have occurred before scrolling completes.
+            ////20171226NotUsed this.getEventCount = function() {  ////20171226 added function.
+            ////20171226NotUsed     return nScrollEventCount;
+            ////20171226NotUsed };
+            ////20171226NotUsed 
 
             // ** Private members
             // Event handler for the scroll event on listDiv.
@@ -1223,21 +1257,25 @@ function Wigo_Ws_CordovaControls() {
             // scrolling is considered to have completed.
             function OnScrollEvent(event) {
                 if (timerId) {
+                    nScrollEventCount++;
                     window.clearTimeout(timerId);
                 }
                 timerId = window.setTimeout(function(){
                     timerId = null; // Reset timer id.
                     if (typeof (that.onScrollComplete) === 'function') {
-                        that.onScrollComplete(event.target.scrollTop);
+                        that.onScrollComplete(event.target.scrollTop, nScrollEventCount);
                     }
+                    nScrollEventCount = 0; 
                 }, timerDelay);
             }
 
 
             // Constructor initialization.
             var that = this;
-            var timerDelay = 333; // Timeout in milliseconds to detect that scrolling has stopped.
+            var timerDelay = 200; // 333; // Timeout in milliseconds to detect that scrolling has stopped.
             var timerId = null;
+
+            var nScrollEventCount = 0; // Number of scroll events that have occurred before scrolling stops. ////20171226 added.
 
             // Start listening for scroll events.
             listDiv.addEventListener('scroll', OnScrollEvent, false);
