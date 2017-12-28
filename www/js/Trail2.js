@@ -667,7 +667,7 @@ function wigo_ws_View() {
                 }
                 recordStatsHistory.update(that.onGetRecordStatsList());
                 ShowElement(divRecordStatsHistory, true);
-                recordStatsHistory.showMonthDate();  ////20171227 added.
+                recordStatsHistory.showMonthDate(); 
                 if (bSetHeight) { 
                     recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
                 }
@@ -7456,7 +7456,6 @@ Are you sure you want to delete the maps?";
                 var separator = this.create('div', null, 'stats_separator');
                 separator.innerHTML = "{0} {1}".format(prevdt.toLocaleString('en-US', {month: 'long'}),
                                                        prevdt.toLocaleString('en-US', {year: 'numeric'}));
-                ////20171226 stats.listDiv.appendChild(separator);
                 AddRowDiv(separator);
             }
 
@@ -7493,20 +7492,10 @@ Are you sure you want to delete the maps?";
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
             // Add the item to the list.
-            /* ////20171226 refactor
-            if (typeof(bTop) !== 'boolean') 
-                bTop = true;
-            if (bTop && stats.listDiv.children.length > 0) {
-                stats.listDiv.insertBefore(item, stats.listDiv.children[0]);
-            } else {
-                stats.listDiv.appendChild(item);
-                
-            }
-            */
             AddRowDiv(item);
 
             itemCount++;
-            prevdt = dt; // Save ref to previous recStats; ////20171226 added.
+            prevdt = dt; // Save ref to Date of previous recStats.
         };
         var prevdt = null; // Ref to Date of previous RecStats object.
 
@@ -7552,12 +7541,11 @@ Are you sure you want to delete the maps?";
                 var row = stats.listDiv.children[i];
                 var timestamp = row.getAttribute('data-timestamp');
                 // Note: timestamp is null for separator div.
-                if (timestamp && row.offsetTop + row.offsetHeight > stats.listDiv.scrollTop) { ////20171227 added + row.offsetHeight 
+                if (timestamp && row.offsetTop + row.offsetHeight > stats.listDiv.scrollTop) { 
                     // Found first visible item.
                     // Set scroll top of list to top of first visbile item.
                     // Display month, date in header for first visible item.
                     that.setMonthYear(Number(timestamp)); 
-                    ////20171226????StopJitter stats.listDiv.scrollTop = prevRowOffsetTop;  
                     break;
                 } else {
                     prevRowOffsetTop = row.offsetTop;
