@@ -7519,8 +7519,7 @@ Are you sure you want to delete the maps?";
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
 
-            
-            AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items to top of array.
+            // AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items to end of array.
 
             var recStats;
             for (var i=itemCount; i < arRecStats.length; i++) {
