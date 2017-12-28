@@ -922,5 +922,15 @@ label {
     text-align: right;
     box-sizing: border-box;
 }
+.stats_separator {
+    clear: both;
+    float: left;
+    height: 2.0em;
+    width: 100%;
+    text-align: center;
+    font-size: 1.9em;
+    padding-top: 5%;
+    background-color: wheat;
+}
 
 
