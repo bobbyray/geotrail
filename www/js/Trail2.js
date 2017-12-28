@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.032-RecStats20171207"; // Constant string for App version. 
+    var sVersion = "1.1.032-RecStats20171228"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -659,7 +659,7 @@ function wigo_ws_View() {
                 break;
             case this.eMode.record_stats_view: 
                 HideAllBars();
-                titleBar.setTitle("Record Stats History");
+                titleBar.setTitle("Stats History");
                 let bSetHeight = false; 
                 if (!recordStatsHistory)  {
                     bSetHeight = true;
@@ -7471,7 +7471,7 @@ Are you sure you want to delete the maps?";
             item.appendChild(cellSpeedCalories);
 
 
-            // Display date example: // 01:30p, 10 Nov, Fri 
+            // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
             // Display date cell.
             var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
             var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
@@ -7481,8 +7481,14 @@ Are you sure you want to delete the maps?";
             // Display display distance, runtime cell and speed, calories cell.
             var sDistance = lc.to(recStats.mDistance);
             var runTimeMins = recStats.msRunTime /(1000 * 60);
-            var sRunTimeMins = runTimeMins.toFixed(0);
-            var runTimeSecs = (runTimeMins - Math.floor(runTimeMins))*60; // Convert fractional minute to seconds.
+            var runTimeMinsFloor = Math.floor(runTimeMins)
+            var runTimeSecs = (runTimeMins - runTimeMinsFloor)*60; // Convert fractional minute to seconds.
+            if (Math.round(runTimeSecs) >= 60) {
+                // runTimeSecs rounds to 60, so increment mins and set secs to 0.
+                runTimeSecs = 0;  
+                runTimeMinsFloor++;
+            }
+            var sRunTimeMins = runTimeMinsFloor.toFixed(0);
             var sRunTimeSecs = runTimeSecs.toFixed(0);
             if (sRunTimeSecs.length < 2) // Always use 2 digits for seconds.
                 sRunTimeSecs = '0' + sRunTimeSecs;
@@ -7568,6 +7574,7 @@ Are you sure you want to delete the maps?";
             // Add items each 12 days apart from first item in the list.
             var msDays = 12 * 24 * 60 * 60 * 1000; // number of days to inscrement insert items in milliseconds.
             var stats0 = arRecStats.length > 0 ? arRecStats[0] : new wigo_ws_GeoTrailRecordStats();
+            stats0.msRunTime = 59510; // Test for seconds > 59.5 seconds.
             for (let i=0; i <nItemsToAdd; i++) {
                 let stats = new wigo_ws_GeoTrailRecordStats();
                 stats.nTimeStamp = stats0.nTimeStamp + msDays;
