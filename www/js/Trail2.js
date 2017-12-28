@@ -667,6 +667,7 @@ function wigo_ws_View() {
                 }
                 recordStatsHistory.update(that.onGetRecordStatsList());
                 ShowElement(divRecordStatsHistory, true);
+                recordStatsHistory.showMonthDate();  ////20171227 added.
                 if (bSetHeight) { 
                     recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
                 }
@@ -7429,6 +7430,18 @@ Are you sure you want to delete the maps?";
         // Class names for formatting stats month, year row separator:
         //  stats_separator:  - row for the stats separator, eg December 2017
         this.addStatsItem = function(recStats, bTop) {
+            if (typeof(bTop) !== 'boolean') 
+                bTop = true;
+
+            // Helper to add row div to this list.
+            function AddRowDiv(rowDiv) {
+                if (bTop && stats.listDiv.children.length > 0) {
+                    stats.listDiv.insertBefore(rowDiv, stats.listDiv.children[0]);
+                } else {
+                    stats.listDiv.appendChild(rowDiv);
+                }
+            }
+            
             var dt = new Date(recStats.nTimeStamp);
             // Initialize current month, year object for empty list.
             if (itemCount === 0) {
@@ -7441,9 +7454,10 @@ Are you sure you want to delete the maps?";
             if (bMonthChanged) {
                 // append a div for month, year row separator.
                 var separator = this.create('div', null, 'stats_separator');
-                separator.innerHTML = "{0} {1}".format(dt.toLocaleString('en-US', {month: 'long'}),
-                                                          dt.toLocaleString('en-US', {year: 'numeric'}));
-                stats.listDiv.appendChild(separator);
+                separator.innerHTML = "{0} {1}".format(prevdt.toLocaleString('en-US', {month: 'long'}),
+                                                       prevdt.toLocaleString('en-US', {year: 'numeric'}));
+                ////20171226 stats.listDiv.appendChild(separator);
+                AddRowDiv(separator);
             }
 
             // Create item div.
@@ -7479,7 +7493,7 @@ Are you sure you want to delete the maps?";
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
             // Add the item to the list.
-
+            /* ////20171226 refactor
             if (typeof(bTop) !== 'boolean') 
                 bTop = true;
             if (bTop && stats.listDiv.children.length > 0) {
@@ -7488,9 +7502,13 @@ Are you sure you want to delete the maps?";
                 stats.listDiv.appendChild(item);
                 
             }
+            */
+            AddRowDiv(item);
 
             itemCount++;
+            prevdt = dt; // Save ref to previous recStats; ////20171226 added.
         };
+        var prevdt = null; // Ref to Date of previous RecStats object.
 
         // Returns number of stats items in the list.
         // Note: length of list is greater than item count because of separator rows.
@@ -7505,15 +7523,28 @@ Are you sure you want to delete the maps?";
             // Add stats items that are not aready in this list.
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
+
+            
+            AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items to top of array.
+
             var recStats;
             for (var i=itemCount; i < arRecStats.length; i++) {
                 recStats = this.addStatsItem(arRecStats[i]);
             }
         };
 
+        // Shows month/date for first item visible in the list.
+        // Note: this control must be visible.
+        this.showMonthDate = function() {
+            // Set month date of first visible item in the list.
+            // Equivalent to processing done for scrolling completed.
+            OnScrollComplete(stats.listDiv.scrollTop, 0);
+        };
+
         // Private members
         var that = this;
         // Handler for scroll completed event.
+        // Sets (displays) month/date for first item visible in the list.
         function OnScrollComplete(pxScrollTop, nScrollEventCount) {
             // Find first item in list that is visible.
             let prevRowOffsetTop = 0;
@@ -7521,16 +7552,45 @@ Are you sure you want to delete the maps?";
                 var row = stats.listDiv.children[i];
                 var timestamp = row.getAttribute('data-timestamp');
                 // Note: timestamp is null for separator div.
-                if (timestamp && row.offsetTop > stats.listDiv.scrollTop) {
+                if (timestamp && row.offsetTop + row.offsetHeight > stats.listDiv.scrollTop) { ////20171227 added + row.offsetHeight 
                     // Found first visible item.
                     // Set scroll top of list to top of first visbile item.
                     // Display month, date in header for first visible item.
                     that.setMonthYear(Number(timestamp)); 
-                    stats.listDiv.scrollTop = prevRowOffsetTop;  
+                    ////20171226????StopJitter stats.listDiv.scrollTop = prevRowOffsetTop;  
                     break;
                 } else {
                     prevRowOffsetTop = row.offsetTop;
                 }
+            }
+        }
+
+        // Adds items to the list in order to test changing from month to month.
+        // Only for debug. Delete when no longer needed.
+        // Args:
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objs. array for which test item are inserted at top of array.
+        //  nItemsToAdd: number of test items to add.
+        var bTestItemsAdded = false;
+        function AddTestItems(arRecStats, nItemsToAdd) {
+            if (bTestItemsAdded) {
+                return; // Only do once.
+            }
+            bTestItemsAdded = true;
+
+            // Add items each 12 days apart from first item in the list.
+            var msDays = 12 * 24 * 60 * 60 * 1000; // number of days to inscrement insert items in milliseconds.
+            var stats0 = arRecStats.length > 0 ? arRecStats[0] : new wigo_ws_GeoTrailRecordStats();
+            for (let i=0; i <nItemsToAdd; i++) {
+                let stats = new wigo_ws_GeoTrailRecordStats();
+                stats.nTimeStamp = stats0.nTimeStamp + msDays;
+                stats.msRunTime = stats0.msRunTime + 2000; 
+                stats.mDistance = stats0.mDistance + 100; 
+                stats.caloriesKinetic = stats0.caloriesKinetic + 11;      
+                stats.caloriesBurnedCalc = stats0.caloriesBurnedCalc + 12;   
+                stats.caloriesBurnedActual = stats0.caloriesBurnedActual + 20;
+
+                arRecStats.push(stats);
+                stats0 = stats;  
             }
         }
 
