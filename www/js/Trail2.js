@@ -7480,6 +7480,7 @@ Are you sure you want to delete the maps?";
             cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
             // Display display distance, runtime cell and speed, calories cell.
             var sDistance = lc.to(recStats.mDistance);
+            var runTimeHoursFloor = 0; ////20171229 added
             var runTimeMins = recStats.msRunTime /(1000 * 60);
             var runTimeMinsFloor = Math.floor(runTimeMins)
             var runTimeSecs = (runTimeMins - runTimeMinsFloor)*60; // Convert fractional minute to seconds.
@@ -7488,13 +7489,27 @@ Are you sure you want to delete the maps?";
                 runTimeSecs = 0;  
                 runTimeMinsFloor++;
             }
+            while (runTimeMinsFloor >= 60) {  ////20171229 added while loop 
+                runTimeMinsFloor -= 60;
+                runTimeHoursFloor++;
+            }
             var sRunTimeMins = runTimeMinsFloor.toFixed(0);
+            var sRunTimeHours = "";
+            var sRunTimeSuffix = "m:s";  
+            if (runTimeHoursFloor > 0) {
+                sRunTimeSuffix = "h:m:s"
+                sRunTimeHours = "{0}:".format(runTimeHoursFloor.toFixed(0));
+                if (sRunTimeMins.length < 2) // Always use 2 digits for mins when hour is present.
+                    sRunTimeMins = '0' + sRunTimeMins;
+            }
+            ////20171229MoveUp var sRunTimeMins = runTimeMinsFloor.toFixed(0);
             var sRunTimeSecs = runTimeSecs.toFixed(0);
             if (sRunTimeSecs.length < 2) // Always use 2 digits for seconds.
                 sRunTimeSecs = '0' + sRunTimeSecs;
             var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
             var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            cellDistanceRunTime.innerHTML = "{0}<br/>{1}:{2} m:s".format(sDistance, sRunTimeMins, sRunTimeSecs);
+            ////20171228 cellDistanceRunTime.innerHTML = "{0}<br/>{1}:{2} m:s".format(sDistance, sRunTimeMins, sRunTimeSecs);
+            cellDistanceRunTime.innerHTML = "{0}<br/>{1}{2}:{3} {4}".format(sDistance, sRunTimeHours, sRunTimeMins, sRunTimeSecs, sRunTimeSuffix);
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
             // Add the item to the list.
@@ -7519,7 +7534,7 @@ Are you sure you want to delete the maps?";
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
 
-            // AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items to end of array.
+            AddTestItems(arRecStats, 10);  ////20171229CommentOut!!!! // Only for debug. Add 10 test items to end of array.
 
             var recStats;
             for (var i=itemCount; i < arRecStats.length; i++) {
@@ -7570,24 +7585,115 @@ Are you sure you want to delete the maps?";
             }
             bTestItemsAdded = true;
 
-            // Add items each 12 days apart from first item in the list.
+            // Add items each 12 days apart from latest item in the list from date before the latest item.
+            // Note: latest item is arRecStats[0]. The newest item is at the end of the list.
             var msDays = 12 * 24 * 60 * 60 * 1000; // number of days to inscrement insert items in milliseconds.
             var stats0 = arRecStats.length > 0 ? arRecStats[0] : new wigo_ws_GeoTrailRecordStats();
             stats0.msRunTime = 59510; // Test for seconds > 59.5 seconds.
-            for (let i=0; i <nItemsToAdd; i++) {
+            for (let i=0; i < nItemsToAdd; i++) {
                 let stats = new wigo_ws_GeoTrailRecordStats();
-                stats.nTimeStamp = stats0.nTimeStamp + msDays;
-                stats.msRunTime = stats0.msRunTime + 2000; 
+                stats.nTimeStamp = stats0.nTimeStamp - msDays;
+                stats.msRunTime = stats0.msRunTime + 2000 + 123 * 60 * 1000; ////20171229 added 123 minutes
                 stats.mDistance = stats0.mDistance + 100; 
                 stats.caloriesKinetic = stats0.caloriesKinetic + 11;      
                 stats.caloriesBurnedCalc = stats0.caloriesBurnedCalc + 12;   
                 stats.caloriesBurnedActual = stats0.caloriesBurnedActual + 20;
 
-                arRecStats.push(stats);
+                ////20171229 arRecStats.push(stats);
+                arRecStats.unshift(stats); // Insert at beginning of list.
                 stats0 = stats;  
             }
         }
 
+        
+        // Object for extracting metrics from the stats data.
+        // Arg: 
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
+        function StatsMetrics() {
+            ////// Initializes for finding the metrics.
+            ////// Arg:
+            //////  arRecStats: array of wigo_ws_GeoTrailRecordStats objs. array for which test item are inserted at top of array.
+            this.init = function() {
+                msNow = Date.now;
+            };
+            
+            // Finds the stats metrics for a given stats object.
+            // Args:
+            //  recStats: wigo_ws_GeoTrailRecordStats object.
+            this.update = function(recStats) {
+                // Ignore if recStats.msTimeStamp is greater than current date/time value.
+                // This can happen if test recStats objects have been added.
+                // In normaal operation, the recStats.msTimeStamp should alway be < current date/time value.
+                if (recStats.msTimeStamp > msNow)
+                    return;
+
+                // Check for personal best distance.
+                if (recBestDistance) {
+                    if (recBestDistance.mDistance < recStats.mDistance)
+                        recBestDistance = recStats;
+                } else {
+                    recBestDistance = recStats;
+                }
+                // Check for personal best distance in last 30 days.
+                if (recBestMonthlyDistance) {
+                    if (msNow - recStats.msTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
+                        recBestMonthlyDistance = recStats;
+                } else {
+                    recBestMonthlyDistance = recStats;
+                }
+
+                // Check for personal best speed.
+                let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
+                if (recBestSpeed) {
+                    if (bestSpeed < speed) {
+                        recBestDistance = recStats;
+                        bestSpeed = speed;
+                    }
+                } else {
+                    if (speed > 0) {
+                        recBestSpeed = recStats;
+                        bestSpeed = speed;
+                    }
+                }
+                // Check for personal best speed in last 30 days.
+                if (recBestMonthlySpeed) {
+                    if (msNow - recStats.msTimeStamp < msMonth && msMonthlyBestSpeed < speed)
+                        recBestMonthlySpeed = recStats;
+                } else {
+                    if (speed > 0) {
+                        recBestMonthlySpeed = recStats;
+                        msBestSpeed = speed;
+                    }
+                }
+                // Check for previous stats obj wrt first recStats.
+                if (bPreviousRecNext) {
+                    recPrevious = recStats;
+                    bPreviousRecNext = false;
+                } else if (!recPrevious) {
+                    bPreviousRecNext = true;
+                }
+            };
+
+
+            //// var arRecStats = null;
+            var msMonth = 30 * 24 * 60 * 60 * 1000; // Time for 30 days, one month, in milliseconds.
+            var msNow = 0; // Date value for current time.
+            var recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
+            var recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
+            var recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
+            var recBestMonthlySpeed = null;    // ref to wigo_ws_GeoTrailRecordStats object for best speed in last 30 days.
+            
+            var bestSpeed = 0;
+            var bestMonthlySpeed = 0;
+
+            var recPrevious = null;            // ref to wigo_ws_GeoTrailRecordStats object for previous stats object.
+            var bPreviousRecNext = false;
+        }
+        var statsMetrics = new StatsMetrics(); 
+
+
+        // ** Constructor initialization.
+       
         // Number of items in the list.
         // Note length of list is greater than item count because of separator rows.
         var itemCount = 0; 
@@ -7629,7 +7735,6 @@ Are you sure you want to delete the maps?";
                             };
 
         
-        // Constructor initialization.
         if (title) {
             this.create('div', null, 'stats_history_title')
         }
