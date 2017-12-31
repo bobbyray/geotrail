@@ -907,7 +907,7 @@ function Wigo_Ws_CordovaControls() {
         //  bError: boolean. true indicates error highlighting
         this.set = function (text, bError) {
             this.clear();
-            if (typeof text === 'string' && text.length > 0)  ////20171231 add if cond only.
+            if (typeof text === 'string' && text.length > 0)  
                 this.add(text, bError);
         };
 

@@ -3281,12 +3281,10 @@ function wigo_ws_View() {
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
-                    ////20171230MoveDown view.ShowStatus(sMsg, false);
                     var statsData = view.onSetRecordStats(stats); // Save stats data. 
-                    recordStatsMetrics.update(statsData); // Update metrics for stats. ////20171230 added. 
+                    recordStatsMetrics.update(statsData); // Update metrics for stats. 
                     var sStatsMetricsMsg = recordStatsMetrics.formStatusMsg();
                     view.ShowStatus(sStatsMetricsMsg, true); // Show stats metrics status as error for highlighting. Maybe change later.
-                    ////20171230 $$$$ write
                     view.AppendStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
@@ -7675,15 +7673,13 @@ Are you sure you want to delete the maps?";
     RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
     RecordStatsHistory.constructor = RecordStatsHistory;
 
-    // Object for extracting metrics from the stats data. ////20171229 added object.
+    // Object for extracting metrics from the stats data. 
     function RecordStatsMetrics() {
         // Initializes this object.
         // Arg: 
         //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects, optional. array of stats.
         //              If given, updates metrics for the array of stats. Ignored if not a valid array.
         this.init = function(arRecStats) {
-            ////20171230 msNow = Date.now;
-            ////20171230 msNow = 0; // Date value for current time.
             recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
             recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
             recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
@@ -7866,7 +7862,6 @@ Are you sure you want to delete the maps?";
             // Form message for distance traveled.
             if (recCurrent) {
                 let mDelta = recCurrent.mDistance - mDistanceGoalPerDay;
-                ////20171231 lc.toNum(mDelta);
                 if (mDelta > 10) {
                     AppendLine("Great, you exceeded goal of {0} by {1}!".format(lc.to(mDistanceGoalPerDay), lc.to(mDelta)));
                 } else if (mDelta > 0) {
@@ -7893,7 +7888,6 @@ Are you sure you want to delete the maps?";
         var nMinDaysApart = 2;       // Minimum number of days to skip walking before a warning is shown.
         var mDistanceGoalPerDay = 2 * 1609.34;  // Goal for distance in meters for one day.
 
-        ////20171230 var msNow = 0; // Date value for current time.
         var recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
         var recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
         var recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
@@ -8353,7 +8347,7 @@ function wigo_ws_Controller() {
         }
         if (data)
             model.setRecordStats(data);
-        return data; ////20171230 added 
+        return data; 
     }; 
 
     // Clears the list of record stats objects for recorded trails.
@@ -8728,7 +8722,7 @@ function wigo_ws_Controller() {
     view.setOwnerName(model.getOwnerName());
 
     // Initialize the Record Stats Metrics that have been saved in local storage.
-    view.InitializeRecordStatsMetrics(model.getRecordStatsList());  ////20171230 added.
+    view.InitializeRecordStatsMetrics(model.getRecordStatsList());  
 
     // Comment out next stmt only if debugging map initialization, in which case handler for buInitView does initialization.
     view.Initialize();
