@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.032-RecStats20171228"; // Constant string for App version. 
+    var sVersion = "1.1.032-RecStats20171231"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -326,6 +326,13 @@ function wigo_ws_View() {
             });
             
         }
+    };
+
+    // Initializes the meterics for Record Stats.
+    // Arg:
+    //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects from which the metrics are initialized.
+    this.InitializeRecordStatsMetrics = function(arRecStats) {
+        recordStatsMetrics.init(arRecStats);
     };
 
     // Enumeration of Authentication status (login result)
@@ -3274,8 +3281,13 @@ function wigo_ws_View() {
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
-                    view.ShowStatus(sMsg, false);
-                    view.onSetRecordStats(stats); // Save stats data. 
+                    ////20171230MoveDown view.ShowStatus(sMsg, false);
+                    var statsData = view.onSetRecordStats(stats); // Save stats data. 
+                    recordStatsMetrics.update(statsData); // Update metrics for stats. ////20171230 added. 
+                    var sStatsMetricsMsg = recordStatsMetrics.formStatusMsg();
+                    view.ShowStatus(sStatsMetricsMsg, true); // Show stats metrics status as error for highlighting. Maybe change later.
+                    ////20171230 $$$$ write
+                    view.AppendStatus(sMsg, false);
                 } else {
                     view.ShowStatus("Failed to calculate stats!");
                 }
@@ -7480,7 +7492,7 @@ Are you sure you want to delete the maps?";
             cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
             // Display display distance, runtime cell and speed, calories cell.
             var sDistance = lc.to(recStats.mDistance);
-            var runTimeHoursFloor = 0; ////20171229 added
+            var runTimeHoursFloor = 0; 
             var runTimeMins = recStats.msRunTime /(1000 * 60);
             var runTimeMinsFloor = Math.floor(runTimeMins)
             var runTimeSecs = (runTimeMins - runTimeMinsFloor)*60; // Convert fractional minute to seconds.
@@ -7489,7 +7501,7 @@ Are you sure you want to delete the maps?";
                 runTimeSecs = 0;  
                 runTimeMinsFloor++;
             }
-            while (runTimeMinsFloor >= 60) {  ////20171229 added while loop 
+            while (runTimeMinsFloor >= 60) {  
                 runTimeMinsFloor -= 60;
                 runTimeHoursFloor++;
             }
@@ -7502,13 +7514,11 @@ Are you sure you want to delete the maps?";
                 if (sRunTimeMins.length < 2) // Always use 2 digits for mins when hour is present.
                     sRunTimeMins = '0' + sRunTimeMins;
             }
-            ////20171229MoveUp var sRunTimeMins = runTimeMinsFloor.toFixed(0);
             var sRunTimeSecs = runTimeSecs.toFixed(0);
             if (sRunTimeSecs.length < 2) // Always use 2 digits for seconds.
                 sRunTimeSecs = '0' + sRunTimeSecs;
             var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
             var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            ////20171228 cellDistanceRunTime.innerHTML = "{0}<br/>{1}:{2} m:s".format(sDistance, sRunTimeMins, sRunTimeSecs);
             cellDistanceRunTime.innerHTML = "{0}<br/>{1}{2}:{3} {4}".format(sDistance, sRunTimeHours, sRunTimeMins, sRunTimeSecs, sRunTimeSuffix);
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
@@ -7534,7 +7544,7 @@ Are you sure you want to delete the maps?";
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
 
-            AddTestItems(arRecStats, 10);  ////20171229CommentOut!!!! // Only for debug. Add 10 test items to end of array.
+            //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
 
             var recStats;
             for (var i=itemCount; i < arRecStats.length; i++) {
@@ -7593,105 +7603,18 @@ Are you sure you want to delete the maps?";
             for (let i=0; i < nItemsToAdd; i++) {
                 let stats = new wigo_ws_GeoTrailRecordStats();
                 stats.nTimeStamp = stats0.nTimeStamp - msDays;
-                stats.msRunTime = stats0.msRunTime + 2000 + 123 * 60 * 1000; ////20171229 added 123 minutes
+                stats.msRunTime = stats0.msRunTime + 2000 + 123 * 60 * 1000; 
                 stats.mDistance = stats0.mDistance + 100; 
                 stats.caloriesKinetic = stats0.caloriesKinetic + 11;      
                 stats.caloriesBurnedCalc = stats0.caloriesBurnedCalc + 12;   
                 stats.caloriesBurnedActual = stats0.caloriesBurnedActual + 20;
 
-                ////20171229 arRecStats.push(stats);
                 arRecStats.unshift(stats); // Insert at beginning of list.
                 stats0 = stats;  
             }
         }
 
         
-        // Object for extracting metrics from the stats data.
-        // Arg: 
-        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
-        function StatsMetrics() {
-            ////// Initializes for finding the metrics.
-            ////// Arg:
-            //////  arRecStats: array of wigo_ws_GeoTrailRecordStats objs. array for which test item are inserted at top of array.
-            this.init = function() {
-                msNow = Date.now;
-            };
-            
-            // Finds the stats metrics for a given stats object.
-            // Args:
-            //  recStats: wigo_ws_GeoTrailRecordStats object.
-            this.update = function(recStats) {
-                // Ignore if recStats.msTimeStamp is greater than current date/time value.
-                // This can happen if test recStats objects have been added.
-                // In normaal operation, the recStats.msTimeStamp should alway be < current date/time value.
-                if (recStats.msTimeStamp > msNow)
-                    return;
-
-                // Check for personal best distance.
-                if (recBestDistance) {
-                    if (recBestDistance.mDistance < recStats.mDistance)
-                        recBestDistance = recStats;
-                } else {
-                    recBestDistance = recStats;
-                }
-                // Check for personal best distance in last 30 days.
-                if (recBestMonthlyDistance) {
-                    if (msNow - recStats.msTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
-                        recBestMonthlyDistance = recStats;
-                } else {
-                    recBestMonthlyDistance = recStats;
-                }
-
-                // Check for personal best speed.
-                let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
-                if (recBestSpeed) {
-                    if (bestSpeed < speed) {
-                        recBestDistance = recStats;
-                        bestSpeed = speed;
-                    }
-                } else {
-                    if (speed > 0) {
-                        recBestSpeed = recStats;
-                        bestSpeed = speed;
-                    }
-                }
-                // Check for personal best speed in last 30 days.
-                if (recBestMonthlySpeed) {
-                    if (msNow - recStats.msTimeStamp < msMonth && msMonthlyBestSpeed < speed)
-                        recBestMonthlySpeed = recStats;
-                } else {
-                    if (speed > 0) {
-                        recBestMonthlySpeed = recStats;
-                        msBestSpeed = speed;
-                    }
-                }
-                // Check for previous stats obj wrt first recStats.
-                if (bPreviousRecNext) {
-                    recPrevious = recStats;
-                    bPreviousRecNext = false;
-                } else if (!recPrevious) {
-                    bPreviousRecNext = true;
-                }
-            };
-
-
-            //// var arRecStats = null;
-            var msMonth = 30 * 24 * 60 * 60 * 1000; // Time for 30 days, one month, in milliseconds.
-            var msNow = 0; // Date value for current time.
-            var recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
-            var recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
-            var recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
-            var recBestMonthlySpeed = null;    // ref to wigo_ws_GeoTrailRecordStats object for best speed in last 30 days.
-            
-            var bestSpeed = 0;
-            var bestMonthlySpeed = 0;
-
-            var recPrevious = null;            // ref to wigo_ws_GeoTrailRecordStats object for previous stats object.
-            var bPreviousRecNext = false;
-        }
-        var statsMetrics = new StatsMetrics(); 
-
-
         // ** Constructor initialization.
        
         // Number of items in the list.
@@ -7751,6 +7674,238 @@ Are you sure you want to delete the maps?";
     }
     RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
     RecordStatsHistory.constructor = RecordStatsHistory;
+
+    // Object for extracting metrics from the stats data. ////20171229 added object.
+    function RecordStatsMetrics() {
+        // Initializes this object.
+        // Arg: 
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects, optional. array of stats.
+        //              If given, updates metrics for the array of stats. Ignored if not a valid array.
+        this.init = function(arRecStats) {
+            ////20171230 msNow = Date.now;
+            ////20171230 msNow = 0; // Date value for current time.
+            recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
+            recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
+            recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
+            recBestMonthlySpeed = null;    // ref to wigo_ws_GeoTrailRecordStats object for best speed in last 30 days.
+            
+            bestSpeed = 0;
+            bestMonthlySpeed = 0;
+    
+            recCurrent = null;            // ref to wigo_ws_GeoTrailRecordStats object for current stats object update.
+            recPrevious = null;           // ref to wigo_ws_GeoTrailRecordStats object for previous stats object.
+    
+            if (arRecStats instanceof Array) {
+                var rec;
+                for (var i = 0; i < arRecStats.length; i++) {
+                    this.update(arRecStats[i]);
+                }
+            }
+        };
+        
+        // Updates the stats metrics for a given stats object.
+        // Args:
+        //  recStats: wigo_ws_GeoTrailRecordStats object.
+        this.update = function(recStats) {
+            // Ignore if recStats.msTimeStamp is greater than current date/time value.
+            // This can happen if test recStats objects have been added.
+            // In normaal operation, the recStats.msTimeStamp should alway be < current date/time value.
+            var msNow = Date.now();
+            if (recStats.nTimeStamp > msNow)
+                return;
+
+            // Check for personal best distance.
+            if (recBestDistance) {
+                if (recBestDistance.mDistance < recStats.mDistance)
+                    recBestDistance = recStats;
+            } else {
+                recBestDistance = recStats;
+            }
+            // Check for personal best distance in last 30 days.
+            if (recBestMonthlyDistance) {
+                if (msNow - recStats.nTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
+                    recBestMonthlyDistance = recStats;
+            } else {
+                recBestMonthlyDistance = recStats;
+            }
+
+            // Check for personal best speed.
+            let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
+            if (recBestSpeed) {
+                if (bestSpeed < speed) {
+                    recBestSpeed = recStats;
+                    bestSpeed = speed;
+                }
+            } else {
+                if (speed > 0) {
+                    recBestSpeed = recStats;
+                    bestSpeed = speed;
+                }
+            }
+            // Check for personal best speed in last 30 days.
+            if (recBestMonthlySpeed) {
+                if (msNow - recStats.nTimeStamp < msMonth && bestMonthlySpeed < speed) {
+                    recBestMonthlySpeed = recStats;
+                    bestMonthlySpeed = speed;
+                }
+            } else {
+                if (speed > 0) {
+                    recBestMonthlySpeed = recStats;
+                    bestMonthlySpeed = speed;
+                }
+            }
+
+
+            // Check for previous stats obj wrt to current (newest) recStats.
+            if (recCurrent) {
+                if (recStats.nTimeStamp > recCurrent.nTimeStamp) {
+                    recPrevious = recCurrent;
+                    recCurrent = recStats;
+                }
+            } else {
+                recCurrent = recStats;
+                recPrevious = null;
+            }
+        };
+
+
+        // Returns true if recStats is ref to stats obj for the best distance.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats obj, optional.
+        //            Defaults to var recCurrent saved by this.update(..).
+        this.isBestDistance = function(recStats) {
+            if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
+                recStats = recCurrent;
+            }
+            
+            var bYes = recBestDistance === recStats; 
+            return bYes;
+        };
+        // Returns true if recStats is ref to stats obj for the best monthly distance.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats obj, optional.
+        //            Defaults to var recCurrent saved by this.update(..).
+        this.isBestMonthlyDistance = function(recStats) {
+            if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
+                recStats = recCurrent;
+            }
+            var bYes = recBestMonthlyDistance === recStats;
+            return bYes;
+        }; 
+
+        // Returns true if recStats is ref to stats obj for the best speed.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats obj, optional.
+        //            Defaults to var recCurrent saved by this.update(..).
+        this.isBestSpeed = function(recStats) {
+            if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
+                recStats = recCurrent;
+            }
+            var bYes = recBestSpeed === recStats; 
+            return bYes;
+        };
+        // Returns true if recStats is ref to stats obj for the best monthly speed.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats obj, optional.
+        //            Defaults to var recCurrent saved by this.update(..).
+        this.isBestMonthlySpeed = function(recStats) {
+            if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
+                recStats = recCurrent;
+            }
+            var bYes = recBestMonthlySpeed === recStats;
+            return bYes;
+        }; 
+    
+        // Returns integer number of days from previous stats.
+        // Note: returns 0 if there is no current or no previous stats.
+        // Args:
+        //  recCur: wigo_ws_GeoTrailRecordStats, optional. Current stats obj.
+        //          Defatult to var recCurrent saved by this.update(..);
+        //  recPrev: wigo_ws_GeoTrailRecordStats, optional. Previous stats obj.
+        //           Defatult to var recPrevious saved by this.update(..);
+        this.daysFromPrevious = function(recCur, recPrev) {
+            var nDays = 0;
+            var msDays = 0;
+            var msFrac = 0;
+
+            if (!(recCur instanceof wigo_ws_GeoTrailRecordStats)) {
+                recCur = recCurrent;
+            }
+            if (!(recPrev instanceof wigo_ws_GeoTrailRecordStats)) {
+                recPrev = recPrevious;
+            }
+            if (recCur && recPrev) {
+                msDays = recCur.nTimeStamp - recPrev.nTimeStamp;
+                nDays = msDays / (24 * 60 * 60 * 1000); 
+                msFrac = nDays - Math.floor(nDays);
+                msFrac = msFrac * 24 * 60 * 60 * 1000;
+                var dtCur = new Date(recCur.nTimeStamp);
+                var dtFrac = new Date(recCur.nTimeStamp + msFrac)
+                nDays = Math.floor(nDays);
+                // If fractional date over flows into next day, increment nDays.
+                if (dtCur.getDate() != dtFrac.getDate()) { // Note: .getDate() returns number for day of month.
+                    nDays++;
+                }
+            }
+            return nDays;
+        };
+
+        // Returns a string in HTML for a status message based on the metrics.
+        this.formStatusMsg = function() {
+            var s = "";
+            // Helper to append lines.
+            // First line does is NOT prepended with a break.
+            // Second and following lines are.
+            // Note: Prevents final line from ending with a break, which can cause
+            //       a blank line before appending another status msg.
+            function AppendLine(sText) {
+                if (s.length > 0)
+                    s += "<br/>";
+                s += sText;
+            }
+            // Form message for distance traveled.
+            if (recCurrent) {
+                let mDelta = recCurrent.mDistance - mDistanceGoalPerDay;
+                ////20171231 lc.toNum(mDelta);
+                if (mDelta > 10) {
+                    AppendLine("Great, you exceeded goal of {0} by {1}!".format(lc.to(mDistanceGoalPerDay), lc.to(mDelta)));
+                } else if (mDelta > 0) {
+                    AppendLine("Great, you met goal of {0}!".format(lc.to(mDistanceGoalPerDay)));
+                } else {
+                    AppendLine("Keep going {0} to reach goal of {1}.".format(lc.to(-mDelta), lc.to(mDistanceGoalPerDay)));
+                }
+            }
+            // Form message for best distance.
+            if (this.isBestDistance(recCurrent)) {
+                AppendLine("WOW, your longest distance ever, {0}!".format(lc(recCurrent.mDistance)));
+            } else if (this.isBestMonthlyDistance(recCurrent)) {
+                AppendLine("Great, this is your longest distance, {0}, in {1} days!".format(lc(recCurrent.mDistanceGoalPerDay), (msDays/msOneDay).toFixed(0)));
+            }
+            var nDays = this.daysFromPrevious();
+            if (nDays > nMinDaysApart) {
+                AppendLine("Please try to walk everyday. It is {0} days since your previous walk.".format(nDays.toFixed(0)));
+            }
+            return s;
+        };
+
+        var msOneDay = 24 * 60 * 60 * 1000;
+        var msMonth = 30 * msOneDay; // Time for 30 days, one month, in milliseconds.
+        var nMinDaysApart = 2;       // Minimum number of days to skip walking before a warning is shown.
+        var mDistanceGoalPerDay = 2 * 1609.34;  // Goal for distance in meters for one day.
+
+        ////20171230 var msNow = 0; // Date value for current time.
+        var recBestDistance = null;        // ref to wigo_ws_GeoTrailRecordStats object for longest distance.
+        var recBestMonthlyDistance = null; // ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
+        var recBestSpeed = null;           // ref to wigo_ws_GeoTrailRecordStats object for best speed.
+        var recBestMonthlySpeed = null;    // ref to wigo_ws_GeoTrailRecordStats object for best speed in last 30 days.
+        
+        var bestSpeed = 0;
+        var bestMonthlySpeed = 0;
+
+        var recCurrent = null;            // ref to wigo_ws_GeoTrailRecordStats object for current stats object update.
+        var recPrevious = null;           // ref to wigo_ws_GeoTrailRecordStats object for previous stats object.
+    }
+    var recordStatsMetrics = new RecordStatsMetrics(); 
 
     // Object for sending message to Pebble watch.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
@@ -8181,10 +8336,12 @@ function wigo_ws_Controller() {
     //    stats: literal obj from recordPath.getStats() | wigo_ws_GeoTrailRecordStats obj. stats to be set.
     //           If stats is literal obj from recordPath.getStats, stats is converted to wigo_ws_GeoTrailRecordStats
     //           object that is set in localStorage.
+    //  Returns: wigo_ws_GeoTrailRecordStats obj.
     // Note: 
     // literal obj for stats from recordPath.getStats():
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    //   The returned object is converted to a wigo_ws_GeoTrailRecordStats obj.
     view.onSetRecordStats = function(stats) { 
         var data = null;
         if (typeof stats !== 'undefined') {
@@ -8196,7 +8353,7 @@ function wigo_ws_Controller() {
         }
         if (data)
             model.setRecordStats(data);
-
+        return data; ////20171230 added 
     }; 
 
     // Clears the list of record stats objects for recorded trails.
@@ -8569,6 +8726,10 @@ function wigo_ws_Controller() {
     var sOwnerId = model.getOwnerId();
     view.setOwnerId(sOwnerId);
     view.setOwnerName(model.getOwnerName());
+
+    // Initialize the Record Stats Metrics that have been saved in local storage.
+    view.InitializeRecordStatsMetrics(model.getRecordStatsList());  ////20171230 added.
+
     // Comment out next stmt only if debugging map initialization, in which case handler for buInitView does initialization.
     view.Initialize();
 }

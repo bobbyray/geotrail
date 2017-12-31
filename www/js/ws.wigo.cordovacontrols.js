@@ -907,7 +907,8 @@ function Wigo_Ws_CordovaControls() {
         //  bError: boolean. true indicates error highlighting
         this.set = function (text, bError) {
             this.clear();
-            this.add(text, bError);
+            if (typeof text === 'string' && text.length > 0)  ////20171231 add if cond only.
+                this.add(text, bError);
         };
 
         // Adds text (maybe HTML) to status div.
