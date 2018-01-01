@@ -7754,7 +7754,7 @@ Are you sure you want to delete the maps?";
 
             // Check for previous stats obj wrt to current (newest) recStats.
             if (recCurrent) {
-                if (recStats.nTimeStamp > recCurrent.nTimeStamp) {
+                if (recStats.nTimeStamp >= recCurrent.nTimeStamp) { // Note: equal is for case when resuming recording.
                     recPrevious = recCurrent;
                     recCurrent = recStats;
                 }
@@ -7774,7 +7774,7 @@ Are you sure you want to delete the maps?";
                 recStats = recCurrent;
             }
             
-            var bYes = recBestDistance === recStats; 
+            var bYes = recBestDistance === recStats;    
             return bYes;
         };
         // Returns true if recStats is ref to stats obj for the best monthly distance.
@@ -7785,7 +7785,7 @@ Are you sure you want to delete the maps?";
             if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
                 recStats = recCurrent;
             }
-            var bYes = recBestMonthlyDistance === recStats;
+            var bYes = recBestMonthlyDistance === recStats; 
             return bYes;
         }; 
 
@@ -7797,7 +7797,7 @@ Are you sure you want to delete the maps?";
             if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
                 recStats = recCurrent;
             }
-            var bYes = recBestSpeed === recStats; 
+            var bYes = recBestSpeed === recStats;   
             return bYes;
         };
         // Returns true if recStats is ref to stats obj for the best monthly speed.
@@ -7808,7 +7808,7 @@ Are you sure you want to delete the maps?";
             if (!(recStats instanceof wigo_ws_GeoTrailRecordStats)) {
                 recStats = recCurrent;
             }
-            var bYes = recBestMonthlySpeed === recStats;
+            var bYes = recBestMonthlySpeed === recStats; 
             return bYes;
         }; 
     
@@ -7863,22 +7863,22 @@ Are you sure you want to delete the maps?";
             if (recCurrent) {
                 let mDelta = recCurrent.mDistance - mDistanceGoalPerDay;
                 if (mDelta > 10) {
-                    AppendLine("Great, you exceeded goal of {0} by {1}!".format(lc.to(mDistanceGoalPerDay), lc.to(mDelta)));
+                    AppendLine("Great, you exceeded goal of {0} by {1}.".format(lc.to(mDistanceGoalPerDay), lc.to(mDelta)));
                 } else if (mDelta > 0) {
-                    AppendLine("Great, you met goal of {0}!".format(lc.to(mDistanceGoalPerDay)));
+                    AppendLine("Great, you met goal of {0}.".format(lc.to(mDistanceGoalPerDay)));
                 } else {
                     AppendLine("Keep going {0} to reach goal of {1}.".format(lc.to(-mDelta), lc.to(mDistanceGoalPerDay)));
                 }
             }
             // Form message for best distance.
             if (this.isBestDistance(recCurrent)) {
-                AppendLine("WOW, your longest distance ever, {0}!".format(lc(recCurrent.mDistance)));
+                AppendLine("WOW, longest distance ever, {0}.".format(lc.to(recCurrent.mDistance)));
             } else if (this.isBestMonthlyDistance(recCurrent)) {
-                AppendLine("Great, this is your longest distance, {0}, in {1} days!".format(lc(recCurrent.mDistanceGoalPerDay), (msDays/msOneDay).toFixed(0)));
+                AppendLine("Longest distance, {0}, in {1} days.".format(lc.to(recCurrent.mDistance), (msMonth/msOneDay).toFixed(0))); 
             }
             var nDays = this.daysFromPrevious();
             if (nDays > nMinDaysApart) {
-                AppendLine("Please try to walk everyday. It is {0} days since your previous walk.".format(nDays.toFixed(0)));
+                AppendLine("Try to walk everyday. It is {0} days since your previous walk.".format(nDays.toFixed(0)));
             }
             return s;
         };
