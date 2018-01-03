@@ -2801,6 +2801,25 @@ function wigo_ws_View() {
         var recordCtrl = null;
         var bOnline = true; 
 
+        // Saves stats for recorded trail locally.
+        // Note: Raises a event.stop, which transitions to StateStopped if reonding is on.
+        this.saveStats = function() { 
+            if (this.isOff())                                          
+                return; // Quit if recording off, no path for stats.   
+            
+            // Ensure stopped.
+            this.nextState(this.event.stop);  
+
+            // Filter the record path.
+            map.recordPath.filter();
+            // Get stats and save locally.
+            var stats = map.recordPath.getStats();
+            if (stats.bOk) {
+                var statsData = view.onSetRecordStats(stats); // Save stats data. 
+                recordStatsMetrics.update(statsData); // Update metrics for stats. 
+            }
+        };
+
         // Transitions this FSM to its next state given an event.
         // Arg:
         //  evenValue: property value of this.event causing the transition.
@@ -3201,6 +3220,7 @@ function wigo_ws_View() {
                         // Stay in same state, which is already prepared.
                         break;
                     case that.event.show_stats:
+                        map.recordPath.filter();   // Filter path before showing stats. 
                         ShowStats();
                         stateStopped.prepare();
                         curState = stateStopped;
@@ -6022,7 +6042,7 @@ function wigo_ws_View() {
                 var nFixed = this.bMetric ? this.kmeterFixedPoint : this.mileFixedPoint;
                 result.text = "{0} {1}".format(result.speed.toFixed(nFixed), result.unit);
             } else {
-                result.text = "error" + result.unit;
+                result.text = "error " + result.unit;  
             }
             return result;
         };
@@ -7053,6 +7073,7 @@ function wigo_ws_View() {
         } else if (!recordFSM.isOff()) { 
             ConfirmYesNo("Recording a trail is in progress. OK to continue and delete the recording?", function(bConfirm){
                 if (bConfirm) {
+                    recordFSM.saveStats(); // Ensure stats for recording have been saved. 
                     recordFSM.initialize(); // Reset recording.
                     AcceptModeChange();
                 } else {
@@ -7403,8 +7424,13 @@ Are you sure you want to delete the maps?";
     // Constructor args:
     //  holderDiv: HTMLElement. container for the record stats list.
     //  tile: string, optional. Title for the recorded stats list. Defaults to no title.
+    // Class Names for CSS Formatting
+    //  stats_history_header     -- div for header row.
+    //  holderStatsHistoryHeader -- cell in header row for drop down menu.
+    //  stats_history_month      -- cell in header row for month.
+    //  stats_history_year       -- cell in header row year.
+    //  stats_history_list       -- div for list of items.
     function RecordStatsHistory(holderDiv, title) {
-
         // Set month/year in header to date.
         // Arg:
         // date: integer or Date object. For an integer, Date object value in milliseconds.
@@ -7473,6 +7499,7 @@ Are you sure you want to delete the maps?";
             var item = this.create('div', null, 'stats_item');
             item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
             var cellDate = this.create('div', null, 'stats_date');
+            cellDate.addEventListener('click', OnDeleteItem, false); // Add click handler to indicate item is to be deleted.
             item.appendChild(cellDate);
 
             var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
@@ -7581,6 +7608,25 @@ Are you sure you want to delete the maps?";
             }
         }
 
+        // Click event handler for cell in an item.
+        // Indicates the item is to be deleted by dimming backgroud of row.
+        function OnDeleteItem(event) {
+            if (event.target instanceof HTMLElement) {
+                let itemDiv = event.target.parentElement;
+                let nMoreCount = 5; // Safety count for looping.
+                while (itemDiv && nMoreCount > 0) {
+                    nMoreCount--; 
+                    if (itemDiv.classList.contains('stats_item')) {
+                        itemDiv.classList.toggle('stats_item_delete');
+                        nMoreCount = 0;
+                        break;
+                    } else {
+                        itemDiv = itemDiv.parentElement;
+                    }
+                }
+            }
+        }
+
         // Adds items to the list in order to test changing from month to month.
         // Only for debug. Delete when no longer needed.
         // Args:
@@ -7662,9 +7708,34 @@ Are you sure you want to delete the maps?";
         
         // Create empty, scrollable list.
         var stats = this.createList(holderDiv, 5); // stats is {headerDiv: div, listDiv: div} obj.
+        stats.headerDiv.className = 'stats_history_header'; ////20180103 added
+        stats.listDiv.className = 'stats_history_list';     ////20180103 added
+        // Ref to div to hold a memu for stats history.   
+        var menuHolder = stats.headerDiv.getElementsByClassName('wigo_ws_cell0')[0]; 
+        menuHolder.className = 'holderStatsHistoryHeader';
+        var menuStatsHistory = new ctrls.DropDownControl(menuHolder, "menuStatsHistory", null, null, "img/ws.wigo.menuicon.png"); 
+        var menuStatsHistoryValues = [['show_metrics', 'Show Metrics'],        // 0
+                                      ['delete_selected','Delete Selected'],   // 1
+                                      ['clear_selected', 'Clear Selected'],  // 2
+                                    ]; 
+        menuStatsHistory.fill(menuStatsHistoryValues);
+
         // Ref to divs for month and year in header.
         var monthDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell1')[0];
+        monthDiv.className = 'stats_history_month'; ////20180103 added
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
+        yearDiv.className = 'stats_history_year'; ////20180103 added
+
+        // Call back handler for selection in menuStatsHistory.
+        menuStatsHistory.onListElClicked = function(dataValue) {
+            if (dataValue === 'show_metrics') {
+                AlertMsg("Show Metrics goes here");
+            } else if (dataValue === 'delete_selected') {
+                AlertMsg("Delete selected items goes here.");
+            } else if (dataValue === 'clear_selected') {
+                AlertMsg("Clear selected items goes here.")
+            }
+        };
 
         // New ScrollComplete object. See ScrollableListBase in ws.wigo.cordovacontrols.js.
         var scrollComplete = this.newOnScrollComplete(stats.listDiv); 

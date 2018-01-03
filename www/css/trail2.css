@@ -854,21 +854,23 @@ label {
     width: 100%;
 }
 
-.wigo_ws_list_header {  
+ .stats_history_header {  /* ////20180103 was .wigo_ws_list_header  */
     height: 2.5em;
 }
-.wigo_ws_list_header .wigo_ws_cell1 {
+/* //// .wigo_ws_list_header */ .stats_history_month {  /* ////20180103 was .wigo_ws_cell1 */
     font-size: 2em;
-    padding-left: 20%;
+    padding-left: 12%;
     padding-right: 5%;
     float: left;
+    padding-top: 0.5em;
 }
-.wigo_ws_list_header .wigo_ws_cell2 {
+/* //// .wigo_ws_list_header */ .stats_history_year { /* ////20180103 was .wigo_ws_cell2 */
     font-size: 2em;
     float: left;
+    padding-top: 0.5em;
 }
 
-.wigo_ws_list {
+.stats_history_list { /* ////20180103 was .wigo_ws_list  */  
     clear: both;
     float: left;
     position: relative;  
@@ -879,12 +881,16 @@ label {
     height: 6em;
     float: left;
 }
-.stats_item:nth-of-type(odd) {   /* stripe alternate stats items */
+.stats_item:nth-of-type(odd):not(.stats_item_delete) {   /* stripe alternate stats items, except dimmed items */
     background-color: lavender;
 }
-.stats_item:nth-of-type(even) {
+.stats_item:nth-of-type(even):not(.stats_item_delete) {
     background-color: lightcyan;
 }
+.stats_item_delete {   
+    background-color: #999;
+}
+
 .stats_date {
     width: 20%;
     height: 100%;
@@ -931,6 +937,25 @@ label {
     font-size: 1.9em;
     padding-top: 5%;
     background-color: wheat;
+}
+
+/* statsHistoryMenu */
+.holderStatsHistoryHeader { /* holder for statsHistoryMenu */
+    position: relative;
+    float: left;  
+    width: 8%;
+    height: 100%;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-right: 2em;
+}
+
+.holderStatsHistoryHeader .wigo_ws_DropDownIcon {
+    left: 0px;
+}
+
+.holderStatsHistoryHeader .wigo_ws_DropDownList {
+    width: 17em;
 }
 
 
