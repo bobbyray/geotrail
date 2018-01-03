@@ -7708,8 +7708,8 @@ Are you sure you want to delete the maps?";
         
         // Create empty, scrollable list.
         var stats = this.createList(holderDiv, 5); // stats is {headerDiv: div, listDiv: div} obj.
-        stats.headerDiv.className = 'stats_history_header'; ////20180103 added
-        stats.listDiv.className = 'stats_history_list';     ////20180103 added
+        stats.headerDiv.className = 'stats_history_header'; 
+        stats.listDiv.className = 'stats_history_list';     
         // Ref to div to hold a memu for stats history.   
         var menuHolder = stats.headerDiv.getElementsByClassName('wigo_ws_cell0')[0]; 
         menuHolder.className = 'holderStatsHistoryHeader';
@@ -7722,9 +7722,9 @@ Are you sure you want to delete the maps?";
 
         // Ref to divs for month and year in header.
         var monthDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell1')[0];
-        monthDiv.className = 'stats_history_month'; ////20180103 added
+        monthDiv.className = 'stats_history_month'; 
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
-        yearDiv.className = 'stats_history_year'; ////20180103 added
+        yearDiv.className = 'stats_history_year'; 
 
         // Call back handler for selection in menuStatsHistory.
         menuStatsHistory.onListElClicked = function(dataValue) {

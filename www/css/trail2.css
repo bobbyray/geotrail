@@ -854,23 +854,23 @@ label {
     width: 100%;
 }
 
- .stats_history_header {  /* ////20180103 was .wigo_ws_list_header  */
+ .stats_history_header {  
     height: 2.5em;
 }
-/* //// .wigo_ws_list_header */ .stats_history_month {  /* ////20180103 was .wigo_ws_cell1 */
+.stats_history_month {  
     font-size: 2em;
     padding-left: 12%;
     padding-right: 5%;
     float: left;
     padding-top: 0.5em;
 }
-/* //// .wigo_ws_list_header */ .stats_history_year { /* ////20180103 was .wigo_ws_cell2 */
+.stats_history_year { 
     font-size: 2em;
     float: left;
     padding-top: 0.5em;
 }
 
-.stats_history_list { /* ////20180103 was .wigo_ws_list  */  
+.stats_history_list { 
     clear: both;
     float: left;
     position: relative;  
