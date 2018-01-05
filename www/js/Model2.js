@@ -422,7 +422,8 @@ function wigo_ws_Model() {
         arOfflineParams.SaveToLocalStorage();
     };
 
-    // Clears record stats object in local storage.
+    // Clears record stats array in memory.
+    // Note: Does not clear recorded stats in localStorage.
     this.clearRecordStats = function() { 
         arRecordStats.Clear();
     };
@@ -438,6 +439,14 @@ function wigo_ws_Model() {
     // Array oibjec of wigo_ws_GeoTrailRecordStats objects.
     this.getRecordStatsList = function() { 
         return arRecordStats.getAll();
+    };
+
+    // Deletes elements from record stats array and saves to localStorage.
+    // Arg:
+    //  arElSpec: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
+    //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+    this.deleteRecordStats = function(arEl) { ////20180104 added 
+        arRecordStats.DeleteEls(arEl);
     };
 
     // Returns ref to last wigo_ws_GeoTrailRecordStats in this array.
@@ -718,6 +727,27 @@ function wigo_ws_Model() {
             else 
                 arRecordStats = [];
         };
+
+        // Deletes elements (wigo_ws_GeoTrailRecordStats objs) from the array.
+        // Saves updated array to localStorage.
+        // Arg:
+        //  arElS: [nTimeStamp, ...]. Object (not array). list specifying elements to delete.
+        //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+        this.DeleteEls = function(arEl) { ////20180104 Added 
+            let bChanged = false;
+            let ix = -1;
+            let arKey = Object.keys(arEl);
+            for (let i=0; i < arKey.length; i++) {
+                ix = FindIxOfId(arEl[arKey[i]]);
+                if (ix >= 0) {
+                    arRecordStats.splice(ix, 1); // Delete element at ix.
+                    bChanged = true;
+                }
+            }
+            if (bChanged) {
+                this.SaveToLocalStorage();
+            }
+        }
 
         // Saves this object to local storage.
         this.SaveToLocalStorage = function() {

@@ -186,9 +186,8 @@ function wigo_ws_View() {
     // Returns: Array of wigo_ws_GeoTrailRecordStat objects.
     this.onGetRecordStatsList = function() { return [];} 
  
-    // Sets recorded starts.
-    // Handler Signature:
-    //  Args: 
+    // Sets recorded stats in localStorage.
+    // Args: 
     //    stats: literal obj from recordPath.getStats() | wigo_ws_GeoTrailRecordStats obj. stats to be set.
     //           If stats is literal obj from recordPath.getStats, stats is converted to wigo_ws_GeoTrailRecordStats
     //           object that is set in localStorage.
@@ -196,7 +195,13 @@ function wigo_ws_View() {
     // literal obj for stats from recordPath.getStats():
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
-    this.onSetRecordStats = function(stats, bData) {}; 
+    this.onSetRecordStats = function(stats) {};  ////20180104 ,bData arg not used.
+
+    // Deletes elements from the record stats and saves to localStorage.
+    // Arg:
+    //  arEl: [nTimeStame, ...]. Object (not array). List specifying elements to delete.
+    //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+    this.onDeleteRecordStats = function(arEl) {}; 
 
     // Clears the list of record stats objects for recorded trails.
     // Handler signature:
@@ -670,14 +675,18 @@ function wigo_ws_View() {
                 let bSetHeight = false; 
                 if (!recordStatsHistory)  {
                     bSetHeight = true;
-                    recordStatsHistory = new RecordStatsHistory(divRecordStatsHistory);    
+                    recordStatsHistory = new RecordStatsHistory(this, divRecordStatsHistory); ////20180104 added this.
                 }
                 recordStatsHistory.update(that.onGetRecordStatsList());
+                // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
+                recordStatsHistory.clearSelections(); 
                 ShowElement(divRecordStatsHistory, true);
                 recordStatsHistory.showMonthDate(); 
-                if (bSetHeight) { 
+                ////20180104 if (bSetHeight) { 
                     recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
-                }
+                ////20180104 }
+
+
                 break;
         }
     };
@@ -7422,15 +7431,16 @@ Are you sure you want to delete the maps?";
 
     // Composite control for displaying history of recorded stats. 
     // Constructor args:
+    //  view: ref to wigo_ws_View object.
     //  holderDiv: HTMLElement. container for the record stats list.
     //  tile: string, optional. Title for the recorded stats list. Defaults to no title.
     // Class Names for CSS Formatting
     //  stats_history_header     -- div for header row.
-    //  holderStatsHistoryHeader -- cell in header row for drop down menu.
+    //  holderStatsHistoryMenu   -- cell in header row for drop down menu.
     //  stats_history_month      -- cell in header row for month.
     //  stats_history_year       -- cell in header row year.
     //  stats_history_list       -- div for list of items.
-    function RecordStatsHistory(holderDiv, title) {
+    function RecordStatsHistory(view, holderDiv, title) {
         // Set month/year in header to date.
         // Arg:
         // date: integer or Date object. For an integer, Date object value in milliseconds.
@@ -7452,7 +7462,7 @@ Are you sure you want to delete the maps?";
         // Add a stats item to the list.
         // Arg:
         //  recStats: wigo_ws_GeoTrailRecordStats object. Contains stats info for item to add to list.
-        // bTop: boolean, optional. true to add at top of list, false appends to list. Defaults to true.
+        //  bTop: boolean, optional. true to add at top of list, false appends to list. Defaults to true.
         // Notes: 
         // Class names for formatting stats item:
         //  stats_history_title - div for title, iff title is given in constructor.
@@ -7499,7 +7509,7 @@ Are you sure you want to delete the maps?";
             var item = this.create('div', null, 'stats_item');
             item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
             var cellDate = this.create('div', null, 'stats_date');
-            cellDate.addEventListener('click', OnDeleteItem, false); // Add click handler to indicate item is to be deleted.
+            cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
             item.appendChild(cellDate);
 
             var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
@@ -7585,6 +7595,17 @@ Are you sure you want to delete the maps?";
             OnScrollComplete(stats.listDiv.scrollTop, 0);
         };
 
+        // Deselects the items in the stats list that are selected.
+        // Note: The selected background color is removed for the selected items.
+        this.clearSelections = function() {
+            let arId = Object.keys(itemsSelected);
+            for (let i=0; i < arId.length; i++) {
+                SelectItem(arId[i], false);
+            }
+            // Empty the itemsSelected obj since no items are selected.
+            itemsSelected = {}; // Empty the list 
+        };
+
         // Private members
         var that = this;
         // Handler for scroll completed event.
@@ -7609,15 +7630,19 @@ Are you sure you want to delete the maps?";
         }
 
         // Click event handler for cell in an item.
-        // Indicates the item is to be deleted by dimming backgroud of row.
-        function OnDeleteItem(event) {
+        // Indicates the item is to selected by dimming backgroud of row.
+        function OnSelectItem(event) {
             if (event.target instanceof HTMLElement) {
                 let itemDiv = event.target.parentElement;
                 let nMoreCount = 5; // Safety count for looping.
                 while (itemDiv && nMoreCount > 0) {
                     nMoreCount--; 
                     if (itemDiv.classList.contains('stats_item')) {
-                        itemDiv.classList.toggle('stats_item_delete');
+                        itemDiv.classList.toggle('stats_item_select');
+                        let nTimeStamp = parseInt(itemDiv.getAttribute('data-timestamp'), 10);
+                        if (isNaN(nTimeStamp))
+                            nTimeStamp = 0; 
+                        ToggleSelectedItem(itemDiv.id, nTimeStamp); 
                         nMoreCount = 0;
                         break;
                     } else {
@@ -7658,6 +7683,67 @@ Are you sure you want to delete the maps?";
             }
         }
 
+        // List of items selected.
+        // Each Properties is an id of an item div in the stats list.
+        //  Value of each property: {nTimeStamp: number, bSelected: boolean} obj.
+        //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element.
+        //      bSelected: boolean. True to indicate element is selected. 
+        // Note: A property can be selected and later deselected.
+        var itemsSelected = {}; 
+       
+        // Toggles selected for an element in itemsSelected if it exists,
+        // otherwise add the added to itemsSelected as selected.
+        // Arg:
+        //  id: string. id of the item div to be selected in var itemsSelected.
+        //  nTimeStamp: number. timestamp in milliseconds for selected item.
+        function ToggleSelectedItem(id, nTimeStamp) {
+            let selectedItem = itemsSelected[id];
+            if (selectedItem) {
+                ////20180105 itemsSelected[id].bSelected = !selectedItem.bSelected;
+                // Delete property from itemsSelected.
+                delete itemsSelected[id];
+            } else {
+                ////20180105 itemsSelected[id] = {nTimeStamp: nTimeStamp, bSelected: true};
+                // Add property to itemsSelected.
+                itemsSelected[id] = nTimeStamp;
+            }
+        }
+
+        // Select an item in the stats list.
+        // Arg:
+        //  id: string. id of item div to select.
+        //  bSelect: boolean. true to select the item, false to deselect.
+        // Note: Sets the class for the item div. The class name 
+        //       is used to determine the background color of the item div.
+        function SelectItem(id, bSelect) {
+            let itemDiv = document.getElementById(id);
+            if (itemDiv) {
+                if (bSelect)
+                    itemDiv.classList.add('stats_item_select');
+                else
+                    itemDiv.classList.remove('stats_item_select');
+            }
+        };
+        
+        // Deletes stats item from list being displayed.
+        // Arg:
+        //  id: string. html id of stats item div to delete.
+        function DeleteItem(id) {
+            let statsDiv = document.getElementById(id);
+            if (statsDiv && statsDiv.parentElement) {
+                statsDiv.parentElement.removeChild(statsDiv);
+            }
+        }
+
+        // Deletes stats items given by var itemsSelected from the list being displayed.
+        function DeleteSelections() {
+            let arId = Object.keys(itemsSelected);
+            for (let i=0; i < arId.length; i++) {
+                DeleteItem(arId[i]);
+            }
+            // Empty the itemsSelected obj since no items are selected.
+            itemsSelected = {}; // Empty the list 
+        }
         
         // ** Constructor initialization.
        
@@ -7712,7 +7798,7 @@ Are you sure you want to delete the maps?";
         stats.listDiv.className = 'stats_history_list';     
         // Ref to div to hold a memu for stats history.   
         var menuHolder = stats.headerDiv.getElementsByClassName('wigo_ws_cell0')[0]; 
-        menuHolder.className = 'holderStatsHistoryHeader';
+        menuHolder.className = 'holderStatsHistoryMenu';
         var menuStatsHistory = new ctrls.DropDownControl(menuHolder, "menuStatsHistory", null, null, "img/ws.wigo.menuicon.png"); 
         var menuStatsHistoryValues = [['show_metrics', 'Show Metrics'],        // 0
                                       ['delete_selected','Delete Selected'],   // 1
@@ -7731,9 +7817,32 @@ Are you sure you want to delete the maps?";
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
             } else if (dataValue === 'delete_selected') {
-                AlertMsg("Delete selected items goes here.");
+                ////20180105 AlertMsg("Delete selected items goes here.");
+                //// $$$$ write
+                /* ////
+                // Display confirmation dialog with Yes, No buttons.
+                // Arg:
+                //  onDone: asynchronous callback with signature:
+                //      bConfirm: boolean indicating Yes.
+                //  sTitle: string, optional. Title for the dialog. Defauts to Confirm.
+                //  sAnswer: string, optional. Caption for the two buttons delimited by a comma.  
+                //           Defaults to 'Yes,No'.
+                // Returns synchronous: false. Only onDone callback is meaningful.
+                function ConfirmYesNo(sMsg, onDone, sTitle, sAnswer) {
+               
+                */
+                ConfirmYesNo("OK to delete all the selected items from local storage?",
+                    function(bConfirm){
+                        if (bConfirm) {
+                            view.onDeleteRecordStats(itemsSelected); 
+                            // Remove selected items from list displayed.
+                            DeleteSelections();
+                        }
+                    }); 
             } else if (dataValue === 'clear_selected') {
-                AlertMsg("Clear selected items goes here.")
+                ///// AlertMsg("Clear selected items goes here.")
+                ////20180104WorkButUseThat recordStatsHistory.clearSelections(); 
+                that.clearSelections(); 
             }
         };
 
@@ -8421,13 +8530,20 @@ function wigo_ws_Controller() {
         return data; 
     }; 
 
+    // Deletes elements from the record stats and saves to localStorage.
+    // Arg:
+    //  arEl: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
+    //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+    view.onDeleteRecordStats = function(arEl) { ////20170104 added.
+        model.deleteRecordStats(arEl);
+    }; 
+
     // Clears the list of record stats objects for recorded trails.
     //  Args: none.
     //  Returns nothing.
     view.onClearRecordStats = function() {
         model.clearRecordStats();
     };
-    
 
     // Saves app version to localStorage.
     // Arg:
