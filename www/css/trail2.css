@@ -855,20 +855,20 @@ label {
 }
 
  .stats_history_header {  
-    height: 4.0em;            /* ////20180104 was 2.5em */
-    box-sizing: border-box;   /* ////20180105 added */
+    height: 4.0em;            
+    box-sizing: border-box;   
 }
 .stats_history_month {  
     font-size: 2em;
     padding-left: 12%;
     padding-right: 5%;
     float: left;
-    padding-top: 0.3em;  /* ////20180104 was 0.5em */
+    padding-top: 0.3em;  
 }
 .stats_history_year { 
     font-size: 2em;
     float: left;
-    padding-top: 0.3em;   /* ////20180104 was 0.5em */
+    padding-top: 0.3em;   
 }
 
 .stats_history_list { 
@@ -946,15 +946,13 @@ label {
     float: left;  
     width: 8%;
     height: 100%;
-    /* ////20180104 padding-top: 0.5em; */
-    /* ////20180104 padding-bottom: 0.5em; */
     padding-right: 2em;
 }
 
 .holderStatsHistoryMenu .wigo_ws_DropDownIcon {
     left: 0px;
-    top: 0.6em;   /* ////20180104 added */
-    height: 70%;  /* ////20180104 added */
+    top: 0.6em;  
+    height: 70%; 
 }
 
 .holderStatsHistoryMenu .wigo_ws_DropDownList {

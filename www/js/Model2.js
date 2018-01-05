@@ -445,7 +445,7 @@ function wigo_ws_Model() {
     // Arg:
     //  arElSpec: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
-    this.deleteRecordStats = function(arEl) { ////20180104 added 
+    this.deleteRecordStats = function(arEl) { 
         arRecordStats.DeleteEls(arEl);
     };
 
@@ -731,9 +731,9 @@ function wigo_ws_Model() {
         // Deletes elements (wigo_ws_GeoTrailRecordStats objs) from the array.
         // Saves updated array to localStorage.
         // Arg:
-        //  arElS: [nTimeStamp, ...]. Object (not array). list specifying elements to delete.
+        //  arEl: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
         //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
-        this.DeleteEls = function(arEl) { ////20180104 Added 
+        this.DeleteEls = function(arEl) { 
             let bChanged = false;
             let ix = -1;
             let arKey = Object.keys(arEl);

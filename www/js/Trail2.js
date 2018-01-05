@@ -195,7 +195,7 @@ function wigo_ws_View() {
     // literal obj for stats from recordPath.getStats():
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
     //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
-    this.onSetRecordStats = function(stats) {};  ////20180104 ,bData arg not used.
+    this.onSetRecordStats = function(stats) {};  
 
     // Deletes elements from the record stats and saves to localStorage.
     // Arg:
@@ -675,18 +675,14 @@ function wigo_ws_View() {
                 let bSetHeight = false; 
                 if (!recordStatsHistory)  {
                     bSetHeight = true;
-                    recordStatsHistory = new RecordStatsHistory(this, divRecordStatsHistory); ////20180104 added this.
+                    recordStatsHistory = new RecordStatsHistory(this, divRecordStatsHistory); 
                 }
                 recordStatsHistory.update(that.onGetRecordStatsList());
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.clearSelections(); 
                 ShowElement(divRecordStatsHistory, true);
                 recordStatsHistory.showMonthDate(); 
-                ////20180104 if (bSetHeight) { 
-                    recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
-                ////20180104 }
-
-
+                recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
                 break;
         }
     };
@@ -7699,11 +7695,9 @@ Are you sure you want to delete the maps?";
         function ToggleSelectedItem(id, nTimeStamp) {
             let selectedItem = itemsSelected[id];
             if (selectedItem) {
-                ////20180105 itemsSelected[id].bSelected = !selectedItem.bSelected;
                 // Delete property from itemsSelected.
                 delete itemsSelected[id];
             } else {
-                ////20180105 itemsSelected[id] = {nTimeStamp: nTimeStamp, bSelected: true};
                 // Add property to itemsSelected.
                 itemsSelected[id] = nTimeStamp;
             }
@@ -7817,20 +7811,6 @@ Are you sure you want to delete the maps?";
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
             } else if (dataValue === 'delete_selected') {
-                ////20180105 AlertMsg("Delete selected items goes here.");
-                //// $$$$ write
-                /* ////
-                // Display confirmation dialog with Yes, No buttons.
-                // Arg:
-                //  onDone: asynchronous callback with signature:
-                //      bConfirm: boolean indicating Yes.
-                //  sTitle: string, optional. Title for the dialog. Defauts to Confirm.
-                //  sAnswer: string, optional. Caption for the two buttons delimited by a comma.  
-                //           Defaults to 'Yes,No'.
-                // Returns synchronous: false. Only onDone callback is meaningful.
-                function ConfirmYesNo(sMsg, onDone, sTitle, sAnswer) {
-               
-                */
                 ConfirmYesNo("OK to delete all the selected items from local storage?",
                     function(bConfirm){
                         if (bConfirm) {
@@ -7840,8 +7820,6 @@ Are you sure you want to delete the maps?";
                         }
                     }); 
             } else if (dataValue === 'clear_selected') {
-                ///// AlertMsg("Clear selected items goes here.")
-                ////20180104WorkButUseThat recordStatsHistory.clearSelections(); 
                 that.clearSelections(); 
             }
         };
@@ -8534,7 +8512,7 @@ function wigo_ws_Controller() {
     // Arg:
     //  arEl: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
-    view.onDeleteRecordStats = function(arEl) { ////20170104 added.
+    view.onDeleteRecordStats = function(arEl) { 
         model.deleteRecordStats(arEl);
     }; 
 
