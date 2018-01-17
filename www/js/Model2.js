@@ -692,22 +692,13 @@ function wigo_ws_Model() {
         //        element is replaced; otherwise it is added.
         this.setId = function(stats) {  
             var iAt = FindIxOfId(stats.nTimeStamp);
-            /* ////20180110 redo to insert in order if not found.
             if (iAt < 0) {
-                iAt = arRecordStats.length;
-            }       
-            arRecordStats[iAt] = stats;
-            */ 
-
-            if (iAt < 0) {
-                ////20180110Redo iAt = arRecordStats.length;
                 // Redo to insert before timestamp that stats.nTimeStamp is less than
                 // searching backwards from last element in the array.
                 if (arRecordStats.length == 0) {
                     arRecordStats[0] = stats;
                 } else {
                     // Search backwards through the array.
-                    //// $$$$ start here.
                     let bInserted = false;
                     let i = arRecordStats.length - 1;
                     for (i; i >= 0; i--) {
