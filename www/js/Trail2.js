@@ -586,7 +586,10 @@ function wigo_ws_View() {
                 ShowElement(mapBar, false);
                 ShowOwnerIdDiv(false);
                 ShowPathInfoDiv(false);  
-                ShowElement(divRecordStatsHistory, false); 
+                ////20180107 ShowElement(divRecordStatsHistory, false); 
+                if (recordStatsHistory)
+                    recordStatsHistory.close();
+                ////20180105Under_divRecordStatsHitory ShowElement(divRecordStatsEdit, false);
         }
 
         var nPrevMode = nMode; 
@@ -672,17 +675,21 @@ function wigo_ws_View() {
             case this.eMode.record_stats_view: 
                 HideAllBars();
                 titleBar.setTitle("Stats History");
-                let bSetHeight = false; 
-                if (!recordStatsHistory)  {
-                    bSetHeight = true;
-                    recordStatsHistory = new RecordStatsHistory(this, divRecordStatsHistory); 
-                }
+                ////20180115NotUsed let bSetHeight = false; 
+                ////20180115NotNeeded if (!recordStatsHistory)  {
+                    ////20180115NotUsed bSetHeight = true;
+                    ////20180107 recordStatsHistory = new RecordStatsHistory(this, divRecordStatsHistory); 
+                    ////20180115NotNeeded recordStatsHistory = new RecordStatsHistory(this); 
+                ////20180115NotNeeded }
                 recordStatsHistory.update(that.onGetRecordStatsList());
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
-                recordStatsHistory.clearSelections(); 
-                ShowElement(divRecordStatsHistory, true);
-                recordStatsHistory.showMonthDate(); 
-                recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
+                ////20180107 recordStatsHistory.clearSelections(); 
+                ////20180107 ShowElement(divRecordStatsHistory, true);
+                ////20180107 recordStatsHistory.showMonthDate(); 
+                ////20180107 recordStatsHistory.setListHeight(titleHolder.offsetHeight); 
+                //// $$$$ fix. add recordStatsHistory.init(divRecordStatsHistory, titleHolder.offsetHeight). 
+                ////           write init function, ensure edit stats is hidden.
+                recordStatsHistory.open(titleHolder.offsetHeight); ////20180107 added
                 break;
         }
     };
@@ -1087,7 +1094,7 @@ function wigo_ws_View() {
         }
     }, false); // Try true to use capture instead of bubble. true does not capture.
 
-    // Returns true if an keyboad event is for the Enter key.
+    // Returns true if a keyboad event is for the Enter key.
     // Arg:
     //  event: KeyboardEvent object.
     function IsEnterKey(event) {
@@ -1214,9 +1221,12 @@ function wigo_ws_View() {
         return mapCanvas;
     }
 
-    // Stats History List for record_stats_view. 
-    var divRecordStatsHistory = document.getElementById('divRecordStatsHistory');
-    var recordStatsHistory = null; 
+    ////20180107 // Stats History List for record_stats_view. 
+    ////20180107 var divRecordStatsHistory = document.getElementById('divRecordStatsHistory');
+    ////20180115MoveDown var recordStatsHistory = new RecordStatsHistory(this); ////20180115 null;  ////20180115 $$$$ fix.
+
+    ////20180107 // Dialog for editing (adding) a Record Stats item.
+    var divRecordStatsEdit = document.getElementById('divRecordStatsEdit'); ////20180105
     
     // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
@@ -4211,7 +4221,8 @@ function wigo_ws_View() {
     // Displays alert message given the string sMsg.
     // Args:
     //  sMsg: string. message to display.
-    //  onDone: function. callback after user dismisses the dialog. callback has no arg.
+    //  onDone: function, optional. callback after user dismisses the dialog. callback has no arg.
+    //          Defaults to null.
     // Note: AlertMsg(..) returns immediately. callback after dialog is dismissed is asynchronous.
     function AlertMsg(sMsg, onDone) {
         if (typeof(onDone) !== 'function')  
@@ -5194,10 +5205,12 @@ function wigo_ws_View() {
         deviceMotion.setAccelThres(settings.nAccelThres);
         deviceMotion.setAccelVThres(settings.nAccelVThres); 
 
-        // Set body mass. (Used to calculate calories for a recorded path.)
+        // Set body mass. (Used to calculate calories for a recorded path and stats item editor.
         map.recordPath.setBodyMass(settings.kgBodyMass);  
-        // Set calorie conversion efficiency factor for RecordFSM 
+        recordStatsHistory.setBodyMass(settings.kgBodyMass);
+        // Set calorie conversion efficiency factor for a recorded path and stats item editor. 
         map.recordPath.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency); 
+        recordStatsHistory.setCaloriesBurnedEfficiency(settings.calorieConversionEfficiency);
         // Testing mode for RecordFSM.
         recordFSM.setTesting(settings.bClickForGeoLoc);   
         // Set auto animation for loading a path. 
@@ -6002,6 +6015,29 @@ function wigo_ws_View() {
             }
             return result;            
         };
+
+        // Returns length in miles or kilometers based on bMetric.
+        // Returns: {n: number, unit: string}, where
+        //  n is number for the distance.
+        //  unit is string specifying kind of unit.
+        //      mi for miles
+        //      km for kilometers.
+        // Arg:
+        this.toDist = function(mLen) { ////20180108 added
+            var result = { n: 0, unit: 'km'};
+            if (this.bMetric) {
+                result.n = mLen / 1000.0;
+                result.unit = 'km';
+            } else {
+                // 1 m = 3.2808399 ft
+                // 1 foot =  0.3048 meters
+                result.n = mLen / 0.3048;
+                // 1 mile = 5280 feet
+                result.n = result.n / 5280;
+                result.unit = 'mi';
+            }
+            return result;            
+        };
         
         // Returns a string for conversion of a length in meters.
         // The string has a suffix for the kind of unit.
@@ -6016,6 +6052,23 @@ function wigo_ws_View() {
                 nFixed = this.kmeterFixedPoint;
             var s = result.n.toFixed(nFixed) + " " + result.unit; 
             return s; 
+        };
+
+
+        // Returns number in meters give a distance to convert.
+        // Arg:
+        //  dist: number. The distance to convert in kilometers or miles.
+        //        For this.bMetric true, distance is in kilometers.
+        //        Otherwise distance is in files.   
+        this.toMeters = function(dist) { ////20180110 added
+            let n;
+            if (this.bMetric) {
+                n = dist * 1000.0;
+            } else {
+                // 1 mi = 1.60934 km.
+                n =  dist * 1.60934 * 1000.0;  ////20180115 added * 1000.0
+            }
+            return n;
         };
 
         // Returns literal object for speed:
@@ -7086,6 +7139,8 @@ function wigo_ws_View() {
                     selectMode.selectedIndex = that.curMode();
                 }
             });
+        } else if (recordStatsHistory && recordStatsHistory.isEditingStatsActive()) { ////20180107 added
+            AlertMsg("Complete editing the stats item before changing the view.", null)
         } else {
             AcceptModeChange();
         }
@@ -7425,18 +7480,75 @@ Are you sure you want to delete the maps?";
         fsmEdit.DoEditTransition(nValue);
     };
 
+    var RecordStatsHistoryBase = new ctrls.ScrollableListBase(); ////20180115 added.
+    ////20180115 RecordStatsHistory.prototype = RecordStatsHistoryBase;  ////20180115 moved to here.
+    ////20180115 RecordStatsHistory.constructor = RecordStatsHistory;    ////20180115 moved to here.
     // Composite control for displaying history of recorded stats. 
     // Constructor args:
     //  view: ref to wigo_ws_View object.
-    //  holderDiv: HTMLElement. container for the record stats list.
-    //  tile: string, optional. Title for the recorded stats list. Defaults to no title.
+    ////20180106 //  holderDiv: HTMLElement. container for the record stats list.
+    ////20180106 //  editDiv: HTMLElement div. Div for editing a stats item.
+    ////20170106Removed //  tile: string, optional. Title for the recorded stats list. Defaults to no title.
+    //  ctrlIds: {holderDivId: 'divRecordStatsHistory', // id of holder div for the stats list.
+    //            editDivId: 'divRecordStatsEdit1', // id of div for editing stats times. 
+    //            // Controls composing the editing div follow:
+    //              dateId: 'dateRecordStats', // id of input, type=date 
+    //              timeId: 'timeRecordStats', // id of input, type=time
+    //              distanceId: 'numRecordStatsDistance', // id of input, type=number
+    //              distanceUnitId: 'spanRecordStatsDistanceUnit', // id of span.  
+    //              bEnglishUnit: true, // boolean. true indicates English for miles, false indicates Metric, km.
+    //              runTimeMinsId: 'minsRecordStatsRunTime', // id of input, type=number. 
+    //              runTimeSecsId: 'secsRecordStatsRunTime', // id of input,type=number.
+    //              doneId: 'buRecordStatsEditDone', // id of button.
+    //              cancelId:'buRecordStatsEditCancel'}. 
+    //            Optional, Defaults to values shown. Identifies controls composing this control.
+    // Note: The stats list and its header are created within the holder div when this object is contructed.
+    //       The holder div html must contain the editing div and its child controls.
+    //       When the editing div is shown, the stats list and its header are hidden, and vice versa.
     // Class Names for CSS Formatting
     //  stats_history_header     -- div for header row.
     //  holderStatsHistoryMenu   -- cell in header row for drop down menu.
     //  stats_history_month      -- cell in header row for month.
     //  stats_history_year       -- cell in header row year.
     //  stats_history_list       -- div for list of items.
-    function RecordStatsHistory(view, holderDiv, title) {
+    ////20180106 function RecordStatsHistory(view, holderDiv, title) 
+    function RecordStatsHistory(view, ctrlIds) {
+        // Initialize to begin showing stats history.
+        // Arg:
+        //  nShrinkPels: number, optional. number of pels to reduce calculated height.
+        //               Defaults to 0.
+        this.open = function(nShrinkPels) {
+                // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
+                ShowMapCanvas(false); ////20180108 added    
+                this.clearSelections(); 
+                ShowRecordStatsEditDiv(false);  // Hide stats item edit div.  ////20180108 editDiv, removed
+                ShowElement(holderDiv, true);
+                this.showMonthDate(); 
+                this.setListHeight(titleHolder.offsetHeight); 
+        };
+
+        // Ends showing stats history.
+        this.close =function() {
+            this.clearSelections();
+            ShowRecordStatsEditDiv(false); ////20180108 editDiv, removed
+            ShowElement(holderDiv, false);
+            ShowMapCanvas(true); ////20180108    
+        };
+
+        // Set body mass.
+        // Arg:
+        //  kgMass: number. body mass in kilograms.
+        this.setBodyMass = function(kgMass) {
+            itemEditor.kgBodyMass = kgMass;
+        };
+
+        // Set calorie burned conversion efficiency.
+        // Arg:
+        //  cce: number. The calorie conversion efficiency.
+        this.setCaloriesBurnedEfficiency = function(cce) {
+            itemEditor.calorieConversionEfficiency = cce;
+        };
+
         // Set month/year in header to date.
         // Arg:
         // date: integer or Date object. For an integer, Date object value in milliseconds.
@@ -7485,11 +7597,11 @@ Are you sure you want to delete the maps?";
             }
             
             var dt = new Date(recStats.nTimeStamp);
-            // Initialize current month, year object for empty list.
-            if (itemCount === 0) {
-                curMonthYear.init(dt); 
-                this.setMonthYear(dt); 
-            }
+            ////20180113NotNeeded // Initialize current month, year object for empty list.
+            ////20180113NotNeeded if (itemCount === 0) {
+            ////20180113NotNeeded     curMonthYear.init(dt); 
+            ////20180113NotNeeded     this.setMonthYear(dt); 
+            ////20180113NotNeeded }
 
             // Check for change in the month.
             var bMonthChanged = curMonthYear.checkChange(dt.getMonth(), dt.getFullYear());
@@ -7523,6 +7635,7 @@ Are you sure you want to delete the maps?";
             cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
             // Display display distance, runtime cell and speed, calories cell.
             var sDistance = lc.to(recStats.mDistance);
+            /* ////20180109 refactor, make HourMinSec object.
             var runTimeHoursFloor = 0; 
             var runTimeMins = recStats.msRunTime /(1000 * 60);
             var runTimeMinsFloor = Math.floor(runTimeMins)
@@ -7548,9 +7661,12 @@ Are you sure you want to delete the maps?";
             var sRunTimeSecs = runTimeSecs.toFixed(0);
             if (sRunTimeSecs.length < 2) // Always use 2 digits for seconds.
                 sRunTimeSecs = '0' + sRunTimeSecs;
+            */
+            let runTime = new HourMinSec(recStats.msRunTime); ////20180109 added
             var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
             var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            cellDistanceRunTime.innerHTML = "{0}<br/>{1}{2}:{3} {4}".format(sDistance, sRunTimeHours, sRunTimeMins, sRunTimeSecs, sRunTimeSuffix);
+            ////20180109 cellDistanceRunTime.innerHTML = "{0}<br/>{1}{2}:{3} {4}".format(sDistance, sRunTimeHours, sRunTimeMins, sRunTimeSecs, sRunTimeSuffix);
+            cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); ////20180109 added.
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
 
             // Add the item to the list.
@@ -7570,17 +7686,23 @@ Are you sure you want to delete the maps?";
         // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
         // Arg: 
         //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
+        // Note: Updates efficiently. Only adds items new items at end of arRecStats.
         this.update = function(arRecStats) {
             // Add stats items that are not aready in this list.
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
 
             //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
-
+            ////2018013Undo stats.listDiv.scrollTop = 0; ////20180113 added
             var recStats;
             for (var i=itemCount; i < arRecStats.length; i++) {
-                recStats = this.addStatsItem(arRecStats[i]);
+                ////201813 recStats = this.addStatsItem(arRecStats[i]);
+                recStats = arRecStats[i];
+                this.addStatsItem(recStats);
             }
+            ////2018013Undo // Set month date for last recStats, which is first time displayed.
+            ////2018013Undo if (recStats)                               ////20180113
+            ////2018013Undo     this.setMonthYear(recStats.nTimeStamp); ////20180113
         };
 
         // Shows month/date for first item visible in the list.
@@ -7600,6 +7722,20 @@ Are you sure you want to delete the maps?";
             }
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
+        };
+
+        // Sets height of list. Needs to be set for scrolling to occur.
+        // Args:
+        //  nShrinkPels: number, optional. number of pels to reduce calculated height..
+        //               Defaults to 0.
+        // Note: Calculates list height = height of body - nShrinkPels.
+        // Note: Base class function in prototype chain, ScrollableListBase obj.
+        // this.setListHeight = function(nShrinkPels){..};
+        
+        // Returns true is editing stats div is active.
+        this.isEditingStatsActive = function() { ////20180107 added 
+            var bYes = IsElementShown(editDiv);
+            return bYes;
         };
 
         // Private members
@@ -7729,6 +7865,87 @@ Are you sure you want to delete the maps?";
             }
         }
 
+        // Search list of stats items for item identified by a timestamp.
+        // Returns HTMLElement for a div. ref to stats item div if found, otherwise null.
+        // Arg:
+        //  msTimeStamp 
+        function FindStatsItem(sTimeStamp) {  ////20180111 added
+            let itemDiv, itemDivFound = null;
+            let msData;
+            for (let i=0; i < stats.listDiv.children.length; i++) {
+                itemDiv = stats.listDiv.children[i];
+                if (!itemDiv.classList.contains('stats_item'))
+                    continue; // Skip row in list that is not a stats items.
+                if (sTimeStamp === itemDiv.getAttribute('data-timestamp')) {
+                    itemDivFound = itemDiv;
+                    break;
+                }
+            }
+            return itemDivFound;
+        }
+
+        // Removes all the div rows from the stats list, which includes
+        // all the stats items and the separator rows.
+        function RemoveAllStatsRows() {
+            // Ensure all selections are cleared first.
+            that.clearSelections();
+            // Remove all the child html elements from the stats list.
+            let rowDiv;
+            ////20180112Oops for (let i=0; i < stats.listDiv.children.length; i++) {
+            ////20180112Oops     stats.listDiv.removeChild(stats.listDiv.children[i]);
+            ////20180112Oops }
+            while(stats.listDiv.children.length > 0) {
+                stats.listDiv.removeChild(stats.listDiv.children[0]);
+            }
+            itemCount = 0; ////20180112 added
+            stats.listDiv.scrollTop = 0; ////20180113 added.
+            curMonthYear.reset(); ////20180113 added.
+        }
+
+        // Event handler for Done button on edit div.
+        function OnEditDone(event) {
+            // Quit if stats item controls are not all valid.
+            if (!itemEditor.areCtrlsValid()) {
+                return; // Note that an AlertMsg() has been displayed.
+            }
+
+            ////20180112DidNotWork // Ensure soft keyboard is not showing.
+            ////20180112DidNotWork itemEditor.clearKeyboard(); 
+            // Hide the editor's div.
+            ShowRecordStatsEditDiv(false); ////20180108 editDiv, removed ////20180108 that.close();
+            
+            let itemData = itemEditor.getEditData();
+            let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
+            for (let i=0; itemFound && i < 100; i++) {
+                itemData.nTimeStamp++; // Increment timestamp by one millisecond to make it unique.
+                itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
+                if (!itemFound) {
+                    // Now itemData.nTimeStamp is unique.
+                    break;
+                }
+            }
+            if (!itemFound) {
+                // Timestamp for itemData to add is unique.
+                // Set itemData in localStorage.
+                view.onSetRecordStats(itemData);
+                // Clear the stats list by removing all html child elements.
+                RemoveAllStatsRows();
+                // Get the new array of stats data recs from localStorage and
+                // update (display) the stats list.
+                that.update(view.onGetRecordStatsList());
+                ////20180112DidNotWork that.open(titleHolder.offsetHeight); // Prepare properly to display the stats list. ////20180112 added titleHolder.offsetHeight.
+                ////20180112IsNeeded???? that.setMonthYear(); 
+                that.showMonthDate(); ////20180115 added.
+            } else {
+                AlertMsg("Failed to save item data!");
+            }
+        }
+
+        // Event handler for Cancel button on edit div.
+        function OnEditCancel(event) {
+            ShowRecordStatsEditDiv(false); ////20180108 editDiv, removed ////20180108 that.close();
+        }
+
         // Deletes stats items given by var itemsSelected from the list being displayed.
         function DeleteSelections() {
             let arId = Object.keys(itemsSelected);
@@ -7738,9 +7955,328 @@ Are you sure you want to delete the maps?";
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
         }
+
+        // Handler for keydown event for various controls.
+        // Arg:
+        //  event: KeyboardEvent obj. keyboard event from an input control.
+        function OnKeyDown(event) {
+            let bEnterKey = IsEnterKey(event);
+            if (bEnterKey) {
+                // Remove software keyboard.
+                event.target.blur();
+            }
+        }
+
+        // Helper object for converting milliseconds to hours, minutes, and seconds.
+        // Arg:
+        //  msRunTime: number. milliseconds to convert to hours, mins, and seconds, and a suffix.
+        function HourMinSec(msRunTime) {
+            var runTimeHoursFloor = 0; 
+            var runTimeMins = msRunTime /(1000 * 60);
+            var runTimeMinsFloor = Math.floor(runTimeMins)
+            var runTimeSecs = (runTimeMins - runTimeMinsFloor)*60; // Convert fractional minute to seconds.
+            if (Math.round(runTimeSecs) >= 60) {
+                // runTimeSecs rounds to 60, so increment mins and set secs to 0.
+                runTimeSecs = 0;  
+                runTimeMinsFloor++;
+            }
+            while (runTimeMinsFloor >= 60) {  
+                runTimeMinsFloor -= 60;
+                runTimeHoursFloor++;
+            }
+            ////20180109 var sRunTimeMins = runTimeMinsFloor.toFixed(0);
+            ////20180109 var sRunTimeHours = "";
+            ////20180109 var sRunTimeSuffix = "m:s";  
+            ////20180109 if (runTimeHoursFloor > 0) {
+                ////20180109 sRunTimeSuffix = "h:m:s"
+                ////20180109 $$$$ fix, do not include : for sRunTimeHours.
+                ////20180109 sRunTimeHours = "{0}:".format(runTimeHoursFloor.toFixed(0));
+                ////20180109 if (sRunTimeMins.length < 2) // Always use 2 digits for mins when hour is present.
+               ////20180109      sRunTimeMins = '0' + sRunTimeMins;
+            ////20180109 }
+            ////20180109 var sRunTimeSecs = runTimeSecs.toFixed(0);
+            ////20180109 if (sRunTimeSecs.length < 2) // Always use 2 digits for seconds.
+            ////20180109     sRunTimeSecs = '0' + sRunTimeSecs;
+            
+            // Helper to pad a string with leading zero(s) if padding is needed.
+            // Returns: padded string.
+            // Arg:
+            //  str: string. string to pad with leading zero(s).
+            //  nMinLen: number. number of zero char(s) prepended to str until str.length reaches nMinLen.
+            //           If str.length >= nMinLen, str is not changed.
+            function ZeroPad(str, nMinLen) {
+                for (let i = str.length; i < nMinLen; i++) {
+                    str = "0" + str;
+                }
+                return str;
+            }
+
+            // Properties.
+            this.ms = msRunTime;  // number. total milliseconds for runtime.
+            this.hour = runTimeHoursFloor; // number. hour component.
+            this.min = runTimeMinsFloor;   // number. minute component.
+            this.sec = runTimeSecs;        // number. second component.
+
+            // Returns string for this.sec as two digits.
+            this.getSec = function() {
+                return ZeroPad(this.sec.toFixed(0), 2);
+            };
+
+            // Returns string for this.min as two digits.
+            this.getMin = function() {
+                return ZeroPad(this.min.toFixed(0), 2);
+            };
+
+            // Returns string for total minutes as two digits.
+            // Note: total minutes = this.min + 60 * this.hour.
+            this.getAllMins = function() {
+                let s = ZeroPad((this.min + 60 * this.hour).toFixed(0), 2);
+                return s;
+            }
+
+            // Returns a string for this.hour.
+            this.getHour = function() {
+                return this.hour.toFixed(0);
+            };
+
+            
+            // Returns a string for hours, mins, secs of this object.
+            // Format of returned string has two possibilities:
+            //      n:nn:nn h:mm:ss  (hours, minutes, seconds when this obj is >= one hour.
+            //      nn:nn m:s        (minutes, seconds when this obj is < one hour.)
+            this.getStr = function() {
+                let s;
+                if (this.hour <= 0) {
+                    s = "{0}:{1} m:s".format(this.getMin(), this.getSec());
+                } else {
+                    s = "{0}:{1}:{2} h:m:s".format(this.getHour(), this.getMin(), this.getSec());
+                }
+                return s;
+            };  
+
+            // Returns string for mins, secs of this object.
+            // Hours are added to mins to form returned string.
+            // Format of returned string:
+            //      nn:nn m:s        (minutes, seconds where hours converted to minutes..)
+            this.getMinSecStr = function() {
+                let mins = this.min + 60 * this.hour;
+                let s = "{0}:{1} m:s".format(ZeroPad(mins, 2), this.getSec());
+                return s;
+            };
+        }
+
+        // Helper object for editing a stats item.
+        function StatsItemEditor(holderStatusDiv) {
+            ////20180118Oops var data = new wigo_ws_GeoTrailRecordStats(); ////20170108Rmove Temp. delete stmt.
+
+            // number for body mass in kilograms.
+            this.kgBodyMass = 50.0; 
+            
+            // number for Calorie conversion efficiency.
+            this.calorieConversionEfficiency = 0.10; 
+
+            // Sets editor's controls based on itemData.
+            // Arg:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. 
+            this.setEditCtrls = function(itemData){
+                // Helper. Returns a string of at least 2 digits.
+                // A zero char is prepended if need be to form a length of 2 digits.
+                // Arg: 
+                // digits:number or string. If number converted to a string.
+                function TwoDigits(digits) {
+                    if (typeof digits === 'number')
+                        digits = digits.toFixed(0);
+                    for (let i=digits.length; i < 2; i++) {
+                        digits = '0' + digits;
+                    }
+                    return digits;
+                }
+
+                // Set starting date.
+                let itemDate = new Date(itemData.nTimeStamp);
+                let nYear = itemDate.getFullYear();
+                let nMonth = itemDate.getMonth() + 1; 
+                let nMonthDay = itemDate.getDate();
+                let nHour = itemDate.getHours();
+                let nMinute = itemDate.getMinutes();
+                let sValue = "{0}-{1}-{2}".format(nYear, TwoDigits(nMonth), TwoDigits(nMonthDay));
+                date.value = sValue;
+                // Set starting time.
+                time.value = "{0}:{1}".format(TwoDigits(nHour), TwoDigits(nMinute));
+
+                // Set distance.
+                let distValue = lc.toDist(itemData.mDistance);  /////20180118 Oops was data.mDistance
+                distance.value = distValue.n.toFixed(2);
+                distanceUnit.innerText = distValue.unit;
+
+                // Set run time.
+                let runTime = new HourMinSec(itemData.msRunTime);
+                runTimeMins.value = runTime.getAllMins();
+                runTimeSecs.value = runTime.getSec();
+            };
+
+            // Checks if control values are valid.
+            // Shows error msg in status div for an invalid control value and sets
+            // focus to the control.
+            // Returns: boolean. true if all control values are valid.
+            this.areCtrlsValid = function() {
+                // Check that date/time is < current time. Do not allow adding dates in the future
+                // because a date/time that may be added later by record needs to be after
+                // the date of last (oldest) item in the stats list because stats history only 
+                // updates for items starting at itemCount.
+                let timestamp = ParseDateTime(date, time);
+                let now = Date.now();
+                if (timestamp > now) {
+                    let dt = new Date(now);
+                    let sMsg = "Starting Date/Time must be less than current Date/Time\nof {0}".format(dt.toLocaleString('en-US'));
+                    ////20180118 AlertMsg(sMsg);
+                    status.set(sMsg);
+                    date.focus();
+                    return false;
+                }
+                return true;
+            }
+
+            // Returns new wigo_ws_GeoTrailRecordStats object based on values in the editor's ctrls.
+            this.getEditData = function() {
+                let itemData = new wigo_ws_GeoTrailRecordStats();
+                // Set distance in meters from input in miles or kilometers.
+                itemData.mDistance = lc.toMeters(GetNumFromCtrl(distance));
+                // Set runtime in milliseconds.
+                let nMins = GetNumFromCtrl(runTimeMins);
+                let nSecs = GetNumFromCtrl(runTimeSecs);
+                itemData.msRunTime = (60 * nMins + nSecs) * 1000.0;
+                // Estimate calories.
+                if (itemData.msRunTime > 0) {
+                    // Calculate kinetic engery to move body mass in calories.
+                    let speed = itemData.mDistance / (itemData.msRunTime / 1000.0);
+                    ////2018016 itemData.caloriesKinetic = (0.5 * this.kgBodyMass * speed * speed)/1000; // engery in kilojoules
+                    let ke = 0.5 * this.kgBodyMass * speed * speed; // engery in joules to move body mass to ave velocity.
+                    ke += ke; // Add engery in joules to move body mass from ave velectity to rest.
+                    // Calculate  energy to overcome friction for traveling along the path in joules.
+                    // 0.032 is estimate for coefficient of friction.
+                    let fe = coeffFriction * this.kgBodyMass * accelGravity * itemData.mDistance;
+                    itemData.caloriesKinetic = (ke + fe)/1000; // Calculated energy in kilojoules.
+                    itemData.caloriesKinetic /= kjoulesPerCalorie; // kjoules converted to food calories.
+                    // Set calories burned accounting for conversion of food to calories.
+                    itemData.caloriesBurnedCalc = itemData.caloriesKinetic / this.calorieConversionEfficiency;
+                }
+
+                // Set timestamp from date and time ctrls.
+                itemData.nTimeStamp = ParseDateTime(date, time);
+                return itemData;
+            };
+
+            // Clears the status div so that it is not shown.
+            this.clearStatus = function() {  ////20180117 added.
+                status.clear();
+            }
+
+            ////20180112DidNotWork // Ensure soft keyboard is not shown.
+            ////20180112DidNotWork this.clearKeyboard = function() { ////20180112 added
+                // Blur all ctrls that might have soft keyboard showing.
+                distance.blur();
+                runTimeMins.blur();
+                runTimeSecs.blur();
+                date.blur();
+                time.blur();
+            ////20180112DidNotWork };
+
+            ////20180112 // Returns new wigo_ws_GeoTrailRecordStats obj based on ref to a stats history item.
+            ////20180112 // Arg:
+            ////20180112 //  itemDiv: HTML div. ref to stats stats history item.
+            ////20180112 this.getItemData = function(itemDiv) {
+            ////20180112 
+            ////20180112 };
+
+            // Returns new wigo_ws_GeoTrailRecordStats object.
+            this.newItemData = function() {
+                return new wigo_ws_GeoTrailRecordStats();
+            };
+
+            // Helper that returns a number from a control.
+            // Arg:
+            //  ctrl: HTMLInput. control whose value is returned as a number.
+            // Note: If control value is NaN, returns 0.
+            function GetNumFromCtrl(ctrl) {
+                let num = Number(ctrl.value);
+                if (num === NaN)
+                    num = 0;
+                return num;
+            }
+
+            // Parses a Date and Time input controls.
+            // Returns millisec value for a Date object.
+            // Returns 0 date or time control does not have a vailid value.
+            // Args:
+            //  dateCtrl: HTMLInput, type=date obj. ref to date ctrl.
+            //  timeCtrl: HTMLInput, type=time obj. ref to time ctrl.
+            function ParseDateTime(dateCtrl, timeCtrl) {
+                let ms = 0; 
+                let sDate = dateCtrl.value;
+                let sTime = timeCtrl.value;
+                if (sDate.length > 0 && sTime.length > 0) {
+                    let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
+                    let datetime = new Date(sDateTime);
+                    ms = datetime.getTime();
+                }
+                return ms;
+            }
+
+            // Coeffient of friction for calculating engery consumed.
+            let coeffFriction = 0.032; 
+            let accelGravity = 9.81;
+            let kjoulesPerCalorie = 4.184; // Kilojoules per food Calorie.
+
+            // Status msg div.
+            let status = new ctrls.StatusDiv();  ////20180118 added
+        }
         
         // ** Constructor initialization.
+        // Set ref and event handlers for controls used for editing a stats item.
+        if (!ctrlIds) {
+            ctrlIds =  {holderDivId: 'divRecordStatsHistory', // id of holder div. 
+                        holderStatusDiv: 'divStatsEditorStatus', // id of holder div for status msg obj.
+                        editDivId: 'divRecordStatsEdit',     // id of div for editing stats times. 
+                        dateId: 'dateRecordStats', // id of input, type=date 
+                        timeId: 'timeRecordStats', // id of input, type=time
+                        distanceId: 'numRecordStatsDistance', // id of input, type=number
+                        distanceUnitId: 'spanRecordStatsDistanceUnit', // id of span. Displays mi or km based on bEnglishUnit.
+                        ////20180110 bEnglishUnit: true, // boolean. true indicates English for miles, false indicates Metric, km.
+                        runTimeMinsId: 'minsRecordStatsRunTime', // id of input, type=number. 
+                        runTimeSecsId: 'secsRecordStatsRunTime', // id of input,type=number.
+                        doneId: 'buRecordStatsEditDone', // id of button.
+                        cancelId:'buRecordStatsEditCancel'};
+        }
+        var holderDiv = document.getElementById(ctrlIds.holderDivId);
+        var holderStatusDiv  = document.getElementById(ctrlIds.holderStatusDiv); ////20180117
+        var editDiv = document.getElementById(ctrlIds.editDivId);
+        var date = document.getElementById(ctrlIds.dateId);
+        var time = document.getElementById(ctrlIds.timeId);
+        var distance = document.getElementById(ctrlIds.distanceId);
+        var distanceUnit = document.getElementById(ctrlIds.distanceUnitId);
+        ////20180110 var bEnglishUnit = ctrlIds.bEnglishUnit;
+        var runTimeMins = document.getElementById(ctrlIds.runTimeMinsId); 
+        var runTimeSecs = document.getElementById(ctrlIds.runTimeSecsId);
+        var done = document.getElementById(ctrlIds.doneId);
+        var cancel = document.getElementById(ctrlIds.cancelId);
+        if (done)
+            done.addEventListener('click', OnEditDone, false); 
+        if (cancel)
+            cancel.addEventListener('click', OnEditCancel, false);
        
+        ////20180110NotNeeded date.addEventListener('keydown', OnKeyDown, false);
+        ////20180110NotNeeded time.addEventListener('keydown', OnKeyDown, false);
+        distance.addEventListener('keydown', OnKeyDown, false);
+        runTimeMins.addEventListener('keydown', OnKeyDown, false);
+        runTimeSecs.addEventListener('keydown', OnKeyDown, false);
+        distance.addEventListener('focus', SelectNumberOnFocus, false);
+        runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
+        runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
+
+        // Helper object for editing a stats item.
+        var itemEditor = new StatsItemEditor(holderStatusDiv);  ////20180117 added holderStatusDiv 
+
         // Number of items in the list.
         // Note length of list is greater than item count because of separator rows.
         var itemCount = 0; 
@@ -7772,22 +8308,30 @@ Are you sure you want to delete the maps?";
                             },
                             // Initialize this object.
                             // Arg: timestamp: Date object or integer for Date value.
-                            init: function(timeStamp) {
+                            set: function(timeStamp) {
                                 if (typeof(timeStamp) === 'number') {
                                     timeStamp = new Date(timeStamp);
                                 }
                                 this.month = timeStamp.getMonth();
                                 this.year = timeStamp.getFullYear();
+                            }, 
+                            // Resets to invalid.
+                            reset: function() {
+                                this.month = -1;
+                                this.year = -1;
                             }
                             };
 
         
-        if (title) {
-            this.create('div', null, 'stats_history_title')
-        }
+        ////20180106 if (title) {
+        ////20180106     this.create('div', null, 'stats_history_title')
+        ////20180106 }
         
         // Create empty, scrollable list.
         var stats = this.createList(holderDiv, 5); // stats is {headerDiv: div, listDiv: div} obj.
+        ////20180115 var stats = RecordStatsHistory.prototype.createList(holderDiv, 5); // Note: this.createList(..) does not work here.
+        ////20180115 var stats = RecordStatsHistoryBase.createList(holderDiv, 5); // Note: this.createList(..) does not work here.
+
         stats.headerDiv.className = 'stats_history_header'; 
         stats.listDiv.className = 'stats_history_list';     
         // Ref to div to hold a memu for stats history.   
@@ -7795,9 +8339,10 @@ Are you sure you want to delete the maps?";
         menuHolder.className = 'holderStatsHistoryMenu';
         var menuStatsHistory = new ctrls.DropDownControl(menuHolder, "menuStatsHistory", null, null, "img/ws.wigo.menuicon.png"); 
         var menuStatsHistoryValues = [['show_metrics', 'Show Metrics'],        // 0
-                                      ['delete_selected','Delete Selected'],   // 1
-                                      ['clear_selected', 'Clear Selected'],  // 2
-                                    ]; 
+                                      ['add_stats_item', 'Add Stats Item'],    // 1
+                                      ['delete_selected','Delete Selected'],   // 2
+                                      ['clear_selected', 'Clear Selected'],    // 3
+                                     ]; 
         menuStatsHistory.fill(menuStatsHistoryValues);
 
         // Ref to divs for month and year in header.
@@ -7806,10 +8351,33 @@ Are you sure you want to delete the maps?";
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
         yearDiv.className = 'stats_history_year'; 
 
+        
+        // Shows a div for editing a stats item and hides the stats header and list, 
+        // or vice versa.
+        // Arg:
+        ////20180108 //  divEdit: HTML element for edit div.
+        //  bShow: boolean. true indicates to show the edit div.
+        function ShowRecordStatsEditDiv(bShow) { ////20180108 editDiv, removed
+            // Clear and hide stats editor status div regardless of bShow.
+            itemEditor.clearStatus(); ////20180117 added
+            // Hide stats list and header.
+            ShowElement(stats.headerDiv, !bShow);
+            ShowElement(stats.listDiv, !bShow);
+            ////20180108 ShowElement(divEdit, bShow);
+            ShowElement(editDiv, bShow);
+            ////20180110 ShowMapCanvas(!bShow);    
+        }
+
         // Call back handler for selection in menuStatsHistory.
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
+            } else if (dataValue === 'add_stats_item') {
+                ////20180107 ShowRecordStatsEditDiv(divRecordStatsEdit, true);
+                let itemData = itemEditor.newItemData();
+                itemData.nTimeStamp = Date.now();
+                itemEditor.setEditCtrls(itemData);
+                ShowRecordStatsEditDiv(true); ////20180108 editDiv, removed
             } else if (dataValue === 'delete_selected') {
                 ConfirmYesNo("OK to delete all the selected items from local storage?",
                     function(bConfirm){
@@ -7817,6 +8385,7 @@ Are you sure you want to delete the maps?";
                             view.onDeleteRecordStats(itemsSelected); 
                             // Remove selected items from list displayed.
                             DeleteSelections();
+                            that.showMonthDate(); ////20180115 added
                         }
                     }); 
             } else if (dataValue === 'clear_selected') {
@@ -7830,6 +8399,7 @@ Are you sure you want to delete the maps?";
     }
     RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
     RecordStatsHistory.constructor = RecordStatsHistory;
+    var recordStatsHistory = new RecordStatsHistory(this); ////20180115 null;  ////20180115 $$$$ fix.
 
     // Object for extracting metrics from the stats data. 
     function RecordStatsMetrics() {

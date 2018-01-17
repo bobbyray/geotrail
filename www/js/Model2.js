@@ -692,10 +692,41 @@ function wigo_ws_Model() {
         //        element is replaced; otherwise it is added.
         this.setId = function(stats) {  
             var iAt = FindIxOfId(stats.nTimeStamp);
+            /* ////20180110 redo to insert in order if not found.
             if (iAt < 0) {
                 iAt = arRecordStats.length;
             }       
             arRecordStats[iAt] = stats;
+            */ 
+
+            if (iAt < 0) {
+                ////20180110Redo iAt = arRecordStats.length;
+                // Redo to insert before timestamp that stats.nTimeStamp is less than
+                // searching backwards from last element in the array.
+                if (arRecordStats.length == 0) {
+                    arRecordStats[0] = stats;
+                } else {
+                    // Search backwards through the array.
+                    //// $$$$ start here.
+                    let bInserted = false;
+                    let i = arRecordStats.length - 1;
+                    for (i; i >= 0; i--) {
+                        if (stats.nTimeStamp > arRecordStats[i].nTimeStamp) {
+                            // Insert stats before previous item which stats was less than.
+                            // Note: if i=1 >= arrray length, then stats is inserted at the end of the array,
+                            //       which should be the typical case.
+                            arRecordStats.splice(i+1, 0, stats);
+                            bInserted = true;
+                            break;
+                        }
+                    }
+                    if (!bInserted)
+                        arRecordStats[0] = stats;
+                }
+            } else {      
+                arRecordStats[iAt] = stats;
+            }
+
             this.SaveToLocalStorage();    
         };
         // Returns ref to array of all the wigo_ws_GeoTrailRecordStats objects.

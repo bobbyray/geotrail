@@ -959,4 +959,29 @@ label {
     width: 17em;
 }
 
+#divRecordStatsDate,
+#divRecordStatsTime,
+#divRecordStatsDistance,
+#divRecordStatsRunTime,
+divRecordStatsClose {
+    height: 3em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    box-sizing: border-box;
+}
+#minsRecordStatsRunTime,
+#secsRecordStatsRunTime,
+#numRecordStatsDistance {
+    width: 4em;
+    text-align: right;
+    padding-right: 0.4em;
+}
+#buRecordStatsEditDone {
+    margin-left: 20%;
+    height: 2em;
+}
+#buRecordStatsEditCancel {
+    margin-left: 10%;
+    height: 2em;
+}
 
