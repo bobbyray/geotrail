@@ -852,6 +852,7 @@ label {
 /* Stats History List */
 #divRecordStatsHistory {
     width: 100%;
+    z-index: 2;
 }
 
  .stats_history_header {  
@@ -959,13 +960,17 @@ label {
     width: 17em;
 }
 
+#divRecordStatsEdit span {
+    font-size: 1.1em;
+}
+
 #divRecordStatsDate,
 #divRecordStatsTime,
 #divRecordStatsDistance,
 #divRecordStatsRunTime,
-divRecordStatsClose {
+#divRecordStatsClose {
     height: 3em;
-    padding-top: 0.5em;
+    padding-top: 1em;
     padding-bottom: 0.5em;
     box-sizing: border-box;
 }
@@ -975,13 +980,26 @@ divRecordStatsClose {
     width: 4em;
     text-align: right;
     padding-right: 0.4em;
+    font-size: 1.3em; /* ////20180117 added */
 }
+
+
+#dateRecordStats,
+#timeRecordStats {
+    font-size: 1.3em; /* ////20180117 added */
+}
+
 #buRecordStatsEditDone {
     margin-left: 20%;
     height: 2em;
+    font-size: 1.3em; /* ////20180117 added */
 }
 #buRecordStatsEditCancel {
     margin-left: 10%;
     height: 2em;
+    font-size: 1.3em; /* ////20180117 added */
 }
 
+.stats_item_editor_ctrl_error {
+    background-color: lightcoral;
+}

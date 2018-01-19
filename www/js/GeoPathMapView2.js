@@ -126,6 +126,17 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         // Note: {zoomControl: false} is used for map options because the zoomControl
         //       always stays on top, which a problem when Setting dialog is opened.
         map = L.map('map-canvas', { zoomControl: bShowMapCtrls }).setView(latlngMtHood, 13);
+        /* ////2018019 not needed
+        if (!map) {
+            map = L.map('map-canvas', { zoomControl: bShowMapCtrls }).setView(latlngMtHood, 13);
+        } else {
+            if (tileLayer) {
+                //// tileLayer.remove();
+                map.removeLayer(tileLayer);
+                tileLayer = null;
+            }
+        }
+        */
 
         NewTileLayer(function (layer, sError) {
             tileLayer = layer;
