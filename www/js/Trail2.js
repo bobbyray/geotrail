@@ -7505,7 +7505,7 @@ Are you sure you want to delete the maps?";
                 this.showMonthDate(); 
                 this.setListHeight(titleHolder.offsetHeight); 
                 // Set item editor to fill screen so touching map is not a problem.
-                itemEditor.setHeight(titleHolder.offsetHeight);  ////20180119 added
+                itemEditor.setHeight(titleHolder.offsetHeight); 
         };
 
         // Ends showing stats history.
@@ -7596,12 +7596,9 @@ Are you sure you want to delete the maps?";
             item.appendChild(cellDate);
 
             var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
-            ////20180120 cellDistanceRunTime.setAttribute('data-m-distance', recStats.mDistance.toFixed(0)); /////20180120 added
-            ////20180120 cellDistanceRunTime.setAttribute('data-ms-runtime', recStats.msRunTime.toFixed(0)); /////20180120 added
             item.appendChild(cellDistanceRunTime);
             var cellSpeedCalories = this.create('div', null, 'stats_speed_calories');  
             item.appendChild(cellSpeedCalories);
-
 
             // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
             // Display date cell.
@@ -7636,7 +7633,7 @@ Are you sure you want to delete the maps?";
         // Returns wigo_ws_GeoTrailRecordStats obj for the data.
         // Arg:
         //  idItemDiv: string. id of the stats item div in the list.
-        this.getItemData = function(idItemDiv) { ////20180120 added
+        this.getItemData = function(idItemDiv) { 
             let recStats = null;
             let itemDiv = document.getElementById(idItemDiv);
             if (itemDiv) {
@@ -7783,14 +7780,6 @@ Are you sure you want to delete the maps?";
         //      bSelected: boolean. True to indicate element is selected. 
         // Note: A property can be selected and later deselected.
         var itemsSelected = {}; 
-        /* ////20180120 not used
-        // Returns number of properties of itemsSelected, which is its length.
-        function ItemsSelectedLength() {  ////20180120 added
-            let arId = Object.keys(itemsSelected);
-            let nLength = arId.length;
-            return nLength;
-        }
-        */
        
         // Toggles selected for an element in itemsSelected if it exists,
         // otherwise add the added to itemsSelected as selected.
@@ -7890,18 +7879,6 @@ Are you sure you want to delete the maps?";
                 return bSame;
             }
 
-            /* ////20180122 did not work because of precision tolerance converting from miles to meters.
-            // Helper to check if speed (ie distance and runtime) are same.
-            // Returns true if same.
-            // Arg:
-            //  originalData: wigo_ws_GeoTrailRecordStats obj for original item data.
-            //  itemDate: wigo_ws_GeoTrailRecordStats obj for item data to check compared to original.
-            function IsSameSpeed(originalData, itemData) {
-                let bSame = originalData.mDistance === itemData.mDistance && originalData.msRunTime === itemData.msRunTime;
-                return bSame;
-            }
-            */
-
             // Helper to update localStorage for itemData.
             function UpdateLocalStorage() {
                     // Timestamp for itemData to add is unique.
@@ -7924,15 +7901,12 @@ Are you sure you want to delete the maps?";
             ShowRecordStatsEditDiv(false); 
             
             let itemData = itemEditor.getEditData();
-            ////20180120MovedDownSameAsBeforeForAdd let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
             let bAdd = !itemEditor.bEditing;
             if (itemEditor.bEditing) {
                 // Check if timestamp has been changed.
-                //// If changed add new object and delete original.
-                //// If not, update original item except timestamp and save.
                 let bChanged = false; 
                 let originalItemData = itemEditor.getOriginalItemData();
-                if (!itemEditor.isSpeedChanged()) {  ////20180122 was IsSameSpeed(originalItemData, itemData)
+                if (!itemEditor.isSpeedChanged()) {  
                     // Set calorie fields from the original data item because
                     // the speed has not changed. The item data from controls has estimated 
                     // the calorie fields, so want to replace these fields.
@@ -7959,7 +7933,7 @@ Are you sure you want to delete the maps?";
                     view.onDeleteRecordStats({0: originalItemData.nTimeStamp}); 
                 }
             }
-            if (bAdd) { //// Added if, body existed before.
+            if (bAdd) { 
                 let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
                 // Adding new stats item.
                 for (let i=0; itemFound && i < 100; i++) {
@@ -7971,29 +7945,18 @@ Are you sure you want to delete the maps?";
                     }
                 }
                 if (!itemFound) {
-                    /* ////20180121 refactor.
-                    // Timestamp for itemData to add is unique.
-                    // Set itemData in localStorage.
-                    view.onSetRecordStats(itemData);
-                    // Clear the stats list by removing all html child elements.
-                    RemoveAllStatsRows();
-                    // Get the new array of stats data recs from localStorage and
-                    // update (display) the stats list.
-                    that.update(view.onGetRecordStatsList());
-                    that.showMonthDate(); 
-                    */
                     // Set itemData in localStorage.
                     UpdateLocalStorage(); 
                 } else {
                     AlertMsg("Failed to save item data!");
                 }
             }
-            itemEditor.clearItemData(); ////20180120 added. Not sure if needed.
+            itemEditor.clearItemData(); 
         }
 
         // Event handler for Cancel button on edit div.
         function OnEditCancel(event) {
-            itemEditor.clearItemData(); ////20180120 added. Not sure if needed.
+            itemEditor.clearItemData(); 
             ShowRecordStatsEditDiv(false); 
         }
 
@@ -8118,14 +8081,14 @@ Are you sure you want to delete the maps?";
             // Sets title.
             // Arg:
             //  sTitle: string. the title.
-            this.setTitle = function(sTitle) { ////201801223
+            this.setTitle = function(sTitle) { 
                 statsEditInstr.innerHTML = sTitle;
             };
 
             // Set height of control to fill screen, less an amount to shrink.
             // Args:
             //  nShrinkPels: number of pels to shrink the height 
-            this.setHeight = function(nShrinkPels) {  ////20180119  added.
+            this.setHeight = function(nShrinkPels) {  
                 let yBody = document.body.offsetHeight;
                 let yHeight = yBody - nShrinkPels;
                 holderDiv.style.height = yHeight.toFixed(0) + 'px';
@@ -8151,7 +8114,7 @@ Are you sure you want to delete the maps?";
                 // Save ref to itemData.
                 originalItemData = itemData; 
                 // Clear speed changed flag.
-                this.setSpeedChanged(false); ////20180122 added
+                this.setSpeedChanged(false); 
                 // Set starting date.
                 let itemDate = new Date(itemData.nTimeStamp);
                 let nYear = itemDate.getFullYear();
@@ -8216,10 +8179,9 @@ Are you sure you want to delete the maps?";
                     sMsg = "Starting Date/Time must be less than current Date/Time\nof {0}".format(dt.toLocaleString('en-US'));
                     status.addLine(sMsg);
                     IndicateError(date, true);
-                    IndicateError(time, true); ////20180119 added
+                    IndicateError(time, true); 
                     bOk = false;
                 } else {
-                    ////20180119 IndicateError(date, false);
                     // Indicate an error if either date or time is not given.
                     if (date.value.length === 0) {
                         status.addLine("Date must be entered.");
@@ -8284,13 +8246,13 @@ Are you sure you want to delete the maps?";
             // Arg: 
             //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
             // 
-            this.setSpeedChanged = function(bChanged) { ////20180122 added
+            this.setSpeedChanged = function(bChanged) { 
                 bSpeedChanged = bChanged;
             };
             var bSpeedChanged = false; 
 
             // boolean. Returns true is distance or runtime control has been changed.
-            this.isSpeedChanged = function() { ////20180122 added.
+            this.isSpeedChanged = function() { 
                 return bSpeedChanged;
             };
 
@@ -8329,7 +8291,7 @@ Are you sure you want to delete the maps?";
             };
 
             // Clears ref to the items saved by this.setEditCtrls(..).
-            this.clearItemData = function() { ////20180120 added
+            this.clearItemData = function() { 
                 originalItemData = null;
             };
 
@@ -8409,7 +8371,7 @@ Are you sure you want to delete the maps?";
         // Handler for change event for controls that affect a change in speed.
         // Arg:
         //  event: html Event object.
-        function SpeedChangedHandler(event) { ////20180122 added
+        function SpeedChangedHandler(event) { 
             itemEditor.setSpeedChanged(true);
         }
 
@@ -8432,7 +8394,7 @@ Are you sure you want to delete the maps?";
         var holderDiv = document.getElementById(ctrlIds.holderDivId);
         var holderStatusDiv  = document.getElementById(ctrlIds.holderStatusDiv);
         var editDiv = document.getElementById(ctrlIds.editDivId);
-        var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  ////20180121 added 
+        var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
         var time = document.getElementById(ctrlIds.timeId);
         var distance = document.getElementById(ctrlIds.distanceId);
@@ -8447,11 +8409,11 @@ Are you sure you want to delete the maps?";
             cancel.addEventListener('click', OnEditCancel, false);
        
         distance.addEventListener('keydown', OnKeyDown, false);
-        distance.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
+        distance.addEventListener('change', SpeedChangedHandler, false); 
         runTimeMins.addEventListener('keydown', OnKeyDown, false);
-        runTimeMins.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
+        runTimeMins.addEventListener('change', SpeedChangedHandler, false); 
         runTimeSecs.addEventListener('keydown', OnKeyDown, false);
-        runTimeSecs.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
+        runTimeSecs.addEventListener('change', SpeedChangedHandler, false); 
         distance.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
@@ -8468,7 +8430,7 @@ Are you sure you want to delete the maps?";
                             isValid: function(){
                                 // Note: Time for ms value of 0 is 1970-01-01T00:00:00 GMT. For timezone not GMT,
                                 //       the time can be in 1969-12-31. For example for PST (GMT-8), 1969-12-31T16:00:00.
-                                return this.month >= 0 && this.month <= 11 && this.year >= 1969;  ////20180119 was 1970
+                                return this.month >= 0 && this.month <= 11 && this.year >= 1969;  
                             },
                             // Checks for a change. If true, sets this object for new  date.
                             // Args: nMonth, nYear: number for month and year to check.
@@ -8535,14 +8497,13 @@ Are you sure you want to delete the maps?";
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
             } else if (dataValue === 'add_stats_item') {
-                itemEditor.bEditing = false; ////20180120 added
-                itemEditor.setTitle("Add a New Record Stats Item"); ////20180122
+                itemEditor.bEditing = false; 
+                itemEditor.setTitle("Add a New Record Stats Item"); 
                 let itemData = itemEditor.newItemData();
                 itemData.nTimeStamp = Date.now();
                 itemEditor.setEditCtrls(itemData);
                 ShowRecordStatsEditDiv(true); 
-            } else if (dataValue === 'edit_stats_item') { ////20180120 added
-                //// $$$$ write
+            } else if (dataValue === 'edit_stats_item') { 
                 let arId = Object.keys(itemsSelected);
                 if (arId.length === 1) {
                     itemEditor.bEditing = true;
@@ -9225,7 +9186,7 @@ function wigo_ws_Controller() {
     // Gets a record stats obj specified by a timestamp.
     // Arg:
     //  nTimeStamp: number. timestamp in milliseconds to find.
-    view.getRecordStats = function(nTimeStamp) { ////20180120 added
+    view.getRecordStats = function(nTimeStamp) { 
         return model.getRecordStats(nTimeStamp); 
     };
 

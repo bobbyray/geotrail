@@ -458,7 +458,7 @@ function wigo_ws_Model() {
     // Returns null if not found.
     // Arg:
     //  nTimeStamp: number. timestamp in milliseconds to find.
-    this.getRecordStats = function(nTimeStamp) {  ////20180120 added
+    this.getRecordStats = function(nTimeStamp) { 
         return arRecordStats.getId(nTimeStamp);
     };
 
