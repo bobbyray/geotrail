@@ -162,7 +162,6 @@ function wigo_ws_View() {
     //      nId: unique id for gpx path record at server.
     this.onDelete = function (nMode, gpxId) { };
 
-
     // Save the settings paramaters.
     // Handler Signature:
     //  settings: wigo_ws_GeoTrailSettings object for the settings to save.
@@ -174,6 +173,12 @@ function wigo_ws_View() {
     //  Returns: wigo_ws_GeoTrailSettings object for current setting. May be null.
     this.onGetSettings = function () { };
 
+    // Returns record stats for item specified by a timestamp.
+    // Returns: wigo_ws_GeoTrailRecordStats obj or null if not found.
+    // Arg:
+    //  nTimeStamp: number. the timestamp of stats item to find.
+    this.onGetRecordStats = function(nTimeStamp) {return null};
+    
     // Gets the last record stats object for a record trail.
     // Handler signature:
     //  Args: none.
@@ -199,7 +204,8 @@ function wigo_ws_View() {
 
     // Deletes elements from the record stats and saves to localStorage.
     // Arg:
-    //  arEl: [nTimeStame, ...]. Object (not array). List specifying elements to delete.
+    //  arEl: {keyi: nTimeSamp, ...}. Object (not array). List specifying elements to delete.
+    //      keyi: string. keys for ith element.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
     this.onDeleteRecordStats = function(arEl) {}; 
 
@@ -594,7 +600,6 @@ function wigo_ws_View() {
 
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
-        ////20180119 var bOffline = nMode === this.eMode.offline || nMode === this.eMode.record_stats_view;
         map.GoOffline(bOffline);  
 
         // Set default leaflet map click2 handler.
@@ -7089,22 +7094,6 @@ function wigo_ws_View() {
             that.ClearStatus();
             // Inform controller of the mode change, not needed.
             // that.onModeChanged(nMode); // not needed.
-            var bOffline = nMode === that.eMode.offline;
-            ////20180118???? var result = map.GoOffline(bOffline);
-            /* ////20180119 not needed now.
-            if (that.curMode() === that.eMode.record_stats_view) {
-                map.InitializeMap(function(bOk, sMsg){
-                    if (!bOk)  {
-                        that.ClearStatus();
-                        that.AppendStatus("Failed initialize map when returning from Stats History.");
-                        that.AppendStatus(sMsg);
-                    }
-                    that.setModeUI(nMode);
-                });
-            } else {
-                that.setModeUI(nMode);
-            }
-            */
             that.setModeUI(nMode);
         }
 
@@ -7509,13 +7498,14 @@ Are you sure you want to delete the maps?";
         //               Defaults to 0.
         this.open = function(nShrinkPels) {
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
-                ////20180119 ShowMapCanvas(false); 
                 // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
                 this.clearSelections(); 
                 ShowRecordStatsEditDiv(false);  // Hide stats item edit div.  
                 ShowElement(holderDiv, true);
                 this.showMonthDate(); 
                 this.setListHeight(titleHolder.offsetHeight); 
+                // Set item editor to fill screen so touching map is not a problem.
+                itemEditor.setHeight(titleHolder.offsetHeight);  ////20180119 added
         };
 
         // Ends showing stats history.
@@ -7523,7 +7513,6 @@ Are you sure you want to delete the maps?";
             this.clearSelections();
             ShowRecordStatsEditDiv(false);
             ShowElement(holderDiv, false);
-            ////20180119 ShowMapCanvas(true); 
             // Note: Do NOT show map-canvas because it must not be hidden to avoid problem when returning from stats history view.
             };
 
@@ -7607,6 +7596,8 @@ Are you sure you want to delete the maps?";
             item.appendChild(cellDate);
 
             var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
+            ////20180120 cellDistanceRunTime.setAttribute('data-m-distance', recStats.mDistance.toFixed(0)); /////20180120 added
+            ////20180120 cellDistanceRunTime.setAttribute('data-ms-runtime', recStats.msRunTime.toFixed(0)); /////20180120 added
             item.appendChild(cellDistanceRunTime);
             var cellSpeedCalories = this.create('div', null, 'stats_speed_calories');  
             item.appendChild(cellSpeedCalories);
@@ -7640,6 +7631,23 @@ Are you sure you want to delete the maps?";
         this.getItemCount = function() {
             return itemCount;
         };
+
+        // Finds stats data for a stats item in the list.
+        // Returns wigo_ws_GeoTrailRecordStats obj for the data.
+        // Arg:
+        //  idItemDiv: string. id of the stats item div in the list.
+        this.getItemData = function(idItemDiv) { ////20180120 added
+            let recStats = null;
+            let itemDiv = document.getElementById(idItemDiv);
+            if (itemDiv) {
+                let timestamp = itemDiv.getAttribute('data-timestamp');
+                if (timestamp) {
+                    timestamp = Number(timestamp);
+                    recStats = view.getRecordStats(timestamp);
+                }
+            }
+            return recStats;
+        }
 
         // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
         // Arg: 
@@ -7775,6 +7783,14 @@ Are you sure you want to delete the maps?";
         //      bSelected: boolean. True to indicate element is selected. 
         // Note: A property can be selected and later deselected.
         var itemsSelected = {}; 
+        /* ////20180120 not used
+        // Returns number of properties of itemsSelected, which is its length.
+        function ItemsSelectedLength() {  ////20180120 added
+            let arId = Object.keys(itemsSelected);
+            let nLength = arId.length;
+            return nLength;
+        }
+        */
        
         // Toggles selected for an element in itemsSelected if it exists,
         // otherwise add the added to itemsSelected as selected.
@@ -7821,7 +7837,7 @@ Are you sure you want to delete the maps?";
         // Search list of stats items for item identified by a timestamp.
         // Returns HTMLElement for a div. ref to stats item div if found, otherwise null.
         // Arg:
-        //  msTimeStamp 
+        //  sTimeStamp: string. data-timestamp attribute value for the stats item to find.
         function FindStatsItem(sTimeStamp) { 
             let itemDiv, itemDivFound = null;
             let msData;
@@ -7854,41 +7870,130 @@ Are you sure you want to delete the maps?";
 
         // Event handler for Done button on edit div.
         function OnEditDone(event) {
+            // Helper to check if two dates are the same, ignoring millisecond component.
+            // Returns true if same.
+            // Arg:
+            //  msTimeStamp1: number. timestamp in milliseconds for date1 to compare with date2.
+            //  msTimeStamp2: number. timestamp in milliseconds for date2 to compare with date1.
+            // Note: Check year, month, day, hour, minute, and second.
+            //       The millisecond of component is not checked because
+            //       milliseconds is not given as an editor control.
+            function IsSameDate(msTimeStamp1, msTimeStamp2) {
+                let date1 = new Date(msTimeStamp1);
+                let date2 = new Date(msTimeStamp2); 
+                let bSame = date1.getFullYear() === date2.getFullYear() &&
+                            date1.getMonth() === date2.getMonth() &&
+                            date1.getDate() === date2.getDate() &&
+                            date1.getHours() === date2.getHours() &&
+                            date1.getMinutes() === date2.getMinutes() &&
+                            date1.getSeconds() === date2.getSeconds();
+                return bSame;
+            }
+
+            /* ////20180122 did not work because of precision tolerance converting from miles to meters.
+            // Helper to check if speed (ie distance and runtime) are same.
+            // Returns true if same.
+            // Arg:
+            //  originalData: wigo_ws_GeoTrailRecordStats obj for original item data.
+            //  itemDate: wigo_ws_GeoTrailRecordStats obj for item data to check compared to original.
+            function IsSameSpeed(originalData, itemData) {
+                let bSame = originalData.mDistance === itemData.mDistance && originalData.msRunTime === itemData.msRunTime;
+                return bSame;
+            }
+            */
+
+            // Helper to update localStorage for itemData.
+            function UpdateLocalStorage() {
+                    // Timestamp for itemData to add is unique.
+                    // Set itemData in localStorage.
+                    view.onSetRecordStats(itemData);
+                    // Clear the stats list by removing all html child elements.
+                    RemoveAllStatsRows();
+                    // Get the new array of stats data recs from localStorage and
+                    // update (display) the stats list.
+                    that.update(view.onGetRecordStatsList());
+                    that.showMonthDate(); 
+            }
+
             // Quit if stats item controls are not all valid.
             if (!itemEditor.areCtrlsValid()) {
-                return; // Note that an AlertMsg() has been displayed.
+                return; // Note that a status error has been displayed.
             }
 
             // Hide the editor's div.
             ShowRecordStatsEditDiv(false); 
             
             let itemData = itemEditor.getEditData();
-            let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
-            for (let i=0; itemFound && i < 100; i++) {
-                itemData.nTimeStamp++; // Increment timestamp by one millisecond to make it unique.
-                itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
-                if (!itemFound) {
-                    // Now itemData.nTimeStamp is unique.
-                    break;
+            ////20180120MovedDownSameAsBeforeForAdd let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
+            let bAdd = !itemEditor.bEditing;
+            if (itemEditor.bEditing) {
+                // Check if timestamp has been changed.
+                //// If changed add new object and delete original.
+                //// If not, update original item except timestamp and save.
+                let bChanged = false; 
+                let originalItemData = itemEditor.getOriginalItemData();
+                if (!itemEditor.isSpeedChanged()) {  ////20180122 was IsSameSpeed(originalItemData, itemData)
+                    // Set calorie fields from the original data item because
+                    // the speed has not changed. The item data from controls has estimated 
+                    // the calorie fields, so want to replace these fields.
+                    itemData.caloriesKinetic = originalItemData.caloriesKinetic;
+                    itemData.caloriesBurnedCalc = originalItemData.caloriesBurnedCalc;
+                    itemData.caloriesBurnedActual = originalItemData.caloriesBurnedActual;
+                } else {
+                    bChanged = true;
+                }
+                let bSameDate = IsSameDate(originalItemData.nTimeStamp, itemData.nTimeStamp);
+                if (bSameDate) {
+                    // Date entered has not changed. Use timestamp in milliseconds from original data.
+                    // timestamp is key for finding the element to update so must match original date exactly.
+                    itemData.nTimeStamp = originalItemData.nTimeStamp;
+                    if (bChanged) {
+                        // Set itemData in localStorage.
+                        UpdateLocalStorage(); 
+                    }
+                } else {
+                    // Date entered by user has changed. 
+                    // Therefore delete original item from data and add new item.
+                    bChanged = true;
+                    bAdd = true; // Add a new stats item to local data below.
+                    view.onDeleteRecordStats({0: originalItemData.nTimeStamp}); 
                 }
             }
-            if (!itemFound) {
-                // Timestamp for itemData to add is unique.
-                // Set itemData in localStorage.
-                view.onSetRecordStats(itemData);
-                // Clear the stats list by removing all html child elements.
-                RemoveAllStatsRows();
-                // Get the new array of stats data recs from localStorage and
-                // update (display) the stats list.
-                that.update(view.onGetRecordStatsList());
-                that.showMonthDate(); 
-            } else {
-                AlertMsg("Failed to save item data!");
+            if (bAdd) { //// Added if, body existed before.
+                let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
+                // Adding new stats item.
+                for (let i=0; itemFound && i < 100; i++) {
+                    itemData.nTimeStamp++; // Increment timestamp by one millisecond to make it unique.
+                    itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
+                    if (!itemFound) {
+                        // Now itemData.nTimeStamp is unique.
+                        break;
+                    }
+                }
+                if (!itemFound) {
+                    /* ////20180121 refactor.
+                    // Timestamp for itemData to add is unique.
+                    // Set itemData in localStorage.
+                    view.onSetRecordStats(itemData);
+                    // Clear the stats list by removing all html child elements.
+                    RemoveAllStatsRows();
+                    // Get the new array of stats data recs from localStorage and
+                    // update (display) the stats list.
+                    that.update(view.onGetRecordStatsList());
+                    that.showMonthDate(); 
+                    */
+                    // Set itemData in localStorage.
+                    UpdateLocalStorage(); 
+                } else {
+                    AlertMsg("Failed to save item data!");
+                }
             }
+            itemEditor.clearItemData(); ////20180120 added. Not sure if needed.
         }
 
         // Event handler for Cancel button on edit div.
         function OnEditCancel(event) {
+            itemEditor.clearItemData(); ////20180120 added. Not sure if needed.
             ShowRecordStatsEditDiv(false); 
         }
 
@@ -8006,6 +8111,26 @@ Are you sure you want to delete the maps?";
             // number for Calorie conversion efficiency.
             this.calorieConversionEfficiency = 0.10; 
 
+            // boolean flag to indicating editing existing stats item (true),
+            // or adding a new stats item (false).
+            this.bEditing = false; 
+
+            // Sets title.
+            // Arg:
+            //  sTitle: string. the title.
+            this.setTitle = function(sTitle) { ////201801223
+                statsEditInstr.innerHTML = sTitle;
+            };
+
+            // Set height of control to fill screen, less an amount to shrink.
+            // Args:
+            //  nShrinkPels: number of pels to shrink the height 
+            this.setHeight = function(nShrinkPels) {  ////20180119  added.
+                let yBody = document.body.offsetHeight;
+                let yHeight = yBody - nShrinkPels;
+                holderDiv.style.height = yHeight.toFixed(0) + 'px';
+            };
+
             // Sets editor's controls based on itemData.
             // Arg:
             //  itemData: wigo_ws_GeoTrailRecordStats obj. 
@@ -8023,6 +8148,10 @@ Are you sure you want to delete the maps?";
                     return digits;
                 }
 
+                // Save ref to itemData.
+                originalItemData = itemData; 
+                // Clear speed changed flag.
+                this.setSpeedChanged(false); ////20180122 added
                 // Set starting date.
                 let itemDate = new Date(itemData.nTimeStamp);
                 let nYear = itemDate.getFullYear();
@@ -8045,6 +8174,7 @@ Are you sure you want to delete the maps?";
                 runTimeMins.value = runTime.getAllMins();
                 runTimeSecs.value = runTime.getSec();
             };
+            let originalItemData = null; // wigo_ws_GeoTrailRecordStats obj saved by this.setEditCtrls(..). 
 
             // Checks if control values are valid.
             // Shows error msg in status div for an invalid control value and sets
@@ -8086,9 +8216,24 @@ Are you sure you want to delete the maps?";
                     sMsg = "Starting Date/Time must be less than current Date/Time\nof {0}".format(dt.toLocaleString('en-US'));
                     status.addLine(sMsg);
                     IndicateError(date, true);
+                    IndicateError(time, true); ////20180119 added
                     bOk = false;
                 } else {
-                    IndicateError(date, false);
+                    ////20180119 IndicateError(date, false);
+                    // Indicate an error if either date or time is not given.
+                    if (date.value.length === 0) {
+                        status.addLine("Date must be entered.");
+                        IndicateError(date, true);
+                        bOk = false;
+                    } else if (time.value.length === 0) {
+                        status.addLine("Time must be given.");
+                        IndicateError(time, true);
+                        bOk = false;
+                    } else {
+                        // date and time are ok.
+                        IndicateError(date, false);
+                        IndicateError(time, false);
+                    }
                 }
                 // Check that distance is not negative.
                 let dist = GetNumFromCtrl(distance);
@@ -8133,7 +8278,21 @@ Are you sure you want to delete the maps?";
                 }
 
                 return bOk;
-            }
+            };
+
+            // Sets flag to indicated speed has changed.
+            // Arg: 
+            //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
+            // 
+            this.setSpeedChanged = function(bChanged) { ////20180122 added
+                bSpeedChanged = bChanged;
+            };
+            var bSpeedChanged = false; 
+
+            // boolean. Returns true is distance or runtime control has been changed.
+            this.isSpeedChanged = function() { ////20180122 added.
+                return bSpeedChanged;
+            };
 
             // Returns new wigo_ws_GeoTrailRecordStats object based on values in the editor's ctrls.
             this.getEditData = function() {
@@ -8167,14 +8326,18 @@ Are you sure you want to delete the maps?";
             // Clears the status div so that it is not shown.
             this.clearStatus = function() {  
                 status.clear();
-            }
+            };
 
-            // Blur all ctrls that might have soft keyboard showing.
-            distance.blur();
-            runTimeMins.blur();
-            runTimeSecs.blur();
-            date.blur();
-            time.blur();
+            // Clears ref to the items saved by this.setEditCtrls(..).
+            this.clearItemData = function() { ////20180120 added
+                originalItemData = null;
+            };
+
+            // Returns ref to original item data saved by this.setEditCtrls(..);
+            // Returns: wigo_ws_GeoTrailRecordStats obj ref.
+            this.getOriginalItemData = function() {
+                return originalItemData;
+            };
 
             // Returns new wigo_ws_GeoTrailRecordStats object.
             this.newItemData = function() {
@@ -8206,6 +8369,10 @@ Are you sure you want to delete the maps?";
                     let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
                     let datetime = new Date(sDateTime);
                     ms = datetime.getTime();
+                } else if (sDate.length > 0) {
+                    let sDateFmt = "{0}".format(sDate);   
+                    let date = new Date(sDateFmt);
+                    ms = date.getTime();
                 }
                 return ms;
             }
@@ -8217,14 +8384,42 @@ Are you sure you want to delete the maps?";
 
             // Status msg div.
             let status = new ctrls.StatusDiv(); 
+
+            // Blur all ctrls that might have soft keyboard showing.
+            distance.blur();
+            runTimeMins.blur();
+            runTimeSecs.blur();
+            date.blur();
+            time.blur();
         }
-        
+
+        // Shows a div for editing a stats item and hides the stats header and list, 
+        // or vice versa.
+        // Arg:
+        //  bShow: boolean. true indicates to show the edit div.
+        function ShowRecordStatsEditDiv(bShow) { 
+            // Clear and hide stats editor status div regardless of bShow.
+            itemEditor.clearStatus(); 
+            // Hide stats list and header.
+            ShowElement(stats.headerDiv, !bShow);
+            ShowElement(stats.listDiv, !bShow);
+            ShowElement(editDiv, bShow);
+        }
+
+        // Handler for change event for controls that affect a change in speed.
+        // Arg:
+        //  event: html Event object.
+        function SpeedChangedHandler(event) { ////20180122 added
+            itemEditor.setSpeedChanged(true);
+        }
+
         // ** Constructor initialization.
         // Set ref and event handlers for controls used for editing a stats item.
         if (!ctrlIds) {
             ctrlIds =  {holderDivId: 'divRecordStatsHistory', // id of holder div. 
                         holderStatusDiv: 'divStatsEditorStatus', // id of holder div for status msg obj.
                         editDivId: 'divRecordStatsEdit',     // id of div for editing stats times. 
+                        statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
                         timeId: 'timeRecordStats', // id of input, type=time
                         distanceId: 'numRecordStatsDistance', // id of input, type=number
@@ -8237,6 +8432,7 @@ Are you sure you want to delete the maps?";
         var holderDiv = document.getElementById(ctrlIds.holderDivId);
         var holderStatusDiv  = document.getElementById(ctrlIds.holderStatusDiv);
         var editDiv = document.getElementById(ctrlIds.editDivId);
+        var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  ////20180121 added 
         var date = document.getElementById(ctrlIds.dateId);
         var time = document.getElementById(ctrlIds.timeId);
         var distance = document.getElementById(ctrlIds.distanceId);
@@ -8251,8 +8447,11 @@ Are you sure you want to delete the maps?";
             cancel.addEventListener('click', OnEditCancel, false);
        
         distance.addEventListener('keydown', OnKeyDown, false);
+        distance.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
         runTimeMins.addEventListener('keydown', OnKeyDown, false);
+        runTimeMins.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
         runTimeSecs.addEventListener('keydown', OnKeyDown, false);
+        runTimeSecs.addEventListener('change', SpeedChangedHandler, false); ////20180122 added
         distance.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
@@ -8267,7 +8466,9 @@ Are you sure you want to delete the maps?";
         // Object to detect change in current month and year.
         var curMonthYear = {month: -1, year: -1,
                             isValid: function(){
-                                return this.month >= 0 && this.month <= 11 && this.year >= 1970;
+                                // Note: Time for ms value of 0 is 1970-01-01T00:00:00 GMT. For timezone not GMT,
+                                //       the time can be in 1969-12-31. For example for PST (GMT-8), 1969-12-31T16:00:00.
+                                return this.month >= 0 && this.month <= 11 && this.year >= 1969;  ////20180119 was 1970
                             },
                             // Checks for a change. If true, sets this object for new  date.
                             // Args: nMonth, nYear: number for month and year to check.
@@ -8317,8 +8518,9 @@ Are you sure you want to delete the maps?";
         var menuStatsHistory = new ctrls.DropDownControl(menuHolder, "menuStatsHistory", null, null, "img/ws.wigo.menuicon.png"); 
         var menuStatsHistoryValues = [['show_metrics', 'Show Metrics'],        // 0
                                       ['add_stats_item', 'Add Stats Item'],    // 1
-                                      ['delete_selected','Delete Selected'],   // 2
-                                      ['clear_selected', 'Clear Selected'],    // 3
+                                      ['edit_stats_item','Edit Stats Item'],   // 2
+                                      ['delete_selected','Delete Selected'],   // 3
+                                      ['clear_selected', 'Clear Selected'],    // 4
                                      ]; 
         menuStatsHistory.fill(menuStatsHistoryValues);
 
@@ -8327,30 +8529,31 @@ Are you sure you want to delete the maps?";
         monthDiv.className = 'stats_history_month'; 
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
         yearDiv.className = 'stats_history_year'; 
-
         
-        // Shows a div for editing a stats item and hides the stats header and list, 
-        // or vice versa.
-        // Arg:
-        //  bShow: boolean. true indicates to show the edit div.
-        function ShowRecordStatsEditDiv(bShow) { 
-            // Clear and hide stats editor status div regardless of bShow.
-            itemEditor.clearStatus(); 
-            // Hide stats list and header.
-            ShowElement(stats.headerDiv, !bShow);
-            ShowElement(stats.listDiv, !bShow);
-            ShowElement(editDiv, bShow);
-        }
-
         // Call back handler for selection in menuStatsHistory.
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
             } else if (dataValue === 'add_stats_item') {
+                itemEditor.bEditing = false; ////20180120 added
+                itemEditor.setTitle("Add a New Record Stats Item"); ////20180122
                 let itemData = itemEditor.newItemData();
                 itemData.nTimeStamp = Date.now();
                 itemEditor.setEditCtrls(itemData);
                 ShowRecordStatsEditDiv(true); 
+            } else if (dataValue === 'edit_stats_item') { ////20180120 added
+                //// $$$$ write
+                let arId = Object.keys(itemsSelected);
+                if (arId.length === 1) {
+                    itemEditor.bEditing = true;
+                    itemEditor.setTitle("Edit a Record Stats Item"); 
+                    let itemData = that.getItemData(arId[0]);
+                    itemEditor.setEditCtrls(itemData);
+                    ShowRecordStatsEditDiv(true);
+                } else {
+                    AlertMsg('Select only one item to edit.');
+                }
+
             } else if (dataValue === 'delete_selected') {
                 ConfirmYesNo("OK to delete all the selected items from local storage?",
                     function(bConfirm){
@@ -9019,6 +9222,13 @@ function wigo_ws_Controller() {
         return model.getLastRecordStats();
     };  
 
+    // Gets a record stats obj specified by a timestamp.
+    // Arg:
+    //  nTimeStamp: number. timestamp in milliseconds to find.
+    view.getRecordStats = function(nTimeStamp) { ////20180120 added
+        return model.getRecordStats(nTimeStamp); 
+    };
+
     // Gets list of recorded stats.
     // Arg: none.
     // Returns: Array of wigo_ws_GeoTrailRecordStat objects.
@@ -9053,7 +9263,8 @@ function wigo_ws_Controller() {
 
     // Deletes elements from the record stats and saves to localStorage.
     // Arg:
-    //  arEl: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
+    //  arEl: {keyi: timestamp, ...}. Object (not array). List specifying elements to delete.
+    //      keyi: string. key for ith element.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
     view.onDeleteRecordStats = function(arEl) { 
         model.deleteRecordStats(arEl);

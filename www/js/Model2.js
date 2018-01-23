@@ -443,7 +443,7 @@ function wigo_ws_Model() {
 
     // Deletes elements from record stats array and saves to localStorage.
     // Arg:
-    //  arElSpec: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
+    //  arElSpec: {nTimeStamp: number, ...}. Object (not array). List specifying elements to delete.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
     this.deleteRecordStats = function(arEl) { 
         arRecordStats.DeleteEls(arEl);
@@ -452,19 +452,27 @@ function wigo_ws_Model() {
     // Returns ref to last wigo_ws_GeoTrailRecordStats in this array.
     this.getLastRecordStats = function() {
         return arRecordStats.getLast();
-    }
+    };
+
+    // Returns ref to wigo_ws_GeoTrailRecordStats in this array specified by a timestamp.
+    // Returns null if not found.
+    // Arg:
+    //  nTimeStamp: number. timestamp in milliseconds to find.
+    this.getRecordStats = function(nTimeStamp) {  ////20180120 added
+        return arRecordStats.getId(nTimeStamp);
+    };
 
     // Sets settings in localStorage.
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for the settings.
     this.setSettings = function (settings) {
         geoTrailSettings.SaveToLocalStorage(settings);
-    }
+    };
 
     // Returns current settings, a wigo_ws_GeoTrailSettings object.
     this.getSettings = function () {
         return geoTrailSettings.getSettings();
-    }
+    };
 
     // Sets version in localStorage.
     this.setVersion = function(version) {
@@ -720,6 +728,20 @@ function wigo_ws_Model() {
 
             this.SaveToLocalStorage();    
         };
+
+        // Returns ref to record stats obj specified by a timestamp.
+        // Returns: wigo_ws_GeoTrailRecordStats ref or null if not found.
+        // Arg:
+        //  nTimeStamp: number. timestamp in milliseconds to find.
+        this.getId = function(nTimeStamp) {
+            var recStats = null;
+            var iAt = FindIxOfId(nTimeStamp);
+            if (iAt >= 0) {
+                recStats = arRecordStats[iAt];
+            }
+            return recStats;
+        };
+
         // Returns ref to array of all the wigo_ws_GeoTrailRecordStats objects.
         this.getAll = function() {
             return arRecordStats;
@@ -753,7 +775,8 @@ function wigo_ws_Model() {
         // Deletes elements (wigo_ws_GeoTrailRecordStats objs) from the array.
         // Saves updated array to localStorage.
         // Arg:
-        //  arEl: [nTimeStamp, ...]. Object (not array). List specifying elements to delete.
+        //  arEl: {keyi: nTimeStamp, ...}. Object (not array). List specifying elements to delete.
+        //      keyi: string. key for ith element.
         //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
         this.DeleteEls = function(arEl) { 
             let bChanged = false;

@@ -980,24 +980,24 @@ label {
     width: 4em;
     text-align: right;
     padding-right: 0.4em;
-    font-size: 1.3em; /* ////20180117 added */
+    font-size: 1.3em; 
 }
 
 
 #dateRecordStats,
 #timeRecordStats {
-    font-size: 1.3em; /* ////20180117 added */
+    font-size: 1.3em; 
 }
 
 #buRecordStatsEditDone {
     margin-left: 20%;
     height: 2em;
-    font-size: 1.3em; /* ////20180117 added */
+    font-size: 1.3em; 
 }
 #buRecordStatsEditCancel {
     margin-left: 10%;
     height: 2em;
-    font-size: 1.3em; /* ////20180117 added */
+    font-size: 1.3em; 
 }
 
 .stats_item_editor_ctrl_error {
