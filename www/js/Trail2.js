@@ -8066,8 +8066,14 @@ Are you sure you want to delete the maps?";
             };
         }
 
+
+        function StatsMetricsMgr(holder) {
+
+        }
+
+
         // Helper object for editing a stats item.
-        function StatsItemEditor(holderStatusDiv) {
+        function StatsItemEditor() { 
             // number for body mass in kilograms.
             this.kgBodyMass = 50.0; 
             
@@ -8379,7 +8385,6 @@ Are you sure you want to delete the maps?";
         // Set ref and event handlers for controls used for editing a stats item.
         if (!ctrlIds) {
             ctrlIds =  {holderDivId: 'divRecordStatsHistory', // id of holder div. 
-                        holderStatusDiv: 'divStatsEditorStatus', // id of holder div for status msg obj.
                         editDivId: 'divRecordStatsEdit',     // id of div for editing stats times. 
                         statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
@@ -8392,7 +8397,6 @@ Are you sure you want to delete the maps?";
                         cancelId:'buRecordStatsEditCancel'};
         }
         var holderDiv = document.getElementById(ctrlIds.holderDivId);
-        var holderStatusDiv  = document.getElementById(ctrlIds.holderStatusDiv);
         var editDiv = document.getElementById(ctrlIds.editDivId);
         var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
@@ -8419,7 +8423,7 @@ Are you sure you want to delete the maps?";
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
 
         // Helper object for editing a stats item.
-        var itemEditor = new StatsItemEditor(holderStatusDiv);  
+        var itemEditor = new StatsItemEditor(); 
 
         // Number of items in the list.
         // Note length of list is greater than item count because of separator rows.
@@ -8496,6 +8500,7 @@ Are you sure you want to delete the maps?";
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
                 AlertMsg("Show Metrics goes here");
+                // $$$$ write 
             } else if (dataValue === 'add_stats_item') {
                 itemEditor.bEditing = false; 
                 itemEditor.setTitle("Add a New Record Stats Item"); 
