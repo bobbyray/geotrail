@@ -6061,10 +6061,10 @@ function wigo_ws_View() {
         // Returns literal object for speed:
         //  speed: number. speed value.
         //  unit:  string: unit for speed:
-        //         For English: MPH
+        //         For English: mph
         //           mph is for miles per hour.
-        //         For Metric: KPM
-        //           mph is for kilometers per hour.
+        //         For Metric: kpm
+        //           kph is for kilometers per hour.
         //  text: string. speed value with unit suffix.
         // Args:
         //  mLen: number. Length (distance) in meters.
@@ -7465,7 +7465,8 @@ Are you sure you want to delete the maps?";
         fsmEdit.DoEditTransition(nValue);
     };
 
-    var RecordStatsHistoryBase = new ctrls.ScrollableListBase(); 
+    ////20180123 var RecordStatsHistoryBase = new ctrls.ScrollableListBase(); 
+    var objScrollableListBase = new ctrls.ScrollableListBase(); 
     // Composite control for displaying history of recorded stats. 
     // Constructor args:
     //  view: ref to wigo_ws_View object.
@@ -7500,18 +7501,22 @@ Are you sure you want to delete the maps?";
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
                 this.clearSelections(); 
-                ShowRecordStatsEditDiv(false);  // Hide stats item edit div.  
+                ShowRecordStatsEditDiv(false);  // Hide stats item edit div. 
+                ShowRecordStatsMetricsDiv(false); // Hide stats metrics report div. ////20180123 added
                 ShowElement(holderDiv, true);
                 this.showMonthDate(); 
                 this.setListHeight(titleHolder.offsetHeight); 
                 // Set item editor to fill screen so touching map is not a problem.
                 itemEditor.setHeight(titleHolder.offsetHeight); 
+                // Set metrics report to fill screen.
+                metricsReport.setListHeight(titleHolder.offsetHeight); ////20180123 added
         };
 
         // Ends showing stats history.
         this.close =function() {
             this.clearSelections();
             ShowRecordStatsEditDiv(false);
+            ShowRecordStatsMetricsDiv(false); // Hide stats metrics report div. ////20180123 added
             ShowElement(holderDiv, false);
             // Note: Do NOT show map-canvas because it must not be hidden to avoid problem when returning from stats history view.
             };
@@ -8067,10 +8072,114 @@ Are you sure you want to delete the maps?";
         }
 
 
-        function StatsMetricsMgr(holder) {
+        // Object for displaying stats metrics.
+        // ScrollableListBase is the base class. Use this.setListHeight(nShrinkPels) to 
+        // set the scroll height for the list.
+        // Class Names for CSS Formatting: 
+        //  RecordStatsMetricsReport  -- title div
+        //  RecordStatsMetricsReportCloseDiv -- div for Close button
+        //  RecordStatsMetricsReportCloseBtn -- close button
+        //  StatsMetricsReportSectionHeader -- section div
+        //  StatsMetricsReportLine -- line div under a section.
+        //  StatsMetricsReportLabel -- span for label in line div.
+        //  StatsMetricsReportValue -- span for value in line div.
+        function StatsMetricsReport() { ////20180123 added
+            //// $$$$ write
+            // Fills the report based on the recordStatsMetrics obj.
+            this.fill = function() {
+                var recStats = recordStatsMetrics.getCurrent();
+                if (!recStats)
+                    return; // Should not happen.
+                // Current meterics.
+                var value = FormDistanceSpeed(recStats);
+                lineCurrentDistance.value.innerText = value.distance;
+                lineCurrentSpeed.value.innerText = value.speed;
+                // Best Monthly (last 30 days) metrics.
+                value = FormDistanceSpeed(recordStatsMetrics.getBestMonthlyDistance())
+                var sLine = "{0} at {1}".format(value.distance, value.speed)
+                lineBestMonthlyDistance.value.innerText = sLine;
+                value = FormDistanceSpeed(recordStatsMetrics.getBestMonthlySpeed());
+                sLine = "{0} over {1}".format(value.speed, value.distance);
+                lineBestMonthlySpeed.value.innerText = sLine;
+                // Best Metrics ever.
+                value = FormDistanceSpeed(recordStatsMetrics.getBestDistance());
+                sLine = "{0} at {1}".format(value.distance, value.speed);
+                lineBestDistance.value.innerText = sLine;
+                value = FormDistanceSpeed(recordStatsMetrics.getBestSpeed());
+                sLine = "{0} over {1}".format(value.speed, value.distance);
+                lineBestSpeed.value.innerText = sLine;
+            }
+
+            function FormDistanceSpeed(recStats) {
+                var sDistance = lc.to(recStats.mDistance);
+                var oSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000);
+                return {distance: sDistance, speed: oSpeed.text};
+            }
+
+            // Adds a section header to the report list.
+            // Arg:
+            //  sHeader: string. text for the header. 
+            function AddSectionHeader(sHeader) {
+                var item = that.addItem(metrics.listDiv, 0);
+                item.className = 'StatsMetricsReportSectionHeader';
+                item.innerHTML = "<h3>{0}</h3>".format(sHeader);
+            }
+
+            // ** Private members
+            // Add a line to the report list.
+            // Returns: {item: div, label: span, value: span} object.
+            //      item: HTML Div element ref for the item containing the label and value.
+            //      label HTML Span element ref for the label.
+            //      value HTML Span elenet ref for the value.
+            // Arg:
+            //  sLabel: string. text for a label.
+            //  sValue: string. text for a value. 
+            function AddLine(sLabel, sValue) {
+                var item = that.addItem(metrics.listDiv, 0);
+                item.className = 'StatsMetricsReportLine';
+                var label = that.create('span', null, 'StatsMetricsReportLabel');
+                label.innerText = sLabel;
+                var value = that.create('span', null, 'StatsMetricsReportValue');
+                value.innerHTML = sValue;
+                item.appendChild(label);
+                item.appendChild(value);
+                return {item: item, label: label, value: value};
+            }
+
+            // ** Constructor initialization.
+            var that = this;
+            // Create empty, scrollable list.
+            var metrics = this.createList(metricsDiv, 2); // metrics is {headerDiv: div, listDiv: div} obj.
+            var titleDiv = metrics.headerDiv.getElementsByClassName('wigo_ws_cell0')[0]; 
+            titleDiv.className = 'RecordStatsMetricsReport';
+            titleDiv.innerHTML = '<h2>Metrics Report</h2>';
+            var cell1 = metrics.headerDiv.getElementsByClassName('wigo_ws_cell1')[0];
+            cell1.className = 'RecordStatsMetricsReportCloseDiv';
+            var buClose = this.create('button', null, 'RecordStatsMetricsReportCloseBtn');
+            buClose.innerHTML = 'Close';  ////20180124 added
+            ////20180124 buClose.setAttribute('value', 'Close');
+            cell1.appendChild(buClose);
+
+            // Initialize each section with label and empty value.
+            var headerCurrentMetrics = AddSectionHeader('Current Metrics');
+            var lineCurrentDistance = AddLine('Distance: ', '');
+            var lineCurrentSpeed = AddLine('Speed: ', '');
+            
+            var headerBestMonthly = AddSectionHeader('Best Metrics for 30 Days');
+            var lineBestMonthlyDistance = AddLine('Longest Distance: ', '');
+            var lineBestMonthlySpeed = AddLine('Fastest Speed: ', '' );
+            
+            var headerBestMetrics = AddSectionHeader('Best Metrics Ever');
+            var lineBestDistance = AddLine('Longest Distance: ', '');
+            var lineBestSpeed = AddLine('Fastest Speed: ', '' );
+
+            buClose.addEventListener('click', function(event) {
+                ShowRecordStatsMetricsDiv(false);
+            }, false);
 
         }
-
+        StatsMetricsReport.prototype = objScrollableListBase;
+        StatsMetricsReport.constructor = StatsMetricsReport;
 
         // Helper object for editing a stats item.
         function StatsItemEditor() { 
@@ -8366,12 +8475,25 @@ Are you sure you want to delete the maps?";
         // Arg:
         //  bShow: boolean. true indicates to show the edit div.
         function ShowRecordStatsEditDiv(bShow) { 
-            // Clear and hide stats editor status div regardless of bShow.
+            // Clear stats editor status div regardless of bShow.
             itemEditor.clearStatus(); 
             // Hide stats list and header.
             ShowElement(stats.headerDiv, !bShow);
             ShowElement(stats.listDiv, !bShow);
+            // Show the edit div.
             ShowElement(editDiv, bShow);
+        }
+
+        // Show a div the metrics report and hides the stats header and list,
+        // or vice versa.
+        // Arg:
+        //  bShow: boolean. true indicates to show the metrics div.
+        function ShowRecordStatsMetricsDiv(bShow) { ////20180123 added
+            // Hide stats list and header.
+            ShowElement(stats.headerDiv, !bShow);
+            ShowElement(stats.listDiv, !bShow);
+            // Show the metrics div.
+            ShowElement(metricsDiv, bShow);
         }
 
         // Handler for change event for controls that affect a change in speed.
@@ -8385,6 +8507,7 @@ Are you sure you want to delete the maps?";
         // Set ref and event handlers for controls used for editing a stats item.
         if (!ctrlIds) {
             ctrlIds =  {holderDivId: 'divRecordStatsHistory', // id of holder div. 
+                        metricsDivId: 'divRecordStatsMetrics', // id of div for showing a stats metrics report 
                         editDivId: 'divRecordStatsEdit',     // id of div for editing stats times. 
                         statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
@@ -8397,6 +8520,7 @@ Are you sure you want to delete the maps?";
                         cancelId:'buRecordStatsEditCancel'};
         }
         var holderDiv = document.getElementById(ctrlIds.holderDivId);
+        var metricsDiv = document.getElementById(ctrlIds.metricsDivId);  ////20180123 added.
         var editDiv = document.getElementById(ctrlIds.editDivId);
         var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
@@ -8424,6 +8548,8 @@ Are you sure you want to delete the maps?";
 
         // Helper object for editing a stats item.
         var itemEditor = new StatsItemEditor(); 
+        // Helper object for displaying a stats metrics report.
+        var metricsReport = new StatsMetricsReport(); ////20180123 added
 
         // Number of items in the list.
         // Note length of list is greater than item count because of separator rows.
@@ -8499,8 +8625,10 @@ Are you sure you want to delete the maps?";
         // Call back handler for selection in menuStatsHistory.
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
-                AlertMsg("Show Metrics goes here");
-                // $$$$ write 
+                ////20180124 AlertMsg("Show Metrics goes here");
+                //// $$$$ write
+                metricsReport.fill();
+                ShowRecordStatsMetricsDiv(true); // Show stats metrics report div. ////20180123 added
             } else if (dataValue === 'add_stats_item') {
                 itemEditor.bEditing = false; 
                 itemEditor.setTitle("Add a New Record Stats Item"); 
@@ -8539,7 +8667,8 @@ Are you sure you want to delete the maps?";
         var scrollComplete = this.newOnScrollComplete(stats.listDiv); 
         scrollComplete.onScrollComplete = OnScrollComplete; // Attach callback for scroll complete event.
     }
-    RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
+    ////20180123 RecordStatsHistory.prototype = new ctrls.ScrollableListBase();
+    RecordStatsHistory.prototype = objScrollableListBase; 
     RecordStatsHistory.constructor = RecordStatsHistory;
     var recordStatsHistory = new RecordStatsHistory(this); 
 
@@ -8634,6 +8763,30 @@ Are you sure you want to delete the maps?";
             }
         };
 
+        // Returns ref to wigo_ws_GeoTrailRecordStats object for current stats.
+        this.getCurrent = function() {
+            return recCurrent;
+        }
+
+        // Returns ref to wigo_ws_GeoTrailRecordStats object for longest distance.
+        this.getBestDistance = function() {
+            return recBestDistance
+        };
+        
+        // Returns ref to wigo_ws_GeoTrailRecordStats object for longest distance in last 30 days.
+        this.getBestMonthlyDistance = function() {
+            return recBestMonthlyDistance
+        };
+
+        // Returns ref to wigo_ws_GeoTrailRecordStats object for best speed.
+        this.getBestSpeed = function() {
+            return recBestSpeed;
+        }
+
+        // Returns ref to wigo_ws_GeoTrailRecordStats object for best speed in last 30 days.
+        this.getBestMonthlySpeed = function() {
+            return recBestMonthlySpeed
+        };
 
         // Returns true if recStats is ref to stats obj for the best distance.
         // Arg:
@@ -8752,6 +8905,17 @@ Are you sure you want to delete the maps?";
             }
             return s;
         };
+
+        /* ////20180124 not needed, undo 
+        // Calculates speed in meters per second for recStats obj.
+        // Returns: number. the calculated speed.
+        // Arg: 
+        //  recStats: wigo_ws_GeoTrailRecordStats object for which speed is calculated.
+        function CalcSpeedMPS(recStats) { ////20180124
+            let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
+            return speed;            
+        }
+        */
 
         var msOneDay = 24 * 60 * 60 * 1000;
         var msMonth = 30 * msOneDay; // Time for 30 days, one month, in milliseconds.

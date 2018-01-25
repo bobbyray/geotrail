@@ -1003,3 +1003,19 @@ label {
 .stats_item_editor_ctrl_error {
     background-color: lightcoral;
 }
+
+#divRecordStatsMetrics .wigo_ws_list {
+    clear:  both;
+}
+
+.RecordStatsMetricsReport {
+    float: left;
+    width: 75%;
+}
+.RecordStatsMetricsReportCloseDiv {
+    float: left;
+    width: 20%;
+}
+.RecordStatsMetricsReportCloseBtn{
+    margin-top: 20%;
+}
