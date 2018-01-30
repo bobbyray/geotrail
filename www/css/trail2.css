@@ -1004,18 +1004,45 @@ label {
     background-color: lightcoral;
 }
 
-#divRecordStatsMetrics .wigo_ws_list {
-    clear:  both;
-}
-
 .RecordStatsMetricsReport {
     float: left;
     width: 75%;
+    font-weight: bold;
+    font-size: 2.0em; /* ////20180129 added */
+    margin-top: 3%; /* ////20180129 added */
 }
 .RecordStatsMetricsReportCloseDiv {
     float: left;
     width: 20%;
+    margin-top: 4%;
 }
+#divRecordStatsMetrics .wigo_ws_list_header {
+    height: 4.0em;
+}
+#divRecordStatsMetrics .wigo_ws_list {
+    clear:  both;
+    overflow-y: scroll;
+}
+/* ////20180129 
 .RecordStatsMetricsReportCloseBtn{
-    margin-top: 20%;
+    margin-top: 1.5em;
+}
+*/
+.StatsMetricsReportSectionHeader { /* ////20180129 try */
+    font-weight: bold;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    font-size: 1.2 em;  /* ////20180129 added */
+}
+.StatsMetricsReportSectionHeader {
+    clear: both;
+    float: left;
+}
+.StatsMetricsReportLabel {
+    clear: both;
+    float: left;
+    width: 30%
+}
+.StatsMetricsReportValue {
+    float: left;
 }

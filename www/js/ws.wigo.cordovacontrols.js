@@ -1155,7 +1155,7 @@ function Wigo_Ws_CordovaControls() {
             if (!(holderDiv instanceof HTMLElement))
                 throw new Error("Container for ScrollableListBase must be a div.");
 
-            ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
+            var ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
             if (typeof nCells === 'number') {
                 var className;
                 for (let i=0; i < nCells; i++) {
@@ -1167,14 +1167,14 @@ function Wigo_Ws_CordovaControls() {
             holderDiv.appendChild(ctrl.listDiv);
             return ctrl;
         };
-        var ctrl; // Set by this.createList(..)
-        
+        ////20180128 var ctrl; // Set by this.createList(..)
         // Sets height of list. Needs to be set for scrolling to occur.
         // Args:
-        //  nShrinkPels: number, optional. number of pels to reduce calculated height..
+        //  ctrl: {headerDiv: HTMLElement, listDiv: HTMLElement} obj returned by this.createList.
+        //  nShrinkPels: number, optional. number of pels to reduce calculated height.
         //                    Defaults to 0.
         // Note: Calculates list height = height of body - nShrinkPels.
-        this.setListHeight = function(nShrinkPels) {  
+        this.setListHeight = function(ctrl, nShrinkPels) {  
             if (!ctrl)
                 return; 
             // Set height for scrolling 
@@ -1184,12 +1184,23 @@ function Wigo_Ws_CordovaControls() {
             var yHeader = ctrl.headerDiv.offsetHeight;
             var yScroll = yBody - yHeader - nShrinkPels;
             ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
+            /* ////20180129 does not work
+            if (!ctrl)
+                return; 
+            // Set height for scrolling 
+            if (typeof(nShrinkPels) !== 'number')
+                nShrinkPels = 0;
+            var yContainer = ctrl.headerDiv.parentElement.clientHeight;
+            var yHeader = ctrl.headerDiv.offsetHeight;
+            var yScroll = yContainer - yHeader - nShrinkPels;
+            ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
+            */
         };
 
         // Adds an item to the listDiv.
         // Args:
         // listDiv: ref to HTMLElement for listDiv.
-        // nCells: number of child divs added to listDiv. May be 0.
+        // nCells: number of child divs added to created item. May be 0.
         // Returns: HTMLElement. ref to element  that has been created and added to listDiv.
         this.addItem = function(listDiv, nCells) {
             if (!(listDiv instanceof HTMLElement))
@@ -1206,6 +1217,27 @@ function Wigo_Ws_CordovaControls() {
             listDiv.appendChild(item);
             return item;
         };
+
+        // Inserts an item after an existing item in the listDiv.
+        // Args:
+        // afterItem: HTMLElement. ref to exiting item in listDiv after which a new item is inserted.
+        // nCells: number of child divs added to new item. May be 0.
+        // Returns: HTMLElement. ref to element  that has been created and inserted.
+        this.insertItemAfter = function(afterItem, nCell) {  ////20180127 added
+            if (!(afterItem instanceof HTMLElement))
+                throw new Error("afterItem must be an html element.");
+            
+            var item = this.create("div");
+            if (typeof nCells === 'number') {
+                var className;
+                for (let i=0; i < nCells; i++) {
+                    className = "wigo_ws_cell{0}".format(i);
+                    item.appendChild(this.create('div', null, className));
+                }
+            }
+            afterItem.insertAdjacentElement('afterend',item);
+            return item;
+        }
 
         // Creates a ScrollComplete object for handling scroll events on listDiv.
         // Arg:

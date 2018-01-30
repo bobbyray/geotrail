@@ -712,15 +712,15 @@ function wigo_ws_Model() {
                     for (i; i >= 0; i--) {
                         if (stats.nTimeStamp > arRecordStats[i].nTimeStamp) {
                             // Insert stats before previous item which stats was less than.
-                            // Note: if i=1 >= arrray length, then stats is inserted at the end of the array,
-                            //       which should be the typical case.
+                            // Note: if stats.nTimeStamp is > timestamp of last array element, 
+                            //       then stats is inserted at the end of the array, which should be the typical case.
                             arRecordStats.splice(i+1, 0, stats);
                             bInserted = true;
                             break;
                         }
                     }
                     if (!bInserted)
-                        arRecordStats[0] = stats;
+                        arRecordStats.splice(0, 0, stats); ////20180125 was arRecordStats[0] = stats;
                 }
             } else {      
                 arRecordStats[iAt] = stats;
