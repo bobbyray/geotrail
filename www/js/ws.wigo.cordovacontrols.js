@@ -1167,7 +1167,6 @@ function Wigo_Ws_CordovaControls() {
             holderDiv.appendChild(ctrl.listDiv);
             return ctrl;
         };
-        ////20180128 var ctrl; // Set by this.createList(..)
         // Sets height of list. Needs to be set for scrolling to occur.
         // Args:
         //  ctrl: {headerDiv: HTMLElement, listDiv: HTMLElement} obj returned by this.createList.
@@ -1184,17 +1183,6 @@ function Wigo_Ws_CordovaControls() {
             var yHeader = ctrl.headerDiv.offsetHeight;
             var yScroll = yBody - yHeader - nShrinkPels;
             ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
-            /* ////20180129 does not work
-            if (!ctrl)
-                return; 
-            // Set height for scrolling 
-            if (typeof(nShrinkPels) !== 'number')
-                nShrinkPels = 0;
-            var yContainer = ctrl.headerDiv.parentElement.clientHeight;
-            var yHeader = ctrl.headerDiv.offsetHeight;
-            var yScroll = yContainer - yHeader - nShrinkPels;
-            ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
-            */
         };
 
         // Adds an item to the listDiv.
@@ -1223,7 +1211,7 @@ function Wigo_Ws_CordovaControls() {
         // afterItem: HTMLElement. ref to exiting item in listDiv after which a new item is inserted.
         // nCells: number of child divs added to new item. May be 0.
         // Returns: HTMLElement. ref to element  that has been created and inserted.
-        this.insertItemAfter = function(afterItem, nCell) {  ////20180127 added
+        this.insertItemAfter = function(afterItem, nCell) {  
             if (!(afterItem instanceof HTMLElement))
                 throw new Error("afterItem must be an html element.");
             

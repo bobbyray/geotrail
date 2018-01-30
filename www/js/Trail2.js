@@ -680,9 +680,6 @@ function wigo_ws_View() {
                 HideAllBars();
                 titleBar.setTitle("Stats History");
                 recordStatsHistory.update(that.onGetRecordStatsList());
-                ////20180126Undo var arRecStats = that.onGetRecordStatsList();
-                ////20180126Undo recordStatsHistory.update(arRecStats);
-                ////20180126Undo recordStatsHistory.updateMonthDays(arRecStats); ////20180126 added.
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
@@ -7500,19 +7497,16 @@ Are you sure you want to delete the maps?";
         //  nShrinkPels: number, optional. number of pels to reduce calculated height.
         //               Defaults to 0.
         this.open = function(nShrinkPels) {
-                // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
-                // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
-                this.clearSelections(); 
-                ShowRecordStatsEditDiv(false);  // Hide stats item edit div. 
-                ShowRecordStatsMetricsDiv(false); // Hide stats metrics report div. 
-                ShowElement(holderDiv, true);
-                this.showMonthDate(); 
-                ////20180128 this.setListHeight(titleHolder.offsetHeight); 
-                this.setListHeight(stats, titleHolder.offsetHeight); 
-                // Set item editor to fill screen so touching map is not a problem.
-                itemEditor.setHeight(titleHolder.offsetHeight); 
-                ////20180129DoAfterVisible // Set metrics report to fill screen.
-                ////20180129DoAfterVisible metricsReport.setListHeight(titleHolder.offsetHeight); 
+            // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
+            // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
+            this.clearSelections(); 
+            ShowRecordStatsEditDiv(false);  // Hide stats item edit div. 
+            ShowRecordStatsMetricsDiv(false); // Hide stats metrics report div. 
+            ShowElement(holderDiv, true);
+            this.showMonthDate(); 
+            this.setListHeight(stats, titleHolder.offsetHeight); 
+            // Set item editor to fill screen so touching map is not a problem.
+            itemEditor.setHeight(titleHolder.offsetHeight); 
         };
 
         // Ends showing stats history.
@@ -7889,16 +7883,15 @@ Are you sure you want to delete the maps?";
 
             // Helper to update localStorage for itemData.
             function UpdateLocalStorage() {
-                    // Timestamp for itemData to add is unique.
-                    // Set itemData in localStorage.
-                    view.onSetRecordStats(itemData);
-                    // Clear the stats list by removing all html child elements.
-                    RemoveAllStatsRows();
-                    // Get the new array of stats data recs from localStorage and
-                    // update (display) the stats list.
-                    that.update(view.onGetRecordStatsList());
-                    //// $$$$ fix.  update month days here also. Maybe not.
-                    that.showMonthDate(); 
+                // Timestamp for itemData to add is unique.
+                // Set itemData in localStorage.
+                view.onSetRecordStats(itemData);
+                // Clear the stats list by removing all html child elements.
+                RemoveAllStatsRows();
+                // Get the new array of stats data recs from localStorage and
+                // update (display) the stats list.
+                that.update(view.onGetRecordStatsList());
+                that.showMonthDate(); 
             }
 
             // Quit if stats item controls are not all valid.
@@ -8090,27 +8083,14 @@ Are you sure you want to delete the maps?";
         function StatsMetricsReport() { 
             // Fills the report based on the recordStatsMetrics obj.
             this.fill = function() {
-                
-                /*
-                    this.nDate = normalizedDate; // number for Data value for the date at 12:00 (noon).
-                    this.mDistance = 0; // number. distance in meters.
-                    this.msRunTime = 0; // Number. milliseconds for runtime.
-                    ////20180126 this.speed = 0; // number. speed in meters per second.
-                    this.nUpdates = 0; // number. number of times other properties have been upded from various stats obj.
-                */
                 // Add item to report list under last 30 days header.
                 // Arg:
                 //  monthDayEl: MonthDayEl obj. info for month day to stats metrics report.
                 //              See function MonthDayEl() below for properties of a MonthDayEl obj.
                 function AddMonthDayLine(afterItem, monthDayEl) {
-                    ////$$$$ write
                     var date = new Date(monthDayEl.nDate)
                     var sLabel = "{0}: ".format(date.toDateString());
-                    ////20180129 var runTime = new HourMinSec(monthDayEl.msRunTime);
-                    ////20180129 var sValue = "{0} at {1} for {2}".format(lc.to(monthDayEl.mDistance),
-                    ////20180129                                          lc.toSpeed(monthDayEl.mDistance, monthDayEl.msRunTime/1000).text,
-                    ////20180129
-                    var sValue;                                          ////20180129 runTime.getStr()); 
+                    var sValue; 
                     if (monthDayEl.nUpdates > 0) {
                         var runTime = new HourMinSec(monthDayEl.msRunTime);
                         var sTimes = monthDayEl.nUpdates > 1 ? " ({0}x)".format(monthDayEl.nUpdates.toFixed(0)) : "";
@@ -8144,11 +8124,9 @@ Are you sure you want to delete the maps?";
 
                 // Metrics for last 30 days
                 var arMonthDay = recordStatsMetrics.getMonthDays(); 
-                ////20180129 var insertAfter = headerMonthlyMetrics;
                 var inserted;
                 for (var i=arMonthDay.length-1; i >= 0; i--) {
                     inserted = AddMonthDayLine(headerMonthlyMetrics, arMonthDay[i]);
-                    ////20180129 insertAfter = inserted.item;
                 }
 
                 // Best Metrics ever.
@@ -8166,7 +8144,7 @@ Are you sure you want to delete the maps?";
             //               Note: header does not scroll, only the list.
             this.setListHeight = function(nShrinkPels) {
                 // this.__proto__.setListHeight(metrics, nShrinkPels);  // same as below, but is deprecated.
-                Object.getPrototypeOf(this).setListHeight(metrics, nShrinkPels); ////20180128 
+                Object.getPrototypeOf(this).setListHeight(metrics, nShrinkPels); 
             };
 
             // Forms string values for distance, speed, and for record stats obj.
@@ -8190,36 +8168,12 @@ Are you sure you want to delete the maps?";
             function AddSectionHeader(sHeader) {
                 var item = that.addItem(metrics.listDiv, 0);
                 item.className = 'StatsMetricsReportSectionHeader';
-                item.innerHTML =  sHeader; ////201801Was "<h3>{0}</h3>".format(sHeader);
+                item.innerHTML =  sHeader; 
                 return item;
             }
 
             // ** Private members
-            /* ////20180127 not used
-            // Add an item to the report list.
-            // Returns: {item: div, label: span, value: span} object.
-            //      item: HTML Div element ref for the item containing the label and value.
-            //      label HTML Span element ref for the label.
-            //      value HTML Span elenet ref for the value.
-            // Arg:
-            //  item: HTMLElement: parent div container for a label and a value.
-            //             New item is appended to parent div.
-            //  sLabel: string. text for a label.
-            //  sValue: string. text for a value. 
-            function AddItem(item, sLabel, sValue) { ////20180127 added change parentDiv to item
-                ////20180127 var item = that.addItem(parentDiv, 0);
-                item.className = 'StatsMetricsReportLine';
-                var label = that.create('span', null, 'StatsMetricsReportLabel');
-                label.innerText = sLabel;
-                var value = that.create('span', null, 'StatsMetricsReportValue');
-                value.innerHTML = sValue;
-                item.appendChild(label);
-                item.appendChild(value);
-                return {item: item, label: label, value: value};
-            }
-            */
 
-            
             // Creates the content  a line to the report list.
             // Returns: {item: div, label: span, value: span} object.
             //      item: HTML Div element ref for the item containing the label and value.
@@ -8234,11 +8188,11 @@ Are you sure you want to delete the maps?";
             //      item: HTML Div element ref for the item containing the label and value.
             //      label HTML Span element ref for the label.
             //      value HTML Span elenet ref for the value.
-            function FormLineContent(item, sLabel, sValue) { ////20180127 added
+            function FormLineContent(item, sLabel, sValue) { 
                 item.className = 'StatsMetricsReportLine';
-                var label = that.create('div', null, 'StatsMetricsReportLabel'); ////20180129 was span
-                label.innerHTML = sLabel;  ////20180129 was innerText
-                var value = that.create('div', null, 'StatsMetricsReportValue'); ////20180129 was span
+                var label = that.create('div', null, 'StatsMetricsReportLabel'); 
+                label.innerHTML = sLabel;  
+                var value = that.create('div', null, 'StatsMetricsReportValue'); 
                 value.innerHTML = sValue;
                 item.appendChild(label);
                 item.appendChild(value);
@@ -8255,9 +8209,8 @@ Are you sure you want to delete the maps?";
             // 
             //  sLabel: string. text for a label.
             //  sValue: string. text for a value. 
-            function InsertLineAfter(afterItem, sLabel, sValue) { ////20180127 added
+            function InsertLineAfter(afterItem, sLabel, sValue) { 
                 var item = that.insertItemAfter(afterItem);
-                //// $$$$ fix.
                 return FormLineContent(item, sLabel, sValue);
             }
             
@@ -8270,23 +8223,6 @@ Are you sure you want to delete the maps?";
             //  sLabel: string. text for a label.
             //  sValue: string. text for a value. 
             function AddLine(sLabel, sValue) {
-                /* ////20180127 refactor
-                var item = that.addItem(metrics.listDiv, 0);
-                item.className = 'StatsMetricsReportLine';
-                var label = that.create('span', null, 'StatsMetricsReportLabel');
-                label.innerText = sLabel;
-                var value = that.create('span', null, 'StatsMetricsReportValue');
-                value.innerHTML = sValue;
-                item.appendChild(label);
-                item.appendChild(value);
-                return {item: item, label: label, value: value};
-                */
-                /* ////20180127  undo did not help.
-                var item = that.addItem(metrics.listDiv, 0);
-                return AddItem(item, sLabel, sValue);
-                */
-
-                ////20180127 refacted
                 var item = that.addItem(metrics.listDiv, 0);
                 return FormLineContent(item, sLabel, sValue); 
             }
@@ -8297,7 +8233,7 @@ Are you sure you want to delete the maps?";
             var metrics = this.createList(metricsDiv, 2); // metrics is {headerDiv: div, listDiv: div} obj.
             var titleDiv = metrics.headerDiv.getElementsByClassName('wigo_ws_cell0')[0]; 
             titleDiv.className = 'RecordStatsMetricsReport';
-            titleDiv.innerHTML = 'Metrics Report'; ////20180129Was  '<h2>Metrics Report</h2>';
+            titleDiv.innerHTML = 'Metrics Report'; 
             var cell1 = metrics.headerDiv.getElementsByClassName('wigo_ws_cell1')[0];
             cell1.className = 'RecordStatsMetricsReportCloseDiv';
             var buClose = this.create('button', null, 'RecordStatsMetricsReportCloseBtn');
@@ -8314,16 +8250,14 @@ Are you sure you want to delete the maps?";
             var lineBestMonthlyDistance = AddLine('Longest Distance: ', '');
             var lineBestMonthlySpeed = AddLine('Fastest Speed: ', '' );
 
-            ////20180129MoveToEnd var headerMonthlyMetrics = AddSectionHeader('Metrics for Last 30 Days'); ////20180127 added
-            
             var headerBestMetrics = AddSectionHeader('Best Metrics Ever');
             var lineBestDistance = AddLine('Longest Distance: ', '');
             var lineBestSpeed = AddLine('Fastest Speed: ', '' );
 
-            var headerMonthlyMetrics = AddSectionHeader('Metrics for Last 30 Days'); ////20180127 added
+            var headerMonthlyMetrics = AddSectionHeader('Metrics for Last 30 Days'); 
             
             // Add a blank line at end to help with last line being visible when scrolling.
-            var lineSpacer = AddLine('&nbsp;','&nbsp;'); ////20180129 added
+            var lineSpacer = AddLine('&nbsp;','&nbsp;'); 
 
             buClose.addEventListener('click', function(event) {
                 ShowRecordStatsMetricsDiv(false);
@@ -8700,8 +8634,6 @@ Are you sure you want to delete the maps?";
 
         // Helper object for editing a stats item.
         var itemEditor = new StatsItemEditor(); 
-        ////20180129 // Helper object for displaying a stats metrics report.
-        ////20180129 var metricsReport = new StatsMetricsReport(); 
 
         // Number of items in the list.
         // Note length of list is greater than item count because of separator rows.
@@ -8777,12 +8709,12 @@ Are you sure you want to delete the maps?";
         // Call back handler for selection in menuStatsHistory.
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
-                recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); ////20180126 added.
+                recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 var metricsReport = new StatsMetricsReport(); // Note: create new metricReport obj each time in order to only fill monthDays once.
                 metricsReport.fill();
                 ShowRecordStatsMetricsDiv(true); // Show stats metrics report div. 
                 // Set metrics report to fill screen.
-                metricsReport.setListHeight(titleHolder.offsetHeight); // A bit off, should shrink more. ////20180126 added ???? May not be needed, already done
+                metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
                 itemEditor.bEditing = false; 
                 itemEditor.setTitle("Add a New Record Stats Item"); 
@@ -9083,7 +9015,6 @@ Are you sure you want to delete the maps?";
             this.nDate = normalizedDate.getTime(); // number for Data value for the date at 12:00 (noon).
             this.mDistance = 0; // number. distance in meters.
             this.msRunTime = 0; // Number. milliseconds for runtime.
-            ////20180126 this.speed = 0; // number. speed in meters per second.
             this.nUpdates = 0; // number. number of times other properties have been upded from various stats obj.
         }
         
@@ -9099,10 +9030,7 @@ Are you sure you want to delete the maps?";
                 // Arg:
                 //  date: Date object that is normalized.
                 function ClearHrMinSec(date) {
-                    date.setHours(12, 0, 0, 0); ////20180127 date.setHours(12);
-                    ////20180127 date.setMinutes(0);
-                    ////20180127 date.setSeconds(0);
-                    ////20180127 date.setMilliseconds(0);
+                    date.setHours(12, 0, 0, 0); 
                 }
                 
                 // Pads arMonthDay array by pushing new elements that are cleared
@@ -9175,8 +9103,6 @@ Are you sure you want to delete the maps?";
                             monthDayEl.mDistance += stats.mDistance;
                             monthDayEl.msRunTime += stats.msRunTime;
                             monthDayEl.nUpdates++; 
-                            // Skip previous stats
-                            ////20180129???? i--;
                             continue; 
                         } else {
                             // Previous stats date is different than ith stats date so
@@ -9184,7 +9110,7 @@ Are you sure you want to delete the maps?";
                             PadTo(statsDate);
                         }
                     }
-                    if (arMonthDay.length < maxSizeOfArMonthDay) {  ////20180129 added if cond, body existed
+                    if (arMonthDay.length < maxSizeOfArMonthDay) {  
                         // Create and fill new MonthDayEl from ith stats obj.
                         monthDayEl = new MonthDayEl(statsDate);
                         monthDayEl.mDistance = stats.mDistance;
@@ -9193,14 +9119,9 @@ Are you sure you want to delete the maps?";
                         monthDayEl.nUpdates++; 
                         // Push the the new monthDayEl to the array.
                         arMonthDay.push(monthDayEl);
-                        prevStatsDate = statsDate;  ////20180127 added
+                        prevStatsDate = statsDate;  
                     }
                 }
-                ////20180129 if (arMonthDay.length >= maxSizeOfArMonthDay) {
-                ////20180129     // Trim arMonthDay to max size
-                ////20180129     var nDelete = arMonthDay.length - maxSizeOfArMonthDay
-                ////20180129     arMonthDay.splice(maxSizeOfArMonthDay, nDelete);
-                ////20180129 }
             };
 
             // Returns ref to array array of MonthDayEl objs.

@@ -1008,8 +1008,8 @@ label {
     float: left;
     width: 75%;
     font-weight: bold;
-    font-size: 2.0em; /* ////20180129 added */
-    margin-top: 3%; /* ////20180129 added */
+    font-size: 2.0em; 
+    margin-top: 3%; 
 }
 .RecordStatsMetricsReportCloseDiv {
     float: left;
@@ -1023,16 +1023,11 @@ label {
     clear:  both;
     overflow-y: scroll;
 }
-/* ////20180129 
-.RecordStatsMetricsReportCloseBtn{
-    margin-top: 1.5em;
-}
-*/
-.StatsMetricsReportSectionHeader { /* ////20180129 try */
+.StatsMetricsReportSectionHeader { 
     font-weight: bold;
     padding-top: .5em;
     padding-bottom: .5em;
-    font-size: 1.2 em;  /* ////20180129 added */
+    font-size: 1.2 em;  
 }
 .StatsMetricsReportSectionHeader {
     clear: both;

@@ -720,7 +720,7 @@ function wigo_ws_Model() {
                         }
                     }
                     if (!bInserted)
-                        arRecordStats.splice(0, 0, stats); ////20180125 was arRecordStats[0] = stats;
+                        arRecordStats.splice(0, 0, stats); 
                 }
             } else {      
                 arRecordStats[iAt] = stats;
