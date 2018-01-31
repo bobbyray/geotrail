@@ -1147,6 +1147,7 @@ function Wigo_Ws_CordovaControls() {
         // Initializes with a headerDiv and an empty listDiv.
         // Args:
         //  holderDiv: div to contain the scrollable list control.
+        //             Note: removes any child nodes first from holderDiv.
         //  nCells: number of child cells added to headerDiv. May be 0.
         // Returns: {headerDiv: HTMLElement, listDiv: HTMLElement}
         //  headerDiv: HTMLElement for the header div.
@@ -1155,6 +1156,11 @@ function Wigo_Ws_CordovaControls() {
             if (!(holderDiv instanceof HTMLElement))
                 throw new Error("Container for ScrollableListBase must be a div.");
 
+            ////20180130No // Empty any chidren nodes.
+            ////20180130No while (holderDiv.firstChild) {  ////20180130 added.
+            ////20180130No     holderDiv.removeChild(holderDiv.firstChild);
+            ////20180130No }
+                
             var ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
             if (typeof nCells === 'number') {
                 var className;
@@ -1184,6 +1190,19 @@ function Wigo_Ws_CordovaControls() {
             var yScroll = yBody - yHeader - nShrinkPels;
             ctrl.listDiv.style.height = yScroll.toFixed(0) + 'px';
         };
+
+        // Removes list it exists.
+        // Args:
+        //  ctrl: {headerDiv: HTMLElement, listDiv: HTMLElement} obj returned by this.createList.
+        //         headerDiv and listDiv are removed.
+        this.removeList = function(ctrl) { ////20180130 added.
+            if (ctrl) {
+                if (ctrl.headerDiv)
+                    ctrl.headerDiv.remove();
+                if (ctrl.listDiv)
+                    ctrl.listDiv.remove();
+            }
+        }
 
         // Adds an item to the listDiv.
         // Args:

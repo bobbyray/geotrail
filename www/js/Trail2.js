@@ -7892,6 +7892,9 @@ Are you sure you want to delete the maps?";
                 // update (display) the stats list.
                 that.update(view.onGetRecordStatsList());
                 that.showMonthDate(); 
+
+                // Update the record stats metrics.
+                recordStatsMetrics.init(view.onGetRecordStatsList());  ////20180130 added.
             }
 
             // Quit if stats item controls are not all valid.
@@ -7904,9 +7907,10 @@ Are you sure you want to delete the maps?";
             
             let itemData = itemEditor.getEditData();
             let bAdd = !itemEditor.bEditing;
+            let bChanged = false; 
             if (itemEditor.bEditing) {
                 // Check if timestamp has been changed.
-                let bChanged = false; 
+                bChanged = false;  ////20180130 remove let, let moved up one level.
                 let originalItemData = itemEditor.getOriginalItemData();
                 if (!itemEditor.isSpeedChanged()) {  
                     // Set calorie fields from the original data item because
@@ -7923,10 +7927,10 @@ Are you sure you want to delete the maps?";
                     // Date entered has not changed. Use timestamp in milliseconds from original data.
                     // timestamp is key for finding the element to update so must match original date exactly.
                     itemData.nTimeStamp = originalItemData.nTimeStamp;
-                    if (bChanged) {
-                        // Set itemData in localStorage.
-                        UpdateLocalStorage(); 
-                    }
+                    ////20180130 if (bChanged) {
+                    ////20180130     // Set itemData in localStorage.
+                    ////20180130     UpdateLocalStorage(); 
+                    ////20180130 }
                 } else {
                     // Date entered by user has changed. 
                     // Therefore delete original item from data and add new item.
@@ -7937,7 +7941,7 @@ Are you sure you want to delete the maps?";
             }
             if (bAdd) { 
                 let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
-                // Adding new stats item.
+                // Adding new stats item. nTimeStamp of new stats item must be unique.
                 for (let i=0; itemFound && i < 100; i++) {
                     itemData.nTimeStamp++; // Increment timestamp by one millisecond to make it unique.
                     itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
@@ -7947,12 +7951,18 @@ Are you sure you want to delete the maps?";
                     }
                 }
                 if (!itemFound) {
-                    // Set itemData in localStorage.
-                    UpdateLocalStorage(); 
+                    bChanged = true; ////20180130 added
+                    ////20180130 // Set itemData in localStorage.
+                    ////20180130 UpdateLocalStorage(); 
                 } else {
                     AlertMsg("Failed to save item data!");
                 }
             }
+            // Update local storage, the stat history list, and stats metrics.
+            if (bChanged) {  ////20180130 added if and body.
+                UpdateLocalStorage();
+            }
+
             itemEditor.clearItemData(); 
         }
 
@@ -8068,7 +8078,6 @@ Are you sure you want to delete the maps?";
             };
         }
 
-
         // Object for displaying stats metrics.
         // ScrollableListBase is the base class. 
         // Use this.setListHeight(nShrinkPels) to set the scroll height for the list.
@@ -8104,6 +8113,14 @@ Are you sure you want to delete the maps?";
                                                              
                     return InsertLineAfter(afterItem, sLabel, sValue);  
                 }
+
+                // Returns normalized date as milliseconds.
+                // Arg: msDate: number. date in milliseconds to normalize and  return.
+                function NormalizedDateMs(msDate) {
+                    var date = new Date(msDate);
+                    date.setHours(12, 0, 0, 0);
+                    return date.getTime();
+                }
                 
                 var recStats = recordStatsMetrics.getCurrent();
                 if (!recStats)
@@ -8112,11 +8129,19 @@ Are you sure you want to delete the maps?";
                 var value = FormDistanceSpeedDate(recStats);
                 lineCurrentDistance.value.innerText = value.distance;
                 lineCurrentSpeed.value.innerText = value.speed;
-                var curDate = new Date(recStats.nTimeStamp); 
-                lineCurrentDate.value.innerText = value.date; 
+                ////20180130NotUsed var curDate = new Date(recStats.nTimeStamp); 
+                ////20180130Redo lineCurrentDate.value.innerText = value.date;
+                var msToDay =   NormalizedDateMs(Date.now());  
+                var msCurDate = NormalizedDateMs(recStats.nTimeStamp); 
+                var msDaysAgo = msToDay - msCurDate;
+                var msOneDay = 24*60*60*1000;
+                var nDaysAgo = msDaysAgo / msOneDay;
+                var sDaysAgo = nDaysAgo < 1 ? "today" : nDaysAgo < 2 ? "1 day ago" : "{0} days ago".format(nDaysAgo.toFixed(0));
+                lineCurrentDate.value.innerText = "{0} {1}".format(value.date, sDaysAgo);
+
                 // Best Monthly (last 30 days) metrics.toLocaleString
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestMonthlyDistance())
-                var sLine = "{0} at {1}".format(value.distance, value.speed)
+                var sLine = "{0} at {1} on {2}".format(value.distance, value.speed, value.date);  ////20180130 added value.date.
                 lineBestMonthlyDistance.value.innerText = sLine;
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestMonthlySpeed());
                 sLine = "{0} over {1} on {2}".format(value.speed, value.distance, value.date); 
@@ -8131,11 +8156,17 @@ Are you sure you want to delete the maps?";
 
                 // Best Metrics ever.
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestDistance());
-                sLine = "{0} at {1}".format(value.distance, value.speed);
+                sLine = "{0} at {1} on {2}".format(value.distance, value.speed, value.date);
                 lineBestDistance.value.innerText = sLine;
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestSpeed());
                 sLine = "{0} over {1} on {2}".format(value.speed, value.distance, value.date); 
                 lineBestSpeed.value.innerText = sLine;
+            };
+
+            
+            // Clears the list including the header by removing the div elements.
+            this.clear = function() { ////20180130
+                this.removeList(metrics); // Call base class function.
             };
 
             // Sets height of list for proper scrolling of the list.
@@ -8707,10 +8738,13 @@ Are you sure you want to delete the maps?";
         yearDiv.className = 'stats_history_year'; 
         
         // Call back handler for selection in menuStatsHistory.
+        var metricsReport = null; 
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
-                var metricsReport = new StatsMetricsReport(); // Note: create new metricReport obj each time in order to only fill monthDays once.
+                if (metricsReport)          ////20180130 added.
+                    metricsReport.clear();  ////20180130 added.
+                metricsReport = new StatsMetricsReport(); // Note: create new metricReport obj each time in order to only fill monthDays once.
                 metricsReport.fill();
                 ShowRecordStatsMetricsDiv(true); // Show stats metrics report div. 
                 // Set metrics report to fill screen.
@@ -8739,6 +8773,8 @@ Are you sure you want to delete the maps?";
                     function(bConfirm){
                         if (bConfirm) {
                             view.onDeleteRecordStats(itemsSelected); 
+                            // Update the stats metrics 
+                            recordStatsMetrics.init(view.onGetRecordStatsList());  ////20180130 added.                            
                             // Remove selected items from list displayed.
                             DeleteSelections();
                             that.showMonthDate(); 
