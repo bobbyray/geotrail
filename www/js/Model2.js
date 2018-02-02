@@ -44,7 +44,7 @@ function wigo_ws_GeoTrailSettings() {
     // has been travel when recording. 
     this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  // 2.0 miles in kilometers. 
     // Distance in kilometers for distance goal per day for a recorded path.
-    this.kmDistanceGoalPerDay = 2.0 * 1.60934;  // 2.0 miles in kilometers. ////20180131 added
+    this.kmDistanceGoalPerDay = 2.0 * 1.60934;  // 2.0 miles in kilometers. 
     // Boolean to indicate excessive acceleration alert is enabled.
     this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
@@ -926,7 +926,7 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('bSnowCoverLayer', 7, true); 
 
                 // ** Changes for nSchema 8. 
-                UpdateIfNeeded('kmDistanceGoalPerDay', 8, 2.0 * 1.60934);  ////20180131 added $$$$ 
+                UpdateIfNeeded('kmDistanceGoalPerDay', 8, 2.0 * 1.60934); 
 
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 

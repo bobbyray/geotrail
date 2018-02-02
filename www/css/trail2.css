@@ -1032,8 +1032,8 @@ label {
     font-size: 1.2 em;  
 }
 .StatsMetricsReportSectionHeader,
-.StatsMetricsReportLine {  /* ////20180201 added .StatsMetricsReportLine */
-    width: 100%; /* ////20180201 added */
+.StatsMetricsReportLine { 
+    width: 100%; 
     clear: both;
     float: left;
 }
