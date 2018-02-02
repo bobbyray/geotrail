@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.032-RecStats20171231"; // Constant string for App version. 
+    var sVersion = "1.1.033-20170202"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -4503,6 +4503,36 @@ function wigo_ws_View() {
     }
     var recordDistanceAlert = new RecordDistanceAlert(); // Record Distance Alert object.
 
+    var labelDistanceGoalPerDay = document.getElementById('labelDistanceGoalPerDay');
+    var numberDistanceGoalPerDay = document.getElementById('numberDistanceGoalPerDay');
+    function DistanceGoalPerDay() {
+        // Call base class.
+        LabelNumberCtrl.call(this, labelDistanceGoalPerDay, numberDistanceGoalPerDay);
+        
+        // **  Over-ride properties for this derived class.
+        this.labelTextMetric = "Daily Distance Goal (km)";
+        
+        this.labelTextEnglish = "Daily Distance Goal (miles)";
+        
+        // Returns float. kilometers converted to miles.
+        // Arg:
+        //  nNumber. float. number of kilometers.
+        this.metricToEnglish = function(nNumber) {
+            nNumber = 0.621371 * nNumber;
+            return nNumber;
+        };
+
+        // Returns float. kilometers for number in miles.
+        // Arg:
+        //  nNumber: float. number value in English units to convert to Metric units.
+        // NOTE: This method should be over-ridden.
+        this.englishToMetric = function(nNumber) {
+            nNumber = nNumber /  0.621371;
+            return nNumber;
+        };
+    }
+    var distanceGoalPerDay = new DistanceGoalPerDay();  ////20180131 added
+
     // Acceleration Alert composite control.
     var labelAccelThres = document.getElementById('labelAccelThres');
     var numberAccelThres = document.getElementById('numberAccelThres');
@@ -5040,6 +5070,8 @@ function wigo_ws_View() {
         settings.countPhoneBeep = parseInt(numberPhoneBeepCount.getSelectedValue());
         settings.kmRecordDistancAlertInterval = recordDistanceAlert.getNumber();   
 
+        settings.kmDistanceGoalPerDay = distanceGoalPerDay.getNumber();  ////20180131 added
+
         settings.bAccelAlert = accelAlertThres.isEnabled(); 
         settings.nAccelThres = accelAlertThres.getNumber(); 
         settings.nAccelVThres = accelAlertVThres.getNumber();
@@ -5091,6 +5123,10 @@ function wigo_ws_View() {
         recordDistanceAlert.bMetric = settings.distanceUnits === 'metric';  
         recordDistanceAlert.setNumber(settings.kmRecordDistancAlertInterval); 
         recordDistanceAlert.show();      
+
+        distanceGoalPerDay.bMetric = settings.distanceUnits === 'metric';
+        distanceGoalPerDay.setNumber(settings.kmDistanceGoalPerDay); 
+        distanceGoalPerDay.show();
         
         if (settings.bAccelAlert)
             accelAlertThres.enable();
@@ -5182,6 +5218,9 @@ function wigo_ws_View() {
         map.recordPath.setVLimit(settings.vSpuriousVLimit); 
         // Set record distance alert interal. 
         map.recordPath.setDistanceAlertInterval(settings.kmRecordDistancAlertInterval); 
+
+        // Set distance goal per day for a recorded path.
+        recordStatsMetrics.setDistanceGoalPerDay(settings.kmDistanceGoalPerDay);  ////20180131 added.
 
         // Set parameters for excessive acceleration.
         deviceMotion.bAvailable = settings.bAccelAlert; 
@@ -7894,7 +7933,7 @@ Are you sure you want to delete the maps?";
                 that.showMonthDate(); 
 
                 // Update the record stats metrics.
-                recordStatsMetrics.init(view.onGetRecordStatsList());  ////20180130 added.
+                recordStatsMetrics.init(view.onGetRecordStatsList());  
             }
 
             // Quit if stats item controls are not all valid.
@@ -7910,7 +7949,7 @@ Are you sure you want to delete the maps?";
             let bChanged = false; 
             if (itemEditor.bEditing) {
                 // Check if timestamp has been changed.
-                bChanged = false;  ////20180130 remove let, let moved up one level.
+                bChanged = false;  
                 let originalItemData = itemEditor.getOriginalItemData();
                 if (!itemEditor.isSpeedChanged()) {  
                     // Set calorie fields from the original data item because
@@ -7927,10 +7966,6 @@ Are you sure you want to delete the maps?";
                     // Date entered has not changed. Use timestamp in milliseconds from original data.
                     // timestamp is key for finding the element to update so must match original date exactly.
                     itemData.nTimeStamp = originalItemData.nTimeStamp;
-                    ////20180130 if (bChanged) {
-                    ////20180130     // Set itemData in localStorage.
-                    ////20180130     UpdateLocalStorage(); 
-                    ////20180130 }
                 } else {
                     // Date entered by user has changed. 
                     // Therefore delete original item from data and add new item.
@@ -7951,15 +7986,13 @@ Are you sure you want to delete the maps?";
                     }
                 }
                 if (!itemFound) {
-                    bChanged = true; ////20180130 added
-                    ////20180130 // Set itemData in localStorage.
-                    ////20180130 UpdateLocalStorage(); 
+                    bChanged = true;
                 } else {
                     AlertMsg("Failed to save item data!");
                 }
             }
             // Update local storage, the stat history list, and stats metrics.
-            if (bChanged) {  ////20180130 added if and body.
+            if (bChanged) { 
                 UpdateLocalStorage();
             }
 
@@ -8092,8 +8125,12 @@ Are you sure you want to delete the maps?";
         function StatsMetricsReport() { 
             // Fills the report based on the recordStatsMetrics obj.
             this.fill = function() {
-                // Add item to report list under last 30 days header.
+                var sDistGoal = lc.to(recordStatsMetrics.getDistanceGoalPerDay()); ////20180201 added
+
+                // Add line to report list under last 30 days header.
+                // Returns: {item: div, label: span, value: span} object. See InsertLineAfter(..) function.
                 // Arg:
+                //  afterItem: HTML Div obj. item in report list after the new month-day item is inserted.
                 //  monthDayEl: MonthDayEl obj. info for month day to stats metrics report.
                 //              See function MonthDayEl() below for properties of a MonthDayEl obj.
                 function AddMonthDayLine(afterItem, monthDayEl) {
@@ -8110,8 +8147,72 @@ Are you sure you want to delete the maps?";
                     } else {
                         sValue = "no activity.";
                     }
-                                                             
                     return InsertLineAfter(afterItem, sLabel, sValue);  
+                }
+
+                // Finds goals met and activity for last 7 days and last 30 days.
+                // Returns: {nGoalMet7Days: number, nGoalMet30Days: number, nActivity7Days: number, nActivity30Days: number}
+                //      nDistance7Days: number of days daily distance goal was met in last 7 days.
+                //      nDistance30Days: number of days daily distance goal was met in last 30 days.
+                //      nActivity7Days: number of days there was activity in last 7 days.
+                //      nActivity30Days: number of days there was activity in last 30 days.
+                // Arg:
+                //  arMonthDay: array of MonthDayEl obj. Each obj is info for month day to stats metrics report.
+                //              See function MonthDayEl() below for properties of a MonthDayEl obj.
+                function FindGoals(arMonthDay) { ////20180201
+                    var goalsMet = {nDistance7Days: 0, nDistance30Days: 0, nActivity7Days: 0, nActivity30Days: 0};
+                    var mDistanceGoal = recordStatsMetrics.getDistanceGoalPerDay();
+                    var el;
+                    /* //// 
+                    function MonthDayEl(normalizedDate) {
+                        this.nDate = normalizedDate.getTime(); // number for Data value for the date at 12:00 (noon).
+                        this.mDistance = 0; // number. distance in meters.
+                        this.msRunTime = 0; // Number. milliseconds for runtime.
+                        this.nUpdates = 0; // number. number of times other properties have been upded from various stats obj.
+                    }
+                    */
+                    for (var i=0; i < arMonthDay.length; i++) {
+                        el = arMonthDay[i];
+
+                        if (el.nUpdates > 0) {
+                            goalsMet.nActivity30Days++;
+                            if (i < 7) {
+                                goalsMet.nActivity7Days++;
+                            }
+
+                            if (el.mDistance >= mDistanceGoal) {
+                                goalsMet.nDistance30Days++;
+                                if ( i < 7) {
+                                    goalsMet.nDistance7Days++;
+                                }
+                            }
+                        }
+                    }
+                    return goalsMet;
+                }
+                
+                // Adds line for a daily distance goal to report list under the goals header.
+                // Return: HTML Div obj for the added line.
+                // Args:
+                //  afterItem: HTML Div obj. item in report list after which a distance goal item is inserted.
+                //  nMetDays: number of days distance goal was met.
+                //  nTotalDays: number of total days.
+                function AddDistanceGoalLine(afterItem, nMetDays, nTotalDays) { ////20180201
+                    var perCent = nMetDays/nTotalDays*100;
+                    var sLine ="Distance goal of {0} met {1} of {2} days ({3}%)".format(sDistGoal, nMetDays.toFixed(0), nTotalDays.toFixed(0), perCent.toFixed(0));
+                    return  InsertSimpleLineAfter(afterItem, sLine) 
+                }
+
+                // Adds item for a daily distance goal to report list under the goals header.
+                // Return: HTML Div obj for the added line.
+                // Args:
+                //  afterItem: HTML Div obj. item in report list after which a distance goal item is inserted.
+                //  nMetDays: number of days distance goal was met.
+                //  nTotalDays: number of total days.
+                function AddActivityGoalLine(afterItem, nMetDays, nTotalDays) {
+                    var perCent = nMetDays/nTotalDays*100;
+                    var sLine = "Activity {0} of {1} days ({2}%)".format(nMetDays.toFixed(0), nTotalDays.toFixed(0), perCent.toFixed(0));
+                    return InsertSimpleLineAfter(afterItem, sLine);
                 }
 
                 // Returns normalized date as milliseconds.
@@ -8129,8 +8230,6 @@ Are you sure you want to delete the maps?";
                 var value = FormDistanceSpeedDate(recStats);
                 lineCurrentDistance.value.innerText = value.distance;
                 lineCurrentSpeed.value.innerText = value.speed;
-                ////20180130NotUsed var curDate = new Date(recStats.nTimeStamp); 
-                ////20180130Redo lineCurrentDate.value.innerText = value.date;
                 var msToDay =   NormalizedDateMs(Date.now());  
                 var msCurDate = NormalizedDateMs(recStats.nTimeStamp); 
                 var msDaysAgo = msToDay - msCurDate;
@@ -8139,19 +8238,30 @@ Are you sure you want to delete the maps?";
                 var sDaysAgo = nDaysAgo < 1 ? "today" : nDaysAgo < 2 ? "1 day ago" : "{0} days ago".format(nDaysAgo.toFixed(0));
                 lineCurrentDate.value.innerText = "{0} {1}".format(value.date, sDaysAgo);
 
-                // Best Monthly (last 30 days) metrics.toLocaleString
+                // Metrics for last 30 days
+                var arMonthDay = recordStatsMetrics.getMonthDays(); 
+                var goals = FindGoals(arMonthDay);
+                // Goals  ////20180201 added lines for goals
+                var inserted;
+                // Add activity goals and distance goals for last 7 days and last 30 days.
+                inserted = AddActivityGoalLine(headerGoals, goals.nActivity7Days, 7);
+                inserted = AddActivityGoalLine(inserted, goals.nActivity30Days, 30)
+                inserted = AddDistanceGoalLine(inserted, goals.nDistance7Days, 7);
+                inserted = AddDistanceGoalLine(inserted, goals.nDistance30Days, 30);
+
+                // Best Monthly (last 30 days) metrics.
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestMonthlyDistance())
-                var sLine = "{0} at {1} on {2}".format(value.distance, value.speed, value.date);  ////20180130 added value.date.
+                var sLine = "{0} at {1} on {2}".format(value.distance, value.speed, value.date); 
                 lineBestMonthlyDistance.value.innerText = sLine;
                 value = FormDistanceSpeedDate(recordStatsMetrics.getBestMonthlySpeed());
                 sLine = "{0} over {1} on {2}".format(value.speed, value.distance, value.date); 
                 lineBestMonthlySpeed.value.innerText = sLine;
 
-                // Metrics for last 30 days
-                var arMonthDay = recordStatsMetrics.getMonthDays(); 
-                var inserted;
+                ////20180201MovedUp var arMonthDay = recordStatsMetrics.getMonthDays(); 
+                ////20180201MovedUp var inserted;
                 for (var i=arMonthDay.length-1; i >= 0; i--) {
-                    inserted = AddMonthDayLine(headerMonthlyMetrics, arMonthDay[i]);
+                    ////20180201 inserted = AddMonthDayLine(headerMonthlyMetrics, arMonthDay[i]);
+                    AddMonthDayLine(headerMonthlyMetrics, arMonthDay[i]);
                 }
 
                 // Best Metrics ever.
@@ -8165,7 +8275,7 @@ Are you sure you want to delete the maps?";
 
             
             // Clears the list including the header by removing the div elements.
-            this.clear = function() { ////20180130
+            this.clear = function() { 
                 this.removeList(metrics); // Call base class function.
             };
 
@@ -8231,7 +8341,7 @@ Are you sure you want to delete the maps?";
             }
             
             
-            // Inserts a line to the report list after and existing item.
+            // Inserts a line in the report list after and existing item.
             // Returns: {item: div, label: span, value: span} object.
             //      item: HTML Div element ref for the item containing the label and value.
             //      label HTML Span element ref for the label.
@@ -8243,6 +8353,17 @@ Are you sure you want to delete the maps?";
             function InsertLineAfter(afterItem, sLabel, sValue) { 
                 var item = that.insertItemAfter(afterItem);
                 return FormLineContent(item, sLabel, sValue);
+            }
+
+            // Inserts a line in the report list after an existing item.
+            // Returns: HTML Div element for the inserted item.
+            // Arg: 
+            //  sText: string. Text that is set innerHTML of the item inserted.
+            function InsertSimpleLineAfter(afterItem, sText) { ////20180201 added
+                var item = that.insertItemAfter(afterItem);
+                item.className = 'StatsMetricsReportLine';
+                item.innerHTML = sText;
+                return item;
             }
             
             // Add a line to the report list.
@@ -8276,6 +8397,8 @@ Are you sure you want to delete the maps?";
             var lineCurrentDistance = AddLine('Distance: ', '');
             var lineCurrentSpeed = AddLine('Speed: ', '');
             var lineCurrentDate = AddLine('Date: ', ''); 
+
+            var headerGoals = AddSectionHeader("Goals", ''); ////20180201 added
             
             var headerBestMonthly = AddSectionHeader('Best Metrics for Last 30 Days');
             var lineBestMonthlyDistance = AddLine('Longest Distance: ', '');
@@ -8742,8 +8865,8 @@ Are you sure you want to delete the maps?";
         menuStatsHistory.onListElClicked = function(dataValue) {
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
-                if (metricsReport)          ////20180130 added.
-                    metricsReport.clear();  ////20180130 added.
+                if (metricsReport)          
+                    metricsReport.clear();  
                 metricsReport = new StatsMetricsReport(); // Note: create new metricReport obj each time in order to only fill monthDays once.
                 metricsReport.fill();
                 ShowRecordStatsMetricsDiv(true); // Show stats metrics report div. 
@@ -8774,7 +8897,7 @@ Are you sure you want to delete the maps?";
                         if (bConfirm) {
                             view.onDeleteRecordStats(itemsSelected); 
                             // Update the stats metrics 
-                            recordStatsMetrics.init(view.onGetRecordStatsList());  ////20180130 added.                            
+                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
                             // Remove selected items from list displayed.
                             DeleteSelections();
                             that.showMonthDate(); 
@@ -8891,6 +9014,19 @@ Are you sure you want to delete the maps?";
         this.updateMonthDays = function(arRecStats) {
             monthDayAry.fill(arRecStats);
         };
+
+        // Sets distance goal for a day.
+        // Arg:
+        //  kmDistance: number. distance goal in kilometers.
+        this.setDistanceGoalPerDay = function(kmDistance) { ////20180131 added.
+            mDistanceGoalPerDay = kmDistance * 1000;
+        };
+
+        // Gets distance goals for a day.
+        // Returns: number. distance goal in meters.
+        this.getDistanceGoalPerDay = function() { ////20180201 added
+            return mDistanceGoalPerDay;
+        }
 
         // Returns a ref to array of month day info for the recent 30 days.
         // Returns: array of 30 MonthDayEl objects. [MonthDayEl obj, ...].
@@ -9099,8 +9235,6 @@ Are you sure you want to delete the maps?";
                 var now = new Date(Date.now());
                 ClearHrMinSec(now);
                 var monthDayEl = new MonthDayEl(now);
-
-
 
                 if (arRecStats.length < 1) {
                     // Push current day to array.

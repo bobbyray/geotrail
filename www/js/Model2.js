@@ -42,7 +42,9 @@ function wigo_ws_GeoTrailSettings() {
     this.countPhoneBeep = 1;
     // Distance in kilometers to issue periodic alert that specified distance interval 
     // has been travel when recording. 
-    this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  //0.5  miles convert to meters. 
+    this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  // 2.0 miles in kilometers. 
+    // Distance in kilometers for distance goal per day for a recorded path.
+    this.kmDistanceGoalPerDay = 2.0 * 1.60934;  // 2.0 miles in kilometers. ////20180131 added
     // Boolean to indicate excessive acceleration alert is enabled.
     this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
@@ -923,6 +925,9 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('bTopologyLayer', 7, false);
                 UpdateIfNeeded('bSnowCoverLayer', 7, true); 
 
+                // ** Changes for nSchema 8. 
+                UpdateIfNeeded('kmDistanceGoalPerDay', 8, 2.0 * 1.60934);  ////20180131 added $$$$ 
+
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
@@ -933,7 +938,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 7;  // Must be set to new number when nSchema change is added.
+        var nSchemaSaved = 8;  // Must be set to new number when nSchema change is added.
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 

@@ -464,13 +464,15 @@ label {
 #divSettings #labelBodyMass,
 #divSettings #labelRecordDistanceAlert,  
 #divSettings #labelAccelThres,     
-#divSettings #labelAccelVThres {
+#divSettings #labelAccelVThres,
+#divSettings #labelDistanceGoalPerDay {
     padding-top: 0.4em;
 }
 #divSettings #numberBodyMass,
 #divSettings #numberRecordDistanceAlert, 
 #divSettings #numberAccelThres, 
-#divSettings #numberAccelVThres {
+#divSettings #numberAccelVThres,
+#divSettings #numberDistanceGoalPerDay {
     float: right;
     background-color: lightgray;
     width: 3em;
@@ -1029,7 +1031,9 @@ label {
     padding-bottom: .5em;
     font-size: 1.2 em;  
 }
-.StatsMetricsReportSectionHeader {
+.StatsMetricsReportSectionHeader,
+.StatsMetricsReportLine {  /* ////20180201 added .StatsMetricsReportLine */
+    width: 100%; /* ////20180201 added */
     clear: both;
     float: left;
 }

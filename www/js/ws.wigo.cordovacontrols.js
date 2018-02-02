@@ -1156,11 +1156,6 @@ function Wigo_Ws_CordovaControls() {
             if (!(holderDiv instanceof HTMLElement))
                 throw new Error("Container for ScrollableListBase must be a div.");
 
-            ////20180130No // Empty any chidren nodes.
-            ////20180130No while (holderDiv.firstChild) {  ////20180130 added.
-            ////20180130No     holderDiv.removeChild(holderDiv.firstChild);
-            ////20180130No }
-                
             var ctrl = {headerDiv: this.create("div", null, 'wigo_ws_list_header'), listDiv: this.create("div", null, 'wigo_ws_list')};
             if (typeof nCells === 'number') {
                 var className;
@@ -1195,7 +1190,7 @@ function Wigo_Ws_CordovaControls() {
         // Args:
         //  ctrl: {headerDiv: HTMLElement, listDiv: HTMLElement} obj returned by this.createList.
         //         headerDiv and listDiv are removed.
-        this.removeList = function(ctrl) { ////20180130 added.
+        this.removeList = function(ctrl) { 
             if (ctrl) {
                 if (ctrl.headerDiv)
                     ctrl.headerDiv.remove();
