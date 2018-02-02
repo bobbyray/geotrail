@@ -4199,7 +4199,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sCopyright = "2015 - 2017";
+        var sCopyright = "2015 - 2018";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
         return sMsg;
