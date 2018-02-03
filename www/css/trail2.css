@@ -1029,13 +1029,14 @@ label {
     font-weight: bold;
     padding-top: .5em;
     padding-bottom: .5em;
-    font-size: 1.2 em;  
 }
 .StatsMetricsReportSectionHeader,
 .StatsMetricsReportLine { 
     width: 100%; 
     clear: both;
     float: left;
+    box-sizing: border-box;
+    font-size: 1.2em; 
 }
 .StatsMetricsReportLabel {
     clear: both;
@@ -1044,4 +1045,5 @@ label {
 }
 .StatsMetricsReportValue {
     float: left;
+    width: 69%;
 }

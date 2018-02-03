@@ -8135,7 +8135,7 @@ Are you sure you want to delete the maps?";
                 //              See function MonthDayEl() below for properties of a MonthDayEl obj.
                 function AddMonthDayLine(afterItem, monthDayEl) {
                     var date = new Date(monthDayEl.nDate)
-                    var sLabel = "{0}: ".format(date.toDateString());
+                    var sLabel = "{0}: ".format(date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', weekday: 'short' })); 
                     var sValue; 
                     if (monthDayEl.nUpdates > 0) {
                         var runTime = new HourMinSec(monthDayEl.msRunTime);
@@ -8145,7 +8145,7 @@ Are you sure you want to delete the maps?";
                                                                  runTime.getStr(),
                                                                 sTimes); 
                     } else {
-                        sValue = "no activity.";
+                        sValue = "no recording"; 
                     }
                     return InsertLineAfter(afterItem, sLabel, sValue);  
                 }
@@ -8203,7 +8203,7 @@ Are you sure you want to delete the maps?";
                 //  nTotalDays: number of total days.
                 function AddActivityGoalLine(afterItem, nMetDays, nTotalDays) {
                     var perCent = nMetDays/nTotalDays*100;
-                    var sLine = "Activity {0} of {1} days ({2}%)".format(nMetDays.toFixed(0), nTotalDays.toFixed(0), perCent.toFixed(0));
+                    var sLine = "Recorded {0} of {1} days ({2}%)".format(nMetDays.toFixed(0), nTotalDays.toFixed(0), perCent.toFixed(0));
                     return InsertSimpleLineAfter(afterItem, sLine);
                 }
 
