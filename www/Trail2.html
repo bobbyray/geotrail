@@ -142,6 +142,40 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <input id="buPtDeleteDo" type="button" value="OK" />
             </div>
         </div>
+        <!-- div for record_stats_view --> 
+        <div id='divRecordStatsHistory' class="wigo_ws_NoShow"> <!-- Constainer for RecordStatsHistory control -->
+            <!-- div for adding a record stats item -->
+            <div id='divRecordStatsEdit' class='wigo_ws_NoShow'>
+                <div id='divStatsAddInstr'>
+                    <h2 id='statsEditInstr'>Add a New Record Stats Item</h2>
+                </div>
+                <div id='divRecordStatsDate'>
+                    <span>Starting Date</span>
+                    <input id='dateRecordStats' type='date' placeholder="mm/dd/yyyy"/>
+
+                </div>
+                <div id='divRecordStatsTime'>
+                    <span>Starting Time</span>
+                    <input id='timeRecordStats' type='time' placeholder="select"/>
+                </div>
+                <div id='divRecordStatsDistance'>
+                    <span>Distance</span>
+                    <input id='numRecordStatsDistance' type="number" placeholder="select", min='0'/>
+                    <span id='spanRecordStatsDistanceUnit'>&nbsp;mi</span>
+                </div>
+                <div id='divRecordStatsRunTime'>
+                    <span>Run Time</span>
+                    <input id='minsRecordStatsRunTime' type='number' placeholder="minutes" min='0'/><span>mins</span>
+                    <input id='secsRecordStatsRunTime' type='number' placeholder="seconds", min='0', max='59'/><span>secs</span>
+                </div>
+                <div id='divRecordStatsClose'>
+                    <button id='buRecordStatsEditDone'>Done</button>
+                    <button id='buRecordStatsEditCancel'>Cancel</button>
+                </div>
+            </div>
+            <!-- div for displaying a record stats metrics report. --> 
+            <div id='divRecordStatsMetrics' class='wigo_ws_NoShow'></div>
+        </div>
     </div>
     <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
         <div id="mapBarBtns">
@@ -179,17 +213,22 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <div id='holderPhoneBeepCount' class='settingItem'></div>
             <div id='holderRecordDistanceAlert' class='settingItem'>
                 <label id='labelRecordDistanceAlert'>Record Dist Alert (miles)</label>
-                <input id='numberRecordDistanceAlert' type='number' step='.5' min='0.0' max='100.0 value='0.5' tabindex='-1'/>
+                <input id='numberRecordDistanceAlert' type='number' step='.5' min='0.0' max='100.0' value='0.5' tabindex='-1'/>
+            </div>
+            
+            <div id='holderDistanceGoalPerDay' class='settingItem'> 
+                <label id='labelDistanceGoalPerDay'>Daily Distance Goal (miles)</label>
+                <input id='numberDistanceGoalPerDay' type='number' step='.5' min='0.0' max='100.0' value='0.5' tabindex='-1'/>
             </div>
 
             <div id='holderAccelAlert' class='settingItem'></div> 
             <div id='holderAccelThres' class='settingItem'>
                 <label id='labelAccelThres'>Accel Alert Thres (m/sec^2</label>
-                <input id='numberAccelThres' type='number' step='.5' min='0.0' max='100.0 value='0.5' tabindex='-1'/>
+                <input id='numberAccelThres' type='number' step='.5' min='0.0' max='100.0' value='0.5' tabindex='-1'/>
             </div>
             <div id='holderAccelVThres' class='settingItem'>
                 <label id='labelAccelVThres'>Accel Alert Vel Thres (m/sec^2)</label>
-                <input id='numberAccelVThres' type='number' step='.5' min='0.0' max='100.0 value='0.5' tabindex='-1'/>
+                <input id='numberAccelVThres' type='number' step='.5' min='0.0' max='100.0' value='0.5' tabindex='-1'/>
             </div>
 
             <div id='holderAutoPathAnimation' class='settingItem'></div>
@@ -289,6 +328,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <button id="buSettingsCancel">Cancel</button>
         </div>
     </div>
+
     
     <!-- Help Guide, only shown when selected from mainMenu -->
     <div id="divHelpGuide" class='wigo_ws_NoShow'>
@@ -314,6 +354,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
             <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
             you have saved online.</li> 
+            <li><a href="#helpStatsHistory">Stats History</a> lets you view a history of statistics saved when you record a trail.</li>
         </ul>
         <h2 id="helpSignInOffBar">Sign-in/off Bar</h2>
         <p>If you do not sign in, you can only view public trails created by others.
@@ -648,6 +689,88 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         There are sites that will convert a KML file to a GPX file.</p>
         <p>Use the site www.wigo.ws/geopathsx/gpxpaths.html to upload the path that you have
         downloaded in GPX format so that you can access the path (aka trail) online from GeoTrail.</p>
+        <h2 id="helpStatsHistory">Stats History</h2>
+        Displays a scrollable list of statistics saved when you record a trail in Online or Offline view (see <a href='#helpOnlineRecord'>Record DropList</a>).
+        Each item in the list shows a summary of the stats for a run:
+        <ul>
+            <li>Date<br/>
+                The day of the month and time of day.<br/>
+            </li>
+            <li>Distance and Run Time<br/>
+                The distance traveled and the run time in minutes and seconds (mm:ss).
+            </li>
+            <li>Speed and Calories<br/>
+                The average speed and an estimate of the number of calories burned.
+            </li>
+        </ul>
+        <h3>Header for the Scrollable List.</h3>
+           The Month and Year for the first item scrolled into view is shown in the header and changes
+           as you scroll into a different month. A separator bar is included in the list to
+           to show a change in month.
+        <h3>Marking an Item for Selection</h3>
+        Touch the day of month number on the left side of the item to select
+        the item. The background of a selected item is set to gray to indicate selection.<br/>
+        Touch the day of month number of a selected item to unselect it.
+        <h3>Stats History Menu</h3>
+        On the left side of the stats list header is a menu to provide additional function:
+        <ul>
+            <li>Menu > Show Metrics<br/>
+            Shows a Metrics Report for metrics obtained from the stats history:
+            <ul>
+                <li>Current Metrics<br/>
+                The distance and speed for last run.</li>
+                <li>Goals<br>
+                    Number of active days in last 7 days.<br/>
+                    Number of active days in last 30 days.<br/>
+                    Number of days distance goal is met in last 7 days.<br/>
+                    Number of days distance goal is met in last 30 days.<br/>
+                    Note: daily distance goal is set in <a href='#helpDailyDistanceGoal'>Settings</a>.
+                    </li>
+                <li>Best Metrics for Last 30 Days<br/>
+                Longest distance in last 30 days, the speed, and date.<br/>
+                Fastest speed in last 30 days, the distance, and date.</li>
+                <li>Best Metrics Ever<br/>
+                Longest distance ever, the speed, and date.<br/>
+                Fastest speed ever, the distance, and date.</li>
+                <li>Metrics for Last 30 Days<br/>
+                For each day, the date, distance, speed and run time (nX).<br/>
+                (nX) is present only if there is more than one run on a day, in which
+                case nX is the number of runs for the day. The distances and run times
+                are summed for the day.</li>
+            </ul>
+            </li>
+            <li>Menu > Add Stats Item<br/>
+            If you forget to record a run, you can add stats for it.<br/>
+            Enter the following on the dialog presented:
+            <ul>
+                <li>Starting Date: touch to enter a date.</li>
+                <li>Starting Time: touch to enter a time in minutes and seconds.</li>
+                <li>Distance: touch to enter the distance.</li>
+                <li>Run Time: touch to enter the run time in minutes and seconds.</li>
+                <li>Done Button<br/>
+                Touch to save and end editing.</li>
+                <li>Cancel Button<br/>
+                Touch to cancel editing without saving any change.</li>
+            </ul>
+            </li>
+            <li>Menu > Edit Stats Item<br/>
+                <!-- $$$$ start here -->
+                If you forgot to resume recording, you can edit the stats for a run.
+                Editing uses the same dialog described above for Add Stats Item.<br/>
+                You need to select the item to edit first in the Stats History list.
+                Touch the day of month number on the left side of the item to select
+                the item. Only one item can be selected for editing.</li>
+            <li>Menu > Delete Selected<br/>
+                You can delete stats for run that are invalid.<br/>
+                You need to select the item(s) to delete first in the Stats History list.
+                Touch the day of month number on the left side of the item to select
+                the item. Multiple items can be selected for deletion.<br/>
+                A prompt is given for confirming the deletion. Once a deletion is 
+                confirmed it can NOT be undone.</li>
+            <li>Menu > Clear Selected<br/>
+                This clears selections that you have indicated in the Stats History list.
+            </li>
+        </ul>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
         <h3>Menu > Terms of Use</h3>
@@ -715,8 +838,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             The phone alert occurs each time you have traveled the interval distance.
             Alert on the <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> must be On for the alert to occur.<br/>
             A value of 0 indicates Record Distance Alert is off (not used). 
+            <li id='helpDailyDistanceGoal'>Daily Distance Goal<br/>
+            Daily goal for distance to travel when recording a trail.
+            </li>
             <li id='helpAccelAlert' class='noIosHelp'>Accel Alert? Yes | No<br/>
-            No means checking for excessive acceletion is NOT done.<br/>
+            No means checking for excessive acceleration is NOT done.<br/>
             Yes causes an excessive acceleration alert to be issued (phone beep and/or Pebble vibration).
             Checking occurs only if Track on <a href='#helpControlsAtBottom'>Controls at Bottom of Map</a> is On 
             or Record is in the On state.

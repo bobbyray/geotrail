@@ -42,7 +42,9 @@ function wigo_ws_GeoTrailSettings() {
     this.countPhoneBeep = 1;
     // Distance in kilometers to issue periodic alert that specified distance interval 
     // has been travel when recording. 
-    this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  //0.5  miles convert to meters. 
+    this.kmRecordDistancAlertInterval = 2.0 * 1.60934;  // 2.0 miles in kilometers. 
+    // Distance in kilometers for distance goal per day for a recorded path.
+    this.kmDistanceGoalPerDay = 2.0 * 1.60934;  // 2.0 miles in kilometers. 
     // Boolean to indicate excessive acceleration alert is enabled.
     this.bAccelAlert = false; 
     // Float for excessive acceleration threshold in m/sec^2.
@@ -422,7 +424,8 @@ function wigo_ws_Model() {
         arOfflineParams.SaveToLocalStorage();
     };
 
-    // Clears record stats object in local storage.
+    // Clears record stats array in memory.
+    // Note: Does not clear recorded stats in localStorage.
     this.clearRecordStats = function() { 
         arRecordStats.Clear();
     };
@@ -440,22 +443,38 @@ function wigo_ws_Model() {
         return arRecordStats.getAll();
     };
 
+    // Deletes elements from record stats array and saves to localStorage.
+    // Arg:
+    //  arElSpec: {nTimeStamp: number, ...}. Object (not array). List specifying elements to delete.
+    //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+    this.deleteRecordStats = function(arEl) { 
+        arRecordStats.DeleteEls(arEl);
+    };
+
     // Returns ref to last wigo_ws_GeoTrailRecordStats in this array.
     this.getLastRecordStats = function() {
         return arRecordStats.getLast();
-    }
+    };
+
+    // Returns ref to wigo_ws_GeoTrailRecordStats in this array specified by a timestamp.
+    // Returns null if not found.
+    // Arg:
+    //  nTimeStamp: number. timestamp in milliseconds to find.
+    this.getRecordStats = function(nTimeStamp) { 
+        return arRecordStats.getId(nTimeStamp);
+    };
 
     // Sets settings in localStorage.
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for the settings.
     this.setSettings = function (settings) {
         geoTrailSettings.SaveToLocalStorage(settings);
-    }
+    };
 
     // Returns current settings, a wigo_ws_GeoTrailSettings object.
     this.getSettings = function () {
         return geoTrailSettings.getSettings();
-    }
+    };
 
     // Sets version in localStorage.
     this.setVersion = function(version) {
@@ -677,19 +696,55 @@ function wigo_ws_Model() {
     function RecordStatsAry() { 
         // Sets a record stats element in this array and saves array to localStorage. 
         // Arg: 
-        //  stats wigo_ws_RecordStats. stats element to set.
+        //  stats wigo_ws_GeoTrailRecordStats. stats element to set.
         //        stats.nTimeStamp is the unique id for the element.
         //        If stats.nTimeStamp matches an existing element, the
         //        element is replaced; otherwise it is added.
         this.setId = function(stats) {  
             var iAt = FindIxOfId(stats.nTimeStamp);
             if (iAt < 0) {
-                iAt = arRecordStats.length;
-            }       
-            arRecordStats[iAt] = stats;
+                // Redo to insert before timestamp that stats.nTimeStamp is less than
+                // searching backwards from last element in the array.
+                if (arRecordStats.length == 0) {
+                    arRecordStats[0] = stats;
+                } else {
+                    // Search backwards through the array.
+                    let bInserted = false;
+                    let i = arRecordStats.length - 1;
+                    for (i; i >= 0; i--) {
+                        if (stats.nTimeStamp > arRecordStats[i].nTimeStamp) {
+                            // Insert stats before previous item which stats was less than.
+                            // Note: if stats.nTimeStamp is > timestamp of last array element, 
+                            //       then stats is inserted at the end of the array, which should be the typical case.
+                            arRecordStats.splice(i+1, 0, stats);
+                            bInserted = true;
+                            break;
+                        }
+                    }
+                    if (!bInserted)
+                        arRecordStats.splice(0, 0, stats); 
+                }
+            } else {      
+                arRecordStats[iAt] = stats;
+            }
+
             this.SaveToLocalStorage();    
         };
-        // Returns ref to array of all the wigo_ws_RecordStats objects.
+
+        // Returns ref to record stats obj specified by a timestamp.
+        // Returns: wigo_ws_GeoTrailRecordStats ref or null if not found.
+        // Arg:
+        //  nTimeStamp: number. timestamp in milliseconds to find.
+        this.getId = function(nTimeStamp) {
+            var recStats = null;
+            var iAt = FindIxOfId(nTimeStamp);
+            if (iAt >= 0) {
+                recStats = arRecordStats[iAt];
+            }
+            return recStats;
+        };
+
+        // Returns ref to array of all the wigo_ws_GeoTrailRecordStats objects.
         this.getAll = function() {
             return arRecordStats;
         };
@@ -718,6 +773,28 @@ function wigo_ws_Model() {
             else 
                 arRecordStats = [];
         };
+
+        // Deletes elements (wigo_ws_GeoTrailRecordStats objs) from the array.
+        // Saves updated array to localStorage.
+        // Arg:
+        //  arEl: {keyi: nTimeStamp, ...}. Object (not array). List specifying elements to delete.
+        //      keyi: string. key for ith element.
+        //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
+        this.DeleteEls = function(arEl) { 
+            let bChanged = false;
+            let ix = -1;
+            let arKey = Object.keys(arEl);
+            for (let i=0; i < arKey.length; i++) {
+                ix = FindIxOfId(arEl[arKey[i]]);
+                if (ix >= 0) {
+                    arRecordStats.splice(ix, 1); // Delete element at ix.
+                    bChanged = true;
+                }
+            }
+            if (bChanged) {
+                this.SaveToLocalStorage();
+            }
+        }
 
         // Saves this object to local storage.
         this.SaveToLocalStorage = function() {
@@ -848,6 +925,9 @@ function wigo_ws_Model() {
                 UpdateIfNeeded('bTopologyLayer', 7, false);
                 UpdateIfNeeded('bSnowCoverLayer', 7, true); 
 
+                // ** Changes for nSchema 8. 
+                UpdateIfNeeded('kmDistanceGoalPerDay', 8, 2.0 * 1.60934); 
+
                 // ** Changes for next nSchema x goes here.
                 // **** BE SURE to set nSchemaSaved below to x. 
                 
@@ -858,7 +938,7 @@ function wigo_ws_Model() {
         // Schema number for settings.nSchema when saving settings.
         // Increase nSchemaSaved when adding new settings property or 
         // changing default for a settings property. 
-        var nSchemaSaved = 7;  // Must be set to new number when nSchema change is added.
+        var nSchemaSaved = 8;  // Must be set to new number when nSchema change is added.
 
         var settings = new wigo_ws_GeoTrailSettings(); // Local var of settings.
 
