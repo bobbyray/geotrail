@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20170202"; // Constant string for App version. 
+    var sVersion = "1.1.033-RecStatsArchive20180209"; // Constant string for App version. 
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2803,8 +2803,11 @@ function wigo_ws_View() {
         var recordCtrl = null;
         var bOnline = true; 
 
-        // Saves stats for recorded trail locally.
-        // Note: Raises a event.stop, which transitions to StateStopped if reonding is on.
+        // Saves stats for recorded trail locally and returns to initial state 
+        // with record recorded path cleared. (Recorded path can be uncleared.)
+        // Note: Raises event.stop, which transitions to StateStopped if recornding is on.
+        //       Raise event.clear, which clears recorded trail (allowing it to be uncleared)
+        //       and transitions to StateInitial from StateStopped.
         this.saveStats = function() { 
             if (this.isOff())                                          
                 return; // Quit if recording off, no path for stats.   
@@ -2812,6 +2815,7 @@ function wigo_ws_View() {
             // Ensure stopped.
             this.nextState(this.event.stop);  
 
+            /* ////20180209 refactor to share
             // Filter the record path.
             map.recordPath.filter();
             // Get stats and save locally.
@@ -2820,7 +2824,24 @@ function wigo_ws_View() {
                 var statsData = view.onSetRecordStats(stats); // Save stats data. 
                 recordStatsMetrics.update(statsData); // Update metrics for stats. 
             }
+            */
+            SaveStats(); // Save stats locally and update metrics.
+
+            this.nextState(this.event.clear); ////20180209 added
         };
+
+
+        // Saves stats and updates stats metrics.
+        function SaveStats() { ////20180209 added by refactoring.
+            // Filter the record path.
+            map.recordPath.filter();
+            // Get stats and save locally.
+            var stats = map.recordPath.getStats();
+            if (stats.bOk) {
+                var statsData = view.onSetRecordStats(stats); // Save stats data. 
+                recordStatsMetrics.update(statsData); // Update metrics for stats. 
+            }
+        }
 
         // Transitions this FSM to its next state given an event.
         // Arg:
@@ -3048,14 +3069,15 @@ function wigo_ws_View() {
         // Record is off. Ready to start.
         function StateInitial() {
             // Reset for StateInitial.
-            // Note: Call if unclear is not available before calling this.prepare().
+            ////20180209 // Note: Call if unclear is not available before calling this.prepare().
+            // Note: Does NOT reset geo points in recordPath. Need to call map.recordPath.reset() to reset geo points.
             this.reset = function() {
                 // Set default for recordShare droplist.
                 selectRecordShareDropDown.setSelected('private');
                 // Reset the uploader for the recorded trail.
                 uploader.clear();
-                // Reset the captured points for trail.
-                map.recordPath.reset();
+                ////20180209 // Reset the captured points for trail.
+                ////20180209 map.recordPath.reset();
                 // Initialize parameters for saving a Record trail offline.
                 localSaver.initParams();
             };
@@ -3078,6 +3100,7 @@ function wigo_ws_View() {
                 switch (event) {
                     case that.event.start: 
                         this.reset(); 
+                        map.recordPath.reset(); // Clear geo points for recordPath. ////20180209
                         stateOn.prepare();
                         map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
@@ -3112,6 +3135,7 @@ function wigo_ws_View() {
                     case that.event.stop:
                         var msTimeStamp = Date.now();
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.PAUSE); 
+                        SaveStats(); // Save stats locally when stopping. ////20180209 added.
                         stateStopped.prepare();
                         curState = stateStopped;
                         view.ShowCurrentStatus(); // Show status for Record, Track, and Accel. 
@@ -3303,8 +3327,8 @@ function wigo_ws_View() {
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
-                    var statsData = view.onSetRecordStats(stats); // Save stats data. 
-                    recordStatsMetrics.update(statsData); // Update metrics for stats. 
+                    ////20180209 var statsData = view.onSetRecordStats(stats); // Save stats data. 
+                    ////20180209 recordStatsMetrics.update(statsData); // Update metrics for stats. 
                     var sStatsMetricsMsg = recordStatsMetrics.formStatusMsg();
                     view.ShowStatus(sStatsMetricsMsg, true); // Show stats metrics status as error for highlighting. Maybe change later.
                     view.AppendStatus(sMsg, false);
@@ -3371,6 +3395,7 @@ function wigo_ws_View() {
                         // Note: If somethng is wrong for saving, stay in same state.
                         break;
                     case that.event.cancel:
+                    case that.event.stop: ////20180209 added. 
                         stateStopped.prepare();
                         view.ClearStatus();    
                         ClearPathNameUI();  // Clear UI for defining path name.
@@ -7153,10 +7178,10 @@ function wigo_ws_View() {
                 }
             });
         } else if (!recordFSM.isOff()) { 
-            ConfirmYesNo("Recording a trail is in progress. OK to continue and delete the recording?", function(bConfirm){
+            ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.saveStats(); // Ensure stats for recording have been saved. 
-                    recordFSM.initialize(); // Reset recording.
+                    ////20180209 recordFSM.initialize(); // Reset recording.
                     AcceptModeChange();
                 } else {
                     // Restore the current mode selected before the change.
