@@ -7664,7 +7664,7 @@ Are you sure you want to delete the maps?";
             var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
             cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); 
             cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
-
+            
             // Add the item to the list.
             AddRowDiv(item);
 
@@ -7707,9 +7707,29 @@ Are you sure you want to delete the maps?";
 
             //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
             var recStats;
-            for (var i=itemCount; i < arRecStats.length; i++) {
-                recStats = arRecStats[i];
-                this.addStatsItem(recStats);
+            
+            if (itemCount === arRecStats.length && arRecStats.length > 0) { 
+                // Check if top item is same as last (top, most recent) stats data rec.
+                if (stats.listDiv.children.length > 0) {
+                    recStats = arRecStats[stats.listDiv.children.length-1];
+                    var topItem = stats.listDiv.children[0];
+                    var sTopTimeStamp = topItem.getAttribute('data-timestamp');
+                    var nTopTimeStamp = Number(sTopTimeStamp); 
+                    if (nTopTimeStamp === recStats.nTimeStamp) {
+                        // Top list item is same as most recent stats data rec.
+                        // Delete top item in the list, and replace it in case
+                        // the stats data rec has been updated. The data stats rec 
+                        // can be updated due to unclearing a recorded path.
+                        DeleteItem(topItem.id);
+                        this.addStatsItem(recStats);
+                    }
+                }
+
+            } else { 
+                for (var i=itemCount; i < arRecStats.length; i++) {
+                    recStats = arRecStats[i];
+                    this.addStatsItem(recStats);
+                }
             }
         };
 
@@ -7870,6 +7890,7 @@ Are you sure you want to delete the maps?";
             let statsDiv = document.getElementById(id);
             if (statsDiv && statsDiv.parentElement) {
                 statsDiv.parentElement.removeChild(statsDiv);
+                itemCount--;  
             }
         }
 
