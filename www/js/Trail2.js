@@ -518,7 +518,7 @@ function wigo_ws_View() {
                     sStatusPebble += 'Accel Disabled\n';
                 }
             } 
-            // Note: For iPhone, not status at all because not used.
+            // Note: For iPhone, no status at all because not used.
         }
 
         // Form status message.
@@ -5234,12 +5234,13 @@ function wigo_ws_View() {
 
         // Set parameters for excessive acceleration.
         deviceMotion.bAvailable = settings.bAccelAlert; 
-        if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. 
-            deviceMotion.allow();
-        else
-            deviceMotion.disallow();
+        var bAllowAfterReset = settings.bAccelAlert && window.app.deviceDetails.isAndroid();
+        deviceMotion.reset(bAllowAfterReset);
         deviceMotion.setAccelThres(settings.nAccelThres);
         deviceMotion.setAccelVThres(settings.nAccelVThres); 
+        if (recordFSM.isRecording())           
+            deviceMotion.enableForRecording(); 
+        // Note: RunTrackTimer() below will enable device motion for tracking if tracking is on.
 
         // Set body mass. (Used to calculate calories for a recorded path and stats item editor.
         map.recordPath.setBodyMass(settings.kgBodyMass);  
@@ -6545,7 +6546,7 @@ function wigo_ws_View() {
     // Note: The webview support for the DeviceMotionEvent is supposed to work.
     //       It does work for mobile Chrome, but I could not get it to work for GeoTrail
     //       The DeviceEvent did work at one time for GeoTrail, but I cannot get it 
-    //       to work now. I tried hard, but no luck. Cannnot image what changed.
+    //       to work now. I tried hard, but no luck. Cannnot imagine what changed.
     // Object for detection device motion.
     // Constructor arg:
     //  view: ref to wigo_ws_View.
@@ -6618,6 +6619,17 @@ function wigo_ws_View() {
             }
             bRecording = false;
         };
+
+        // Resets device motion.
+        // Arg:
+        //  bAllow: boolean. true to allow device motion sensing after resetting.
+        this.reset = function(bAllow) { 
+            this.disallow();
+            this.disableForTracking();
+            this.disableForRecording();
+            if (bAllow) 
+                this.allow();
+        }
 
         // Returns true if acceleration is being sensed.
         this.isSensing = function() { // Added function.
