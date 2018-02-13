@@ -592,7 +592,7 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
-            if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  ////20180212 added nMode !== this.eMode.record_stats_view for iPhone.
+            if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  
                 recordStatsHistory.close();
         }
 
@@ -2814,8 +2814,6 @@ function wigo_ws_View() {
             
             // Ensure stopped. StateStopped saves stats locally.
             this.nextState(this.event.stop);  
-
-            ////20180211 SaveStats(); // Save stats locally and update metrics. Not needed. Ommit for iPhone problem.
 
             this.nextState(this.event.clear); // Clear recorded trail.
         };
@@ -7723,8 +7721,7 @@ Are you sure you want to delete the maps?";
             if (itemCount === arRecStats.length && arRecStats.length > 0) { 
                 // Check if top item is same as last (top, most recent) stats data rec.
                 if (stats.listDiv.children.length > 0) {
-                    ////20180213 recStats = arRecStats[stats.listDiv.children.length-1];
-                    recStats = arRecStats[arRecStats.length-1];  ////20180213 Fix, was stats.listDiv.children.length-1 
+                    recStats = arRecStats[arRecStats.length-1];  
                     var topItem = stats.listDiv.children[0];
                     var sTopTimeStamp = topItem.getAttribute('data-timestamp');
                     var nTopTimeStamp = Number(sTopTimeStamp); 
