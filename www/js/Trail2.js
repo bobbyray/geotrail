@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20180211"; // Constant string for App version. RecStatsArchive
+    var sVersion = "1.1.033-20180212"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -592,7 +592,7 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
-            if (recordStatsHistory)
+            if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  ////20180212 added nMode !== this.eMode.record_stats_view for iPhone.
                 recordStatsHistory.close();
         }
 
@@ -2812,10 +2812,10 @@ function wigo_ws_View() {
             if (this.isOff())                                          
                 return; // Quit if recording off, no path for stats.   
             
-            // Ensure stopped.
+            // Ensure stopped. StateStopped saves stats locally.
             this.nextState(this.event.stop);  
 
-            SaveStats(); // Save stats locally and update metrics.
+            ////20180211 SaveStats(); // Save stats locally and update metrics. Not needed. Ommit for iPhone problem.
 
             this.nextState(this.event.clear); // Clear recorded trail.
         };
