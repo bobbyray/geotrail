@@ -879,6 +879,7 @@ label {
     float: left;
     position: relative;  
     overflow-y: scroll;
+    width: 100%;  /* ////20180212 added to fix width of first stats item added */
 }
 .stats_item {
     width: 100%;
