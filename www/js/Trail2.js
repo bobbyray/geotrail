@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20180212"; // Constant string for App version. // not yet RecStatsArchive
+    var sVersion = "1.1.033-20180213"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -7723,7 +7723,8 @@ Are you sure you want to delete the maps?";
             if (itemCount === arRecStats.length && arRecStats.length > 0) { 
                 // Check if top item is same as last (top, most recent) stats data rec.
                 if (stats.listDiv.children.length > 0) {
-                    recStats = arRecStats[stats.listDiv.children.length-1];
+                    ////20180213 recStats = arRecStats[stats.listDiv.children.length-1];
+                    recStats = arRecStats[arRecStats.length-1];  ////20180213 Fix, was stats.listDiv.children.length-1 
                     var topItem = stats.listDiv.children[0];
                     var sTopTimeStamp = topItem.getAttribute('data-timestamp');
                     var nTopTimeStamp = Number(sTopTimeStamp); 
