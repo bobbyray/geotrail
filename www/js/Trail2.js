@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20180213"; // Constant string for App version. // not yet RecStatsArchive
+    var sVersion = "1.1.033-20180213-1558"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -8917,23 +8917,36 @@ Are you sure you want to delete the maps?";
                     itemEditor.setEditCtrls(itemData);
                     ShowRecordStatsEditDiv(true);
                 } else {
-                    AlertMsg('Select only one item to edit.');
+                    AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
                 }
 
             } else if (dataValue === 'delete_selected') {
-                ConfirmYesNo("OK to delete all the selected items from local storage?",
-                    function(bConfirm){
-                        if (bConfirm) {
-                            view.onDeleteRecordStats(itemsSelected); 
-                            // Update the stats metrics 
-                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                            // Remove selected items from list displayed.
-                            DeleteSelections();
-                            that.showMonthDate(); 
-                        }
-                    }); 
+                // Prompt user if no item is selected.
+                let arId = Object.keys(itemsSelected);  
+                if (arId.length > 0) {  
+                    ConfirmYesNo("OK to delete all the selected items from local storage?",
+                        function(bConfirm){
+                            if (bConfirm) {
+                                view.onDeleteRecordStats(itemsSelected); 
+                                // Update the stats metrics 
+                                recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                // Remove selected items from list displayed.
+                                DeleteSelections();
+                                that.showMonthDate(); 
+                            }
+                        }); 
+                } else { 
+                    let sMsg = "Select one or more items for deletion by touching the Date of an item.";
+                    AlertMsg(sMsg);
+                }
             } else if (dataValue === 'clear_selected') {
-                that.clearSelections(); 
+                // Prompt user if no item is selected.
+                let arId = Object.keys(itemsSelected);  
+                if (arId.length > 0) {  
+                    that.clearSelections(); 
+                } else {  
+                    AlertMsg("No item is selected.");
+                }
             }
         };
 
