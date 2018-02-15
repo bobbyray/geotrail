@@ -107,12 +107,13 @@ function wigo_ws_GeoTrailVersion() { // 20160610 added.
 
 // Object for statistics for a trail that has been recorded.
 function wigo_ws_GeoTrailRecordStats() { 
-    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer.
+    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer. Creation timesamp.
+    this.nModifiedTimeStamp = 0; // integer. Time value of javascript Date object as an inter. Mofication timestamp. 
     this.msRunTime = 0;  // number. Run time for the recorded path in milliseconds.
     this.mDistance = 0;  // number. Distance of path in meters.
     this.caloriesKinetic = 0;      // number. Kinetic engery in calories to move body mass along the path.
     this.caloriesBurnedCalc = 0;   // number. Calories burned calculated by the GeoTrail app.
-    this.caloriesBurnedActual = 0; // number. Actual calories looked up by user from some web site. 
+    //20180215 this.caloriesBurnedActual = 0; // Removed. 
 }
 
 // Object for the Model (data) used by html page.

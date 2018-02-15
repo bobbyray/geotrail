@@ -1395,13 +1395,6 @@ function wigo_ws_View() {
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
-            // Save actual calories that user has entered.           
-            var actualCalories = cceActualCaloriesNumber.getValue();
-            var statsData = that.onGetLastRecordStats();
-            if (statsData) {
-                statsData.caloriesBurnedActual = actualCalories; 
-                that.onSetRecordStats(statsData); 
-            }
             titleBar.scrollIntoView();   
         }
     });
@@ -5178,12 +5171,9 @@ function wigo_ws_View() {
             cceSpeedLabel.set(cceSpeed.speed, cceSpeed.unit); 
             cceKineticCaloriesLabel.set(lastStats.caloriesKinetic); 
             cceCaloriesBurnedLabel.set(lastStats.caloriesBurnedCalc, "");
-            cceActualCaloriesNumber.set(lastStats.caloriesBurnedActual);   
-            if (lastStats.caloriesBurnedActual > 0) {                      
-                cceNewEfficiencyNumber.set(lastStats.caloriesKinetic / lastStats.caloriesBurnedActual);
-            } else {
-                cceNewEfficiencyNumber.set(0);
-            }
+            cceActualCaloriesNumber.set(0); 
+            cceNewEfficiencyNumber.set(0);  
+
             var curEfficiency = lastStats.caloriesKinetic / lastStats.caloriesBurnedCalc;
             if (!Number.isFinite(curEfficiency)) {
                 curEfficiency = 0;
@@ -7846,8 +7836,6 @@ Are you sure you want to delete the maps?";
                 stats.mDistance = stats0.mDistance + 100; 
                 stats.caloriesKinetic = stats0.caloriesKinetic + 11;      
                 stats.caloriesBurnedCalc = stats0.caloriesBurnedCalc + 12;   
-                stats.caloriesBurnedActual = stats0.caloriesBurnedActual + 20;
-
                 arRecStats.unshift(stats); // Insert at beginning of list.
                 stats0 = stats;  
             }
@@ -7997,7 +7985,6 @@ Are you sure you want to delete the maps?";
                     // the calorie fields, so want to replace these fields.
                     itemData.caloriesKinetic = originalItemData.caloriesKinetic;
                     itemData.caloriesBurnedCalc = originalItemData.caloriesBurnedCalc;
-                    itemData.caloriesBurnedActual = originalItemData.caloriesBurnedActual;
                 } else {
                     bChanged = true;
                 }
@@ -9984,7 +9971,6 @@ function wigo_ws_Controller() {
         data.mDistance = stats.dTotal;
         data.caloriesKinetic = stats.calories;
         data.caloriesBurnedCalc = stats.calories3;
-        // data.caloriesBurnedActual is not set. Value is default set by constructor.
         return data;
     }
 

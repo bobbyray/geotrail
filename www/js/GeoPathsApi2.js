@@ -770,4 +770,11 @@ wigo_ws_GpxPath.AttachFcns = function (me) {
     // May want to attach Parse(xmlData) also, but not needed now.
 };
 
+// wigo_ws_GeoTrailRecordStats in Model.js is object exchanged with 
+// for stats for a recorded trail. 
+// JavaScript Object                    Server Object
+// wigo_ws_GeoTrailRecordStats          GeoTrailRecordStats
+// [] of wigo_ws_GeoTrailRecordStats    GeoTrailRecordStatsList
+
+
 
