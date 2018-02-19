@@ -496,6 +496,7 @@ function wigo_ws_Model() {
     var sGeoTrailSettingsKey = 'GeoTrailSettingsKey'; 
     var sGeoTrailVersionKey = 'GeoTrailVersionKey'; 
     var sRecordStatsKey = 'GeoTrailRecordStatsKey';  
+    var sRecordStatsSchemaKey = 'GeoTrailRecordStatsSchemaKey';  ////20180215 added
 
     var api = new wigo_ws_GeoPathsRESTfulApi(); // Api for data exchange with server.
 
@@ -768,12 +769,53 @@ function wigo_ws_Model() {
 
         // Loads this object from local storage.
         this.LoadFromLocalStorage = function() {
+            ////20180215 $$$$ fix for schema level.
+            // Get schema for arRecordStats from localStorage.
+            if ( localStorage && localStorage[sRecordStatsSchemaKey]) {
+                schema = JSON.parse(localStorage[sRecordStatsSchemaKey]);
+            } else {
+                schema.level = 0;
+            }
+
             var sRecordStats = localStorage[sRecordStatsKey];
-            if (sRecordStats !== undefined) 
-                arRecordStats = JSON.parse(sRecordStats)
-            else 
+            if (sRecordStats !== undefined) {
+                arRecordStats = JSON.parse(sRecordStats);
+                ////20180215 add update arRecordStats is schema is down level.
+                // Check for updating schema.
+                if (schema.level < nSchemaSaved) {
+                    // Change for scheme.level 1.
+                    if (schema.level < 1)
+                        UpdateSchemaTo1();
+                    
+                    // ** Changes for next schema.level x goes here.
+                    // **** BE SURE to set nSchemaSaved below to x. 
+                    this.SaveToLocalStorage();
+                }
+            } else {
                 arRecordStats = [];
+            }
         };
+        // Schema number for arRecordStats when saving settings.
+        // Increase nSchemaSaved when updating property of elements of arRecordStats.
+        var nSchemaSaved = 1;  // Must be set to new number when nSchema change is added. ////20180215 added
+        var schema = {level: 0}; // Current schema leval.
+        // Update each element of arRecords. Each element is a wigo_ws_GeoTrailRecordStats obj:
+        //      add property nModifiedTimeStamp.
+        //      remove property caloriesBurnedActual.
+        function UpdateSchemaTo1() {
+            var statsEl;
+            for (var i=0; i < arRecordStats.length; i++) {
+                statsEl = arRecordStats[i];
+                // Add nModifiedTimeStamp property if missing.
+                if ((typeof(statsEl.nModifiedTimeStamp) === 'undefined')) {
+                    statsEl.nModifiedTimeStamp = statsEl.nTimeStamp;  
+                }
+                // Remove caloriesBurnedActual if it exists.
+                if (typeof (statsEl.caloriesBurnedActual) !== 'undefined') {
+                    delete statsEl.caloriesBurnedActual;
+                }
+            }
+        }
 
         // Deletes elements (wigo_ws_GeoTrailRecordStats objs) from the array.
         // Saves updated array to localStorage.
@@ -800,6 +842,8 @@ function wigo_ws_Model() {
         // Saves this object to local storage.
         this.SaveToLocalStorage = function() {
             localStorage[sRecordStatsKey] = JSON.stringify(arRecordStats);
+            schema.level = nSchemaSaved;   ////20180215 added.
+            localStorage[sRecordStatsSchemaKey] = JSON.stringify(schema);
         };
 
         // Searches for record stats element.

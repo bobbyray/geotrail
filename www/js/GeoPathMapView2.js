@@ -2770,8 +2770,11 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         //                         m is body mass in kilograms.
         //                      Note: Does not seem to be useful. Value is way too low. Use calories instead.
         //  calories3: number. Estimated number of calories burned. Equals calories / calsBurnedEfficency.
+        //  nModifiedTimeStamp: number. timestamp in milliseconds for modification of stats.
+        //                      Also returned as 0 by this.getStats(). Can be set by caller to indicate timestamp of modification.
         this.getStats = function() {
-            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0, calories3: 0}; 
+            var result = {bOk: false, dTotal: 0,  msRecordTime: 0, msElapsedTime: 0, tStart: null, kJoules: 0, calories: 0, nExcessiveV: 0, calories2: 0, calories3: 0, nModifiedTimeStamp: 0}; 
+            ////20180215 added nModifiedTimeStamp to result object.
             if (!IsMapLoaded())
                 return result; // Quit if map has not been loaded.
             

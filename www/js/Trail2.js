@@ -2819,6 +2819,7 @@ function wigo_ws_View() {
             // Get stats and save locally.
             var stats = map.recordPath.getStats();
             if (stats.bOk) {
+                stats.nModifiedTimeStamp = Date.now(); // Set modification timestamp. ////20180215 added.
                 var statsData = view.onSetRecordStats(stats); // Save stats data. 
                 recordStatsMetrics.update(statsData); // Update metrics for stats. 
             }
@@ -7928,14 +7929,14 @@ Are you sure you want to delete the maps?";
 
         // Event handler for Done button on edit div.
         function OnEditDone(event) {
-            // Helper to check if two dates are the same, ignoring millisecond component.
+            // Helper to check if two dates are the same, ignoring seconds and millisecond component.
             // Returns true if same.
             // Arg:
             //  msTimeStamp1: number. timestamp in milliseconds for date1 to compare with date2.
             //  msTimeStamp2: number. timestamp in milliseconds for date2 to compare with date1.
-            // Note: Check year, month, day, hour, minute, and second.
-            //       The millisecond of component is not checked because
-            //       milliseconds is not given as an editor control.
+            // Note: Check year, month, day, hour, minute.
+            //       The seonds and milliseconds components are not checked because
+            //       they are not given as editor controls.
             function IsSameDate(msTimeStamp1, msTimeStamp2) {
                 let date1 = new Date(msTimeStamp1);
                 let date2 = new Date(msTimeStamp2); 
@@ -7943,8 +7944,8 @@ Are you sure you want to delete the maps?";
                             date1.getMonth() === date2.getMonth() &&
                             date1.getDate() === date2.getDate() &&
                             date1.getHours() === date2.getHours() &&
-                            date1.getMinutes() === date2.getMinutes() &&
-                            date1.getSeconds() === date2.getSeconds();
+                            date1.getMinutes() === date2.getMinutes(); ////20180215 &&
+                            ////20180215 date1.getSeconds() === date2.getSeconds();
                 return bSame;
             }
 
@@ -8019,7 +8020,8 @@ Are you sure you want to delete the maps?";
                 }
             }
             // Update local storage, the stat history list, and stats metrics.
-            if (bChanged) { 
+            if (bChanged) {
+                itemData.nModifiedTimeStamp = Date.now(); ////20180215 added
                 UpdateLocalStorage();
             }
 
@@ -9956,14 +9958,15 @@ function wigo_ws_Controller() {
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
     var gpxOfflineArray = null; // Array of wigo_ws_GeoPathMap.OfflineParams objects obtained from model.
 
-    // Converts record path stats to data to save to save to local storage.
+    // Converts record path stats to data to save to local storage.
     // Returns: wigo_ws_GeoTrailRecordStats object. 
     //  Args: 
     //    stats: literal obj. stats from recordPath.getStats() member of wigo_ws_GeoPathMap object.
     // Note: 
     // literal obj for stats:
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
-    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number,
+    //    nModifiedTimeStamp: number} 
     function ConvertRecordStatsToData(stats) {
         var data = new wigo_ws_GeoTrailRecordStats();
         data.nTimeStamp = stats.tStart ? stats.tStart.getTime() : 0;
@@ -9971,6 +9974,7 @@ function wigo_ws_Controller() {
         data.mDistance = stats.dTotal;
         data.caloriesKinetic = stats.calories;
         data.caloriesBurnedCalc = stats.calories3;
+        data.nModifiedTimeStamp = stats.nModifiedTimeStamp; ////20180215 added.
         return data;
     }
 
