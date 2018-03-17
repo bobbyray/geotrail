@@ -1,6 +1,6 @@
 'use strict';
 /* 
-Copyright (c) 2017 Robert R Schomburg
+Copyright (c) 2017 - 2018 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -73,16 +73,17 @@ function wigo_ws_NetworkInformation() {
 // Arg:
 //  bIos: boolean. If true returns dummy replacement for wigo_ws_NetworkInformation object that always indicates online.
 //                 If falses returns wigo_ws_NetworkInformation object.
+//  deviceDetails: Wigo_Ws_CordovaDeviceDetails obj. device details indicating android, IOS (iPhone), or perhaps other devices in the future.
 // Note: // cordova-plugin-network-information is not working for ios. Hangs app at start up.
-function wigo_ws_NewNetworkInformation(bIos) {
-    if (typeof(bIos) !== 'boolean')
-        bIos = false;
+function wigo_ws_NewNetworkInformation(deviceDetails) {  
+    var bDeviceDetails = typeof deviceDetails !== 'undefined';
+    
     var networkInfo;
-    if (bIos) {
+    if (bDeviceDetails && deviceDetails.isAndroid()) {
+        networkInfo = new wigo_ws_NetworkInformation(); 
+    } else {  // iPhone or unknown.
         networkInfo = {isOnline: function(){return this.isCellOnline() || this.isWiFiOnline();}, isCellOnline: function(){return true;}, 
         isWiFiOnline: function(){return true;}, getBackOnlineInstr: function(){return ""}};  
-    } else { 
-        networkInfo = new wigo_ws_NetworkInformation(); 
     }
     return networkInfo;
 }

@@ -1,6 +1,6 @@
 ﻿'use strict';
 /* 
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015 - 2018 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -105,21 +105,10 @@ function wigo_ws_GeoTrailVersion() { // 20160610 added.
     this.bTermsOfUseAccepted = false; 
 }
 
-// Object for statistics for a trail that has been recorded.
-function wigo_ws_GeoTrailRecordStats() { 
-    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer. Creation timesamp.
-    this.nModifiedTimeStamp = 0; // integer. Time value of javascript Date object as an inter. Mofication timestamp. 
-    this.msRunTime = 0;  // number. Run time for the recorded path in milliseconds.
-    this.mDistance = 0;  // number. Distance of path in meters.
-    this.caloriesKinetic = 0;      // number. Kinetic engery in calories to move body mass along the path.
-    this.caloriesBurnedCalc = 0;   // number. Calories burned calculated by the GeoTrail app.
-    //20180215 this.caloriesBurnedActual = 0; // Removed. 
-}
-
 // Object for the Model (data) used by html page.
 // Model should be sharable by all html pages for GeoPaths site.
 // However, Controller and View are different for each page.
-function wigo_ws_Model() {
+function wigo_ws_Model(deviceDetails) {   
     // ** Public members
 
     // Puts gpx data to server.
@@ -197,6 +186,85 @@ function wigo_ws_Model() {
         var bOk = api.GpxGetListByLatLon(sOwnerId, nShare, gptSW, gptNE, this.getAccessHandle(), onDone);
         return bOk;
     };
+
+    // Uploads recorded stats list to server.
+    // Args:
+    //  arStats: ref to array of wigo_ws_GeoTrailRecordStats objs. the list to upload.
+    //  onDone: Asynchronous completion handler. Signature:
+    //      bOk: boolean: true for sucessful upload.
+    //      sStatus: string: description for the upload result.
+    //      Returns: void
+    //  Synchronous return: boolean. true indicates upload successfully started.
+    // Remarks: User must be signed in. If user is not signed in, calls onDone(..) 
+    // immediately indicating user is not signed in and returns false.
+    this.uploadRecordStatsList = function (arStats, onDone) { 
+        var ah = this.getAccessHandle();
+        var id = this.getOwnerId();
+        var bStarted = false;
+        if (ah.length > 0 && id.length > 0) {
+            bStarted = api.UploadRecordStatsList(id, ah, arStats, onDone);
+        } else {
+            // Can not upload because user id is invalid. 
+            bStarted = false;  
+            if (onDone) {
+                onDone(false, "User must be signed in.");
+            }
+        }
+        return bStarted;
+    };
+
+    // Deletes recorded stats list at server.
+    // Args:
+    //  arTimeStamp: ref to array of wigo_ws_GeoTrailTimeStamp objs. the list of timestamps identifying wigo_ws_GeoTrailRecordStats objs to delete. 
+    //  onDone: Asynchronous completion handler. Signature:
+    //      bOk: boolean: true for sucessful delete.
+    //      sStatus: string: description for the delete result.
+    //      Returns: void
+    //  Synchronous return: boolean. true indicates delete successfully started.
+    // Remarks: User must be signed in. If user is not signed in, calls onDone(..) 
+    // immediately indicating user is not signed in and returns false.
+    this.deleteRecordStatsList = function (arTimeStamp, onDone) { 
+        var ah = this.getAccessHandle();
+        var id = this.getOwnerId();
+        var bStarted = false;
+        if (ah.length > 0 && id.length > 0) {
+            bStarted = api.DeleteRecordStatsList(id, ah, arTimeStamp, onDone);
+        } else {
+            // Can not delete at server because user id is invalid. 
+            bStarted = false; 
+            if (onDone) {
+                onDone(false, "User must be signed in.");
+            }
+        }
+        return bStarted;
+    };
+
+    // Downloads recorded stats list from server.
+    // Args:
+    //  onDone: Asynchronous completion handler. Signature:
+    //      bOk: boolean: true for sucessful upload.
+    //      arStats: array of wigo_ws_GeoTrailRecordStats objs. the list that has been downloaded.
+    //      sStatus: string: description for the upload result.
+    //      Returns: void
+    //  Synchronous return: boolean. true indicates download successfully started.
+    // Remarks: User must be signed in. If user is not signed in, calls onDone(..) 
+    // immediately indicating user is not signed in and returns false.
+    this.downloadRecordStatsList = function (onDone) { 
+        var ah = this.getAccessHandle();
+        var id = this.getOwnerId();
+        var bStarted = false;
+        if (ah.length > 0 && id.length > 0) {
+            bStarted = api.DownloadRecordStatsList(id, ah, onDone);
+        } else {
+            // Can not upload because user id is invalid. 
+            bStarted = false;  
+            if (onDone) {
+                onDone(false, [], "User must be signed in.");
+            }
+        }
+        return bStarted;
+
+    }
 
     // Resets flag that indicates http request (get or post) is still in progress.
     // Note: May be needed if trying to issue subsequent requests fails due to 
@@ -439,7 +507,7 @@ function wigo_ws_Model() {
     };
 
     // Returns list of record stats objects, which is
-    // Array oibjec of wigo_ws_GeoTrailRecordStats objects.
+    // Array object of wigo_ws_GeoTrailRecordStats objects.
     this.getRecordStatsList = function() { 
         return arRecordStats.getAll();
     };
@@ -496,7 +564,7 @@ function wigo_ws_Model() {
     var sGeoTrailSettingsKey = 'GeoTrailSettingsKey'; 
     var sGeoTrailVersionKey = 'GeoTrailVersionKey'; 
     var sRecordStatsKey = 'GeoTrailRecordStatsKey';  
-    var sRecordStatsSchemaKey = 'GeoTrailRecordStatsSchemaKey';  ////20180215 added
+    var sRecordStatsSchemaKey = 'GeoTrailRecordStatsSchemaKey';  
 
     var api = new wigo_ws_GeoPathsRESTfulApi(); // Api for data exchange with server.
 
@@ -539,7 +607,6 @@ function wigo_ws_Model() {
         }
         return bOk;
     }
-
 
     // Object for storing Offline Parameters for geo paths in local storage.
     // Manages an array of wigo_ws_GeoPathMap.OfflineParams objects.
@@ -768,10 +835,9 @@ function wigo_ws_Model() {
         };
 
         // Loads this object from local storage.
-        this.LoadFromLocalStorage = function() {
-            ////20180215 $$$$ fix for schema level.
+        this.LoadFromLocalStorage = function () {
             // Get schema for arRecordStats from localStorage.
-            if ( localStorage && localStorage[sRecordStatsSchemaKey]) {
+            if (localStorage && localStorage[sRecordStatsSchemaKey]) {
                 schema = JSON.parse(localStorage[sRecordStatsSchemaKey]);
             } else {
                 schema.level = 0;
@@ -780,13 +846,12 @@ function wigo_ws_Model() {
             var sRecordStats = localStorage[sRecordStatsKey];
             if (sRecordStats !== undefined) {
                 arRecordStats = JSON.parse(sRecordStats);
-                ////20180215 add update arRecordStats is schema is down level.
                 // Check for updating schema.
                 if (schema.level < nSchemaSaved) {
                     // Change for scheme.level 1.
                     if (schema.level < 1)
                         UpdateSchemaTo1();
-                    
+
                     // ** Changes for next schema.level x goes here.
                     // **** BE SURE to set nSchemaSaved below to x. 
                     this.SaveToLocalStorage();
@@ -797,18 +862,18 @@ function wigo_ws_Model() {
         };
         // Schema number for arRecordStats when saving settings.
         // Increase nSchemaSaved when updating property of elements of arRecordStats.
-        var nSchemaSaved = 1;  // Must be set to new number when nSchema change is added. ////20180215 added
-        var schema = {level: 0}; // Current schema leval.
+        var nSchemaSaved = 1;  // Must be set to new number when nSchema change is added. 
+        var schema = { level: 0 }; // Current schema leval.
         // Update each element of arRecords. Each element is a wigo_ws_GeoTrailRecordStats obj:
         //      add property nModifiedTimeStamp.
         //      remove property caloriesBurnedActual.
         function UpdateSchemaTo1() {
             var statsEl;
-            for (var i=0; i < arRecordStats.length; i++) {
+            for (var i = 0; i < arRecordStats.length; i++) {
                 statsEl = arRecordStats[i];
-                // Add nModifiedTimeStamp property if missing.
-                if ((typeof(statsEl.nModifiedTimeStamp) === 'undefined')) {
-                    statsEl.nModifiedTimeStamp = statsEl.nTimeStamp;  
+                // Ensure there is no nModifiedTimeStamp property.
+                if ((typeof (statsEl.nModifiedTimeStamp) !== 'undefined')) {
+                    delete statsEl.nModifiedTimeStamp;
                 }
                 // Remove caloriesBurnedActual if it exists.
                 if (typeof (statsEl.caloriesBurnedActual) !== 'undefined') {
@@ -842,7 +907,7 @@ function wigo_ws_Model() {
         // Saves this object to local storage.
         this.SaveToLocalStorage = function() {
             localStorage[sRecordStatsKey] = JSON.stringify(arRecordStats);
-            schema.level = nSchemaSaved;   ////20180215 added.
+            schema.level = nSchemaSaved;   
             localStorage[sRecordStatsSchemaKey] = JSON.stringify(schema);
         };
 
@@ -1042,5 +1107,5 @@ function wigo_ws_Model() {
     geoTrailVersion.LoadFromLocalStorage();
 
     // Network information object. Wrapper for cordova-plugin-network-information.
-    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
+    var networkInfo = wigo_ws_NewNetworkInformation(deviceDetails);
 }

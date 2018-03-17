@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20180213-1558"; // Constant string for App version. // not yet RecStatsArchive
+    var sVersion = "1.1.033-20180317-1541"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -2819,7 +2819,6 @@ function wigo_ws_View() {
             // Get stats and save locally.
             var stats = map.recordPath.getStats();
             if (stats.bOk) {
-                stats.nModifiedTimeStamp = Date.now(); // Set modification timestamp. ////20180215 added.
                 var statsData = view.onSetRecordStats(stats); // Save stats data. 
                 recordStatsMetrics.update(statsData); // Update metrics for stats. 
             }
@@ -7944,8 +7943,7 @@ Are you sure you want to delete the maps?";
                             date1.getMonth() === date2.getMonth() &&
                             date1.getDate() === date2.getDate() &&
                             date1.getHours() === date2.getHours() &&
-                            date1.getMinutes() === date2.getMinutes(); ////20180215 &&
-                            ////20180215 date1.getSeconds() === date2.getSeconds();
+                            date1.getMinutes() === date2.getMinutes();
                 return bSame;
             }
 
@@ -8021,7 +8019,6 @@ Are you sure you want to delete the maps?";
             }
             // Update local storage, the stat history list, and stats metrics.
             if (bChanged) {
-                itemData.nModifiedTimeStamp = Date.now(); ////20180215 added
                 UpdateLocalStorage();
             }
 
@@ -8159,11 +8156,16 @@ Are you sure you want to delete the maps?";
                 // Add line to report list under last 30 days header.
                 // Returns: {item: div, label: span, value: span} object. See InsertLineAfter(..) function.
                 // Arg:
-                //  afterItem: HTML Div obj. item in report list after the new month-day item is inserted.
+                //  afterItem: HTML Div obj. item in report list after which the monthDayEl is inserted.
                 //  monthDayEl: MonthDayEl obj. info for month day to stats metrics report.
                 //              See function MonthDayEl() below for properties of a MonthDayEl obj.
                 function AddMonthDayLine(afterItem, monthDayEl) {
-                    var date = new Date(monthDayEl.nDate)
+                    var date = new Date(monthDayEl.nDate);
+                    // Convert UTC value of date to local component values.
+                    // Note: hour, minute, second, milliseconds of converted date is 12:00:00:000. 
+                    // Conversion is probably not necessary, but is done because some times have timezone offsets > 12,
+                    // which could throw off determining the correct date without a conversion.
+                    date = new Date(date.getTime() + date.getTimezoneOffset()*60*1000); 
                     var sLabel = "{0}: ".format(date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', weekday: 'short' })); 
                     var sValue; 
                     if (monthDayEl.nUpdates > 0) {
@@ -8359,15 +8361,15 @@ Are you sure you want to delete the maps?";
             }
             
             
-            // Inserts a line in the report list after and existing item.
-            // Returns: {item: div, label: span, value: span} object.
+            // Inserts a line in the report list after an existing item.
+            // Returns: {item: div, label: span, value: span} object. the new inserted item.
             //      item: HTML Div element ref for the item containing the label and value.
             //      label HTML Span element ref for the label.
             //      value HTML Span elenet ref for the value.
             // Arg:
-            // 
-            //  sLabel: string. text for a label.
-            //  sValue: string. text for a value. 
+            //  afterItem: HTML Div obj. item in report list after which a new item is inserted.
+            //  sLabel: string. text for a label for the new item.
+            //  sValue: string. text for a value for the new item. 
             function InsertLineAfter(afterItem, sLabel, sValue) { 
                 var item = that.insertItemAfter(afterItem);
                 return FormLineContent(item, sLabel, sValue);
@@ -8690,24 +8692,59 @@ Are you sure you want to delete the maps?";
                 return num;
             }
 
-            // Parses a Date and Time input controls.
-            // Returns millisec value for a Date object.
-            // Returns 0 date or time control does not have a vailid value.
+            // Parses Date and Time input controls.
+            // Returns millisecond value for a Date object.
+            // Returns 0 date if date control does not have a valid value.
             // Args:
             //  dateCtrl: HTMLInput, type=date obj. ref to date ctrl.
             //  timeCtrl: HTMLInput, type=time obj. ref to time ctrl.
             function ParseDateTime(dateCtrl, timeCtrl) {
+                //let ms = 0; 
+                //let sDate = dateCtrl.value;
+                //let sTime = timeCtrl.value;
+                // The following worked differently for android and ios. 
+                // android used local time and ios used utc.
+                // Mozilla documents recommends NOT number Date(dateString) consructor.
+                //if (sDate.length > 0 && sTime.length > 0) {
+                //    let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
+                //    let datetime = new Date(sDateTime);
+                //    ms = datetime.getTime();
+                //} else if (sDate.length > 0) {
+                //    // The followinf worked different for android and ios.
+                //    let sDateFmt = "{0}".format(sDate);   
+                //    let date = new Date(sDateFmt);
+                //    ms = date.getTime();
+                //}
+                //return ms;
+
+                // Parses string for year, month, day.
+                // Arg:
+                //  sDate: string. date format is yyyy-mm-dd
+                //  sTime: string. time format is hh:ss
+                // Returns: {year: number, month: number_origin_0, date: number, hour: number, minute: number} or null if sDate is invalid.
+                //          If sTime is invalid, hour = 0 and minute = 0. 
+                //          Returned month is origin 0 for January for compatability with Date constructor.
+                //          sDate month part is origin 1 for January.
+                function ParseStr(sDate, sTime) {
+                    var matches =sDate.match(/(\d\d\d\d)\-(\d\d)\-(\d\d)/);
+                    var ymdhm = null;
+                    if (matches) {
+                        ymdhm = {year: Number(matches[1]), month: Number(matches[2]-1), date: Number(matches[3]), hour: 0, minute: 0};
+                        matches = sTime.match(/(\d\d)\:(\d\d)/);
+                        if (matches) {
+                            ymdhm.hour = Number(matches[1]);
+                            ymdhm.minute = Number(matches[2]);
+                        }
+                    }
+                    return ymdhm;
+                }
+
                 let ms = 0; 
                 let sDate = dateCtrl.value;
                 let sTime = timeCtrl.value;
-                if (sDate.length > 0 && sTime.length > 0) {
-                    let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
-                    let datetime = new Date(sDateTime);
-                    ms = datetime.getTime();
-                } else if (sDate.length > 0) {
-                    let sDateFmt = "{0}".format(sDate);   
-                    let date = new Date(sDateFmt);
-                    ms = date.getTime();
+                let ymdhm = ParseStr(sDate, sTime);
+                if (ymdhm) {
+                    ms = (new Date(ymdhm.year, ymdhm.month, ymdhm.date, ymdhm.hour, ymdhm.minute)).getTime();
                 }
                 return ms;
             }
@@ -9213,7 +9250,7 @@ Are you sure you want to delete the maps?";
         // ** Private Members.
         // Object for element of MonthlyDayAry.
         // Construct Arg:
-        //  normalizedDate: Date object with hours, minutes, seconds, milliseconds of 12, 0, 0, 0.
+        //  normalizedDate: Date object with UTC value with hours, minutes, seconds, milliseconds of 12, 0, 0, 0.
         function MonthDayEl(normalizedDate) {
             this.nDate = normalizedDate.getTime(); // number for Data value for the date at 12:00 (noon).
             this.mDistance = 0; // number. distance in meters.
@@ -9227,19 +9264,28 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  arRecStat: array of wigo_ws_GeoTrailRecordStats objs used to fill this array.
             this.fill = function(arRecStats) {
-                // Helper. Normalizes date for a day, which is useful for finding element of
+                // Helper. Normalizes date for a day using UTC, which is useful for finding element of
                 // arMonthDay by .nDate.
                 // Sets date components hours, minutes, seconds, milliseconds to 12,0,0,0.
                 // Arg:
-                //  date: Date object that is normalized.
+                //  date: ref to Date object that is normalized. data is NOT changed.
+                // Returns Date. the normalized date. 
                 function ClearHrMinSec(date) {
-                    date.setHours(12, 0, 0, 0); 
+                    //No date.setHours(12, 0, 0, 0); // Does not work because of daylight saving time
+                    //because a date one day before daylight saving time change and date the day after are NOT 24 hours apart.
+                    
+                    var normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0));
+                    // Must use UTC so that the day before daylight saving time change and the day after have the millisecond time difference of of one day.:
+                    // For example, Date before: 2018-03-10_04:00:00:00 -TZ 8 PST vs Date after: 2018-03-11_12:05:00:00:00 -TZ 7 PDT.
+                    // The getTime() value is one day difference, (24*12*60*1000) in milliseconds. 
+                    // The UTC time is 2018-03-10_12:00:00:00 vs 2018-03-11_12:00:00:00
+                    return normalizedDate;
                 }
                 
                 // Pads arMonthDay array by pushing new elements that are cleared
                 // except each has a previous date.
                 // Arg:
-                //  toDate: Date obj with in normalized hour, minute, second, millisecond components.
+                //  toDate: Date obj with normalized hour, minute, second, millisecond components.
                 //          Pads up to but not included toDate.
                 function PadTo(toDate) {
                     var monthDayEl;
@@ -9248,11 +9294,11 @@ Are you sure you want to delete the maps?";
                     
                     var msOneDay = 24*60*60*1000; // fime for one day in milliseconds.
                     var nFromDate = arMonthDay[arMonthDay.length-1].nDate;
-                    var nToDate = toDate.getTime();
+                    var nToDate = toDate.getTime();  
                     for (var i = arMonthDay.length; i < maxSizeOfArMonthDay; i++) {
                         nFromDate -= msOneDay;
-                        if (nFromDate === nToDate) {
-                            // quit when fromDate equals toDate.
+                        if (nFromDate <= nToDate) { 
+                            // quit when fromDate equals toDate. < should not happen, but check for safety.
                             break;
                         } else {
                             // push a pad element, which indicates no walking activity.
@@ -9264,7 +9310,7 @@ Are you sure you want to delete the maps?";
                 
                 arMonthDay = []; 
                 var now = new Date(Date.now());
-                ClearHrMinSec(now);
+                now = ClearHrMinSec(now);
                 var monthDayEl = new MonthDayEl(now);
 
                 if (arRecStats.length < 1) {
@@ -9275,7 +9321,7 @@ Are you sure you want to delete the maps?";
                 }
 
                 var statsDate = new Date(arRecStats[arRecStats.length-1].nTimeStamp);
-                ClearHrMinSec(statsDate);
+                statsDate = ClearHrMinSec(statsDate);
 
                 if (monthDayEl.nDate > statsDate.getTime()) {
                     // Current date more recent than last stats date.
@@ -9293,8 +9339,8 @@ Are you sure you want to delete the maps?";
                         break; // Quit because arMonthDay if full.
 
                     stats = arRecStats[i];
-                    statsDate = new Date(stats.nTimeStamp);
-                    ClearHrMinSec(statsDate);
+                    statsDate = new Date(stats.nTimeStamp); 
+                    statsDate = ClearHrMinSec(statsDate); 
 
                     // Check if prevStatsDate is same as ith monthDay date.
                     if (prevStatsDate ) {
@@ -9387,7 +9433,7 @@ Are you sure you want to delete the maps?";
     fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 
     // Object for network (internet) connection state.
-    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
+    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails);
 
     // Object for navigating back from a link that has been followed in an HTML description. 
     // Construct Arg:
@@ -9455,7 +9501,7 @@ Are you sure you want to delete the maps?";
 function wigo_ws_Controller() {
     var that = this;
     var view = new wigo_ws_View();
-    var model = new wigo_ws_Model();
+    var model = new wigo_ws_Model(window.app.deviceDetails);
 
     // ** Handlers for events fired by view.
 
@@ -9965,8 +10011,7 @@ function wigo_ws_Controller() {
     // Note: 
     // literal obj for stats:
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
-    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number,
-    //    nModifiedTimeStamp: number} 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}
     function ConvertRecordStatsToData(stats) {
         var data = new wigo_ws_GeoTrailRecordStats();
         data.nTimeStamp = stats.tStart ? stats.tStart.getTime() : 0;
@@ -9974,7 +10019,6 @@ function wigo_ws_Controller() {
         data.mDistance = stats.dTotal;
         data.caloriesKinetic = stats.calories;
         data.caloriesBurnedCalc = stats.calories3;
-        data.nModifiedTimeStamp = stats.nModifiedTimeStamp; ////20180215 added.
         return data;
     }
 
