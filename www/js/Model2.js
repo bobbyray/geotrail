@@ -105,6 +105,21 @@ function wigo_ws_GeoTrailVersion() { // 20160610 added.
     this.bTermsOfUseAccepted = false; 
 }
 
+// Object for RecordStats Xfr with Server
+function wigo_ws_RecordStatsXfrInfo() { ////20180319 added
+    // number of milliseconds for timestamp of most recent stats item uploaded to server.
+    this.nUploadTimeStamp = 0; 
+    // Owner (user) id of  previously signed in user.
+    this.sPreviousOwnerId = "";
+}
+
+// Object for element of array of residual RecordStats items than need to be 
+// uploaded to web server for an owner id.
+function wigo_ws_RecordStatsXfrResidue() { ////20180321 added
+    this.sOwnerId = ""; // String for owner id.
+    this.arRecStats = []; // Array of wigo_ws_GeoTrailRecordStats objects for sOwnerId.        
+}
+
 // Object for the Model (data) used by html page.
 // Model should be sharable by all html pages for GeoPaths site.
 // However, Controller and View are different for each page.
@@ -215,7 +230,7 @@ function wigo_ws_Model(deviceDetails) {
 
     // Deletes recorded stats list at server.
     // Args:
-    //  arTimeStamp: ref to array of wigo_ws_GeoTrailTimeStamp objs. the list of timestamps identifying wigo_ws_GeoTrailRecordStats objs to delete. 
+    //  arTimeStamp: ref to array of number. the list of timestamps identifying wigo_ws_GeoTrailRecordStats objs to delete. 
     //  onDone: Asynchronous completion handler. Signature:
     //      bOk: boolean: true for sucessful delete.
     //      sStatus: string: description for the delete result.
@@ -263,7 +278,6 @@ function wigo_ws_Model(deviceDetails) {
             }
         }
         return bStarted;
-
     }
 
     // Resets flag that indicates http request (get or post) is still in progress.
@@ -499,12 +513,19 @@ function wigo_ws_Model(deviceDetails) {
         arRecordStats.Clear();
     };
     
-    // Sets record stats object in local storage.
+    // Sets record stats object in memory and in localStorage.
     // Arg:
     //  status: wigo_ws_GeoTrailRecordStats obj. The stats to save.
     this.setRecordStats = function(stats) { 
         arRecordStats.setId(stats);
     };
+
+    // Sets the list of Record Stats items in memory and in localStorage.
+    // Arg:
+    //  arRecStats: array of wigo_ws_GeoTrailRecordStats obj. The list to set in memory and localStorage.
+    this.setRecordStatsList = function(arRecStats) { ////20180323 added
+        arRecordStats.setList(arRecStats);
+    }
 
     // Returns list of record stats objects, which is
     // Array object of wigo_ws_GeoTrailRecordStats objects.
@@ -514,7 +535,8 @@ function wigo_ws_Model(deviceDetails) {
 
     // Deletes elements from record stats array and saves to localStorage.
     // Arg:
-    //  arElSpec: {nTimeStamp: number, ...}. Object (not array). List specifying elements to delete.
+    //  arEl: {keyi: nTimeStamp, ...}. Object (not array). List specifying elements to delete.
+    //      keyi: object property name. ith timestamp in the list.
     //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
     this.deleteRecordStats = function(arEl) { 
         arRecordStats.DeleteEls(arEl);
@@ -533,6 +555,40 @@ function wigo_ws_Model(deviceDetails) {
         return arRecordStats.getId(nTimeStamp);
     };
 
+    // Returns ref to RecordStatsXfr obj. 
+    // Summary of object's properties (see function RecordStatsXfr for details):
+    //    .getUploadTimeStamp()
+    //    .setUploadTimeStamp(nTimeStamp)
+    //    .getRecordStatsUploadNeeded() : returns arRecStats portion.
+    //    .uploadRecordStatsList(arRecStats, onDone); async call to onDone. same as this.uploadRecordStats(...) property of model.
+    //    .deleteRecordStatsList(arTimeStamp, onDone); async all to onDone. same as this.deleteRecordStats(...) property of model.
+    //    .getResideAry(sOwnerId) : returns arRecStats residue for owner.
+    //    .appendResidueAry(sOwnerId, arRecStats)
+    //    .clearResidue(sOwnerId) 
+    //  
+    this.getRecordStatsXfr = function() { ////20180319 added
+        return geoTrailRecordStatsXfr;
+    };
+
+    ////20180323 // Sets record stats xfr info to localStorage.
+    ////20180323 // Arg:
+    ////20180323 //  recordStatsXfr: wigo_ws_RecordStatsXfr obj. the record stats xfr info.
+    ////20180323 this.setRecordStatsXfr = function(recordStatsXfr) { ////20180319 added
+    ////20180323     geoTrailRecordStatsXfr.SaveToLocalStorage(recordStatsXfr);
+    ////20180323 };
+
+    ////20180323 // Returns ref to RecordStatsXfrResidue obj to manage record stats residue 
+    ////20180323 // for a user.
+    ////20180323 // Properties of returned ref obj:
+    ////20180323 //  .getResideAry(sOwnerId) : returns arRecStats.
+    ////20180323 //  .appendResidueAry(sOwnerId, arRecStats) 
+    ////20180323 //  .clearResidue(sOwnerId)
+    ////20180323 //  See function RecordStatsXfrResidue() object description for details.
+    ////20180323 this.getRecordStatsXfrResidue = function() {
+    ////20180323     return geoTrailRecordStatsXfrResidue;
+    ////20180323 };
+
+    
     // Sets settings in localStorage.
     // Arg:
     //  settings: wigo_ws_GeoTrailSettings object for the settings.
@@ -553,7 +609,7 @@ function wigo_ws_Model(deviceDetails) {
     // Returns current version, a wigo_ws_GeoTrailVersion object.
     this.getVersion = function() {
         return geoTrailVersion.getVersion();
-    }
+    };
 
     // ** Private members
     var sOwnerIdKey = "GeoPathsOwnerId";
@@ -565,6 +621,8 @@ function wigo_ws_Model(deviceDetails) {
     var sGeoTrailVersionKey = 'GeoTrailVersionKey'; 
     var sRecordStatsKey = 'GeoTrailRecordStatsKey';  
     var sRecordStatsSchemaKey = 'GeoTrailRecordStatsSchemaKey';  
+    var sRecordStatsXfrInfoKey = 'GeoTrailRecordStatsXfrInfoKey'; ////20180319 added.
+    var sRecordStatsXfrResidueKey = 'GeoTrailRecordStatsXfrResidueKey'; ////20180321 added
 
     var api = new wigo_ws_GeoPathsRESTfulApi(); // Api for data exchange with server.
 
@@ -800,6 +858,18 @@ function wigo_ws_Model(deviceDetails) {
             this.SaveToLocalStorage();    
         };
 
+        // Sets this array to list of record stats elements and saves to localStorage.
+        // Arg:
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objs. the list to assign to this array.
+        this.setList = function(arRecStats) { ////20180323 added
+            // Assign the arRecStats to this array without changing ref to this array.
+            arRecordStats.splice(0); // Empty this array without changing ref.
+            for (var i=0; i < arRecStats.length; i++) {
+                arRecordStats.push(arRecStats[i]);
+            } 
+            this.SaveToLocalStorage(); 
+        };
+
         // Returns ref to record stats obj specified by a timestamp.
         // Returns: wigo_ws_GeoTrailRecordStats ref or null if not found.
         // Arg:
@@ -886,7 +956,7 @@ function wigo_ws_Model(deviceDetails) {
         // Saves updated array to localStorage.
         // Arg:
         //  arEl: {keyi: nTimeStamp, ...}. Object (not array). List specifying elements to delete.
-        //      keyi: string. key for ith element.
+        //      keyi: object property name. key for ith element.
         //      nTimeStamp: number. Timestamp in milliseconds, which is unique, for element to delete.
         this.DeleteEls = function(arEl) { 
             let bChanged = false;
@@ -1097,7 +1167,227 @@ function wigo_ws_Model(deviceDetails) {
         var version = new wigo_ws_GeoTrailVersion();
 
     }
-    
+
+    /* ////20180323 REDO to simplify
+    // Object for RecordStatsXfr saved in localStorage. 
+    // wigo_ws_RecordStatsXfr
+    function RecordStatsXfr() { ////20180319 added
+        // Returns ref to RecordStatsXfr obj.
+        // Note: The obj returned is same as in localStorage.
+        //       However for efficiency localStorage is only loaded during
+        //       construction and this.SaveToLocalStorage updates the local 
+        //       recordStatsXfr var and saves it to localStorage.
+        this.getRecordStatsXfr = function() {
+            return recordStatsXfr;
+        };
+
+        // Loads this obj from localStorage.
+        // Returns: wigo_ws_RecordStatsXfr obj.
+        this.LoadFromLocalStorage = function() {
+            if (localStorage && localStorage[sRecordStatsXfrKey]) { 
+                recordStatsXfr = JSON.parse(localStorage[sRecordStatsXfrKey]);
+            }
+            return recordStatsXfr;
+        };
+
+        // Saves record stats info to localStorage.
+        // Arg:
+        //  oRecordStatsXfr: wigo_ws_RecordStatsXfr obj saved to localStorage.
+        this.SaveToLocalStorage = function(oRecordStatsXfr) {
+            recordStatsXfr = oRecordStatsXfr;
+            if (localStorage) {
+                localStorage[sRecordStatsXfrKey] = JSON.stringify(oRecordStatsXfr);
+            }
+        }
+        // Private members.
+        var recordStatsXfr = new wigo_ws_RecordStatsXfr();
+    }
+    */
+
+    // Object for RecordStatsXfr info and residue saved in localStorage.
+    // When a new record stats item is formed, it can be uploaded to server.
+    // The timestamp of most recent record stats item is saved in order to
+    // to only upload items more recent than the previous upload.
+    // When an owner (user) logs out, there may be a residue of 
+    // wigo_ws_GeoTrailRecordStats objs that have not been upload to the server.
+    // This object saves the residue for an owner, so that when the owner signs
+    // in again, the residue can be uploaded. Normally wigo_ws_GeoTrailRecordStats
+    // objs are uploaded to the server when switching to Stats History View.
+    // Constructor arg:
+    //  model: ref to wigo_ws_Model, the outer object.
+    function RecordStatsXfr(model) { ////20180321 added  ////20180323 was RecordStatsXfrResidue
+        // Gets the timestamp of record stats time most recently upload to server.
+        // Returns: number. milliseconds for the timestamp.
+        this.getUploadTimeStamp = function() {
+            return recordStatsXfrInfo.nUploadTimeStamp;
+        };
+
+        // Sets the timestamp of record stats item most recently uploaded to server and
+        // saves to localStorage.
+        // Arg:
+        //  nTimeStamp: number. timestamp in milliseconds.
+        this.setUploadTimeStamp = function(nTimeStamp) {``
+            recordStatsXfrInfo.nUploadTimeStamp = nTimeStamp;
+            SaveInfoToLocalStorage();
+        };
+
+
+        // Sets the previous signed in owner (user) id and saves to localStorage.
+        this.setPreviousOwnerId = function(sOwnerId) {
+            recordStatsXfrInfo.sPreviousOwnerId = sOwnerId;
+            SaveInfoToLocalStorage();
+        };
+
+        // Previous owner (user) id that is different than currently signed in user.
+        // Returns: string. the previous owner id. 
+        //          empty string if there was no previous user, which should only
+        //          be the case if no one has ever signed in.
+        this.getPreviousOwnerId = function() {
+            return recordStatsXfrInfo.sPreviousOwnerId;
+        };
+
+        // Checks if there are RecordStats items that need to be uploaded to server.
+        // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded
+        //          for current user (owner). 
+        //          Returned array is empty if there is nothing to upload
+        //          Element 0 of the returned array is the most recent timestamp.
+        // Note: the wigo_ws_GeoTrailRecordStats objs in the returned array are those
+        //       whose timestamp is more recent than timestamp given by this.getUploadTimeStamp().
+        this.getRecordStatsUploadNeeded = function() { ////20180324 added
+            var arRecStats = model.getRecordStatsList(); ;
+            var nPreviousUploadTimeStamp = this.getUploadTimeStamp();
+            // Check if RecordStats items have been added locally that have not been uploaded to server.
+            var recStats; 
+            var arUploadRecStats = []; 
+            for (var i= arRecStats.length-1; i >= 0; i--) {
+                recStats = arRecStats[i];
+                // If recent local RecStats item is more recent (greater) than last upload, add
+                // the item to the upload list.
+                if (recStats.nTimeStamp > nPreviousUploadTimeStamp) {
+                    arUploadRecStats.push(recStats);
+                } else {
+                    break;
+                }
+            }
+            return arUploadRecStats;
+        };
+
+        // Uploads record stats list to server.
+        // Same as model.uploadRecordStatsList(arRecStats, onDone)
+        this.uploadRecordStatsList = function(arRecStats, onDone) { ////20180326 added 
+            return model.uploadRecordStatsList(arRecStats, onDone);
+        };
+
+        // Deletes record stats list at server.
+        // Same as model.model.uploadRecordStatsList(arTimeStamp, onDone);
+        this.deleteRecordStatsList = function(arTimeStamp, onDone) { ////2080326 added $$$$
+            return model.deleteRecordStatsList(arTimeStamp, onDone); 
+        };
+
+        // Gets residue of wigo_ws_GeoTrailRecordStats objs for an owner.
+        // Arg:
+        //  sOwnerId: string for owner id of the residue.
+        // Returns: ref to array of wigo_ws_GeoTrailRecordStats objs.
+        //          null if there is no residue for sOwnerId.
+        //          Note: sOwner may be found, but return an empty array if there no residue.
+        this.getResideAry = function(sOwnerId) {
+            var arRecStats = null;
+            for (var i=0; i < arResidue.length; i++){
+                if (arResidue[i].sOwnerId === sOwnerId) {
+                    arRecStats = arResidue[i].arRecStats;
+                    break;
+                }
+            }
+            return arRecStats;
+        };
+
+        // Appends residue of RecordStats items and saves to localStorage.
+        // Args:
+        //  sOwnerId: string for owner id of the residue.
+        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objs. the residue to append.
+        // Returns: ref to array of wigo_ws_GeoTrailRecordStats objs. the total residue 
+        //          after appending arRecStats.
+        this.appendResidueAry = function(sOwnerId, arRecStats) {
+            var residue = null;
+            for (var i=0; i < arResidue.length; i++) {
+                if (arResidue[i].sOwnerId === sOwnerId) {
+                    residue = arResidue[i];
+                    break;
+                }
+            }
+            if (!residue) {
+                // Add new element for owner to arResidue.
+                residue = new wigo_ws_RecordStatsXfrResidue();
+                residue.sOwnerId = sOwnerId;
+                arResidue.push(residue);
+            }
+            for (var i=0; i < arRecStats.length; i++) {
+                residue.arRecStats.push(arRecStats[i]);
+            }
+            
+            SaveResidueToLocalStorage();
+            return residue.arRecStats; 
+        };
+
+        // Clears the residue for an owner and saves to localStorage.
+        // If no owner is found does nothing.
+        // Arg:
+        //  sOwnerId: string for owner id.
+        this.clearResidue = function(sOwnerId) {
+            for (var i=0; i < arResidue.length; i++) {
+                if (arResidue[i].sOwnerId === sOwnerId) {
+                    arResidue[i].arRecStats.splice(0); // Clears array with ref unchanged.
+                    SaveResidueToLocalStorage();
+                    break;
+                }
+            }
+        };
+
+        // **** Private members
+
+        // Loads record stats xfr info from localStorage.
+        // Returns: wigo_ws_RecordStatsXfr obj.
+        function LoadInfoFromLocalStorage() {
+            if (localStorage && localStorage[sRecordStatsXfrInfoKey]) { 
+                recordStatsXfrInfo = JSON.parse(localStorage[sRecordStatsXfrInfoKey]);
+            }
+            return recordStatsXfrInfo;
+        };
+
+        // Saves record stats xfr info to localStorage.
+        function SaveInfoToLocalStorage() {
+            if (localStorage) {
+                localStorage[sRecordStatsXfrInfoKey] = JSON.stringify(recordStatsXfrInfo);
+            }
+        }
+
+        // Loads arResidue from localStorage.
+        function LoadResidueFromLocalStorage() {
+            if (localStorage && localStorage[sRecordStatsXfrResidueKey]) { 
+                arResidue = JSON.parse(localStorage[sRecordStatsXfrResidueKey]);
+            } else {
+                arResidue = [];
+            }
+        };
+
+        // Saves arResidue to localStorage.
+        // Arg:
+        //  oRecordStatsXfr: wigo_ws_RecordStatsXfr obj saved to localStorage.
+        function SaveResidueToLocalStorage() {
+            if (localStorage) {
+                localStorage[sRecordStatsXfrResidueKey] = JSON.stringify(arResidue);
+            }
+        }
+
+        // Constructor initialization.
+        var arResidue; // Array of wigo_ws_RecordStatsXfrResidue objs.
+        LoadResidueFromLocalStorage(); // Sets arResidue from localStorate. 
+
+        var recordStatsXfrInfo = new wigo_ws_RecordStatsXfrInfo();
+        LoadInfoFromLocalStorage();
+    }
+
+
     // Settings for My Geo Trail.
     var geoTrailSettings = new GeoTrailSettings();
     geoTrailSettings.LoadFromLocalStorage();
@@ -1105,6 +1395,11 @@ function wigo_ws_Model(deviceDetails) {
     // Version for GeoTrail app in localStorage.
     var geoTrailVersion = new GeoTrailVersion();
     geoTrailVersion.LoadFromLocalStorage();
+
+    var geoTrailRecordStatsXfr = new RecordStatsXfr(this); ////20180319 added  
+    ////20180323 geoTrailRecordStatsXfr.LoadFromLocalStorage();
+
+    ////20180323 var geoTrailRecordStatsXfrResidue = new RecordStatsXfrResidue(); // constructor loads obj from localStorage. ////20180322 added.
 
     // Network information object. Wrapper for cordova-plugin-network-information.
     var networkInfo = wigo_ws_NewNetworkInformation(deviceDetails);
