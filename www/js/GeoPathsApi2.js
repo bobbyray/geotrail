@@ -199,7 +199,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
             onAuthenticate = function (status) { };
         // Post ajax to geopaths server.
         var bOk = base.Post(eState.Authenticate, sAuthenticateUri(), authData);
-        return bOk;  ////20180329 added
+        return bOk; 
     };
 
     // Logs out user with the server (revokes authentication).
@@ -219,7 +219,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
             onLogout = function (bOk) { };
         // Post ajax to geopaths server.
         var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
-        return bOk; ////20180329 added
+        return bOk; 
     };
 
     // Resets flag that indicates http request (get or post) is still in progress.
@@ -561,7 +561,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
             case eState.Logout:
                 var sLogoutMsg = base.FormCompletionStatus(req);
                 onLogout(bOk, sLogoutMsg);
-                break;  ////20180329 added missing break
+                break;  
             case eState.UploadRecordStatsList:  
                 if (bOk)
                     sStatus = "UploadRecordStatsList succeeded."
@@ -949,7 +949,7 @@ function wigo_ws_GeoTrailRecordStats() {
 // Args:
 //  to:   wigo_ws_GeoTrailRecordStats obj assigned to (the target).
 //  from: wigo_ws_GeoTrailRecordStats obj assigned from (the source).
-wigo_ws_GeoTrailRecordStats.Copy = function(to, from) {  ////20180327 added
+wigo_ws_GeoTrailRecordStats.Copy = function(to, from) {  
     if (to instanceof wigo_ws_GeoTrailRecordStats && from instanceof wigo_ws_GeoTrailRecordStats) {
         to.nTimeStamp = from.nTimeStamp; // integer. Time value of javascript Date object as an integer. Creation timesamp.
         to.msRunTime = from.msRunTime;  // number. Run time for the recorded path in milliseconds.

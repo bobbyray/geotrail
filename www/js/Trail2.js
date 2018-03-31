@@ -248,29 +248,6 @@ function wigo_ws_View() {
     //  nMode: byte value of this.eMode enumeration.
     this.onResetRequest = function(nMode) { }; 
 
-    ////20180319 Additions for transferring RecordStats items with server.
-    ////20180326 Use recordStatsXfr.uploadRecordStatsList(...) instead.
-    ////20180326 // Uploads to web server a list of record stats items. ////20180319 added.
-    ////20180326 // An item is replaced if it already exists at server, or is 
-    ////20180326 // created if it does not exist.
-    ////20180326 // Arg:
-    ////20180326 //  arStats: array of wigo_ws_GeoTrailRecordStats objs.
-    ////20180326 //  onDone: callback after async completion, signature:
-    ////20180326 //      bOk: boolean: true for sucessful upload.
-    ////20180326 //      sStatus: string: description for the update result.
-    ////20180326 //      Returns: void
-    ////20180326 //  Synchronous return: boolean. true indicates upload successfully started.
-    ////20180326 this.onUploadRecordStatsList = function (arStats, onDone) { return false;};
-
-    ////20180323 // Sets record stats xfr info into local storage.
-    ////20180323 // Arg:
-    ////20180323 //  recordStatsXfr: wigo_ws_RecordStatsXfr obj. info set into local storage.
-    ////20180323 // Returns: nothing.
-    ////20180323 this.onSetRecordStatsXfr = function(recordStatsXfr) { };    
-
-    ////20180323 // Get ref to RecordStatsXfrResidue object.
-    ////20180323 this.onGetRecordStatsXfrResidue = function() { }; ////20180322 added 
-    
     // ** Public members
 
     // Initializes the view. 
@@ -705,8 +682,8 @@ function wigo_ws_View() {
             case this.eMode.record_stats_view: 
                 HideAllBars();
                 titleBar.setTitle("Stats History");
-                recordStatsHistory.update(); ////20180322 (that.onGetRecordStatsList(), that.onGetRecordStatsXfr()); ////20180319 added that.onGetRecordStatsXfr() 
-                recordStatsHistory.uploadAdditions(); /////20180326 added
+                recordStatsHistory.update();
+                recordStatsHistory.uploadAdditions(); 
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
@@ -935,7 +912,7 @@ function wigo_ws_View() {
     }
 
     // Clears and initializes the RecordStatsHistory ui list.
-    this.clearRecordStatsHistory = function() {  ////20180328 added.
+    this.clearRecordStatsHistory = function() {  
         recordStatsHistory.clearStatsItems(); 
     };
 
@@ -7249,23 +7226,21 @@ function wigo_ws_View() {
                 that.AppendStatus("Complete defining a new trail, then logout.", false);
             } else {
                 that.ClearStatus();
-                ////20180322 ** addition for record stats residue.
                 // Save record stats residue for current user if need be.
                 var sOwnerId =  that.getOwnerId();
                 var recordStatsXfr = that.onGetRecordStatsXfr();
                 var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
                 if (arUploadRecStats.length > 0) {
                     if (sOwnerId) {
-                        recordStatsXfr.clearResidue(sOwnerId);  ////20180328 added sOwnerId
+                        recordStatsXfr.clearResidue(sOwnerId); 
                         recordStatsXfr.appendResidueAry(sOwnerId, arUploadRecStats);
-                        recordStatsXfr.setUploadTimeStamp(arUploadRecStats[0].nTimeStamp); // Note: element 0 is most recent ////20180329 added .nTimeStamp
+                        recordStatsXfr.setUploadTimeStamp(arUploadRecStats[0].nTimeStamp); // Note: element 0 is most recent 
                     }
                 }
                 // Save previous owner id before logging out.
                 if (sOwnerId ) {
                     recordStatsXfr.setPreviousOwnerId(sOwnerId);
                 }
-                ////20180322 ** 
                 fb.LogOut();
             }
         } else if (dataValue === 'set') {
@@ -7689,7 +7664,7 @@ Are you sure you want to delete the maps?";
             // Create item div.
             var item = this.create('div', null, 'stats_item');
             item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
-            item.setAttribute('data-distance', recStats.mDistance); ////20180327
+            item.setAttribute('data-distance', recStats.mDistance); 
             var cellDate = this.create('div', null, 'stats_date');
             cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
             item.appendChild(cellDate);
@@ -7746,49 +7721,13 @@ Are you sure you want to delete the maps?";
         }
 
         // Clears all the div rows in this list and initializes for an empty list.
-        this.clearStatsItems = function() { ////20180328 added
+        this.clearStatsItems = function() { 
             RemoveAllStatsRows(); 
         };
 
-        /* ////20180325 not needed use recordStatsXfr.getRecordStatsUploadNeeded() instead.
-        // Checks if there are RecordStats items that need to be uploaded to server.
-        // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded
-        //          for current user (owner). 
-        ////20180324 //          If there is no current user signed in, return array is empty.
-        ////20180324 //          If there is a current user but no upload is needed, the returned array is empty.
-        //          Element 0 of the returned array is the most recent timestamp.
-        //          Returned array is empty if there is nothing to upload
-        this.getRecordStatsUploadNeeded = function() { ////20180321 added
-            ////20180319 add code to upload new stats itesm to server.
-            ////20180320 fix check if user is signed in.
-            var arRecStats = view.onGetRecordStatsList();
-            var recordStatsXfr = view.onGetRecordStatsXfr();
-            var nPreviousUploadTimeStamp = recordStatsXfr.getUploadTimeStamp();
-            // Check if RecordStats items have been added locally that have not been uploaded to server.
-            var recStats; 
-            var arUploadRecStats = []; 
-            for (var i= arRecStats.length-1; i >= 0; i--) {
-                recStats = arRecStats[i];
-                // If recent local RecStats item is more recent (greater) than last upload, add
-                // the item to the upload list.
-                if (recStats.nTimeStamp > nPreviousUploadTimeStamp) {
-                    arUploadRecStats.push(recStats);
-                } else {
-                    break;
-                }
-            }
-            return arUploadRecStats;
-        }
-        */
-
         // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
-        ////20180326 and uploads
-        ////20180326 // updates to server if need be and if user is signed in.
-        ////20180323 // Arg: 
-        ////20180323 //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
-        ////20180323 //  recordStatsXfr: ref to RecordStatsXfr obj. info and residue for transferring RecordStats items with server.
         // Note: Updates efficiently. Only adds items new items at end of arRecStats.
-        this.update = function() { ////20180319 added recordStatsXfr arg
+        this.update = function() { 
             // Add stats items that are not aready in this list.
             var arRecStats = view.onGetRecordStatsList();
             if (!arRecStats)
@@ -7805,21 +7744,19 @@ Are you sure you want to delete the maps?";
                     var nTopTimeStamp = Number(sTopTimeStamp); 
                     var sTopDistance = topItem.getAttribute('data-distance');
                     var mTopDistance = Number(sTopDistance); 
-                    if (nTopTimeStamp === recStats.nTimeStamp && mTopDistance !== recStats.mDistance) { ////20180327 added distance check.
+                    if (nTopTimeStamp === recStats.nTimeStamp && mTopDistance !== recStats.mDistance) { 
                         // Top list item is same as most recent stats data rec and appears to have changed.
                         // Delete top item in the list, and replace it in case
                         // the stats data rec has been updated. The data stats rec 
                         // can be updated due to unclearing a recorded path.
                         DeleteItem(topItem.id);
                         this.addStatsItem(recStats);
-                        ////20180326 **** move back previous upload timestamp in order to upload most recent stats item again.
                         // Move back previous upload timestamp in order to upload most recent stats item again later.
                         var recordStatsXfr =  view.onGetRecordStatsXfr();
                         if (recordStatsXfr.getUploadTimeStamp() === recStats.nTimeStamp) {
                             var nUploadTimeStamp = arRecStats.length > 1 ? arRecStats[arRecStats.length-2].nTimeStamp : 0;
                             recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                         }
-                        ////20180326 **** 
                     }
                 }
 
@@ -7829,64 +7766,7 @@ Are you sure you want to delete the maps?";
                     this.addStatsItem(recStats);
                 }
             }
-            
-            /* ////20180322 
-            ////20180319 add code to upload new stats itesm to server.
-            ////20180320 fix check if user is signed in.
-            if (view.getOwnerId()) {
-                // Check if RecordStats items have been added locally that have not been uploaded to server.
-                var arUploadRecStats = []; 
-                for (var i= arRecStats.length-1; i >= 0; i--) {
-                    recStats = arRecStats[i];
-                    // If recent local RecStats item is more recent (greater) than last upload, add
-                    // the item to the upload list.
-                    if (recStats.nTimeStamp > recordStatsXfr.nUploadTimeStamp) {
-                        arUploadRecStats.push(recStats);
-                    } else {
-                        break;
-                    }
-                }
-                if (arUploadRecStats.length > 0) {
-                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    view.onUploadRecordStatsList(arUploadRecStats, function(bOk, sStatus){
-                        if (bOk) { ////20180320 added
-                            recordStatsXfr.nUploadTimeStamp = nUploadTimeStamp;
-                            view.onSetRecordStatsXfr(recordStatsXfr);
-                        }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats items.".format(arUploadRecStats.length) : 
-                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
-                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
-                        view.ShowStatus(sMsg, !bOk);
-                    }); 
-                }
-            } else {
-                ////20180321 view.ShowStatus("To upload recent stats, first go to View > Sign-in/off  first.", false);
-                view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
-            }
-            */
-            /* ////20180326 moved to this.uploadAdditions().
-            // Upload updated stats items to server if needed and if user is signed in.
-            var recordStatsXfr = view.onGetRecordStatsXfr();
-            var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-            if (arUploadRecStats.length > 0) {
-                if (view.getOwnerId()) {
-                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    view.onUploadRecordStatsList(arUploadRecStats, function(bOk, sStatus){
-                        if (bOk) { ////20180320 added
-                            recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
-                        }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats items.".format(arUploadRecStats.length) : 
-                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
-                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
-                        view.ShowStatus(sMsg, !bOk);
-                    }); 
-                } else {
-                    view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
-                }
-            }
-            */
         };
-
 
         // Uploads to server record stats items that have been added since last upload.
         // Synchronous Return: boolean. 
@@ -7895,7 +7775,7 @@ Are you sure you want to delete the maps?";
         // Asynchronous Completion: If an uploaded is started, the completion is asynchronous
         // Note: Iff upload is needed, shows status message for the result.
         //       User must be signed in for upload to success.
-        this.uploadAdditions = function() {  ////20180326
+        this.uploadAdditions = function() { 
             // Upload updated stats items to server if needed and if user is signed in.
             var bStarted = false;
             var recordStatsXfr = view.onGetRecordStatsXfr();
@@ -7903,8 +7783,8 @@ Are you sure you want to delete the maps?";
             if (arUploadRecStats.length > 0) {
                 if (view.getOwnerId()) {
                     var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    bStarted = recordStatsXfr.uploadRecordStatsList(arUploadRecStats, function(bOk, sStatus) { ////was view.onUploadRecordStatsList(...)
-                        if (bOk) { ////20180320 added
+                    bStarted = recordStatsXfr.uploadRecordStatsList(arUploadRecStats, function(bOk, sStatus) { 
+                        if (bOk) { 
                             recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                         }
                         var sMsg = bOk ? "Uploaded {0} RecordStats items.".format(arUploadRecStats.length) : 
@@ -7917,79 +7797,7 @@ Are you sure you want to delete the maps?";
                 }
             } 
             return bStarted;
-        }
-        
-        
-        /* ////20180322 This worked, but refactor 
-        // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
-        // Arg: 
-        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
-        //  recordStatsXfr: ref to wigo_ws_RecordStatsXfr obj. info for transferring RecordStats items with server.
-        // Note: Updates efficiently. Only adds items new items at end of arRecStats.
-        this.update = function(arRecStats, recordStatsXfr) { ////20180319 added recordStatsXfr arg
-            // Add stats items that are not aready in this list.
-            if (!arRecStats)
-                return; // Quit if arRecStats is not defined or is null.
-
-            //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
-            var recStats;
-            if (itemCount === arRecStats.length && arRecStats.length > 0) { 
-                // Check if top item is same as last (top, most recent) stats data rec.
-                if (stats.listDiv.children.length > 0) {
-                    recStats = arRecStats[arRecStats.length-1];  
-                    var topItem = stats.listDiv.children[0];
-                    var sTopTimeStamp = topItem.getAttribute('data-timestamp');
-                    var nTopTimeStamp = Number(sTopTimeStamp); 
-                    if (nTopTimeStamp === recStats.nTimeStamp) {
-                        // Top list item is same as most recent stats data rec.
-                        // Delete top item in the list, and replace it in case
-                        // the stats data rec has been updated. The data stats rec 
-                        // can be updated due to unclearing a recorded path.
-                        DeleteItem(topItem.id);
-                        this.addStatsItem(recStats);
-                    }
-                }
-
-            } else { 
-                for (var i=itemCount; i < arRecStats.length; i++) {
-                    recStats = arRecStats[i];
-                    this.addStatsItem(recStats);
-                }
-            }
-            ////20180319 add code to upload new stats itesm to server.
-            ////20180320 fix check if user is signed in.
-            if (view.getOwnerId()) {
-                // Check if RecordStats items have been added locally that have not been uploaded to server.
-                var arUploadRecStats = []; 
-                for (var i= arRecStats.length-1; i >= 0; i--) {
-                    recStats = arRecStats[i];
-                    // If recent local RecStats item is more recent (greater) than last upload, add
-                    // the item to the upload list.
-                    if (recStats.nTimeStamp > recordStatsXfr.nUploadTimeStamp) {
-                        arUploadRecStats.push(recStats);
-                    } else {
-                        break;
-                    }
-                }
-                if (arUploadRecStats.length > 0) {
-                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    view.onUploadRecordStatsList(arUploadRecStats, function(bOk, sStatus){
-                        if (bOk) { ////20180320 added
-                            recordStatsXfr.nUploadTimeStamp = nUploadTimeStamp;
-                            view.onSetRecordStatsXfr(recordStatsXfr);
-                        }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats items.".format(arUploadRecStats.length) : 
-                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
-                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
-                        view.ShowStatus(sMsg, !bOk);
-                    }); 
-                }
-            } else {
-                ////20180321 view.ShowStatus("To upload recent stats, first go to View > Sign-in/off  first.", false);
-                view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
-            }
         };
-        */
 
         // Shows month/date for first item visible in the list.
         // Note: this control must be visible.
@@ -8214,7 +8022,7 @@ Are you sure you want to delete the maps?";
                 RemoveAllStatsRows();
                 // Get the new array of stats data recs from localStorage and
                 // update (display) the stats list.
-                that.update(); ////20180326 arg view.onGetRecordStatsList() removed.
+                that.update(); 
                 that.showMonthDate(); 
 
                 // Update the record stats metrics.
@@ -8268,12 +8076,11 @@ Are you sure you want to delete the maps?";
             }
             
             // Helper function called after successful upload to server.
-            function UploadCompleted() { ////20180326 add function
+            function UploadCompleted() { 
                 // Update local storage, the stat history list, and stats metrics.
                 if (bChanged) {
                     UpdateLocalStorage();
                 }
-                ////20180327 itemEditor.clearItemData(); 
             }
 
             // Quit if stats item controls are not all valid.
@@ -8284,14 +8091,14 @@ Are you sure you want to delete the maps?";
             // Hide the editor's div.
             ShowRecordStatsEditDiv(false); 
             // Get the edited item data from the editor.
-            let nDeleteItemTimeStamp = null; // timestamp of item data to delete. ////20180326 added
+            let nDeleteItemTimeStamp = null; // timestamp of item data to delete.
             let itemData = itemEditor.getEditData();
             let bAdd = !itemEditor.bEditing;
             let bChanged = false; 
             if (itemEditor.bEditing) {
                 // Check if timestamp has been changed.
                 bChanged = false;  
-                let originalItemData = NewRecordStatsObj(itemData); // Make copy of itemData before it is changed. ////20180327 ////20180327 itemEditor.getOriginalItemData();
+                let originalItemData = NewRecordStatsObj(itemData); // Make copy of itemData before it is changed. 
                 if (!itemEditor.isSpeedChanged()) {  
                     // Set calorie fields from the original data item because
                     // the speed has not changed. The item data from controls has estimated 
@@ -8311,8 +8118,7 @@ Are you sure you want to delete the maps?";
                     // Therefore delete original item from data and add new item.
                     bChanged = true;
                     bAdd = true; // Add a new stats item to local data below.
-                    ////20180326 view.onDeleteRecordStats({0: originalItemData.nTimeStamp}); 
-                    nDeleteItemTimeStamp = originalItemData.nTimeStamp;  ////20180326 changed
+                    nDeleteItemTimeStamp = originalItemData.nTimeStamp; 
                 }
             }
             if (bAdd) { 
@@ -8334,14 +8140,6 @@ Are you sure you want to delete the maps?";
                 }
             }
 
-            ////20180326 **** Move to UploadCompleted() function
-            ////20180326 // Update local storage, the stat history list, and stats metrics.
-            ////20180326 if (bChanged) {
-            ////20180326     UpdateLocalStorage();
-            ////20180326 }
-            ////20180326 itemEditor.clearItemData(); 
-            ////20180326 ****
-
             var recordStatsXfr = view.onGetRecordStatsXfr();
             // Delete stats item data at server if need be.
             if (nDeleteItemTimeStamp) {
@@ -8358,7 +8156,6 @@ Are you sure you want to delete the maps?";
 
         // Event handler for Cancel button on edit div.
         function OnEditCancel(event) {
-            ////20180327 itemEditor.clearItemData(); 
             ShowRecordStatsEditDiv(false); 
         }
 
@@ -8817,8 +8614,6 @@ Are you sure you want to delete the maps?";
                     return digits;
                 }
 
-                ////20180327 // Save ref to itemData.
-                ////20180327 originalItemData = itemData; 
                 // Clear speed changed flag.
                 this.setSpeedChanged(false); 
                 // Set starting date.
@@ -8843,7 +8638,6 @@ Are you sure you want to delete the maps?";
                 runTimeMins.value = runTime.getAllMins();
                 runTimeSecs.value = runTime.getSec();
             };
-            ////20180327 let originalItemData = null; // wigo_ws_GeoTrailRecordStats obj saved by this.setEditCtrls(..). 
 
             // Checks if control values are valid.
             // Shows error msg in status div for an invalid control value and sets
@@ -8996,17 +8790,6 @@ Are you sure you want to delete the maps?";
                 status.clear();
             };
 
-            ////20180327 // Clears ref to the items saved by this.setEditCtrls(..).
-            ////20180327 this.clearItemData = function() { 
-            ////20180327     originalItemData = null;
-            ////20180327 };
-
-            ////20180327 // Returns ref to original item data saved by this.setEditCtrls(..);
-            ////20180327 // Returns: wigo_ws_GeoTrailRecordStats obj ref.
-            ////20180327 this.getOriginalItemData = function() {
-            ////20180327     return originalItemData;
-            ////20180327 };
-
             // Returns new wigo_ws_GeoTrailRecordStats object.
             this.newItemData = function() {
                 return new wigo_ws_GeoTrailRecordStats();
@@ -9095,81 +8878,6 @@ Are you sure you want to delete the maps?";
             date.blur();
             time.blur();
         }
-
-
-        /* ////20180321 NOT USE USED
-        ////20180318 **** Helper object for transfering stats items with server.
-        function StatsXfrMgr() {
-            // Update server with local stats items that have not been uploaded.
-            // Returns: number. timestamp of most recent stats item successfully up loaded.
-            this.updateAtServer = function(nLastUpateTimeStamp, arLocalStats, onDone) {
-                ////  write
-                
-            }; 
-
-            // Delete stats items at server.
-            // Arg:
-            //  arStats: array of wigo_ws_GeoTrailRecordStats objs. list of stats items to delete at server.
-            // Synchronous Return: boolean. true for delete transfer started.
-            this.deleteAtServer = function(arStats, onDone) {
-                //// write
-            };
-
-            // Syncs stats items with the server.
-            // Updates at server any server items that are missing or are different wrt the local stats.
-            // Updates from server any local stats items that are missing.
-            // Args:
-            //  arlocalStats: array of array of wigo_ws_GeoTrailRecordStats objs objs. list of all local stats items.
-            // Synchronous Return: boolean. true for transfer started.
-            this.syncWithServer = function(arLocalStats, onDone) {
-                //// write
-            };
-
-            // ** Private 
-            
-            //// **** ////20180319 Don't think this will be needed. Use upload all, download all instead.
-            // Object of a manager for an array of all local stats items and 
-            // an array of all server stats items.
-            function StatusMgr(arLocalStats, arServerStats) {
-                this.updateStatus = function() {
-
-                };
-
-
-                // Status object for a stats status array.
-                // Constructor:
-                //  stats: ref to wigo_ws_GeoTrailRecordStats obj.
-                function StatusEl(stats) {
-                    this.bMatched = false;
-                    this.stats = stats instanceof wigo_ws_GeoTrailRecordStats ? stats : null;
-                }
-
-                // Sets a status for an array stats items.
-                // Arg:
-                //  arStatus: array of StatusEl objs. list is set to status for arStats.
-                //  arStats: array wigo_ws_GeoTrailRecordStats objs.
-                function SetStatusAry(arStatus, arStats) {
-                    var statusEl;
-                    arStatus.length = 0; 
-                    for (var i=0; i < arStats.length; i++) {
-                        statusEl = new StatusEl(arStats[i]);
-                        arStatus.push(statsEl);
-                    }
-                }
-
-
-                // Constructor initialization.
-                var arServerStatus = [];
-                var arLocalStatus  = [];
-                SetStatusAry(arServerStatus, arServerStats);
-                SetStatusAry(arLocalStatus, arLocalStats);
-            }
-            //// ****
-        }
-        */ 
-
-
-
 
         // Shows a div for editing a stats item and hides the stats header and list, 
         // or vice versa.
@@ -10294,7 +10002,7 @@ function wigo_ws_Controller() {
 
     // Gets accessor to RecordStatsXfr info and residue.
     // Returns: ref to RecordStatsXfr obj.
-    view.onGetRecordStatsXfr = function() { ////20180319 added
+    view.onGetRecordStatsXfr = function() { 
         return model.getRecordStatsXfr();
     };
 
@@ -10326,8 +10034,7 @@ function wigo_ws_Controller() {
             var bOk = model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
                 var recordStatsXfr = model.getRecordStatsXfr();
                 var sPreviousOwnerId = recordStatsXfr.getPreviousOwnerId();
-                ////20180328 var bSameUser = sPreviousOwnerId.length > 0 && result.userID === sPreviousOwnerId; ////20180322 added
-                var bSameUser = result.userID === sPreviousOwnerId; ////20180322 added
+                var bSameUser = result.userID === sPreviousOwnerId; 
                 // Save user info to localStorage.
                 model.setOwnerId(result.userID);
                 model.setOwnerName(result.userName);
@@ -10335,30 +10042,9 @@ function wigo_ws_Controller() {
                 view.setOwnerName(result.userName);
                 view.setOwnerId(result.userID);
                 if (result.status === model.eAuthStatus().Ok) {
-                    /* ////20180322 refactor
-                    view.ShowStatus("User successfully logged in.", false);
-                    var nMode = view.curMode();
-                    if (nMode === view.eMode.online_view) {
-                        // Check if logon is due to recording a trail, in which case 
-                        // do not call view.onGetPaths(..) because the download from server
-                        // takes time and the upload for the recorded trail fails if another transfer
-                        // request is in already in progress. Always calling view.onGetPaths() works
-                        // fairly well, but can be confusing to user if it causes uploading a new trail to fail,
-                        // in which case the user would need to retry uploading the trail.
-                        if (!view.IsRecordingSignInActive())   
-                            view.onGetPaths(view.curMode(), view.getOwnerId());
-                    } else if (nMode === view.eMode.online_edit ||
-                               nMode === view.eMode.online_define) {
-                        // Fire SignedIn event.
-                        var fsm = view.fsmEdit();
-                        fsm.DoEditTransition(fsm.eventEdit.SignedIn);
-                    }
-                    */
-                    // ////20180324 $$$$ Upload record stats residue for user that signed in and download record stats.
                     // Upload record stats residue if need be for user that signed in and download record stats.
                     // Helper to complete successful athentication after download Record Stats items for new user.
-                    function DoForAuthOk() { ////20180322 added
-                        ////20180322 view.ShowStatus("User successfully logged in.", false);
+                    function DoForAuthOk() { 
                         view.AppendStatus("User successfully logged in.", false);
                         var nMode = view.curMode();
                         if (nMode === view.eMode.online_view) {
@@ -10394,7 +10080,7 @@ function wigo_ws_Controller() {
                         if (arResidueRecStats.length > 0) {
                             bOk = model.uploadRecordStatsList(arResidueRecStats, function(bOk, sStatus) {
                                 if (bOk) {
-                                    recordStatsXfr.clearResidue(result.userID);  ////20180328 added.
+                                    recordStatsXfr.clearResidue(result.userID); 
                                 } else { 
                                     view.AppendStatus("Failed to upload residual Record Stats items: " + sStatus);
                                 }
@@ -10422,7 +10108,7 @@ function wigo_ws_Controller() {
                                 var nUploadTimeStamp = arRecStats.length > 0 ? arRecStats[arRecStats.length-1].nTimeStamp : 0;
                                 recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                                 // Clear the RecordStatsHistory ui.
-                                view.clearRecordStatsHistory();   ////20180328 added
+                                view.clearRecordStatsHistory(); 
                                 // If view is Stats History, reload the view.
                                 if (view.curMode() === view.eMode.record_stats_view) {
                                     view.setModeUI(view.eMode.record_stats_view);
@@ -10444,7 +10130,7 @@ function wigo_ws_Controller() {
                     // Helper to clean up after an upload or download error.
                     // Resets the local stats history data if for a different user.
                     // Clears the RecordStatsHistory ui list.
-                    function DoXfrErrorCleanup() { ////20180328 added
+                    function DoXfrErrorCleanup() { 
                         // If sPreviousOwnerId is empty, the local record stats are for no user signed in.
                         // In this case leave the them as is, otherwise reset for the new user.
                         if (sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId) {
@@ -10560,36 +10246,6 @@ function wigo_ws_Controller() {
     view.onResetRequest = function(nMode) {  
         model.resetRequest();
     };
-
-    ////20180319 additons for transferring record stats items with server.
-    ////20180326 Use recordStatsXfr.uploadRecordStats(...) instead
-    ////20180326 // Uploads to web server a list of record stats items. 
-    ////20180326 // An item is replaced if it already exists at server, or is 
-    ////20180326 // created if it does not exist.
-    ////20180326 // Arg:
-    ////20180326 //  arStats: array of wigo_ws_GeoTrailRecordStats objs.
-    ////20180326 //  onDone: callback after async completion, signature:
-    ////20180326 //      bOk: boolean: true for sucessful upload.
-    ////20180326 //      sStatus: string: description for the update result.
-    ////20180326 //      Returns: void
-    ////20180326 //  Synchronous return: boolean. true indicates upload successfully started.
-    ////20180326 view.onUploadRecordStatsList = function (arStats, onDone) {  ////20180319 added
-    ////20180326     var bStarted = model.uploadRecordStatsList(arStats, onDone)
-    ////20180326     return bStarted;
-    ////20180326 };
-
-    ////20180323 // Sets record stats xfr info into local storage.
-    ////20180323 // Arg:
-    ////20180323 //  recordStatsXfr: wigo_ws_RecordStatsXfr obj. info set into local storage.
-    ////20180323 // Returns: nothing.
-    ////20180323 view.onSetRecordStatsXfr = function(recordStatsXfr) { 
-    ////20180323     model.setRecordStatsXfr(recordStatsXfr); 
-    ////20180323 };    
-
-    ////20180323 // Get ref to RecordStatsXfrResidue object.
-    ////20180323 view.onGetRecordStatsXfrResidue = function() {  ////20180322 added 
-    ////20180323     return model.getRecordStatsXfrResidue();
-    ////20180323 };
 
     // ** More private members
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
