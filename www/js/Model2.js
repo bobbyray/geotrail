@@ -1176,6 +1176,25 @@ function wigo_ws_Model(deviceDetails) {
             SaveInfoToLocalStorage();
         };
 
+        // Reduces the current upload timestamp if needed.
+        // Arg:
+        //  nTimeStamp: number. a time stamp in milliseconds for reduction value.
+        //              The current upload timestamp is only reduced if nTimeStamp is 
+        //              <= than the current upload timestamp.
+        this.reduceUploadTimeStamp = function(nTimeStamp) { 
+            if (nTimeStamp <= recordStatsXfrInfo.nUploadTimeStamp) {
+                // Need to find element in arRecStats that is < nTimeStamp, not equal to. 
+                var nFoundTimeStamp = 0; 
+                var arRecStats = model.getRecordStatsList();
+                for (var i=arRecStats.length-1; i >= 0; i-- ) {
+                    if (arRecStats[i].nTimeStamp < nTimeStamp) {
+                        nFoundTimeStamp = arRecStats[i].nTimeStamp;
+                        break;
+                    }
+                }
+                recordStatsXfrInfo.nUploadTimeStamp = nFoundTimeStamp;
+            }
+        };
 
         // Sets the previous signed in owner (user) id and saves to localStorage.
         this.setPreviousOwnerId = function(sOwnerId) {

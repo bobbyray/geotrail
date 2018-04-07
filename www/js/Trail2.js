@@ -2829,6 +2829,7 @@ function wigo_ws_View() {
             if (stats.bOk) {
                 var statsData = view.onSetRecordStats(stats); // Save stats data. 
                 recordStatsMetrics.update(statsData); // Update metrics for stats. 
+                recordStatsHistory.queueStatsUpdateItem(statsData); // Queue stats for display in Stats History.
             }
         }
 
@@ -7621,82 +7622,6 @@ Are you sure you want to delete the maps?";
             monthDiv.innerHTML = month;
         };
 
-        // Add a stats item to the list.
-        // Arg:
-        //  recStats: wigo_ws_GeoTrailRecordStats object. Contains stats info for item to add to list.
-        //  bTop: boolean, optional. true to add at top of list, false appends to list. Defaults to true.
-        // Notes: 
-        // Class names for formatting stats item:
-        //  stats_history_title - div for title, iff title is given in constructor.
-        //  stats_item -- row for the stats item cells.
-        //  stats_date - cell for date and time.
-        //      stats_time       - start time, eg 01:15 pm
-        //      stats_month_day  - day of month, eg 19
-        //      stats_week_day   - day of week, eg Wed
-        //  stats_distance_time - distance in english or metric units and runtime in mins:secs.
-        //  stats_speed_calories - speed in english or metreic units and calories.
-        // Class names for formatting stats month, year row separator:
-        //  stats_separator:  - row for the stats separator, eg December 2017
-        this.addStatsItem = function(recStats, bTop) {
-            if (typeof(bTop) !== 'boolean') 
-                bTop = true;
-
-            // Helper to add row div to this list.
-            function AddRowDiv(rowDiv) {
-                if (bTop && stats.listDiv.children.length > 0) {
-                    stats.listDiv.insertBefore(rowDiv, stats.listDiv.children[0]);
-                } else {
-                    stats.listDiv.appendChild(rowDiv);
-                }
-            }
-            
-            var dt = new Date(recStats.nTimeStamp);
-            // Check for change in the month.
-            var bMonthChanged = curMonthYear.checkChange(dt.getMonth(), dt.getFullYear());
-            if (bMonthChanged) {
-                // append a div for month, year row separator.
-                var separator = this.create('div', null, 'stats_separator');
-                separator.innerHTML = "{0} {1}".format(prevdt.toLocaleString('en-US', {month: 'long'}),
-                                                       prevdt.toLocaleString('en-US', {year: 'numeric'}));
-                AddRowDiv(separator);
-            }
-
-            // Create item div.
-            var item = this.create('div', null, 'stats_item');
-            item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
-            item.setAttribute('data-distance', recStats.mDistance); 
-            var cellDate = this.create('div', null, 'stats_date');
-            cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
-            item.appendChild(cellDate);
-
-            var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
-            item.appendChild(cellDistanceRunTime);
-            var cellSpeedCalories = this.create('div', null, 'stats_speed_calories');  
-            item.appendChild(cellSpeedCalories);
-
-            // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
-            // Display date cell.
-            var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
-            var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
-            // var sMonth = dt.toLocaleString('en-US', {month: 'short'});
-            var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
-            cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
-            // Display display distance, runtime cell and speed, calories cell.
-            var sDistance = lc.to(recStats.mDistance);
-            let runTime = new HourMinSec(recStats.msRunTime); 
-            var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
-            var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); 
-            cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
-            
-            // Add the item to the list.
-            AddRowDiv(item);
-
-            itemCount++;
-            prevdt = dt; // Save ref to Date of previous recStats.
-        };
-        var prevdt = null; // Ref to Date of previous RecStats object.
-
         // Returns number of stats items in the list.
         // Note: length of list is greater than item count because of separator rows.
         this.getItemCount = function() {
@@ -7735,37 +7660,32 @@ Are you sure you want to delete the maps?";
 
             //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
             var recStats;
-            if (itemCount === arRecStats.length && arRecStats.length > 0) { 
-                // Check if top item has same timestamp as last (top, most recent) record stats obj, and if record stats obj has changed.
-                if (stats.listDiv.children.length > 0) {
-                    recStats = arRecStats[arRecStats.length-1];  
-                    var topItem = stats.listDiv.children[0];
-                    var sTopTimeStamp = topItem.getAttribute('data-timestamp');
-                    var nTopTimeStamp = Number(sTopTimeStamp); 
-                    var sTopDistance = topItem.getAttribute('data-distance');
-                    var mTopDistance = Number(sTopDistance); 
-                    if (nTopTimeStamp === recStats.nTimeStamp && mTopDistance !== recStats.mDistance) { 
-                        // Top list item is same as most recent stats data rec and appears to have changed.
-                        // Delete top item in the list, and replace it in case
-                        // the stats data rec has been updated. The data stats rec 
-                        // can be updated due to unclearing a recorded path.
-                        DeleteItem(topItem.id);
-                        this.addStatsItem(recStats);
-                        // Move back previous upload timestamp in order to upload most recent stats item again later.
-                        var recordStatsXfr =  view.onGetRecordStatsXfr();
-                        if (recordStatsXfr.getUploadTimeStamp() === recStats.nTimeStamp) {
-                            var nUploadTimeStamp = arRecStats.length > 1 ? arRecStats[arRecStats.length-2].nTimeStamp : 0;
-                            recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
-                        }
-                    }
-                }
-
-            } else { 
+            if (itemCount === 0) {
+                // Update the display for all the stats items in arRecStats.
                 for (var i=itemCount; i < arRecStats.length; i++) {
                     recStats = arRecStats[i];
-                    this.addStatsItem(recStats);
+                    AddStatsItem(recStats);
+                }
+            } else {
+                var recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+                // Update for the display only for the queued rec stats items.
+                recStats = arStatsUpdate.next();
+                while (recStats) {
+                    AddStatsItem(recStats);
+                    // Reduce the upload needed timestamp if necessary.
+                    recordStatsXfr.reduceUploadTimeStamp(recStats.nTimeStamp);
+                    recStats = arStatsUpdate.next();
                 }
             }
+            // Clear the stats update queue.
+            arStatsUpdate.clear();
+        };
+
+        // Queues stats to a list updates to be displayed.
+        // Arg:
+        //  stats: wigo_ws_GeoTrailRecordStats obj. the stats to queue.
+        this.queueStatsUpdateItem = function(stats) { 
+            arStatsUpdate.add(stats);
         };
 
         // Uploads to server record stats items that have been added since last upload.
@@ -7787,7 +7707,7 @@ Are you sure you want to delete the maps?";
                         if (bOk) { 
                             recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                         }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats items.".format(arUploadRecStats.length) : 
+                        var sMsg = bOk ? "Uploaded {0} RecordStats item(s).".format(arUploadRecStats.length) : 
                                         "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
                                         "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
                         view.ShowStatus(sMsg, !bOk);
@@ -7877,6 +7797,233 @@ Are you sure you want to delete the maps?";
                 }
             }
         }
+
+        // Add a stats item to the list keeping the list in descending display order of timestamps.
+        // The most recent is at the top of the list. List element at index 0 is the top item.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats object. Contains stats info for item to add to list.
+        //            If recStats.nTimeStamp is the same as for an existing item in the list, the item 
+        //            is replaces.
+        // Notes: 
+        // Class names for formatting stats item:
+        //  stats_history_title - div for title, iff title is given in constructor.
+        //  stats_item -- row for the stats item cells.
+        //  stats_date - cell for date and time.
+        //      stats_time       - start time, eg 01:15 pm
+        //      stats_month_day  - day of month, eg 19
+        //      stats_week_day   - day of week, eg Wed
+        //  stats_distance_time - distance in english or metric units and runtime in mins:secs.
+        //  stats_speed_calories - speed in english or metreic units and calories.
+        // Class names for formatting stats month, year row separator:
+        //  stats_separator:  - row for the stats separator, eg December 2017
+        function AddStatsItem(recStats) {  
+            // Helper to insert row div to this list.
+            // Arg:
+            //  ixAt: integer: insertion is before stats.listDiv.children[ixAt].
+            //  row: HTML Div Element. the row div to insert in stats.listDiv.children[]
+            //  Note: if ixAt div is out of range for stats.listDiv.children[], row is append.
+            function InsertRowDiv(ixAt, rowDiv) {  
+                if (ixAt >= 0 && ixAt < stats.listDiv.children.length) {
+                        stats.listDiv.insertBefore(rowDiv, stats.listDiv.children[ixAt]); 
+                } else {
+                    stats.listDiv.appendChild(rowDiv); 
+                }
+            }
+            
+            // Compares compares two dates to see if month and year of each date are the same.
+            // Ars:
+            //  dt1: Date object or number for date timestamp in milliseconds.
+            //  dt2: Date object or number for date timestamp in milliseconds.
+            // Returns: boolean. true if dates are the same.
+            function IsMonthYearSame(dt1, dt2) {
+                if (typeof dt1 === 'number') 
+                    dt1 =  new Date(Number(dt1));
+                if (typeof dt2 === 'number') 
+                    dt2 = new Date(Number(dt2));
+                var bSame = dt1.getMonth() === dt2.getMonth() && dt1.getFullYear() === dt2.getFullYear();
+                return bSame;
+            }
+
+
+            // Returns true if a row is a separation header.
+            // Arg:
+            //  row: HTML Div element. the row to check.
+            function IsSeparatorDiv(row) {
+                var bYes = row.classList.contains('stats_separator');
+                return bYes;
+            }
+
+            // Inserts a separator div before an item row div.
+            // Arg: 
+            //  ixAt: integer. index of item row before which the separator div is inserted.
+            //        The separator div shows the month and year of the item row div.
+            // Returns: integer. the index of the inserted separator div.
+            function InsertSeparatorDiv(ixAt) {
+                while (ixAt - 1 >= 0 && IsSeparatorDiv(stats.listDiv.children[ixAt-1])) {
+                    stats.listDiv.removeChild(stats.listDiv.children[ixAt-1]);
+                    ixAt--;
+                }
+
+                var row = stats.listDiv.children[ixAt];
+                var separatorTimeStamp = row.getAttribute('data-timestamp');
+                if (separatorTimeStamp.length > 0) {
+                    var dt = new Date(Number(separatorTimeStamp));
+                    var separator = that.create('div', null, 'stats_separator');
+                    separator.innerHTML = "{0} {1}".format(dt.toLocaleString('en-US', {month: 'long'}),
+                                                           dt.toLocaleString('en-US', {year: 'numeric'}));
+                    InsertRowDiv(ixAt, separator);
+                }
+                return ixAt;
+            }
+
+            // Create item div. 
+            var dt = new Date(recStats.nTimeStamp); 
+            var item = that.create('div', null, 'stats_item');
+            item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
+            item.setAttribute('data-distance', recStats.mDistance); 
+            var cellDate = that.create('div', null, 'stats_date');
+            cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
+            item.appendChild(cellDate);
+
+            var cellDistanceRunTime = that.create('div', null, 'stats_distance_time');    
+            item.appendChild(cellDistanceRunTime);
+            var cellSpeedCalories = that.create('div', null, 'stats_speed_calories');  
+            item.appendChild(cellSpeedCalories);
+
+            // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
+            // Display date cell.
+            var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
+            var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
+            // var sMonth = dt.toLocaleString('en-US', {month: 'short'});
+            var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
+            cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
+            // Display display distance, runtime cell and speed, calories cell.
+            var sDistance = lc.to(recStats.mDistance);
+            let runTime = new HourMinSec(recStats.msRunTime); 
+            var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
+            var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
+            cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); 
+            cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
+            
+            // Search for insertion location.
+            var row;
+            var nRowTimeStamp = null;
+            var ixAt = stats.listDiv.children.length; // Set later to exact index at which to insert item.
+            var bReplaced = false;
+            var bSepartorNeeded = false;
+            for (var i=0; i < stats.listDiv.children.length; i++) {
+                row = stats.listDiv.children[i]; 
+                if (IsSeparatorDiv(row)) {
+                    // Ignore separator div.
+                    continue;
+                }
+                nRowTimeStamp = Number(row.getAttribute('data-timestamp')); 
+                if (recStats.nTimeStamp >= nRowTimeStamp) { 
+                    if (recStats.nTimeStamp === nRowTimeStamp) {
+                        // Replacement point found.
+                        bReplaced = true; 
+                        // Remove existing node and insert its replacement next.
+                        stats.listDiv.removeChild(row);
+                        InsertRowDiv(i, item);
+                        // Note: no need to check for month separator header for replacement.
+                    } else {
+                        // Insertion point found.
+                        ixAt = i;
+                    }
+                    break;
+                }
+            }
+
+            if (!bReplaced) {
+                // Check if a month separator header is needed for row at insertion index.
+                // Note: this checks if a separator div is needed after the item.
+                var bSameMonthYear =  nRowTimeStamp === null || IsMonthYearSame(dt, nRowTimeStamp);
+                if (ixAt >= 0 && ixAt < stats.listDiv.children.length) {
+                    if (!bSameMonthYear) {
+                        // Need a separator div because month has changed between item and row at insertion.
+                        ixAt = InsertSeparatorDiv(ixAt);
+                        // Note: ixAt is now ix of separator div, which is correct.
+                    } 
+                }
+                
+                // Insert the item.
+                InsertRowDiv(ixAt, item);
+                // Note: ixAt is now the index of item row.
+
+                if (!bSameMonthYear) {
+                    // Check if a month separator is needed before the item row just inserted.
+                    var ixBefore = ixAt - 1;
+                    var rowBefore = null;
+                    // Skip over any previous separator div (there should not be any to skip over).
+                    while (ixBefore >= 0) {
+                        rowBefore = stats.listDiv.children[ixBefore];
+                        if (IsSeparatorDiv(rowBefore)) {
+                            ixBefore--
+                            continue;
+                        }
+                        break;
+                    }
+                    if (rowBefore) { 
+                        var nRowBeforeTimeStamp = Number(rowBefore.getAttribute('data-timestamp')); 
+                        if (!IsMonthYearSame(dt, nRowBeforeTimeStamp)) {
+                            // Separator div is needed before the item row.
+                            // Insert the separator div.
+                            ixAt = InsertSeparatorDiv(ixAt);
+                            // Note: ixAt is now ix of separator div, which is correct.
+                        } 
+                    }
+                }
+                itemCount++;
+            }
+        }
+
+        // Object for list stats items that need to added the stats history list display.
+        function StatsUpdateAry() { 
+            // Adds a stats to the list of updates.
+            // If stats.nTimeStamp already exists in the list, the list element is replaced;
+            // otherwise the stats is added to the top (end) of the list.
+            // The list is kept in ascending order of timestamps
+            // Arg:
+            //  stats: wigo_ws_GeoTrailRecordStats obj. The stats to add to the list.
+            this.add = function(stats) {
+                for (var i=arStats.length-1; i >= 0; i--) {
+                    if (stats.nTimeStamp > arStats[i]) {
+                        arStats.splice(i, 0, stats);
+                        break;
+                    } else if (stats.nTimeStamp === arStats[i].nTimeStamp) {
+                        arStats[i] = stats;
+                        break;
+                    }
+                }
+                if (i < 0) {
+                    // Add stats to top (end) of the array.
+                    arStats.push(stats);
+                }
+            };
+
+            // Gets next element of the list in order from least timestamp to greatest timestamp (most recent).
+            // Returns: wigo_ws_GeoTrailRecordStats obj. the next stats element in the list.
+            //          null. There is no next element to get.
+            this.next = function() {
+                var stats = null;
+                if (iNext >= 0 && iNext < arStats.length) {
+                    stats = arStats[iNext];
+                    iNext++;
+                }
+                return stats;
+            };
+
+            // Clears the list.
+            this.clear = function() {
+                arStats.splice(0); // remove all the elements.
+                iNext = 0;
+            }
+
+            // ** Private Members
+            var arStats = []; // List of wigo_ws_GeoTrailRecordStats objs.
+            var iNext = 0;   // Index for getting next element of arStats.
+        }
+        var arStatsUpdate = new StatsUpdateAry();
 
         // Adds items to the list in order to test changing from month to month.
         // Only for debug. Delete when no longer needed.
@@ -8058,7 +8205,9 @@ Are you sure you want to delete the maps?";
             // Then iff update stats items at server and in localStorage.
             function DoDeleteAndUpload() {
                 // Delete the old item at server.
-                var bStarted = recordStatsXfr.deleteRecordStatsList([nDeleteItemTimeStamp], function(bOk, sStatus){
+                var arUploadDelete = [];  
+                arUploadDelete.push(new wigo_ws_GeoTrailTimeStamp(nDeleteItemTimeStamp)); 
+                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
                     if (bOk) {
                         // Delete the item from localStorage.
                         view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
@@ -8095,10 +8244,10 @@ Are you sure you want to delete the maps?";
             let itemData = itemEditor.getEditData();
             let bAdd = !itemEditor.bEditing;
             let bChanged = false; 
-            if (itemEditor.bEditing) {
+            let originalItemData = itemEditor.getOriginalItemData(); // Get ref to original itemData before it was edited. 
+            if (itemEditor.bEditing && originalItemData) {  
                 // Check if timestamp has been changed.
                 bChanged = false;  
-                let originalItemData = NewRecordStatsObj(itemData); // Make copy of itemData before it is changed. 
                 if (!itemEditor.isSpeedChanged()) {  
                     // Set calorie fields from the original data item because
                     // the speed has not changed. The item data from controls has estimated 
@@ -8142,7 +8291,7 @@ Are you sure you want to delete the maps?";
 
             var recordStatsXfr = view.onGetRecordStatsXfr();
             // Delete stats item data at server if need be.
-            if (nDeleteItemTimeStamp) {
+            if (nDeleteItemTimeStamp) { 
                 // Delete the old item at server and iff ok, delete locally.
                 // Then iff ok, upload edited item  to server and iff ok, save locally.
                 DoDeleteAndUpload();
@@ -8167,6 +8316,25 @@ Are you sure you want to delete the maps?";
             }
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
+        }
+
+        // Get a list of stats items to be deleted from server.
+        // Returns: array of wigo_ws_GeoTrailTimeStamp objs. 
+        //          the deletion list for server wigo_ws_GeoPathsRESTfulApi(), DeleteRecordStatsList(..) method.
+        function GetServerDeleteSelections() { 
+            var arServerDelete = [];
+            let arId = Object.keys(itemsSelected);
+            let nTimeStamp = 0;
+            let itemDiv = null;
+            for (let i=0; i < arId.length; i++) {
+                // arId[i] is ith property name (string) of the div id for a selected row in the RecordStatsHistory list.
+                itemDiv = document.getElementById(arId[i]);
+                if (itemDiv) {
+                    nTimeStamp = Number(itemDiv.getAttribute('data-timestamp'));
+                    arServerDelete.push(new wigo_ws_GeoTrailTimeStamp(nTimeStamp));
+                }
+            }
+            return arServerDelete;
         }
 
         // Handler for keydown event for various controls.
@@ -8614,6 +8782,9 @@ Are you sure you want to delete the maps?";
                     return digits;
                 }
 
+                // Save ref to the orginal item data set into the edit controls.
+                originalItemData = itemData; 
+
                 // Clear speed changed flag.
                 this.setSpeedChanged(false); 
                 // Set starting date.
@@ -8637,6 +8808,13 @@ Are you sure you want to delete the maps?";
                 let runTime = new HourMinSec(itemData.msRunTime);
                 runTimeMins.value = runTime.getAllMins();
                 runTimeSecs.value = runTime.getSec();
+            };
+
+            // Gets ref to the original item data that is arg to this.setEditCtrls(itemData); 
+            // Returns: ref to wigo_ws_GeoTrailRecordStats obj. 
+            //          Could be null if not set by this.setEditCtrls(itemData).
+            this.getOriginalItemData = function() { 
+                return originalItemData; 
             };
 
             // Checks if control values are valid.
@@ -8871,6 +9049,8 @@ Are you sure you want to delete the maps?";
             // Status msg div.
             let status = new ctrls.StatusDiv(); 
 
+            let originalItemData = null; // ref to wigo_ws_GeoTrailRecordStats. the item data that is set into the edit controls. 
+
             // Blur all ctrls that might have soft keyboard showing.
             distance.blur();
             runTimeMins.blur();
@@ -9065,14 +9245,31 @@ Are you sure you want to delete the maps?";
                 let arId = Object.keys(itemsSelected);  
                 if (arId.length > 0) {  
                     ConfirmYesNo("OK to delete all the selected items from local storage?",
-                        function(bConfirm){
+                        function(bConfirm) {
                             if (bConfirm) {
-                                view.onDeleteRecordStats(itemsSelected); 
-                                // Update the stats metrics 
-                                recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                                // Remove selected items from list displayed.
-                                DeleteSelections();
-                                that.showMonthDate(); 
+                                // Delete the items at server first.
+                                // Iff deletion at server is successful, then delete locally.
+                                // Delete the old item at server first.
+                                var arUploadDelete = GetServerDeleteSelections();
+                                var recordStatsXfr = view.onGetRecordStatsXfr();  
+                                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
+                                    if (bOk) {
+                                        view.onDeleteRecordStats(itemsSelected); 
+                                        // Update the stats metrics 
+                                        recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                        // Remove selected items from list displayed.
+                                        DeleteSelections();
+                                        that.showMonthDate(); 
+                                        var sMsg = "Deleted {0} stats item(s) at server.".format(arUploadDelete.length);
+                                        view.ShowStatus(sMsg, false); 
+                                    } else {
+                                        var sMsg = "Failed to delete {0} stats item(s) at server".format(arUploadDelete.length);
+                                        view.ShowStatus(sMsg)
+                                    }
+                                });
+                                if (!bStarted) {
+                                    view.ShowStatus("Failed to start deleting stats item(s) at server.");
+                                }
                             }
                         }); 
                 } else { 
