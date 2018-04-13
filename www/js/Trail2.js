@@ -8191,7 +8191,7 @@ Are you sure you want to delete the maps?";
                     if (bOk) {
                         UploadCompleted();
                     } else {
-                        var sMsg = "failed to upload stats item to server: {0}".format(sStatus);
+                        var sMsg = "Failed to upload stats item to server: {0}".format(sStatus);
                         view.ShowStatus(sMsg);
                     }
                 });
@@ -8214,7 +8214,7 @@ Are you sure you want to delete the maps?";
                         // upload the new item to server.
                         DoUpload(); 
                     } else {
-                        var sMsg = "failed to delete old stats item at server: {0}".format(sStatus);
+                        var sMsg = "Failed to delete old stats item at server: {0}".format(sStatus);
                         view.ShowStatus(sMsg);
                     }
                 });
@@ -8229,6 +8229,8 @@ Are you sure you want to delete the maps?";
                 // Update local storage, the stat history list, and stats metrics.
                 if (bChanged) {
                     UpdateLocalStorage();
+                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; ////20180412 added
+                    view.ShowStatus(sMsg, false);                                                    ////20180412 added
                 }
             }
 
@@ -9212,6 +9214,19 @@ Are you sure you want to delete the maps?";
         // Call back handler for selection in menuStatsHistory.
         var metricsReport = null; 
         menuStatsHistory.onListElClicked = function(dataValue) {
+            // Helper that checks if user is signed in. 
+            // Arg:
+            //  sNotSignedInMsg: string. status msg shown if user is not signed in.
+            // Returns: boolean. true if signed.
+            function IsUserSignedIn(sNotSignedInMsg) { ////20180412 added
+                var bSignedIn = view.getOwnerId().length > 0;
+                if (!bSignedIn) {
+                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in Off.<br>Sign-in> Facebook.";
+                    view.ShowStatus(sMsg);
+                }
+                return bSignedIn;
+            }
+
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 if (metricsReport)          
@@ -9222,59 +9237,64 @@ Are you sure you want to delete the maps?";
                 // Set metrics report to fill screen.
                 metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
-                itemEditor.bEditing = false; 
-                itemEditor.setTitle("Add a New Record Stats Item"); 
-                let itemData = itemEditor.newItemData();
-                itemData.nTimeStamp = Date.now();
-                itemEditor.setEditCtrls(itemData);
-                ShowRecordStatsEditDiv(true); 
-            } else if (dataValue === 'edit_stats_item') { 
-                let arId = Object.keys(itemsSelected);
-                if (arId.length === 1) {
-                    itemEditor.bEditing = true;
-                    itemEditor.setTitle("Edit a Record Stats Item"); 
-                    let itemData = that.getItemData(arId[0]);
+                if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { ////20180412 added if cond, then body existed.
+                    itemEditor.bEditing = false; 
+                    itemEditor.setTitle("Add a New Record Stats Item"); 
+                    let itemData = itemEditor.newItemData();
+                    itemData.nTimeStamp = Date.now();
                     itemEditor.setEditCtrls(itemData);
-                    ShowRecordStatsEditDiv(true);
-                } else {
-                    AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
+                    ShowRecordStatsEditDiv(true); 
+                } /////20180412 added 
+            } else if (dataValue === 'edit_stats_item') { 
+                if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { ////20180412 added if cond, then body existed.
+                    let arId = Object.keys(itemsSelected);
+                    if (arId.length === 1) {
+                        itemEditor.bEditing = true;
+                        itemEditor.setTitle("Edit a Record Stats Item"); 
+                        let itemData = that.getItemData(arId[0]);
+                        itemEditor.setEditCtrls(itemData);
+                        ShowRecordStatsEditDiv(true);
+                    } else {
+                        AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
+                    }
                 }
-
             } else if (dataValue === 'delete_selected') {
-                // Prompt user if no item is selected.
-                let arId = Object.keys(itemsSelected);  
-                if (arId.length > 0) {  
-                    ConfirmYesNo("OK to delete all the selected items from local storage?",
-                        function(bConfirm) {
-                            if (bConfirm) {
-                                // Delete the items at server first.
-                                // Iff deletion at server is successful, then delete locally.
-                                // Delete the old item at server first.
-                                var arUploadDelete = GetServerDeleteSelections();
-                                var recordStatsXfr = view.onGetRecordStatsXfr();  
-                                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                                    if (bOk) {
-                                        view.onDeleteRecordStats(itemsSelected); 
-                                        // Update the stats metrics 
-                                        recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                                        // Remove selected items from list displayed.
-                                        DeleteSelections();
-                                        that.showMonthDate(); 
-                                        var sMsg = "Deleted {0} stats item(s) at server.".format(arUploadDelete.length);
-                                        view.ShowStatus(sMsg, false); 
-                                    } else {
-                                        var sMsg = "Failed to delete {0} stats item(s) at server".format(arUploadDelete.length);
-                                        view.ShowStatus(sMsg)
+                if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { ////20180412 added if cond, then body existed.
+                    // Prompt user if no item is selected.
+                    let arId = Object.keys(itemsSelected);  
+                    if (arId.length > 0) {  
+                        ConfirmYesNo("OK to delete all the selected items from local storage?",
+                            function(bConfirm) {
+                                if (bConfirm) {
+                                    // Delete the items at server first.
+                                    // Iff deletion at server is successful, then delete locally.
+                                    // Delete the old item at server first.
+                                    var arUploadDelete = GetServerDeleteSelections();
+                                    var recordStatsXfr = view.onGetRecordStatsXfr();  
+                                    var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
+                                        if (bOk) {
+                                            view.onDeleteRecordStats(itemsSelected); 
+                                            // Update the stats metrics 
+                                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                            // Remove selected items from list displayed.
+                                            DeleteSelections();
+                                            that.showMonthDate(); 
+                                            var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
+                                            view.ShowStatus(sMsg, false); 
+                                        } else {
+                                            var sMsg = "Failed to delete {0} stats item(s).".format(arUploadDelete.length);
+                                            view.ShowStatus(sMsg)
+                                        }
+                                    });
+                                    if (!bStarted) {
+                                        view.ShowStatus("Failed to start deleting stats item(s) at server.");
                                     }
-                                });
-                                if (!bStarted) {
-                                    view.ShowStatus("Failed to start deleting stats item(s) at server.");
                                 }
-                            }
-                        }); 
-                } else { 
-                    let sMsg = "Select one or more items for deletion by touching the Date of an item.";
-                    AlertMsg(sMsg);
+                            }); 
+                    } else { 
+                        let sMsg = "Select one or more items for deletion by touching the Date of an item.";
+                        AlertMsg(sMsg);
+                    } 
                 }
             } else if (dataValue === 'clear_selected') {
                 // Prompt user if no item is selected.
@@ -9339,6 +9359,7 @@ Are you sure you want to delete the maps?";
             } else {
                 recBestDistance = recStats;
             }
+            /* ////20180410 Fix
             // Check for personal best distance in last 30 days.
             if (recBestMonthlyDistance) {
                 if (msNow - recStats.nTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
@@ -9346,6 +9367,31 @@ Are you sure you want to delete the maps?";
             } else {
                 recBestMonthlyDistance = recStats;
             }
+            */
+            /* ////20180410 STILL NOT CORRECT. DO in this.updateMonthDays() instead.
+            // Check for personal best distance in last 30 days. ////20180410 fixed $$$$
+            if (msNow - recBestMonthlyDistance.nTimeStamp < msMonth) {
+                // recBestMontlyDistance is within last 30 days so it is a candidate to replace recBestMonthlyDistance.
+                if (recBestMonthlyDistance === null )    {
+                    // There is no valid best monthly distance so set it to recStats.
+                    recBestMonthlyDistance = recStats;
+                } else {
+                    if (msNow - recBestMonthlyDistance.nTimeStamp < msMonth) {
+                        if (recBestMonthlyDistance.mDistance < recStats.mDistance) {
+                            // recBestMonthlyDistance and recStats are both within last 30 days. 
+                            // Replace recBestMonthlyDistance because its distance is less.
+                            recBestMonthlyDistance = recStats;
+                        }
+                    } else  {
+                        // recBestMonthlyDistance is not in last 30 days, so replace it.
+                        recBestMonthlyDistance = recStats;                        
+                    }
+                }
+            } else {
+                // recStats is not within last 30 days so recBestMonthlyDistance can not be valid.
+                recBestMonthlyDistance = null;
+            }
+            */
 
             // Check for personal best speed.
             let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
@@ -9360,6 +9406,7 @@ Are you sure you want to delete the maps?";
                     bestSpeed = speed;
                 }
             }
+            /* ////20180410 Fix
             // Check for personal best speed in last 30 days.
             if (recBestMonthlySpeed) {
                 if (msNow - recStats.nTimeStamp < msMonth && bestMonthlySpeed < speed) {
@@ -9372,6 +9419,36 @@ Are you sure you want to delete the maps?";
                     bestMonthlySpeed = speed;
                 }
             }
+            */
+            /* ////20180410 STILL NOT CORRECT. Do in this.updateMonthDays() instead.
+            // Check for personal best speed in last 30 days. ////20180410 fixed $$$$
+            if (msNow - recBestMonthlySpeed.nTimeStamp < msMonth) {
+                // recBestMonthlySpeed is within last 30 days so it is a candidate to replace recBestMonthlySpeed.
+                if (recBestMonthlySpeed === null) {
+                    // There is no valid best monthly speed so set it to recStats.
+                    recBestMonthlySpeed = recStats;
+                    bestMonthlySpeed = speed;
+                } else {
+                    if (msNow - recBestMonthlySpeed.nTimeStamp < msMonth) {
+                        if (bestMonthlySpeed < speed) {
+                            // recBestMonthlySpeed and recStats are both within last 30 days. 
+                            // Replace recBestMonthlySpeed because its distance is less.
+                            recBestMonthlySpeed = recStats;
+                            bestMonthlySpeed = speed;
+                        }
+                    } else {
+                        // recBestMonthlySpeed is not in last 30 days, so replace it.
+                        recBestMonthlySpeed = recStats;
+                        bestMonthlySpeed = speed;
+                    }
+                }
+            } else {
+                // recStats is not within last 30 days so recBestMonthlySpeed can not be valid.
+                recBestMonthlySpeed = null;
+                bestMonthlySpeed = 0;
+            }
+            */
+
             // Check for previous stats obj wrt to current (newest) recStats.
             if (recCurrent) {
                 if (recStats.nTimeStamp >= recCurrent.nTimeStamp) { // Note: equal is for case when resuming recording.
@@ -9574,6 +9651,8 @@ Are you sure you want to delete the maps?";
             // Fills this array from an array of stats objects.
             // Arg:
             //  arRecStat: array of wigo_ws_GeoTrailRecordStats objs used to fill this array.
+            // Returns: nothing
+            // Sets [out]: var recBestMonthlyDistance, var recBestMonthlySpeed, var bestMonthlySpeed. 
             this.fill = function(arRecStats) {
                 // Helper. Normalizes date for a day using UTC, which is useful for finding element of
                 // arMonthDay by .nDate.
@@ -9644,12 +9723,36 @@ Are you sure you want to delete the maps?";
                 // Loop thru arRecStats in descending order from most recent to least recent.
                 var stats;
                 var prevStatsDate = null;
+                var speed; ////20180410 added
+                recBestMonthlyDistance = null; ////20180410 added
+                recBestMonthlySpeed = null;    ////20180410 added
+                bestMonthlySpeed = 0;   ////20180410 added
                 for (var i=arRecStats.length-1; i >= 0; i--) {
 
                     if (arMonthDay.length >= maxSizeOfArMonthDay)
                         break; // Quit because arMonthDay if full.
 
                     stats = arRecStats[i];
+                    
+                    ////20180410 ** addition $$$$
+                    // Check for best distance and speed within a month for each individual run
+                    // (not for sum of runs on same day).
+                    // Check for best distance.
+                    if (!recBestMonthlyDistance)
+                        recBestMonthlyDistance = stats;
+                    else if (stats.mDistance > recBestMonthlyDistance.mDistance)
+                        recBestMonthlyDistance = stats;
+                    // Check for best speed.
+                    speed = stats.msRunTime > 0 ? stats.mDistance / (stats.msRunTime/1000) : 0;
+                    if (!recBestMonthlySpeed) {
+                        recBestMonthlySpeed = stats;
+                        bestMonthlySpeed = speed;
+                    } else if (speed > bestMonthlySpeed) {
+                        recBestMonthlySpeed = stats;
+                        bestMonthlySpeed = speed;
+                    }
+                    ////20180410 ** end addition
+
                     statsDate = new Date(stats.nTimeStamp); 
                     statsDate = ClearHrMinSec(statsDate); 
 

@@ -811,6 +811,7 @@ function wigo_ws_Model(deviceDetails) {
         this.setId = function(stats) {  
             var iAt = FindIxOfId(stats.nTimeStamp);
             if (iAt < 0) {
+                /* ////20180407 $$$$ REDONE TO USE NEW MORE EFFICIENT FindIxOfId(..)
                 // Redo to insert before timestamp that stats.nTimeStamp is less than
                 // searching backwards from last element in the array.
                 if (arRecordStats.length == 0) {
@@ -832,7 +833,20 @@ function wigo_ws_Model(deviceDetails) {
                     if (!bInserted)
                         arRecordStats.splice(0, 0, stats); 
                 }
+                */
+                // stats is not in the array. Find insertion point.
+                if (iAt >= -arRecordStats.length) {
+                    // Convert negative insertion point to positive index.
+                    // Insertion point is iAt + arRecordStats.length.
+                    iAt += arRecordStats.length;
+                    arRecordStats.splice(iAt, 0, stats); 
+                } else {
+                    // Note: Here iAt should be == -arRecordStats.length - 1.
+                    // Insertion point is at top of array.
+                    arRecordStats.push(stats);
+                }
             } else {      
+                // stats found in array. replace existing element.
                 arRecordStats[iAt] = stats;
             }
 
@@ -962,6 +976,7 @@ function wigo_ws_Model(deviceDetails) {
             localStorage[sRecordStatsSchemaKey] = JSON.stringify(schema);
         };
 
+        /* ////20180407 redo for efficiency based on array always in ascending order of element[i].nTimeStamp.
         // Searches for record stats element.
         // Returns index of element if found, or -1 if not found.
         // Arg:
@@ -978,6 +993,49 @@ function wigo_ws_Model(deviceDetails) {
             }
             return iFound;
         }
+        */ 
+
+        // Searches for record stats. Search is efficent based on assumption that array
+        // is in ascending order of element timestaps.
+        // Returns integer. an index that aids in keeping the array in ascending order.
+        //      index for index of element if found, or < 0 if not found.
+        //      For index >= 0, elment was found at index.
+        //      For index < 0 && index >= - Length_of_array, indicates element is not found
+        //          and insertion (splicng) index for ascending order = index + Length_ of_array.
+        //      For index == -Length_of_array - 1, element was not found and insertion index = Length_of_array,
+        //          i.e, the end (aka top) of the array. Can push element to keep ascending order.
+        // Arg:
+        //  nTimeStamp: number. nTimeStamp id of element to match.
+        function FindIxOfId(nTimeStamp) {  ////20180407 REDONE $$$$ 
+            var el; // element i for looping thru array.
+            // Default to index not found and nTimeStamp < el[0].nTimeStamp.
+            // The default insertion point is for el[0], which causes existing el[0] to raise. 
+            var iFound = -arRecordStats.length; 
+            // Search thru array from top (most recent timestam) to botton (least recent timestamp).
+            for (var i=arRecordStats.length - 1; i >= 0; i--) {
+                el = arRecordStats[i];
+                if (nTimeStamp === el.nTimeStamp) {
+                    iFound = i; // Found the element at index i.
+                    break;
+                } if (nTimeStamp > el.nTimeStamp) {
+                    // nTimeStamp is for insertion point at previous index
+                    // because nTimeStamp is < timestamp of previous element. 
+                    // Insertion point for ascending order is index of previous element.
+                    if (i === arRecordStats.length - 1) {
+                        // index for insertion at top of array.
+                        // Note: If searching for a recently created element, this is the likely case
+                        //       because an element is created as time increases.
+                        iFound =  -arRecordStats.length - 1; 
+                    } else {
+                        // Insertion point at an index in the array.
+                        iFound = i + 1 - arRecordStats.length; 
+                    }
+                    break;
+                }
+            }
+            return iFound;
+        }
+
 
         var arRecordStats = []; // Array of wigo_ws_GeoTrailRecordStats objects.
 
