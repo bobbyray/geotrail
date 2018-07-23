@@ -9227,6 +9227,55 @@ Are you sure you want to delete the maps?";
                 return bSignedIn;
             }
 
+            
+            // Helper that gets list of item descriptions.
+            // Arg:
+            //  arId: array of unique html id of selected data items.
+            // Returns: array of string. Each element is a description of the data itsm.
+            function GetItemDescrList(arId) { // ////20180721 added
+                let itemData;
+                let arDescr = [];
+                let sDescr;
+                let date;
+                let sDate, sValue;
+                for (let i=0; i < arId.length; i++) {
+                    itemData = that.getItemData(arId[i]);
+                    date = new Date(itemData.nTimeStamp);
+                    /* //// example
+                    var sLabel = "{0}: ".format(date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', weekday: 'short' })); 
+                    var sValue; 
+                    if (monthDayEl.nUpdates > 0) {
+                        var runTime = new HourMinSec(monthDayEl.msRunTime);
+                        var sTimes = monthDayEl.nUpdates > 1 ? " ({0}x)".format(monthDayEl.nUpdates.toFixed(0)) : "";
+                        sValue = "{0} at {1} for {2}{3}".format(lc.to(monthDayEl.mDistance),
+                                                                 lc.toSpeed(monthDayEl.mDistance, monthDayEl.msRunTime/1000).text,
+                                                                 runTime.getStr(),
+                                                                sTimes); 
+
+                    */
+                    ////20180722 sDate = "{0}, ".format(date.toLocaleDateString('en-US', {year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short' })); 
+                    sDate = "{0}, ".format(date.toLocaleDateString('en-US', {year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short', hour12: true, hour: '2-digit', minute: '2-digit' })); 
+                    sValue = " {0}".format(lc.to(itemData.mDistance));
+                    sDescr = sDate + sValue;
+                    arDescr.push(sDescr);
+                }
+                return arDescr;
+            }
+
+
+            // Helper to form a confirmation msg for deleting a list of items.
+            // Arg:
+            //  arId: array of unique html id of selected data items.
+            // Returns: string. Confirmation msg describing list of items to delete.
+            function GetConfirmDeleteListMsg(arId) { ////20180721 added
+                let sMsg = 'OK to delete these selected items?\n';
+                let arDescr = GetItemDescrList(arId);
+                for (let i=0; i < arDescr.length; i++) {
+                    sMsg += '{0}\n'.format(arDescr[i]);
+                }
+                return sMsg;
+            }
+
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 if (metricsReport)          
@@ -9263,7 +9312,8 @@ Are you sure you want to delete the maps?";
                     // Prompt user if no item is selected.
                     let arId = Object.keys(itemsSelected);  
                     if (arId.length > 0) {  
-                        ConfirmYesNo("OK to delete all the selected items from local storage?",
+                        ////20180721 ConfirmYesNo("OK to delete all the selected items from local storage?",
+                        ConfirmYesNo(GetConfirmDeleteListMsg(arId),
                             function(bConfirm) {
                                 if (bConfirm) {
                                     // Delete the items at server first.
