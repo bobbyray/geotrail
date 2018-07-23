@@ -8229,8 +8229,8 @@ Are you sure you want to delete the maps?";
                 // Update local storage, the stat history list, and stats metrics.
                 if (bChanged) {
                     UpdateLocalStorage();
-                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; ////20180412 added
-                    view.ShowStatus(sMsg, false);                                                    ////20180412 added
+                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; 
+                    view.ShowStatus(sMsg, false);                                                    
                 }
             }
 
@@ -9218,7 +9218,7 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  sNotSignedInMsg: string. status msg shown if user is not signed in.
             // Returns: boolean. true if signed.
-            function IsUserSignedIn(sNotSignedInMsg) { ////20180412 added
+            function IsUserSignedIn(sNotSignedInMsg) { 
                 var bSignedIn = view.getOwnerId().length > 0;
                 if (!bSignedIn) {
                     var sMsg = sNotSignedInMsg + "<br>View > Sign-in Off.<br>Sign-in> Facebook.";
@@ -9232,7 +9232,7 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  arId: array of unique html id of selected data items.
             // Returns: array of string. Each element is a description of the data itsm.
-            function GetItemDescrList(arId) { // ////20180721 added
+            function GetItemDescrList(arId) { 
                 let itemData;
                 let arDescr = [];
                 let sDescr;
@@ -9241,19 +9241,6 @@ Are you sure you want to delete the maps?";
                 for (let i=0; i < arId.length; i++) {
                     itemData = that.getItemData(arId[i]);
                     date = new Date(itemData.nTimeStamp);
-                    /* //// example
-                    var sLabel = "{0}: ".format(date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', weekday: 'short' })); 
-                    var sValue; 
-                    if (monthDayEl.nUpdates > 0) {
-                        var runTime = new HourMinSec(monthDayEl.msRunTime);
-                        var sTimes = monthDayEl.nUpdates > 1 ? " ({0}x)".format(monthDayEl.nUpdates.toFixed(0)) : "";
-                        sValue = "{0} at {1} for {2}{3}".format(lc.to(monthDayEl.mDistance),
-                                                                 lc.toSpeed(monthDayEl.mDistance, monthDayEl.msRunTime/1000).text,
-                                                                 runTime.getStr(),
-                                                                sTimes); 
-
-                    */
-                    ////20180722 sDate = "{0}, ".format(date.toLocaleDateString('en-US', {year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short' })); 
                     sDate = "{0}, ".format(date.toLocaleDateString('en-US', {year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short', hour12: true, hour: '2-digit', minute: '2-digit' })); 
                     sValue = " {0}".format(lc.to(itemData.mDistance));
                     sDescr = sDate + sValue;
@@ -9267,7 +9254,7 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  arId: array of unique html id of selected data items.
             // Returns: string. Confirmation msg describing list of items to delete.
-            function GetConfirmDeleteListMsg(arId) { ////20180721 added
+            function GetConfirmDeleteListMsg(arId) { 
                 let sMsg = 'OK to delete these selected items?\n';
                 let arDescr = GetItemDescrList(arId);
                 for (let i=0; i < arDescr.length; i++) {
@@ -9286,16 +9273,16 @@ Are you sure you want to delete the maps?";
                 // Set metrics report to fill screen.
                 metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
-                if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { ////20180412 added if cond, then body existed.
+                if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { 
                     itemEditor.bEditing = false; 
                     itemEditor.setTitle("Add a New Record Stats Item"); 
                     let itemData = itemEditor.newItemData();
                     itemData.nTimeStamp = Date.now();
                     itemEditor.setEditCtrls(itemData);
                     ShowRecordStatsEditDiv(true); 
-                } /////20180412 added 
+                } 
             } else if (dataValue === 'edit_stats_item') { 
-                if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { ////20180412 added if cond, then body existed.
+                if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { 
                     let arId = Object.keys(itemsSelected);
                     if (arId.length === 1) {
                         itemEditor.bEditing = true;
@@ -9308,11 +9295,10 @@ Are you sure you want to delete the maps?";
                     }
                 }
             } else if (dataValue === 'delete_selected') {
-                if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { ////20180412 added if cond, then body existed.
+                if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { 
                     // Prompt user if no item is selected.
                     let arId = Object.keys(itemsSelected);  
                     if (arId.length > 0) {  
-                        ////20180721 ConfirmYesNo("OK to delete all the selected items from local storage?",
                         ConfirmYesNo(GetConfirmDeleteListMsg(arId),
                             function(bConfirm) {
                                 if (bConfirm) {
@@ -9409,39 +9395,6 @@ Are you sure you want to delete the maps?";
             } else {
                 recBestDistance = recStats;
             }
-            /* ////20180410 Fix
-            // Check for personal best distance in last 30 days.
-            if (recBestMonthlyDistance) {
-                if (msNow - recStats.nTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
-                    recBestMonthlyDistance = recStats;
-            } else {
-                recBestMonthlyDistance = recStats;
-            }
-            */
-            /* ////20180410 STILL NOT CORRECT. DO in this.updateMonthDays() instead.
-            // Check for personal best distance in last 30 days. ////20180410 fixed $$$$
-            if (msNow - recBestMonthlyDistance.nTimeStamp < msMonth) {
-                // recBestMontlyDistance is within last 30 days so it is a candidate to replace recBestMonthlyDistance.
-                if (recBestMonthlyDistance === null )    {
-                    // There is no valid best monthly distance so set it to recStats.
-                    recBestMonthlyDistance = recStats;
-                } else {
-                    if (msNow - recBestMonthlyDistance.nTimeStamp < msMonth) {
-                        if (recBestMonthlyDistance.mDistance < recStats.mDistance) {
-                            // recBestMonthlyDistance and recStats are both within last 30 days. 
-                            // Replace recBestMonthlyDistance because its distance is less.
-                            recBestMonthlyDistance = recStats;
-                        }
-                    } else  {
-                        // recBestMonthlyDistance is not in last 30 days, so replace it.
-                        recBestMonthlyDistance = recStats;                        
-                    }
-                }
-            } else {
-                // recStats is not within last 30 days so recBestMonthlyDistance can not be valid.
-                recBestMonthlyDistance = null;
-            }
-            */
 
             // Check for personal best speed.
             let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
@@ -9456,48 +9409,6 @@ Are you sure you want to delete the maps?";
                     bestSpeed = speed;
                 }
             }
-            /* ////20180410 Fix
-            // Check for personal best speed in last 30 days.
-            if (recBestMonthlySpeed) {
-                if (msNow - recStats.nTimeStamp < msMonth && bestMonthlySpeed < speed) {
-                    recBestMonthlySpeed = recStats;
-                    bestMonthlySpeed = speed;
-                }
-            } else {
-                if (speed > 0) {
-                    recBestMonthlySpeed = recStats;
-                    bestMonthlySpeed = speed;
-                }
-            }
-            */
-            /* ////20180410 STILL NOT CORRECT. Do in this.updateMonthDays() instead.
-            // Check for personal best speed in last 30 days. ////20180410 fixed $$$$
-            if (msNow - recBestMonthlySpeed.nTimeStamp < msMonth) {
-                // recBestMonthlySpeed is within last 30 days so it is a candidate to replace recBestMonthlySpeed.
-                if (recBestMonthlySpeed === null) {
-                    // There is no valid best monthly speed so set it to recStats.
-                    recBestMonthlySpeed = recStats;
-                    bestMonthlySpeed = speed;
-                } else {
-                    if (msNow - recBestMonthlySpeed.nTimeStamp < msMonth) {
-                        if (bestMonthlySpeed < speed) {
-                            // recBestMonthlySpeed and recStats are both within last 30 days. 
-                            // Replace recBestMonthlySpeed because its distance is less.
-                            recBestMonthlySpeed = recStats;
-                            bestMonthlySpeed = speed;
-                        }
-                    } else {
-                        // recBestMonthlySpeed is not in last 30 days, so replace it.
-                        recBestMonthlySpeed = recStats;
-                        bestMonthlySpeed = speed;
-                    }
-                }
-            } else {
-                // recStats is not within last 30 days so recBestMonthlySpeed can not be valid.
-                recBestMonthlySpeed = null;
-                bestMonthlySpeed = 0;
-            }
-            */
 
             // Check for previous stats obj wrt to current (newest) recStats.
             if (recCurrent) {
@@ -9773,10 +9684,10 @@ Are you sure you want to delete the maps?";
                 // Loop thru arRecStats in descending order from most recent to least recent.
                 var stats;
                 var prevStatsDate = null;
-                var speed; ////20180410 added
-                recBestMonthlyDistance = null; ////20180410 added
-                recBestMonthlySpeed = null;    ////20180410 added
-                bestMonthlySpeed = 0;   ////20180410 added
+                var speed; 
+                recBestMonthlyDistance = null; 
+                recBestMonthlySpeed = null;    
+                bestMonthlySpeed = 0;   
                 for (var i=arRecStats.length-1; i >= 0; i--) {
 
                     if (arMonthDay.length >= maxSizeOfArMonthDay)
@@ -9784,7 +9695,6 @@ Are you sure you want to delete the maps?";
 
                     stats = arRecStats[i];
                     
-                    ////20180410 ** addition $$$$
                     // Check for best distance and speed within a month for each individual run
                     // (not for sum of runs on same day).
                     // Check for best distance.
@@ -9801,7 +9711,6 @@ Are you sure you want to delete the maps?";
                         recBestMonthlySpeed = stats;
                         bestMonthlySpeed = speed;
                     }
-                    ////20180410 ** end addition
 
                     statsDate = new Date(stats.nTimeStamp); 
                     statsDate = ClearHrMinSec(statsDate); 

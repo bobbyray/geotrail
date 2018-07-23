@@ -811,29 +811,6 @@ function wigo_ws_Model(deviceDetails) {
         this.setId = function(stats) {  
             var iAt = FindIxOfId(stats.nTimeStamp);
             if (iAt < 0) {
-                /* ////20180407 $$$$ REDONE TO USE NEW MORE EFFICIENT FindIxOfId(..)
-                // Redo to insert before timestamp that stats.nTimeStamp is less than
-                // searching backwards from last element in the array.
-                if (arRecordStats.length == 0) {
-                    arRecordStats[0] = stats;
-                } else {
-                    // Search backwards through the array.
-                    let bInserted = false;
-                    let i = arRecordStats.length - 1;
-                    for (i; i >= 0; i--) {
-                        if (stats.nTimeStamp > arRecordStats[i].nTimeStamp) {
-                            // Insert stats before previous item which stats was less than.
-                            // Note: if stats.nTimeStamp is > timestamp of last array element, 
-                            //       then stats is inserted at the end of the array, which should be the typical case.
-                            arRecordStats.splice(i+1, 0, stats);
-                            bInserted = true;
-                            break;
-                        }
-                    }
-                    if (!bInserted)
-                        arRecordStats.splice(0, 0, stats); 
-                }
-                */
                 // stats is not in the array. Find insertion point.
                 if (iAt >= -arRecordStats.length) {
                     // Convert negative insertion point to positive index.
@@ -976,25 +953,6 @@ function wigo_ws_Model(deviceDetails) {
             localStorage[sRecordStatsSchemaKey] = JSON.stringify(schema);
         };
 
-        /* ////20180407 redo for efficiency based on array always in ascending order of element[i].nTimeStamp.
-        // Searches for record stats element.
-        // Returns index of element if found, or -1 if not found.
-        // Arg:
-        //  nTimeStamp: number. nTimeStamp id of element to match.
-        function FindIxOfId(nTimeStamp) { 
-            var iFound = -1;
-            var el;
-            for (var i=0; i < arRecordStats.length; i++) {
-                el = arRecordStats[i];
-                if (el.nTimeStamp === nTimeStamp) {
-                    iFound = i;
-                    break;
-                }
-            }
-            return iFound;
-        }
-        */ 
-
         // Searches for record stats. Search is efficent based on assumption that array
         // is in ascending order of element timestaps.
         // Returns integer. an index that aids in keeping the array in ascending order.
@@ -1006,7 +964,7 @@ function wigo_ws_Model(deviceDetails) {
         //          i.e, the end (aka top) of the array. Can push element to keep ascending order.
         // Arg:
         //  nTimeStamp: number. nTimeStamp id of element to match.
-        function FindIxOfId(nTimeStamp) {  ////20180407 REDONE $$$$ 
+        function FindIxOfId(nTimeStamp) {  
             var el; // element i for looping thru array.
             // Default to index not found and nTimeStamp < el[0].nTimeStamp.
             // The default insertion point is for el[0], which causes existing el[0] to raise. 
