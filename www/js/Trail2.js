@@ -7682,7 +7682,7 @@ Are you sure you want to delete the maps?";
         };
 
         // Reloads this list of items from localStorage.
-        this.reload = function() { ////20180727 added
+        this.reload = function() { 
             itemCount = 0;
             let arRecStats = view.onGetRecordStatsList();
             // Set arRecStats to empty array if it is null or undefined.
@@ -9111,7 +9111,7 @@ Are you sure you want to delete the maps?";
         }
 
         // Helper object for syncing stats data with server and localStorage.
-        function StatsSyncer() { ////20180723
+        function StatsSyncer() { 
 
             // Synchronizes stats between server and local stats.
             // Arg:
@@ -9197,7 +9197,6 @@ Are you sure you want to delete the maps?";
             //  aryServerStats: RecordStatsAryServer object. stats from server.
             // Retuns: array of wigo_ws_GeoTrailRecordStats objs. the missing stats. Empty array if none are missing.
             function AddMissingToLocalStats(aryServerStats) {
-                ////let arLocalStats = aryLocalStats.getAll();
                 let arMissingStats = []; // Array of missing stats.
                 let bMissing = false;
                 let aryLocalStats = recordStatsXfr.getLocalRecordStatsAry();
@@ -9234,10 +9233,6 @@ Are you sure you want to delete the maps?";
 
             var that = this;
             var recordStatsXfr = null; // ref to RecordStatsXfr set by this.sync().
-
-            ////20180726 var arServerStats = []; // Array of wigo_ws_GeoTrailRecordStats objects download from server.
-            ////20180726 var arLocalStats = [];  // Ref to array of local stats.
-
         }
 
         // ** Constructor initialization.
@@ -9348,7 +9343,7 @@ Are you sure you want to delete the maps?";
                                       ['edit_stats_item','Edit Stats Item'],   // 2
                                       ['delete_selected','Delete Selected'],   // 3
                                       ['clear_selected', 'Clear Selected'],    // 4
-                                      ['sync_server', 'Sync w/ Server'],       // 5 ////20180723 added 
+                                      ['sync_server', 'Sync w/ Server'],       // 5 
                                     ]; 
         menuStatsHistory.fill(menuStatsHistoryValues);
 
@@ -9487,7 +9482,7 @@ Are you sure you want to delete the maps?";
                 } else {  
                     AlertMsg("No item is selected.");
                 }
-            } else if (dataValue === 'sync_server') {  ////20180726 added 
+            } else if (dataValue === 'sync_server') {  
                 if (IsUserSignedIn("You must sign-in to Sync Stats with Server.")) {
                     let bStarted = statsSyncer.sync(function(bOk, nLocalStatsAdded, sStatus){
                         view.ShowStatus(sStatus, !bOk);  
@@ -9505,7 +9500,7 @@ Are you sure you want to delete the maps?";
             }
         };
 
-        var statsSyncer = new StatsSyncer(); // Object to sync stats with server. ////20180726 added 
+        var statsSyncer = new StatsSyncer(); // Object to sync stats with server. 
 
         // New ScrollComplete object. See ScrollableListBase in ws.wigo.cordovacontrols.js.
         var scrollComplete = this.newOnScrollComplete(stats.listDiv); 
