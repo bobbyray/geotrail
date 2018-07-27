@@ -683,7 +683,7 @@ function wigo_ws_View() {
                 HideAllBars();
                 titleBar.setTitle("Stats History");
                 recordStatsHistory.update();
-                recordStatsHistory.uploadAdditions(); 
+                recordStatsHistory.uploadAdditions();  
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
@@ -7681,6 +7681,22 @@ Are you sure you want to delete the maps?";
             arStatsUpdate.clear();
         };
 
+        // Reloads this list of items from localStorage.
+        this.reload = function() { ////20180727 added
+            itemCount = 0;
+            let arRecStats = view.onGetRecordStatsList();
+            // Set arRecStats to empty array if it is null or undefined.
+            if (!arRecStats)
+                arRecStats = []; 
+            
+            // Update the display for all the stats items in arRecStats.
+            let recStats; 
+            for (var i=itemCount; i < arRecStats.length; i++) {
+                recStats = arRecStats[i];
+                AddStatsItem(recStats);
+            }
+        }
+
         // Queues stats to a list updates to be displayed.
         // Arg:
         //  stats: wigo_ws_GeoTrailRecordStats obj. the stats to queue.
@@ -9094,6 +9110,136 @@ Are you sure you want to delete the maps?";
             itemEditor.setSpeedChanged(true);
         }
 
+        // Helper object for syncing stats data with server and localStorage.
+        function StatsSyncer() { ////20180723
+
+            // Synchronizes stats between server and local stats.
+            // Arg:
+            //  onDone: callback function with signature:
+            //    bOk: boolean. Successfully completed sync
+            //    nLocalStatsAdded: number. number of local stats added.
+            //    sStatus: string. message describing result of syncing.
+            // Synchronous return: boolean. 
+            //  true indicates sync started.
+            //  false indicates cannot start syncing because
+            //        some other exchange with server is in progrss.
+            this.sync = function(onDone) {
+                if (recordStatsXfr === null)
+                    recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+
+                let bStarted  = CompareStats(onDone);
+                return bStarted;
+            };
+            
+            // Compares stats downloaded from server with stats in localStorage.
+            // Adds stats from server that are missing to local stats and saves to localStorage.
+            // Adds stats from local stats that are missing in server data and uploads missing stats to server.
+            // Arg: 
+            //  OnDone: callback with this signature:
+            //      bOk: boolean: true for sucess.
+            //      nLocalStatsAdded: number. number of local stats added.
+            //      sStatus: string: description for the syncing result.
+            function CompareStats(onDone) {
+                let bStarted = recordStatsXfr.downloadRecordStatsAry(function(bOk, aryServerStats, sStatus){
+                    let sLineEnd = '<br/>';
+                    let sStatusMsg = '';
+                    let nLocalStatsAdded = 0; 
+
+                    
+                    function DoDone(bDoneOk) {
+                        if (onDone) {
+                            onDone(bDoneOk, nLocalStatsAdded, sStatusMsg);
+                        }
+                    }
+
+                    if (bOk) {
+                        // Add missing stats to local stats and saves to localStorage if there are missing stats.
+                        let arMissingStats = AddMissingToLocalStats(aryServerStats); 
+                        nLocalStatsAdded = arMissingStats.length;
+                        if (arMissingStats.length > 0) {
+                            sStatusMsg += 'Saved {0} stats from server missing in local data.{1}'.format(arMissingStats.length, sLineEnd);
+                        }
+                        
+                        // Add missing stats to server stats.
+                        arMissingStats = AddMissingToServerStats(aryServerStats);
+                        if (arMissingStats.length > 0) { 
+                            // Upload server stats that have been added.
+                            let bUploadStarted = recordStatsXfr.uploadRecordStatsList(arMissingStats, function(bOk, sStatus){
+                                if (bOk) {
+                                    sStatusMsg += 'Uploaded {0} stats missing at server.{1}'.format(arMissingStats.length, sLineEnd);
+                                } else {
+                                    sStatusMsg += 'Error uploading {0} stats missing at server.{1}{2}{1}'.format(arMissingStats.length, sLineEnd, sStatus);
+                                }
+                                DoDone(bOk);
+                            });
+                            if (!bUploadStarted) {
+                                // Failed to start uploading data to server. Should not happen.
+                                sStatusMsg += 'Failed to start uploading {0} missing stats to server.{1}'.format(arMissingStats.length, sLineEnd);
+                                DoDone(false);
+                            }
+                        } else {
+                            if (sStatusMsg.length === 0) {
+                                sStatusMsg += 'Sync determined local stats and stats saved at server are the same.{0}'.format(sLineEnd);
+                            }
+                            DoDone(bOk);
+                        }
+                    } else {
+                        sStatusMsg += 'Sync failed to download stats from server.{0}{1}{0}'.format(sLineEnd, sStatus);
+                        DoDone(bOk);
+                    }
+                });
+                return bStarted;  
+            }
+
+            // Add any missing stats from the server to local stats.
+            // If there are missing stats, the localStorage for stats is updated (saved).
+            // Arg:
+            //  aryServerStats: RecordStatsAryServer object. stats from server.
+            // Retuns: array of wigo_ws_GeoTrailRecordStats objs. the missing stats. Empty array if none are missing.
+            function AddMissingToLocalStats(aryServerStats) {
+                ////let arLocalStats = aryLocalStats.getAll();
+                let arMissingStats = []; // Array of missing stats.
+                let bMissing = false;
+                let aryLocalStats = recordStatsXfr.getLocalRecordStatsAry();
+                let arServerStats = aryServerStats.getAll();
+                for (let i=0; i < arServerStats.length; i++) {
+                    bMissing = aryLocalStats.insertMissingNoSave(arServerStats[i]);                   
+                    if (bMissing) {
+                        arMissingStats.push(arServerStats[i]);
+                    }
+                }
+                if (arMissingStats.length > 0)
+                    aryLocalStats.SaveToLocalStorage();
+                return arMissingStats;
+            }
+
+            // Add any missing stats from the local stats to server stats.
+            // Note: Does NOT upload missing stats to server.
+            // Arg:
+            //  aryServerStats: RecordStatsAryServer object. stats from server.
+            // Retuns: number. number of missing stats added to server stats.
+            function AddMissingToServerStats(aryServerStats) {
+                let arMissingStats = []; // Array of missing stats.
+                let bMissing = false;
+                let aryLocalStats = recordStatsXfr.getLocalRecordStatsAry();
+                let arLocalStats = aryLocalStats.getAll();
+                for (let i=0; i < arLocalStats.length; i++) {
+                    bMissing = aryServerStats.insertMissingNoSave(arLocalStats[i]);
+                    if (bMissing) {
+                        arMissingStats.push(arLocalStats[i])
+                    }
+                }
+                return arMissingStats;
+            }
+
+            var that = this;
+            var recordStatsXfr = null; // ref to RecordStatsXfr set by this.sync().
+
+            ////20180726 var arServerStats = []; // Array of wigo_ws_GeoTrailRecordStats objects download from server.
+            ////20180726 var arLocalStats = [];  // Ref to array of local stats.
+
+        }
+
         // ** Constructor initialization.
         // Set ref and event handlers for controls used for editing a stats item.
         if (!ctrlIds) {
@@ -9202,7 +9348,8 @@ Are you sure you want to delete the maps?";
                                       ['edit_stats_item','Edit Stats Item'],   // 2
                                       ['delete_selected','Delete Selected'],   // 3
                                       ['clear_selected', 'Clear Selected'],    // 4
-                                     ]; 
+                                      ['sync_server', 'Sync w/ Server'],       // 5 ////20180723 added 
+                                    ]; 
         menuStatsHistory.fill(menuStatsHistoryValues);
 
         // Ref to divs for month and year in header.
@@ -9221,7 +9368,7 @@ Are you sure you want to delete the maps?";
             function IsUserSignedIn(sNotSignedInMsg) { 
                 var bSignedIn = view.getOwnerId().length > 0;
                 if (!bSignedIn) {
-                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in Off.<br>Sign-in> Facebook.";
+                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in> Facebook.";
                     view.ShowStatus(sMsg);
                 }
                 return bSignedIn;
@@ -9340,8 +9487,25 @@ Are you sure you want to delete the maps?";
                 } else {  
                     AlertMsg("No item is selected.");
                 }
+            } else if (dataValue === 'sync_server') {  ////20180726 added 
+                if (IsUserSignedIn("You must sign-in to Sync Stats with Server.")) {
+                    let bStarted = statsSyncer.sync(function(bOk, nLocalStatsAdded, sStatus){
+                        view.ShowStatus(sStatus, !bOk);  
+                        if (nLocalStatsAdded > 0) {
+                            // Reload the history list since local stats have changed.
+                            that.reload();
+                        }
+                    });
+                    if (!bStarted) {
+                        // Some previous exchange with server has not completed. 
+                        // If exchange with server is hung, View > Sign-in/off > Sign-in > Reset Server Access may help.
+                        view.ShowStatus('Exchange with server is in progress. Wait and try again.', true);
+                    }    
+                }
             }
         };
+
+        var statsSyncer = new StatsSyncer(); // Object to sync stats with server. ////20180726 added 
 
         // New ScrollComplete object. See ScrollableListBase in ws.wigo.cordovacontrols.js.
         var scrollComplete = this.newOnScrollComplete(stats.listDiv); 

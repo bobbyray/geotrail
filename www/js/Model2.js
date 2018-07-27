@@ -259,7 +259,7 @@ function wigo_ws_Model(deviceDetails) {
     //  onDone: Asynchronous completion handler. Signature:
     //      bOk: boolean: true for sucessful upload.
     //      arStats: array of wigo_ws_GeoTrailRecordStats objs. the list that has been downloaded.
-    //      sStatus: string: description for the upload result.
+    //      sStatus: string: description for the download result.
     //      Returns: void
     //  Synchronous return: boolean. true indicates download successfully started.
     // Remarks: User must be signed in. If user is not signed in, calls onDone(..) 
@@ -528,9 +528,16 @@ function wigo_ws_Model(deviceDetails) {
     }
 
     // Returns list of record stats objects, which is
-    // Array object of wigo_ws_GeoTrailRecordStats objects.
+    // array object of wigo_ws_GeoTrailRecordStats objects.
     this.getRecordStatsList = function() { 
         return arRecordStats.getAll();
+    };
+
+    // Returns ref to object that contains list of record stats objects.
+    // Returns: ref to RecordStatsAry object, which contains array of 
+    // wigo_ws_GeoTrailRecordStats objs and members to access the array.
+    this.getRecordStatsAry = function() { ////20180726 added
+        return arRecordStats;
     };
 
     // Deletes elements from record stats array and saves to localStorage.
@@ -802,6 +809,8 @@ function wigo_ws_Model(deviceDetails) {
     // Object for storing an array of wigo_ws_GeoTrailRecordStats objects.
     // Note: Construction loads this object from localStorage.
     function RecordStatsAry() { 
+        
+        /* ////20180724 refactor
         // Sets a record stats element in this array and saves array to localStorage. 
         // Arg: 
         //  stats wigo_ws_GeoTrailRecordStats. stats element to set.
@@ -828,6 +837,42 @@ function wigo_ws_Model(deviceDetails) {
             }
 
             this.SaveToLocalStorage();    
+        };
+        */
+
+        // Sets a record stats element in this array and saves array to localStorage. 
+        // Arg: 
+        //  stats wigo_ws_GeoTrailRecordStats. stats element to set.
+        //        stats.nTimeStamp is the unique id for the element.
+        //        If stats.nTimeStamp matches an existing element, the
+        //        element is replaced; otherwise it is added.
+        this.setId = function(stats) {  
+            var iAt = FindIxOfId(stats.nTimeStamp);
+            if (iAt < 0) {
+                // stats is not in the array. Insert stats into arRecordStats.
+                InsertMissingAtNegi(iAt, stats);
+            } else {      
+                // stats found in array. replace existing element.
+                arRecordStats[iAt] = stats;
+            }
+
+            this.SaveToLocalStorage();    
+        };
+
+        // Inserts stats only iif it is not in the array.
+        // Does NOT save the array to localStorage.
+        // Arg:
+        //  stats wigo_ws_GeoTrailRecordStats. stats element to insert.
+        //        stats.nTimeStamp is the unique id for the element.
+        // Returns: boolean. true if stats is inserted (ie missing).
+        this.insertMissingNoSave = function(stats) { ////20180724 added
+            let bInserted = false;
+            let iAt = FindIxOfId(stats.nTimeStamp);
+            if (iAt < 0) {
+                InsertMissingAtNegi(iAt, stats);
+                bInserted = true;               
+            }
+            return bInserted;
         };
 
         // Sets this array to list of record stats elements and saves to localStorage.
@@ -906,6 +951,25 @@ function wigo_ws_Model(deviceDetails) {
         // Increase nSchemaSaved when updating property of elements of arRecordStats.
         var nSchemaSaved = 1;  // Must be set to new number when nSchema change is added. 
         var schema = { level: 0 }; // Current schema leval.
+        
+        // Refactored helper to share saving stats at a negative index
+        // return by FindIx(). 
+        function InsertMissingAtNegi(iAt, stats) { ////20180724 refactor
+            if (iAt >= 0)
+                return; 
+            if (iAt >= -arRecordStats.length) {
+                // Convert negative insertion point to positive index.
+                // Insertion point is iAt + arRecordStats.length.
+                iAt += arRecordStats.length;
+                arRecordStats.splice(iAt, 0, stats);
+            }
+            else {
+                // Note: Here iAt should be == -arRecordStats.length - 1.
+                // Insertion point is at top of array.
+                arRecordStats.push(stats);
+            }
+        }
+
         // Update each element of arRecords. Each element is a wigo_ws_GeoTrailRecordStats obj:
         //      add property nModifiedTimeStamp.
         //      remove property caloriesBurnedActual.
@@ -1000,6 +1064,26 @@ function wigo_ws_Model(deviceDetails) {
         this.LoadFromLocalStorage();
     }
     var arRecordStats = new RecordStatsAry();  
+
+    // Object for an array of wigo_ws_GeoTrailRecordStats objects obtained from web server.
+    // Note: Same as RecordStatsAry() object, except neither saves nor loads from localStorage.
+    function RecordStatsAryServer() { ////20180726 added
+        // Over-rides saving this object to local storage.
+        // Does nothing. Does NOT save to local storage
+        this.SaveToLocalStorage = function () {
+            // localStorage[sOfflineParamsKey] = JSON.stringify(arParams);
+            // DO NOT save to local storage
+        };
+
+        // Over-rides loading this object from local storage.
+        // Does nothing.
+        this.LoadFromLocalStorage = function () {
+            // Do NOT load from localStorage.
+        };
+    }
+    RecordStatsAryServer.prototype = new RecordStatsAry();
+    RecordStatsAryServer.constructor = RecordStatsAryServer;
+
 
     // Object for the Geo Trail Settings persisted to localStorage.
     function GeoTrailSettings() {
@@ -1234,7 +1318,7 @@ function wigo_ws_Model(deviceDetails) {
         // Note: the wigo_ws_GeoTrailRecordStats objs in the returned array are those
         //       whose timestamp is more recent than timestamp given by this.getUploadTimeStamp().
         this.getRecordStatsUploadNeeded = function() { 
-            var arRecStats = model.getRecordStatsList(); ;
+            var arRecStats = model.getRecordStatsList();
             var nPreviousUploadTimeStamp = this.getUploadTimeStamp();
             // Check if RecordStats items have been added locally that have not been uploaded to server.
             var recStats; 
@@ -1259,9 +1343,44 @@ function wigo_ws_Model(deviceDetails) {
         };
 
         // Deletes record stats list at server.
-        // Same as model.model.uploadRecordStatsList(arTimeStamp, onDone);
+        // Same as model.uploadRecordStatsList(arTimeStamp, onDone);
         this.deleteRecordStatsList = function(arTimeStamp, onDone) { 
             return model.deleteRecordStatsList(arTimeStamp, onDone); 
+        };
+
+        // Downloads objecto for array of record stats from server.
+        // Arg:
+        //  onDone: callback function whose signature is:
+        //      bOk: boolean: true for sucessful upload.
+        //      aryStats: RecordStatsAryServer object. contains array of wigo_ws_GeoTrailRecordStats objs
+        //                and has members to access the array.
+        //      sStatus: string: description for the download result.
+        //      Returns: void
+        this.downloadRecordStatsAry = function(onDone) { ////20180723 added
+                //      bOk: boolean: true for sucessful upload.
+                //      arStats: array of wigo_ws_GeoTrailRecordStats objs. the list that has been downloaded.
+                //      sStatus: string: description for the download result.
+                //      Returns: void
+
+            let bStarted = model.downloadRecordStatsList(function(bOk, arStats, sStatus){
+                recordStatsAryServer.Clear();
+                if (bOk) {
+                    recordStatsAryServer.setList(arStats);
+                } else {
+                    recordStatsAryServer.Clear();
+                }
+                if (onDone) {
+                    onDone(bOk, recordStatsAryServer, sStatus);
+                }
+            });
+            return bStarted;
+        };
+
+        // Gets ref to object for array of local record stats.
+        // Returns: RecordStatsAry object. Contains array of local stats object
+        //          and has members to access the array. 
+        this.getLocalRecordStatsAry = function() { ////20180723 added
+            return model.getRecordStatsAry(); ////20180727Was return model.getRecordStatsList(); 
         };
 
         // Gets residue of wigo_ws_GeoTrailRecordStats objs for an owner.
@@ -1362,6 +1481,8 @@ function wigo_ws_Model(deviceDetails) {
         // Constructor initialization.
         var arResidue; // Array of wigo_ws_RecordStatsXfrResidue objs.
         LoadResidueFromLocalStorage(); // Sets arResidue from localStorate. 
+
+        var recordStatsAryServer = new RecordStatsAryServer(); ////20180726 
 
         var recordStatsXfrInfo = new wigo_ws_RecordStatsXfrInfo();
         LoadInfoFromLocalStorage();
