@@ -5217,6 +5217,11 @@ function wigo_ws_View() {
     function SetSettingsParams(settings, bInitial) {
         if (typeof(bInitial) !== 'boolean')
             bInitial = true;
+
+        // Set body in the BodyMass control.
+        bodyMass.setMass(settings.kgBodyMass); ////20180809 added 
+        bodyMass.bMetric = settings.distanceUnits === 'metric';  
+
         EnableMapBarGeoTrackingOptions(settings, bInitial); 
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
@@ -8264,9 +8269,10 @@ Are you sure you want to delete the maps?";
             let bChanged = false; 
             let originalItemData = itemEditor.getOriginalItemData(); // Get ref to original itemData before it was edited. 
             if (itemEditor.bEditing && originalItemData) {  
+                /* ////20180809 redo, use changed flag instead of speed change detection.
                 // Check if timestamp has been changed.
                 bChanged = false;  
-                if (!itemEditor.isSpeedChanged()) {  
+                if (!itemEditor.isSpeedChanged()) {   ////20180730 I don't think isSpeedChange() is needed any longer because of caloriesBurned control.
                     // Set calorie fields from the original data item because
                     // the speed has not changed. The item data from controls has estimated 
                     // the calorie fields, so want to replace these fields.
@@ -8275,6 +8281,11 @@ Are you sure you want to delete the maps?";
                 } else {
                     bChanged = true;
                 }
+                */
+                //// 
+                // Check if stats item has been changed.
+                bChanged = itemEditor.isStatsChanged();  
+
                 let bSameDate = IsSameDate(originalItemData.nTimeStamp, itemData.nTimeStamp);
                 if (bSameDate) {
                     // Date entered has not changed. Use timestamp in milliseconds from original data.
@@ -8757,6 +8768,7 @@ Are you sure you want to delete the maps?";
 
         // Helper object for editing a stats item.
         function StatsItemEditor() { 
+            var that = this;
             // number for body mass in kilograms.
             this.kgBodyMass = 50.0; 
             
@@ -8803,8 +8815,8 @@ Are you sure you want to delete the maps?";
                 // Save ref to the orginal item data set into the edit controls.
                 originalItemData = itemData; 
 
-                // Clear speed changed flag.
-                this.setSpeedChanged(false); 
+                ////20180811 // Clear speed changed flag.
+                ////20180811 this.setSpeedChanged(false); 
                 // Set starting date.
                 let itemDate = new Date(itemData.nTimeStamp);
                 let nYear = itemDate.getFullYear();
@@ -8818,14 +8830,13 @@ Are you sure you want to delete the maps?";
                 time.value = "{0}:{1}".format(TwoDigits(nHour), TwoDigits(nMinute));
 
                 // Set distance.
-                let distValue = lc.toDist(itemData.mDistance);  
-                distance.value = distValue.n.toFixed(2);
-                distanceUnit.innerText = distValue.unit;
+                SetDistanceCtrl(itemData.mDistance); ////20180807 refactored.
 
                 // Set run time.
-                let runTime = new HourMinSec(itemData.msRunTime);
-                runTimeMins.value = runTime.getAllMins();
-                runTimeSecs.value = runTime.getSec();
+                SetRunTimeCtrl(itemData.msRunTime); ////20180809 refactored
+
+                // Set calories burned.
+                SetCaloriesBurnedCtrl(itemData.caloriesBurnedCalc);  ////20180730 refactored
             };
 
             // Gets ref to the original item data that is arg to this.setEditCtrls(itemData); 
@@ -8840,6 +8851,7 @@ Are you sure you want to delete the maps?";
             // focus to the control.
             // Returns: boolean. true if all control values are valid.
             this.areCtrlsValid = function() {
+                /* ////20180810 refactor
                 // Helper that returns true if num is an integer.
                 function IsInteger(num) {
                     let bYes = num === Math.floor(num);
@@ -8860,10 +8872,94 @@ Are you sure you want to delete the maps?";
                         ctrl.classList.remove('stats_item_editor_ctrl_error');
                     }
                 }
+                */
                 
+                let bOk = IsDateTimeValid();
+
+                // Check that distance is not negative.
+                if (bOk)
+                    bOk = IsDistanceValid();
+
+                // Check run time minutes.
+                if (bOk)
+                    bOk = IsRunTimeValid();
+
+                // Check that caloriesBurned is valid. ////20180730 added.
+                if (bOk)
+                    bOk = IsCaloriesBurnedValid();
+
+                return bOk;
+            };
+
+            function IsCaloriesBurnedValid() {
                 let bOk = true;
-                let sMsg; 
-                this.clearStatus();
+                let nCaloriesBurned = GetNumFromCtrl(caloriesBurned);
+                if (nCaloriesBurned < 0) {
+                    status.addLine('Calories burned must be greater than 0.');
+                    IndicateError(caloriesBurned, true);
+                    bOk = false;
+                }
+                return bOk;
+            }
+
+            function IsRunTimeValid() {
+                let bOk = true;
+                let nMins = GetNumFromCtrl(runTimeMins);
+                if (nMins < 0) {
+                    status.addLine("Run Time Minutes cannot be negative.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                else if (!IsInteger(nMins)) {
+                    status.addLine("Run Time Minutes must be whole mumber.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(runTimeMins, false);
+                }
+                // Check run time seconds.
+                let nSecs = GetNumFromCtrl(runTimeSecs);
+                if (nSecs < 0) {
+                    status.addLine("Run Time Secs cannot be negative.");
+                    IndicateError(runTimeSecs, true);
+                    bOk = false;
+                }
+                else if (nSecs > 59 || !IsInteger(nSecs)) {
+                    status.addLine("Run Time Secs must be whole number from 0, 1, ... 59");
+                    IndicateError(runTimeSecs, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(runTimeSecs, false);
+                }
+                // Check run time is not zero.
+                if (nSecs <= 0 && nMins <= 0) {
+                    status.addLine("Run Time must be greater than 0.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                return bOk;
+            }
+
+            function IsDistanceValid() {
+                let bOk = true;
+                let dist = GetNumFromCtrl(distance);
+                if (dist < 0) {
+                    status.addLine("Distance cannot be negative.");
+                    IndicateError(distance, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(distance, false);
+                }
+                return bOk;
+            }
+
+            function IsDateTimeValid() {
+                let bOk = true;
+                let sMsg;
+                that.clearStatus(); ////20180811 was this
                 // Check that date/time is < current time. Do not allow adding dates in the future
                 // because a date/time that may be added later by record needs to be after
                 // the date of last (oldest) item in the stats list because stats history only 
@@ -8875,92 +8971,214 @@ Are you sure you want to delete the maps?";
                     sMsg = "Starting Date/Time must be less than current Date/Time\nof {0}".format(dt.toLocaleString('en-US'));
                     status.addLine(sMsg);
                     IndicateError(date, true);
-                    IndicateError(time, true); 
+                    IndicateError(time, true);
                     bOk = false;
-                } else {
+                }
+                else {
                     // Indicate an error if either date or time is not given.
                     if (date.value.length === 0) {
                         status.addLine("Date must be entered.");
                         IndicateError(date, true);
                         bOk = false;
-                    } else if (time.value.length === 0) {
+                    }
+                    else if (time.value.length === 0) {
                         status.addLine("Time must be given.");
                         IndicateError(time, true);
                         bOk = false;
-                    } else {
+                    }
+                    else {
                         // date and time are ok.
                         IndicateError(date, false);
                         IndicateError(time, false);
                     }
                 }
-                // Check that distance is not negative.
-                let dist = GetNumFromCtrl(distance);
-                if (dist < 0) {
-                    status.addLine("Distance cannot be negative.");
-                    IndicateError(distance, true);
-                    bOk = false;
-                } else {
-                    IndicateError(distance, false);
-                }
-                // Check run time minutes.
-                let nMins = GetNumFromCtrl(runTimeMins);
-                if (nMins < 0) {
-                    status.addLine("Run Time Minutes cannot be negative.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                } else if (!IsInteger(nMins)) {
-                    status.addLine("Run Time Minutes must be whole mumber.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                } else {
-                    IndicateError(runTimeMins, false);
-                }
-                // Check run time seconds.
-                let nSecs = GetNumFromCtrl(runTimeSecs);
-                if (nSecs < 0) {
-                    status.addLine("Run Time Secs cannot be negative.");
-                    IndicateError(runTimeSecs, true);
-                    bOk = false;
-                } else if (nSecs > 59 || !IsInteger(nSecs)) { 
-                    status.addLine("Run Time Secs must be whole number from 0, 1, ... 59");
-                    IndicateError(runTimeSecs, true);
-                    bOk = false;
-                } else {
-                    IndicateError(runTimeSecs, false);
-                }
-                // Check run time is not zero.
-                if (nSecs <= 0 && nMins <= 0) {
-                    status.addLine("Run Time must be greater than 0.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                }
-
                 return bOk;
+            }
+
+            // Helper that returns true if num is an integer.
+            function IsInteger(num) {  //20180810 refactored
+                let bYes = num === Math.floor(num);
+                return bYes;
+            }
+
+            // Helper to indicate a ctrl has an invalid entry
+            // by setting focus to control and setting class name
+            // used to designate background color.
+            // Args
+            //  ctrl: HTML Element obj for the control.
+            //  bError: boolean. true indicates invalid entry.
+            function IndicateError(ctrl, bError) { ////20180810 refactored
+                if (bError) {
+                    ctrl.focus();
+                    ctrl.classList.add('stats_item_editor_ctrl_error');
+                } else {
+                    ctrl.classList.remove('stats_item_editor_ctrl_error');
+                }
+            }
+            
+
+            ////20180811 // Sets flag to indicated speed has changed.
+            ////20180811 // Arg: 
+            ////20180811 //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
+            ////20180811 // 
+            ////20180811 this.setSpeedChanged = function(bChanged) { 
+            ////20180811     bSpeedChanged = bChanged;
+            ////20180811 };
+            ////20180811 var bSpeedChanged = false; 
+            ////20180811 
+            ////20180811 // boolean. Returns true is distance or runtime control has been changed.
+            ////20180811 this.isSpeedChanged = function() { 
+            ////20180811     return bSpeedChanged;
+            ////20180811 };
+
+
+            var bStatsChanged = false; // Flag to indicate user has changed the stats item. ////20180809 added
+            
+            // boolean. Returns true if stats item has been changed.
+            this.isStatsChanged = function() { ////20180809 added.
+                return bStatsChanged;
+            }
+
+            // Indicate stats item has changed.
+            this.changeDateHandler = function() { ////20180809 added
+                bStatsChanged = true;
+                let bOk = IsDateTimeValid(); ////20180810 added
+                if (bOk)            ////20180811  added
+                    status.clear(); 
             };
 
-            // Sets flag to indicated speed has changed.
-            // Arg: 
-            //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
-            // 
-            this.setSpeedChanged = function(bChanged) { 
-                bSpeedChanged = bChanged;
+            // Indicate stats items has changed. 
+            this.changeTimeHandler = function() { ////20180809 added
+                bStatsChanged = true;
+                let bOk = IsDateTimeValid(); ////20180810 added
+                if (bOk)            ////20180811  added
+                    status.clear(); 
             };
-            var bSpeedChanged = false; 
 
-            // boolean. Returns true is distance or runtime control has been changed.
-            this.isSpeedChanged = function() { 
-                return bSpeedChanged;
+            // Update other ctrls for estimates if allowed when distance is changed.
+            // Reset toggle for Estimate Distance.
+            this.changeDistanceHandler = function() { ////20180807 added
+                bStatsChanged = true;  
+                if (!IsDistanceValid() ) ////20180810 added 
+                    return; 
+                else                    ////20180811 added
+                    status.clear();
+
+                let mDistance = GetDistanceMetersFromCtrl();
+                ////20180810 // If adding, initially set velocity based on acceleration and distance.
+                ////20180810 if (!this.bEditing && acceleration1 > 0 &&  velocity1 <= 0) {  ////20180810 fixed
+                ////20180810     velocity1 = Math.sqrt(2*acceleration1*mDistance);
+                ////20180810 }
+
+                let msRunTime = CalcRunTimeMilliSecsFromDistance(mDistance);
+                // Estimate run time if allowed.
+                if (toggleEstimateRunTime.getState() === 1) {
+                    SetRunTimeCtrl(msRunTime);
+                }
+                // Estimate calories burned if allowed.
+                if (toggleEstimateCaloriesBurned.getState() === 1) {
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
+                // Reset estimate distance toggle.
+                toggleEstimateDistance.setState(0);
+            };
+
+            // Update other ctrls for estimates if allowed when run time is changed.
+            // Reset toggle for Estimate Run Time.
+            this.changeRunTimeHandler = function() { ////20180807 added
+                bStatsChanged = true; 
+                if (!IsRunTimeValid()) ////20180810 added
+                    return; 
+                else                    ////20180811 added
+                    status.clear();
+
+                let msRunTime = GetRunTimeMilliSecsFromCtrl();
+                ////20180810 // If adding, initially set velocity based on acceleration and runtime.
+                ////20180810 if (!this.bEditing && acceleration1 > 0 &&  velocity1 <= 0) {
+                ////20180810     velocity1 = acceleration1 * (msRunTime/1000);
+                ////20180810 }
+                // Estimate distance if allowed.
+                let mDistance = CalcDistanceFromRunTimeMilliSecs(msRunTime);
+                if (toggleEstimateDistance.getState() === 1) {
+                    SetDistanceCtrl(mDistance);
+                }
+                // Estimate calories burned if allowed.
+                if (toggleEstimateCaloriesBurned.getState() === 1) {
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
+
+                // Reset estimate run time toggle.
+                toggleEstimateRunTime.setState(0); 
+            };
+
+            // Leave other ctrils as they are. 
+            // Reset toggle for Estimate Calories Burned.
+            this.changeCaloriesBurnedHandler = function() { ////20180807 added
+                bStatsChanged = true; 
+                if (!IsCaloriesBurnedValid()) ////20180810 added
+                    return;
+                else                    ////20180811 added
+                    status.clear();
+
+                // Reset estimate calories burned toggle.
+                toggleEstimateCaloriesBurned.setState(0); 
+            };
+
+            // Do and set estimate for distance ctrl if allowed.
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimatedDistanceHandler = function(nState) { ////20180807 added
+                ////20180810 // Toggle state of estimate distance.
+                ////20180810 let newState = ToggleState(toggleEstimateDistance.getState());
+                ////20180810 toggleEstimateDistance.setState(newState);
+                // Do estimate distance if allowed.
+                if (nState === 1) {
+                    let msRunTime = GetRunTimeMilliSecsFromCtrl();
+                    let mDistance = CalcDistanceFromRunTimeMilliSecs(msRunTime);
+                    SetDistanceCtrl(mDistance);
+                }
+            };
+
+            // Do and set estimated for run time ctrl if allowed. 
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimatedRunTimeHandler = function(nState) { ////20180807 added
+                ////20180810 // Toggle state of estimate run time.
+                ////20180810 let newState = ToggleState(toggleEstimateRunTime.getState());
+                ////20180810 toggleEstimateRunTime.setState(newState);
+                // Do estimate run time if allowed.
+                if (nState === 1) {
+                    let mDistance = GetDistanceMetersFromCtrl();
+                    let msRunTime = CalcRunTimeMilliSecsFromDistance(mDistance);
+                    SetRunTimeCtrl(msRunTime);
+                }
+            }; 
+            
+            // Do and set estimate for calories burned ctrl if allowed. 
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimateCaloriesBurnedHandler = function(nState) { ////20180807 added
+                ////20180810 // Toggle state of estimate calories burned.
+                ////20180810 let newState = ToggleState(toggleEstimateCaloriesBurned.getState());
+                ////20180810 toggleEstimateCaloriesBurned.setState(newState);
+                // Do calories burned estimate if allowed.
+                if (nState === 1) {
+                    let mDistance = GetDistanceMetersFromCtrl();
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
             };
 
             // Returns new wigo_ws_GeoTrailRecordStats object based on values in the editor's ctrls.
             this.getEditData = function() {
                 let itemData = new wigo_ws_GeoTrailRecordStats();
                 // Set distance in meters from input in miles or kilometers.
-                itemData.mDistance = lc.toMeters(GetNumFromCtrl(distance));
+                itemData.mDistance = GetDistanceMetersFromCtrl(); ////20180730 call refactored function.
                 // Set runtime in milliseconds.
-                let nMins = GetNumFromCtrl(runTimeMins);
-                let nSecs = GetNumFromCtrl(runTimeSecs);
-                itemData.msRunTime = (60 * nMins + nSecs) * 1000.0;
+                itemData.msRunTime = GetRunTimeMilliSecsFromCtrl(); ////20180730 call refactored function.
+                /* ////20180730 Calories is now a control 
                 // Estimate calories.
                 if (itemData.msRunTime > 0) {
                     // Calculate kinetic engery to move body mass in calories.
@@ -8969,17 +9187,266 @@ Are you sure you want to delete the maps?";
                     ke += ke; // Add engery in joules to move body mass from ave velectity to rest.
                     // Calculate  energy to overcome friction for traveling along the path in joules.
                     // 0.032 is estimate for coefficient of friction.
-                    let fe = coeffFriction * this.kgBodyMass * accelGravity * itemData.mDistance;
+                    let fe = coeffFriction * this.kgBodyMass * accelGravity * itemData.mDistance; // frictional engery to overcome over total distance.
                     itemData.caloriesKinetic = (ke + fe)/1000; // Calculated energy in kilojoules.
                     itemData.caloriesKinetic /= kjoulesPerCalorie; // kjoules converted to food calories.
                     // Set calories burned accounting for conversion of food to calories.
                     itemData.caloriesBurnedCalc = itemData.caloriesKinetic / this.calorieConversionEfficiency;
                 }
+                */
+               itemData.caloriesBurnedCalc = GetNumFromCtrl(caloriesBurned); ////20180730 added.
+               itemData.caloriesKinetic = itemData.caloriesBurnedCalc * this.calorieConversionEfficiency; ////20180730 added.
 
                 // Set timestamp from date and time ctrls.
                 itemData.nTimeStamp = ParseDateTime(date, time);
                 return itemData;
             };
+
+            // Sets average coeffient of friction for an array of item data.
+            // Arg:
+            //  arItemData: array of wigo_ws_GeoTrailRecordStats objs, or single wigo_ws_GeoTrailRecordStats.
+            //  nCountLimit: number, optional. Limit for number of items to check in arItemData. Defaults to 10.
+            this.setCoefficientOfFriction = function(arItemData, nCountLimit) { ////20180728 added
+                if (arItemData instanceof wigo_ws_GeoTrailRecordStats) 
+                    arItemData = [arItemData];      
+                if (typeof nCountLimit !== 'number')
+                    nCountLimit = 10;
+
+                let nCount = 0;
+                let nSumCoeffFriction = 0;
+                for (let i=0; i < arItemData.length; i++, nCount++) {
+                    nSumCoeffFriction += calcCoefficientOfFriction(arItemData[i]);
+                }
+
+                coeffFriction = nCount > 0 ? nSumCoeffFriction / nCount : 0;
+            };
+
+            // Toggles state value for an of/off ctrl.
+            // Arg:
+            //  nState: number. current state, which is 0, 1 or -1.
+            // Returns: number. new state after toggle:
+            //      1 -> 0
+            //      0 -> 1
+            //     -1 -> 1
+            function ToggleState(nState) { ////20180808 added
+                let newState = nState === 1 ? 0 : 1;
+                return newState;
+            }
+
+            function SetCaloriesBurnedCtrl(caloriesBurnedCalc) { ////20180807 was itemData
+                caloriesBurned.value = caloriesBurnedCalc.toFixed(0);
+            }
+
+            // Set run time ctrl for minutes and seconds.
+            // Arg:
+            //  msRunTime: number. run time in milliseconds.
+            function SetRunTimeCtrl(msRunTime) { ////20180807 was itemData
+                let runTime = new HourMinSec(msRunTime);
+                runTimeMins.value = runTime.getAllMins();
+                runTimeSecs.value = runTime.getSec();
+            }
+
+            // Set distance ctrl.
+            // Arg:
+            //  mDistance: number. distance in meters.
+            function SetDistanceCtrl(mDistance) {  ////20180807 was itemData
+                let distValue = lc.toDist(mDistance);
+                distance.value = distValue.n.toFixed(2);
+                distanceUnit.innerText = distValue.unit;
+            }
+
+            function GetDistanceMetersFromCtrl() { ////20180730 refactored
+                return lc.toMeters(GetNumFromCtrl(distance));
+            }
+
+            function GetRunTimeMilliSecsFromCtrl() {  ////20180730 refactored.
+                let nMins = GetNumFromCtrl(runTimeMins);
+                let nSecs = GetNumFromCtrl(runTimeSecs);
+                ////20180730 itemData.msRunTime = (60 * nMins + nSecs) * 1000.0;
+                return (60 * nMins + nSecs) * 1000.0;
+            }
+
+            // Calculates distance given run time.
+            // Arg:
+            //  msRunTime: number. run time in milliseconds.
+            // Returns: number. disntance in meters.
+            function CalcDistanceFromRunTimeMilliSecs(msRunTime) { ////20180807
+                let d = 0;
+                if (velocity1 > 0 && msRunTime > 0) {
+                    d = velocity1 * (msRunTime/1000);
+                }
+                return d;
+            }
+
+            // Calculates run time given distance.
+            // Arg:
+            //  mDistance: number. distance in meters.
+            // Returns: number. run time in milliseconds.
+            function CalcRunTimeMilliSecsFromDistance(mDistance) {
+                let msRunTime = 0;
+                if (velocity1 > 0 && mDistance > 0) {
+                    msRunTime = (mDistance / velocity1) * 1000;
+                }
+                return msRunTime;
+            }
+
+            // Calculates calories based on distance.
+            // Arg: 
+            //  mDistance: number. distance in meters.
+            // Returns: number. calories burned.
+            function CalcCaloriesBurned(mDistance) { ////20180807 
+                ////20180810 let ke = bodyMass.getMass() * acceleration1 * mDistance; // joules.
+                let ke = that.kgBodyMass * acceleration1 * mDistance; // joules.
+                let kjoules = ke / 1000;
+                let calories = kjoules / kjoulesPerCalorie;
+                let caloriesBurned = calories / that.calorieConversionEfficiency;
+                return caloriesBurned;
+            }
+
+            // Calculates coeeficient of friction for itemData.
+            // Arg:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. 
+            // Returns: number. the coefficent friction.
+            //  Note: returns 0 if itemData.mDistance is 0 or if this.kgBodyMass is 0.
+            function calcCoefficientOfFriction(itemData) { ////20180728 
+                //  energy = kinetic_energy + friction_energy
+                //  e = ke + fe
+                //  fe = e - ke
+                //  fe = coefficient_friction *  mass*accel_gravity * distance   
+                //  coefficent_fricton = fe / (mass * accel_gravity * distance)
+                if (that.kgBodyMass === 0 || itemData.mDistance === 0) {
+                    return 0;  // Avoid divide by 0 in calculation below.
+                }
+
+                let e = itemData.caloriesKinetic * 1000; // convert kilojoules to joules.
+                let ke = 0.5 * that.kgBodyMass * speed * speed; // kinetic engery in joules moving from rest to ave velocity.
+                ke += ke; // Add kinetic engery in joules to move from ave velectity to rest.
+                let fe = e - ke;
+                let cf = fe / (that.kgBodyMass * accelGravity * itemData.mDistance);
+                return cf; 
+            } 
+            
+            // Sets the acceleration and velocity for editing an exiting item.
+            // Args:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. 
+            this.setAV1ForEdit = function(itemData) { ////20180729 added
+                let r = CalcAV1(itemData);
+                acceleration1 = r.a;
+                velocity1 = r.v;
+            };
+
+            // Sets the acceleration and velocity for adding a new item.
+            // acceleration1 is set to average from the stats data.
+            // velocity1 is set to 0. 
+            // Args:
+            //  arItemData: array of wigo_ws_GeoTrailRecordStats objs.
+            //              The average acceleration and velocity is calculated.
+            //              This arg should be the stats data list obtained from the model.
+            //  nLimit: number, optional. Defaults to 10. Number of array elements
+            //          to use in the average. The most recent items are used for the average.
+            this.setAV1ForAdd = function(arItemData, nLimit) { ////20180729 added
+                if (typeof nLimit !== 'number')
+                    nLimit = 10;
+                let sumR = {a: 0, v: 0};
+                let nCount = 0;
+                let r = {a: 0, v: 0};
+                for (let i=arItemData.length-1; i >= 0; i--) {
+                    r = CalcAV1(arItemData[i]);
+                    if (r.a > 0 && r.v > 0) {
+                        sumR.a += r.a;
+                        sumR.v += r.v;
+                        nCount++;
+                    }
+                    if (nCount >= nLimit)
+                        break;
+                }
+                let aveR = {a: 0, v: 0};
+                if (nCount > 0) {
+                    aveR.a = sumR.a / nCount;
+                    aveR.v = sumR.v / nCount;
+                }
+                acceleration1 = aveR.a;
+                velocity1 = aveR.v;  ////20180810 was 0 
+            };
+
+            // Sets the estimate toggle controls.
+            // Arg:
+            //  bSet: boolean, optional. true to set estimate on. defaults to true.
+            this.setEstimateToggleCtrls = function(bSet) {
+                if (typeof bSet !== 'boolean')
+                    bSet = true;
+                let nState = bSet ? 1 : 0;
+                toggleEstimateDistance.setState(nState);
+                toggleEstimateRunTime.setState(nState);
+                toggleEstimateCaloriesBurned.setState(nState);
+            };
+
+            /* ////20180807 never used
+            // Updates the caloriesBurned control based on changes in
+            // the runtime or distance controls.
+            this.updateCaloriesBurnedCtrl = function() { //// 20180730 added
+                
+            };
+            */
+
+            // Calculates acceleration and velocity for a data item.
+            // Arg:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. the data item.
+            // Returns: {a: number, v: number}:
+            //  a: acceleration i meters/sec^2
+            //  v: velocity in meters / sec.
+            function CalcAV1(itemData) { ////20180729 added
+                let r = {a: 0, v: 0};
+                if (itemData.msRunTime > 0) {
+                    r.v = itemData.mDistance / (itemData.msRunTime/1000); // meters / sec.
+                    // w = m * a * d 
+                    //  a = w / (m * d)
+                    if (that.kgBodyMass > 0 & itemData.mDistance > 0) {
+                        let w = itemData.caloriesKinetic * kjoulesPerCalorie * 1000; // work (energy) joules.
+                        r.a = w / (that.kgBodyMass * itemData.mDistance);
+                    }
+                } 
+                return r;
+            }
+
+            /* ////20180806 never used, do differently.
+            // Calculates current kinetic engergy based on original item data
+            // and the current value of the distance and runtime controls.
+            // Returns: number. the number of calories for the kinetic kinetic energy.
+            function CalcKinecticCalories() {
+                //// write $$$$ 
+                // Calc kinetic energy for for original data item for part 1 of total kinetic energy.
+                let ke1 = that.kgBodyMass * acceleration1 * originalItemData.mDistance;
+
+                // Calc distance,velocity and acceleration for part 2.
+                let mDistance = GetDistanceMetersFromCtrl()
+                let msRunTime = GetRunTimeMilliSecsFromCtrl(); 
+                let mDeltaDistance = mDistance - originalItemData.mDistance;
+                let msDeltaRunTime = msRunTime - originalItemData.msRunTime;
+                
+                let ke2 = 0;
+                if (mDeltaDistance > 0 && msDeltaRunTime > 0) {
+                    let velocity2 = mDeltaDistance / (msDeltaRunTime / 1000); // velocity for part2 in m/sec
+                    let acceleration2 = (velocity2 - velocity1) / (msDeltaRunTime/1000); // acceleration for part2 in m/sec^2.
+                    let deltaAcceleration2 = acceleration2 - acceleration1;
+                    ke2 = that.kgBodyMass * (acceleration1 + deltaAcceleration2) * mDeltaDistance;
+                }
+                let ke = ke1 + ke2; // joules.
+                let keKJoules = (ke/1000)
+                let keCalories = keKJoules /  kjoulesPerCalorie; 
+                return ke;  //// fix need calories not joules. //// Check this.
+            }
+            */
+
+            // Returns number. joules converted to calories.
+            // Arg:
+            //  ke: number. Kinetic engery (units for joules same as units for newton-meter).
+            function JoulesToCalories(ke) { ////20180806 added.
+                let keKJoules = (ke/1000)
+                let keCalories = keKJoules /  kjoulesPerCalorie; 
+                return keCalories;
+            }
+
 
             // Clears the status div so that it is not shown.
             this.clearStatus = function() {  
@@ -9064,6 +9531,9 @@ Are you sure you want to delete the maps?";
             let accelGravity = 9.81;
             let kjoulesPerCalorie = 4.184; // Kilojoules per food Calorie.
 
+            let acceleration1 = 0; // acceleration in meter/sec^ for part1 for item data being added or edited. ////20180729 added
+            let velocity1 = 0;     // velocity in meter/sec for part1 for item data being added or edited. ////20180729 added
+
             // Status msg div.
             let status = new ctrls.StatusDiv(); 
 
@@ -9103,11 +9573,32 @@ Are you sure you want to delete the maps?";
             ShowElement(metricsDiv, bShow);
         }
 
-        // Handler for change event for controls that affect a change in speed.
+        ////20180811 // Handler for change event for controls that affect a change in speed.
+        ////20180811 // Arg:
+        ////20180811 //  event: html Event object.
+        ////20180811 function SpeedChangedHandler(event) { 
+        ////20180811     itemEditor.setSpeedChanged(true);
+        ////20180811 }
+        
+        // Handler for change event for distance control.
         // Arg:
         //  event: html Event object.
-        function SpeedChangedHandler(event) { 
-            itemEditor.setSpeedChanged(true);
+        function DistanceChangedHandler(event) { ////20180729 added
+            itemEditor.changeDistanceHandler();  
+        }
+
+        // Handler for change event for run time control.
+        // Arg:
+        //  event: html Event object.
+        function RunTimeChangedHandler(event) { ////20180729 added
+            itemEditor.changeRunTimeHandler();
+        }
+
+        // Handler for change event for calories burned control.
+        // Arg:
+        //  event: html Event object.
+        function CaloriesBurnedChangedHandler(event) { ////20180729 added
+            itemEditor.changeCaloriesBurnedHandler(); 
         }
 
         // Helper object for syncing stats data with server and localStorage.
@@ -9244,10 +9735,14 @@ Are you sure you want to delete the maps?";
                         statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
                         timeId: 'timeRecordStats', // id of input, type=time
+                        holderEstimateDistanceToggleId: 'holderEstimateDistanceToggle', ////20180806 added
                         distanceId: 'numRecordStatsDistance', // id of input, type=number
                         distanceUnitId: 'spanRecordStatsDistanceUnit', // id of span. Displays mi or km based on bEnglishUnit.
+                        holderEstimateRunTimeToggleId: 'holderEstimateRunTimeToggle', ////20180806 added
                         runTimeMinsId: 'minsRecordStatsRunTime', // id of input, type=number. 
                         runTimeSecsId: 'secsRecordStatsRunTime', // id of input,type=number.
+                        holderEstimateCaloriesBurnedToggleId: 'holderEstimateCaloriesBurnedToggle', ////20180806 added
+                        caloriesBurnedId: 'numRecordStatsCaloriesBurned', // id of input, type=number ////20180729 added
                         doneId: 'buRecordStatsEditDone', // id of button.
                         cancelId:'buRecordStatsEditCancel'};
         }
@@ -9257,26 +9752,60 @@ Are you sure you want to delete the maps?";
         var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
         var time = document.getElementById(ctrlIds.timeId);
+        var holderEstimateDistanceToggle = document.getElementById(ctrlIds.holderEstimateDistanceToggleId); ////20180806 added
+        var toggleEstimateDistance = new ctrls.OnOffControl(holderEstimateDistanceToggle, null, "Estimate", -1); ////20180807 added
         var distance = document.getElementById(ctrlIds.distanceId);
         var distanceUnit = document.getElementById(ctrlIds.distanceUnitId);
+        var holderEstimateRunTimeToggle = document.getElementById(ctrlIds.holderEstimateRunTimeToggleId);
+        var toggleEstimateRunTime = new ctrls.OnOffControl(holderEstimateRunTimeToggle, null, "Estimate", -1); ////20180807 added
         var runTimeMins = document.getElementById(ctrlIds.runTimeMinsId); 
         var runTimeSecs = document.getElementById(ctrlIds.runTimeSecsId);
+        var holderEstimateCaloriesBurnedToggle = document.getElementById(ctrlIds.holderEstimateCaloriesBurnedToggleId); ////20180806 added
+        var toggleEstimateCaloriesBurned = new ctrls.OnOffControl(holderEstimateCaloriesBurnedToggle, null, "Estimate", -1); ////20180807 added
+
+        var caloriesBurned = document.getElementById(ctrlIds.caloriesBurnedId); ////2080730 added
         var done = document.getElementById(ctrlIds.doneId);
         var cancel = document.getElementById(ctrlIds.cancelId);
         if (done)
             done.addEventListener('click', OnEditDone, false); 
         if (cancel)
             cancel.addEventListener('click', OnEditCancel, false);
+
+        date.addEventListener('change', function(event){ ////20180809 added
+            itemEditor.changeDateHandler();
+        }, false);
+
+        time.addEventListener('change', function(event){ ////20180809 added
+            itemEditor.changeTimeHandler(); 
+        }, false);
        
         distance.addEventListener('keydown', OnKeyDown, false);
-        distance.addEventListener('change', SpeedChangedHandler, false); 
+        distance.addEventListener('change', DistanceChangedHandler, false);  ////20180729Was SpeedChangedHandler
         runTimeMins.addEventListener('keydown', OnKeyDown, false);
-        runTimeMins.addEventListener('change', SpeedChangedHandler, false); 
+        runTimeMins.addEventListener('change', RunTimeChangedHandler, false);  ////20180729Was SpeedChangedHandler
         runTimeSecs.addEventListener('keydown', OnKeyDown, false);
-        runTimeSecs.addEventListener('change', SpeedChangedHandler, false); 
+        runTimeSecs.addEventListener('change', RunTimeChangedHandler, false);    ////20180729Was SpeedChangedHandler
+        
+        caloriesBurned.addEventListener('keydown', OnKeyDown, false); ////20180729 added
+        caloriesBurned.addEventListener('change', CaloriesBurnedChangedHandler, false); ////20180729 added
+        
         distance.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
+
+        caloriesBurned.addEventListener('focus', SelectNumberOnFocus, false); ////20180729 added
+
+        toggleEstimateDistance.onChanged = function(nState) { ////20180807 added
+            itemEditor.toggleEstimatedDistanceHandler(nState);
+        };
+
+        toggleEstimateRunTime.onChanged = function(nState) { ////20180807 added
+            itemEditor.toggleEstimatedRunTimeHandler(nState);
+        }; 
+
+        toggleEstimateCaloriesBurned.onChanged = function(nState) { ////20180807 added
+            itemEditor.toggleEstimateCaloriesBurnedHandler(nState);
+        };
 
         // Helper object for editing a stats item.
         var itemEditor = new StatsItemEditor(); 
@@ -9420,6 +9949,8 @@ Are you sure you want to delete the maps?";
                     itemEditor.setTitle("Add a New Record Stats Item"); 
                     let itemData = itemEditor.newItemData();
                     itemData.nTimeStamp = Date.now();
+                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list.  ////20180728 added.
+                    itemEditor.setEstimateToggleCtrls();  ////20180808 added
                     itemEditor.setEditCtrls(itemData);
                     ShowRecordStatsEditDiv(true); 
                 } 
@@ -9430,6 +9961,8 @@ Are you sure you want to delete the maps?";
                         itemEditor.bEditing = true;
                         itemEditor.setTitle("Edit a Record Stats Item"); 
                         let itemData = that.getItemData(arId[0]);
+                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited.  ////20180728 added.
+                        itemEditor.setEstimateToggleCtrls(); ////20180808 added
                         itemEditor.setEditCtrls(itemData);
                         ShowRecordStatsEditDiv(true);
                     } else {
@@ -9490,6 +10023,7 @@ Are you sure you want to delete the maps?";
                             // Reload the history list since local stats have changed.
                             that.reload();
                         }
+                        recordStatsMetrics.init(view.onGetRecordStatsList()); ////20180727 added.
                     });
                     if (!bStarted) {
                         // Some previous exchange with server has not completed. 

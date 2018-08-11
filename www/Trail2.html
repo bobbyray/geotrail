@@ -145,7 +145,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         </div>
         <!-- div for record_stats_view --> 
         <div id='divRecordStatsHistory' class="wigo_ws_NoShow"> <!-- Constainer for RecordStatsHistory control -->
-            <!-- div for adding a record stats item -->
+            <!-- div for editing or adding a record stats item -->
             <div id='divRecordStatsEdit' class='wigo_ws_NoShow'>
                 <div id='divStatsAddInstr'>
                     <h2 id='statsEditInstr'>Add a New Record Stats Item</h2>
@@ -160,15 +160,28 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                     <input id='timeRecordStats' type='time' placeholder="select"/>
                 </div>
                 <div id='divRecordStatsDistance'>
-                    <span>Distance</span>
+                    <div id='holderEstimateDistanceToggle'></div> <!-- ////20180806 added estimate  -->
+                    <span>Distance</span>  
                     <input id='numRecordStatsDistance' type="number" placeholder="select", min='0'/>
                     <span id='spanRecordStatsDistanceUnit'>&nbsp;mi</span>
                 </div>
                 <div id='divRecordStatsRunTime'>
-                    <span>Run Time</span>
-                    <input id='minsRecordStatsRunTime' type='number' placeholder="minutes" min='0'/><span>mins</span>
-                    <input id='secsRecordStatsRunTime' type='number' placeholder="seconds", min='0', max='59'/><span>secs</span>
+                    <div id='divRecordStatsRunTimeEstimate'>
+                        <div id='holderEstimateRunTimeToggle'></div><!-- ////20180806 added estimate  -->
+                        <span>Run Time</span>  
+                    </div>    
+                    <div id='divRecordStatsMinsSec'>
+                        <input id='minsRecordStatsRunTime' type='number' placeholder="minutes" min='0'/><span>mins</span>
+                        <input id='secsRecordStatsRunTime' type='number' placeholder="seconds", min='0', max='59'/><span>secs</span>
+                    </div>
                 </div>
+                <div id='divRecordStatsCaloriesBurned'> <!-- ////20180729 added-->
+                    <div id='holderEstimateCaloriesBurnedToggle'></div> <!-- ////20180806 added estimate  -->
+                    <span>Calories</span> 
+                    <input id='numRecordStatsCaloriesBurned' type=number placeholder='calories' min='0'/>
+                </div>
+                <br/>
+                <br/>
                 <div id='divRecordStatsClose'>
                     <button id='buRecordStatsEditDone'>Done</button>
                     <button id='buRecordStatsEditCancel'>Cancel</button>
@@ -748,11 +761,25 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 <li>Starting Time: touch to enter a time in minutes and seconds.</li>
                 <li>Distance: touch to enter the distance.</li>
                 <li>Run Time: touch to enter the run time in minutes and seconds.</li>
+                <li>Calories: touch to enter the number of calories.</li>
                 <li>Done Button<br/>
                 Touch to save and end editing.</li>
                 <li>Cancel Button<br/>
                 Touch to cancel editing without saving any change.</li>
             </ul>
+            Distance, Run Time, and Calories have toggle controls to indicate if its entry
+            should be automatically calculated due to a change:
+            <ul>
+                <li>Estimate Distance<br/>
+                If On, the Distance is automatically calculated when Run Time is changed.</li>
+                <li>Estimate Run Time<br/>
+                If On, the Run Time is automatically calculated when Distance is changed.</li>
+                <li>Estimate Calories<br/>
+                If On, the calories are automatically calculated when Distance or Run Time are changed.</li>
+            </ul>
+            When Distance, Run Time, or Calories are entered, the corresponding Estimate toggle is set to Off.
+            Toggling an Estimate that is Off to On causes the corresponding entry to be calculated.
+            When Estimate is Off, its corresponding value is only changed by entering a value for it.
             </li>
             <li>Menu > Edit Stats Item<br/>
                 If you forgot to resume recording, you can edit the stats for a run.
