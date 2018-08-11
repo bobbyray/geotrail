@@ -5219,7 +5219,7 @@ function wigo_ws_View() {
             bInitial = true;
 
         // Set body in the BodyMass control.
-        bodyMass.setMass(settings.kgBodyMass); ////20180809 added 
+        bodyMass.setMass(settings.kgBodyMass); 
         bodyMass.bMetric = settings.distanceUnits === 'metric';  
 
         EnableMapBarGeoTrackingOptions(settings, bInitial); 
@@ -8269,20 +8269,6 @@ Are you sure you want to delete the maps?";
             let bChanged = false; 
             let originalItemData = itemEditor.getOriginalItemData(); // Get ref to original itemData before it was edited. 
             if (itemEditor.bEditing && originalItemData) {  
-                /* ////20180809 redo, use changed flag instead of speed change detection.
-                // Check if timestamp has been changed.
-                bChanged = false;  
-                if (!itemEditor.isSpeedChanged()) {   ////20180730 I don't think isSpeedChange() is needed any longer because of caloriesBurned control.
-                    // Set calorie fields from the original data item because
-                    // the speed has not changed. The item data from controls has estimated 
-                    // the calorie fields, so want to replace these fields.
-                    itemData.caloriesKinetic = originalItemData.caloriesKinetic;
-                    itemData.caloriesBurnedCalc = originalItemData.caloriesBurnedCalc;
-                } else {
-                    bChanged = true;
-                }
-                */
-                //// 
                 // Check if stats item has been changed.
                 bChanged = itemEditor.isStatsChanged();  
 
@@ -8815,8 +8801,6 @@ Are you sure you want to delete the maps?";
                 // Save ref to the orginal item data set into the edit controls.
                 originalItemData = itemData; 
 
-                ////20180811 // Clear speed changed flag.
-                ////20180811 this.setSpeedChanged(false); 
                 // Set starting date.
                 let itemDate = new Date(itemData.nTimeStamp);
                 let nYear = itemDate.getFullYear();
@@ -8830,13 +8814,13 @@ Are you sure you want to delete the maps?";
                 time.value = "{0}:{1}".format(TwoDigits(nHour), TwoDigits(nMinute));
 
                 // Set distance.
-                SetDistanceCtrl(itemData.mDistance); ////20180807 refactored.
+                SetDistanceCtrl(itemData.mDistance); 
 
                 // Set run time.
-                SetRunTimeCtrl(itemData.msRunTime); ////20180809 refactored
+                SetRunTimeCtrl(itemData.msRunTime); 
 
                 // Set calories burned.
-                SetCaloriesBurnedCtrl(itemData.caloriesBurnedCalc);  ////20180730 refactored
+                SetCaloriesBurnedCtrl(itemData.caloriesBurnedCalc);  
             };
 
             // Gets ref to the original item data that is arg to this.setEditCtrls(itemData); 
@@ -8851,29 +8835,6 @@ Are you sure you want to delete the maps?";
             // focus to the control.
             // Returns: boolean. true if all control values are valid.
             this.areCtrlsValid = function() {
-                /* ////20180810 refactor
-                // Helper that returns true if num is an integer.
-                function IsInteger(num) {
-                    let bYes = num === Math.floor(num);
-                    return bYes;
-                }
-
-                // Helper to indicate a ctrl has an invalid entry
-                // by setting focus to control and setting class name
-                // used to designate background color.
-                // Args
-                //  ctrl: HTML Element obj for the control.
-                //  bError: boolean. true indicates invalid entry.
-                function IndicateError(ctrl, bError) {
-                    if (bError) {
-                        ctrl.focus();
-                        ctrl.classList.add('stats_item_editor_ctrl_error');
-                    } else {
-                        ctrl.classList.remove('stats_item_editor_ctrl_error');
-                    }
-                }
-                */
-                
                 let bOk = IsDateTimeValid();
 
                 // Check that distance is not negative.
@@ -8884,13 +8845,15 @@ Are you sure you want to delete the maps?";
                 if (bOk)
                     bOk = IsRunTimeValid();
 
-                // Check that caloriesBurned is valid. ////20180730 added.
+                // Check that caloriesBurned is valid. 
                 if (bOk)
                     bOk = IsCaloriesBurnedValid();
 
                 return bOk;
             };
 
+            // Checks if control value for CaloriesBurned is valid.
+            // Returns boolean. true if valid.
             function IsCaloriesBurnedValid() {
                 let bOk = true;
                 let nCaloriesBurned = GetNumFromCtrl(caloriesBurned);
@@ -8902,6 +8865,8 @@ Are you sure you want to delete the maps?";
                 return bOk;
             }
 
+            // Checks if control value for Run Time mins and secs are valid.
+            // Returns boolean. true if valid.
             function IsRunTimeValid() {
                 let bOk = true;
                 let nMins = GetNumFromCtrl(runTimeMins);
@@ -8942,6 +8907,8 @@ Are you sure you want to delete the maps?";
                 return bOk;
             }
 
+            // Checks if control value for Distance is valid.
+            // Returns boolean. true if valid.
             function IsDistanceValid() {
                 let bOk = true;
                 let dist = GetNumFromCtrl(distance);
@@ -8956,10 +8923,12 @@ Are you sure you want to delete the maps?";
                 return bOk;
             }
 
+            // Checks if control value for Date and Time controls are valid.
+            // Returns boolean. true if valid.
             function IsDateTimeValid() {
                 let bOk = true;
                 let sMsg;
-                that.clearStatus(); ////20180811 was this
+                that.clearStatus(); 
                 // Check that date/time is < current time. Do not allow adding dates in the future
                 // because a date/time that may be added later by record needs to be after
                 // the date of last (oldest) item in the stats list because stats history only 
@@ -9007,7 +8976,7 @@ Are you sure you want to delete the maps?";
             // Args
             //  ctrl: HTML Element obj for the control.
             //  bError: boolean. true indicates invalid entry.
-            function IndicateError(ctrl, bError) { ////20180810 refactored
+            function IndicateError(ctrl, bError) { 
                 if (bError) {
                     ctrl.focus();
                     ctrl.classList.add('stats_item_editor_ctrl_error');
@@ -9016,59 +8985,39 @@ Are you sure you want to delete the maps?";
                 }
             }
             
-
-            ////20180811 // Sets flag to indicated speed has changed.
-            ////20180811 // Arg: 
-            ////20180811 //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
-            ////20180811 // 
-            ////20180811 this.setSpeedChanged = function(bChanged) { 
-            ////20180811     bSpeedChanged = bChanged;
-            ////20180811 };
-            ////20180811 var bSpeedChanged = false; 
-            ////20180811 
-            ////20180811 // boolean. Returns true is distance or runtime control has been changed.
-            ////20180811 this.isSpeedChanged = function() { 
-            ////20180811     return bSpeedChanged;
-            ////20180811 };
-
-
-            var bStatsChanged = false; // Flag to indicate user has changed the stats item. ////20180809 added
+            var bStatsChanged = false; // Flag to indicate user has changed the stats item. 
             
             // boolean. Returns true if stats item has been changed.
-            this.isStatsChanged = function() { ////20180809 added.
+            this.isStatsChanged = function() {
                 return bStatsChanged;
             }
 
             // Indicate stats item has changed.
-            this.changeDateHandler = function() { ////20180809 added
+            this.changeDateHandler = function() {
                 bStatsChanged = true;
-                let bOk = IsDateTimeValid(); ////20180810 added
-                if (bOk)            ////20180811  added
+                let bOk = IsDateTimeValid(); 
+                if (bOk)            
                     status.clear(); 
             };
 
             // Indicate stats items has changed. 
-            this.changeTimeHandler = function() { ////20180809 added
+            this.changeTimeHandler = function() {
                 bStatsChanged = true;
-                let bOk = IsDateTimeValid(); ////20180810 added
-                if (bOk)            ////20180811  added
+                let bOk = IsDateTimeValid();
+                if (bOk)          
                     status.clear(); 
             };
 
             // Update other ctrls for estimates if allowed when distance is changed.
             // Reset toggle for Estimate Distance.
-            this.changeDistanceHandler = function() { ////20180807 added
+            this.changeDistanceHandler = function() {
                 bStatsChanged = true;  
-                if (!IsDistanceValid() ) ////20180810 added 
+                if (!IsDistanceValid() )
                     return; 
-                else                    ////20180811 added
+                else                   
                     status.clear();
 
                 let mDistance = GetDistanceMetersFromCtrl();
-                ////20180810 // If adding, initially set velocity based on acceleration and distance.
-                ////20180810 if (!this.bEditing && acceleration1 > 0 &&  velocity1 <= 0) {  ////20180810 fixed
-                ////20180810     velocity1 = Math.sqrt(2*acceleration1*mDistance);
-                ////20180810 }
 
                 let msRunTime = CalcRunTimeMilliSecsFromDistance(mDistance);
                 // Estimate run time if allowed.
@@ -9086,18 +9035,14 @@ Are you sure you want to delete the maps?";
 
             // Update other ctrls for estimates if allowed when run time is changed.
             // Reset toggle for Estimate Run Time.
-            this.changeRunTimeHandler = function() { ////20180807 added
+            this.changeRunTimeHandler = function() {
                 bStatsChanged = true; 
-                if (!IsRunTimeValid()) ////20180810 added
+                if (!IsRunTimeValid())
                     return; 
-                else                    ////20180811 added
+                else                  
                     status.clear();
 
                 let msRunTime = GetRunTimeMilliSecsFromCtrl();
-                ////20180810 // If adding, initially set velocity based on acceleration and runtime.
-                ////20180810 if (!this.bEditing && acceleration1 > 0 &&  velocity1 <= 0) {
-                ////20180810     velocity1 = acceleration1 * (msRunTime/1000);
-                ////20180810 }
                 // Estimate distance if allowed.
                 let mDistance = CalcDistanceFromRunTimeMilliSecs(msRunTime);
                 if (toggleEstimateDistance.getState() === 1) {
@@ -9115,11 +9060,11 @@ Are you sure you want to delete the maps?";
 
             // Leave other ctrils as they are. 
             // Reset toggle for Estimate Calories Burned.
-            this.changeCaloriesBurnedHandler = function() { ////20180807 added
+            this.changeCaloriesBurnedHandler = function() {
                 bStatsChanged = true; 
-                if (!IsCaloriesBurnedValid()) ////20180810 added
+                if (!IsCaloriesBurnedValid())
                     return;
-                else                    ////20180811 added
+                else                   
                     status.clear();
 
                 // Reset estimate calories burned toggle.
@@ -9129,10 +9074,7 @@ Are you sure you want to delete the maps?";
             // Do and set estimate for distance ctrl if allowed.
             // Arg:
             //  nState: number. state of the control.
-            this.toggleEstimatedDistanceHandler = function(nState) { ////20180807 added
-                ////20180810 // Toggle state of estimate distance.
-                ////20180810 let newState = ToggleState(toggleEstimateDistance.getState());
-                ////20180810 toggleEstimateDistance.setState(newState);
+            this.toggleEstimatedDistanceHandler = function(nState) { 
                 // Do estimate distance if allowed.
                 if (nState === 1) {
                     let msRunTime = GetRunTimeMilliSecsFromCtrl();
@@ -9144,10 +9086,7 @@ Are you sure you want to delete the maps?";
             // Do and set estimated for run time ctrl if allowed. 
             // Arg:
             //  nState: number. state of the control.
-            this.toggleEstimatedRunTimeHandler = function(nState) { ////20180807 added
-                ////20180810 // Toggle state of estimate run time.
-                ////20180810 let newState = ToggleState(toggleEstimateRunTime.getState());
-                ////20180810 toggleEstimateRunTime.setState(newState);
+            this.toggleEstimatedRunTimeHandler = function(nState) {
                 // Do estimate run time if allowed.
                 if (nState === 1) {
                     let mDistance = GetDistanceMetersFromCtrl();
@@ -9159,10 +9098,7 @@ Are you sure you want to delete the maps?";
             // Do and set estimate for calories burned ctrl if allowed. 
             // Arg:
             //  nState: number. state of the control.
-            this.toggleEstimateCaloriesBurnedHandler = function(nState) { ////20180807 added
-                ////20180810 // Toggle state of estimate calories burned.
-                ////20180810 let newState = ToggleState(toggleEstimateCaloriesBurned.getState());
-                ////20180810 toggleEstimateCaloriesBurned.setState(newState);
+            this.toggleEstimateCaloriesBurnedHandler = function(nState) {
                 // Do calories burned estimate if allowed.
                 if (nState === 1) {
                     let mDistance = GetDistanceMetersFromCtrl();
@@ -9175,27 +9111,11 @@ Are you sure you want to delete the maps?";
             this.getEditData = function() {
                 let itemData = new wigo_ws_GeoTrailRecordStats();
                 // Set distance in meters from input in miles or kilometers.
-                itemData.mDistance = GetDistanceMetersFromCtrl(); ////20180730 call refactored function.
+                itemData.mDistance = GetDistanceMetersFromCtrl();
                 // Set runtime in milliseconds.
-                itemData.msRunTime = GetRunTimeMilliSecsFromCtrl(); ////20180730 call refactored function.
-                /* ////20180730 Calories is now a control 
-                // Estimate calories.
-                if (itemData.msRunTime > 0) {
-                    // Calculate kinetic engery to move body mass in calories.
-                    let speed = itemData.mDistance / (itemData.msRunTime / 1000.0);
-                    let ke = 0.5 * this.kgBodyMass * speed * speed; // engery in joules to move body mass to ave velocity.
-                    ke += ke; // Add engery in joules to move body mass from ave velectity to rest.
-                    // Calculate  energy to overcome friction for traveling along the path in joules.
-                    // 0.032 is estimate for coefficient of friction.
-                    let fe = coeffFriction * this.kgBodyMass * accelGravity * itemData.mDistance; // frictional engery to overcome over total distance.
-                    itemData.caloriesKinetic = (ke + fe)/1000; // Calculated energy in kilojoules.
-                    itemData.caloriesKinetic /= kjoulesPerCalorie; // kjoules converted to food calories.
-                    // Set calories burned accounting for conversion of food to calories.
-                    itemData.caloriesBurnedCalc = itemData.caloriesKinetic / this.calorieConversionEfficiency;
-                }
-                */
-               itemData.caloriesBurnedCalc = GetNumFromCtrl(caloriesBurned); ////20180730 added.
-               itemData.caloriesKinetic = itemData.caloriesBurnedCalc * this.calorieConversionEfficiency; ////20180730 added.
+                itemData.msRunTime = GetRunTimeMilliSecsFromCtrl();
+               itemData.caloriesBurnedCalc = GetNumFromCtrl(caloriesBurned); 
+               itemData.caloriesKinetic = itemData.caloriesBurnedCalc * this.calorieConversionEfficiency;
 
                 // Set timestamp from date and time ctrls.
                 itemData.nTimeStamp = ParseDateTime(date, time);
@@ -9206,7 +9126,7 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  arItemData: array of wigo_ws_GeoTrailRecordStats objs, or single wigo_ws_GeoTrailRecordStats.
             //  nCountLimit: number, optional. Limit for number of items to check in arItemData. Defaults to 10.
-            this.setCoefficientOfFriction = function(arItemData, nCountLimit) { ////20180728 added
+            this.setCoefficientOfFriction = function(arItemData, nCountLimit) { 
                 if (arItemData instanceof wigo_ws_GeoTrailRecordStats) 
                     arItemData = [arItemData];      
                 if (typeof nCountLimit !== 'number')
@@ -9228,19 +9148,19 @@ Are you sure you want to delete the maps?";
             //      1 -> 0
             //      0 -> 1
             //     -1 -> 1
-            function ToggleState(nState) { ////20180808 added
+            function ToggleState(nState) {
                 let newState = nState === 1 ? 0 : 1;
                 return newState;
             }
 
-            function SetCaloriesBurnedCtrl(caloriesBurnedCalc) { ////20180807 was itemData
+            function SetCaloriesBurnedCtrl(caloriesBurnedCalc) { 
                 caloriesBurned.value = caloriesBurnedCalc.toFixed(0);
             }
 
             // Set run time ctrl for minutes and seconds.
             // Arg:
             //  msRunTime: number. run time in milliseconds.
-            function SetRunTimeCtrl(msRunTime) { ////20180807 was itemData
+            function SetRunTimeCtrl(msRunTime) {
                 let runTime = new HourMinSec(msRunTime);
                 runTimeMins.value = runTime.getAllMins();
                 runTimeSecs.value = runTime.getSec();
@@ -9249,20 +9169,19 @@ Are you sure you want to delete the maps?";
             // Set distance ctrl.
             // Arg:
             //  mDistance: number. distance in meters.
-            function SetDistanceCtrl(mDistance) {  ////20180807 was itemData
+            function SetDistanceCtrl(mDistance) { 
                 let distValue = lc.toDist(mDistance);
                 distance.value = distValue.n.toFixed(2);
                 distanceUnit.innerText = distValue.unit;
             }
 
-            function GetDistanceMetersFromCtrl() { ////20180730 refactored
+            function GetDistanceMetersFromCtrl() {
                 return lc.toMeters(GetNumFromCtrl(distance));
             }
 
-            function GetRunTimeMilliSecsFromCtrl() {  ////20180730 refactored.
+            function GetRunTimeMilliSecsFromCtrl() { 
                 let nMins = GetNumFromCtrl(runTimeMins);
                 let nSecs = GetNumFromCtrl(runTimeSecs);
-                ////20180730 itemData.msRunTime = (60 * nMins + nSecs) * 1000.0;
                 return (60 * nMins + nSecs) * 1000.0;
             }
 
@@ -9270,7 +9189,7 @@ Are you sure you want to delete the maps?";
             // Arg:
             //  msRunTime: number. run time in milliseconds.
             // Returns: number. disntance in meters.
-            function CalcDistanceFromRunTimeMilliSecs(msRunTime) { ////20180807
+            function CalcDistanceFromRunTimeMilliSecs(msRunTime) {
                 let d = 0;
                 if (velocity1 > 0 && msRunTime > 0) {
                     d = velocity1 * (msRunTime/1000);
@@ -9294,8 +9213,7 @@ Are you sure you want to delete the maps?";
             // Arg: 
             //  mDistance: number. distance in meters.
             // Returns: number. calories burned.
-            function CalcCaloriesBurned(mDistance) { ////20180807 
-                ////20180810 let ke = bodyMass.getMass() * acceleration1 * mDistance; // joules.
+            function CalcCaloriesBurned(mDistance) {
                 let ke = that.kgBodyMass * acceleration1 * mDistance; // joules.
                 let kjoules = ke / 1000;
                 let calories = kjoules / kjoulesPerCalorie;
@@ -9308,7 +9226,7 @@ Are you sure you want to delete the maps?";
             //  itemData: wigo_ws_GeoTrailRecordStats obj. 
             // Returns: number. the coefficent friction.
             //  Note: returns 0 if itemData.mDistance is 0 or if this.kgBodyMass is 0.
-            function calcCoefficientOfFriction(itemData) { ////20180728 
+            function calcCoefficientOfFriction(itemData) {
                 //  energy = kinetic_energy + friction_energy
                 //  e = ke + fe
                 //  fe = e - ke
@@ -9329,7 +9247,7 @@ Are you sure you want to delete the maps?";
             // Sets the acceleration and velocity for editing an exiting item.
             // Args:
             //  itemData: wigo_ws_GeoTrailRecordStats obj. 
-            this.setAV1ForEdit = function(itemData) { ////20180729 added
+            this.setAV1ForEdit = function(itemData) {
                 let r = CalcAV1(itemData);
                 acceleration1 = r.a;
                 velocity1 = r.v;
@@ -9344,7 +9262,7 @@ Are you sure you want to delete the maps?";
             //              This arg should be the stats data list obtained from the model.
             //  nLimit: number, optional. Defaults to 10. Number of array elements
             //          to use in the average. The most recent items are used for the average.
-            this.setAV1ForAdd = function(arItemData, nLimit) { ////20180729 added
+            this.setAV1ForAdd = function(arItemData, nLimit) {
                 if (typeof nLimit !== 'number')
                     nLimit = 10;
                 let sumR = {a: 0, v: 0};
@@ -9366,7 +9284,7 @@ Are you sure you want to delete the maps?";
                     aveR.v = sumR.v / nCount;
                 }
                 acceleration1 = aveR.a;
-                velocity1 = aveR.v;  ////20180810 was 0 
+                velocity1 = aveR.v;  
             };
 
             // Sets the estimate toggle controls.
@@ -9381,21 +9299,13 @@ Are you sure you want to delete the maps?";
                 toggleEstimateCaloriesBurned.setState(nState);
             };
 
-            /* ////20180807 never used
-            // Updates the caloriesBurned control based on changes in
-            // the runtime or distance controls.
-            this.updateCaloriesBurnedCtrl = function() { //// 20180730 added
-                
-            };
-            */
-
             // Calculates acceleration and velocity for a data item.
             // Arg:
             //  itemData: wigo_ws_GeoTrailRecordStats obj. the data item.
             // Returns: {a: number, v: number}:
             //  a: acceleration i meters/sec^2
             //  v: velocity in meters / sec.
-            function CalcAV1(itemData) { ////20180729 added
+            function CalcAV1(itemData) { 
                 let r = {a: 0, v: 0};
                 if (itemData.msRunTime > 0) {
                     r.v = itemData.mDistance / (itemData.msRunTime/1000); // meters / sec.
@@ -9409,39 +9319,10 @@ Are you sure you want to delete the maps?";
                 return r;
             }
 
-            /* ////20180806 never used, do differently.
-            // Calculates current kinetic engergy based on original item data
-            // and the current value of the distance and runtime controls.
-            // Returns: number. the number of calories for the kinetic kinetic energy.
-            function CalcKinecticCalories() {
-                //// write $$$$ 
-                // Calc kinetic energy for for original data item for part 1 of total kinetic energy.
-                let ke1 = that.kgBodyMass * acceleration1 * originalItemData.mDistance;
-
-                // Calc distance,velocity and acceleration for part 2.
-                let mDistance = GetDistanceMetersFromCtrl()
-                let msRunTime = GetRunTimeMilliSecsFromCtrl(); 
-                let mDeltaDistance = mDistance - originalItemData.mDistance;
-                let msDeltaRunTime = msRunTime - originalItemData.msRunTime;
-                
-                let ke2 = 0;
-                if (mDeltaDistance > 0 && msDeltaRunTime > 0) {
-                    let velocity2 = mDeltaDistance / (msDeltaRunTime / 1000); // velocity for part2 in m/sec
-                    let acceleration2 = (velocity2 - velocity1) / (msDeltaRunTime/1000); // acceleration for part2 in m/sec^2.
-                    let deltaAcceleration2 = acceleration2 - acceleration1;
-                    ke2 = that.kgBodyMass * (acceleration1 + deltaAcceleration2) * mDeltaDistance;
-                }
-                let ke = ke1 + ke2; // joules.
-                let keKJoules = (ke/1000)
-                let keCalories = keKJoules /  kjoulesPerCalorie; 
-                return ke;  //// fix need calories not joules. //// Check this.
-            }
-            */
-
             // Returns number. joules converted to calories.
             // Arg:
             //  ke: number. Kinetic engery (units for joules same as units for newton-meter).
-            function JoulesToCalories(ke) { ////20180806 added.
+            function JoulesToCalories(ke) {
                 let keKJoules = (ke/1000)
                 let keCalories = keKJoules /  kjoulesPerCalorie; 
                 return keCalories;
@@ -9531,8 +9412,8 @@ Are you sure you want to delete the maps?";
             let accelGravity = 9.81;
             let kjoulesPerCalorie = 4.184; // Kilojoules per food Calorie.
 
-            let acceleration1 = 0; // acceleration in meter/sec^ for part1 for item data being added or edited. ////20180729 added
-            let velocity1 = 0;     // velocity in meter/sec for part1 for item data being added or edited. ////20180729 added
+            let acceleration1 = 0; // acceleration in meter/sec^ for part1 for item data being added or edited. 
+            let velocity1 = 0;     // velocity in meter/sec for part1 for item data being added or edited.
 
             // Status msg div.
             let status = new ctrls.StatusDiv(); 
@@ -9573,31 +9454,24 @@ Are you sure you want to delete the maps?";
             ShowElement(metricsDiv, bShow);
         }
 
-        ////20180811 // Handler for change event for controls that affect a change in speed.
-        ////20180811 // Arg:
-        ////20180811 //  event: html Event object.
-        ////20180811 function SpeedChangedHandler(event) { 
-        ////20180811     itemEditor.setSpeedChanged(true);
-        ////20180811 }
-        
         // Handler for change event for distance control.
         // Arg:
         //  event: html Event object.
-        function DistanceChangedHandler(event) { ////20180729 added
+        function DistanceChangedHandler(event) {
             itemEditor.changeDistanceHandler();  
         }
 
         // Handler for change event for run time control.
         // Arg:
         //  event: html Event object.
-        function RunTimeChangedHandler(event) { ////20180729 added
+        function RunTimeChangedHandler(event) { 
             itemEditor.changeRunTimeHandler();
         }
 
         // Handler for change event for calories burned control.
         // Arg:
         //  event: html Event object.
-        function CaloriesBurnedChangedHandler(event) { ////20180729 added
+        function CaloriesBurnedChangedHandler(event) { 
             itemEditor.changeCaloriesBurnedHandler(); 
         }
 
@@ -9735,14 +9609,14 @@ Are you sure you want to delete the maps?";
                         statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
                         timeId: 'timeRecordStats', // id of input, type=time
-                        holderEstimateDistanceToggleId: 'holderEstimateDistanceToggle', ////20180806 added
+                        holderEstimateDistanceToggleId: 'holderEstimateDistanceToggle', 
                         distanceId: 'numRecordStatsDistance', // id of input, type=number
                         distanceUnitId: 'spanRecordStatsDistanceUnit', // id of span. Displays mi or km based on bEnglishUnit.
-                        holderEstimateRunTimeToggleId: 'holderEstimateRunTimeToggle', ////20180806 added
+                        holderEstimateRunTimeToggleId: 'holderEstimateRunTimeToggle', 
                         runTimeMinsId: 'minsRecordStatsRunTime', // id of input, type=number. 
                         runTimeSecsId: 'secsRecordStatsRunTime', // id of input,type=number.
-                        holderEstimateCaloriesBurnedToggleId: 'holderEstimateCaloriesBurnedToggle', ////20180806 added
-                        caloriesBurnedId: 'numRecordStatsCaloriesBurned', // id of input, type=number ////20180729 added
+                        holderEstimateCaloriesBurnedToggleId: 'holderEstimateCaloriesBurnedToggle', 
+                        caloriesBurnedId: 'numRecordStatsCaloriesBurned', // id of input, type=number 
                         doneId: 'buRecordStatsEditDone', // id of button.
                         cancelId:'buRecordStatsEditCancel'};
         }
@@ -9752,18 +9626,18 @@ Are you sure you want to delete the maps?";
         var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
         var time = document.getElementById(ctrlIds.timeId);
-        var holderEstimateDistanceToggle = document.getElementById(ctrlIds.holderEstimateDistanceToggleId); ////20180806 added
-        var toggleEstimateDistance = new ctrls.OnOffControl(holderEstimateDistanceToggle, null, "Estimate", -1); ////20180807 added
+        var holderEstimateDistanceToggle = document.getElementById(ctrlIds.holderEstimateDistanceToggleId); 
+        var toggleEstimateDistance = new ctrls.OnOffControl(holderEstimateDistanceToggle, null, "Estimate", -1); 
         var distance = document.getElementById(ctrlIds.distanceId);
         var distanceUnit = document.getElementById(ctrlIds.distanceUnitId);
         var holderEstimateRunTimeToggle = document.getElementById(ctrlIds.holderEstimateRunTimeToggleId);
-        var toggleEstimateRunTime = new ctrls.OnOffControl(holderEstimateRunTimeToggle, null, "Estimate", -1); ////20180807 added
+        var toggleEstimateRunTime = new ctrls.OnOffControl(holderEstimateRunTimeToggle, null, "Estimate", -1);
         var runTimeMins = document.getElementById(ctrlIds.runTimeMinsId); 
         var runTimeSecs = document.getElementById(ctrlIds.runTimeSecsId);
-        var holderEstimateCaloriesBurnedToggle = document.getElementById(ctrlIds.holderEstimateCaloriesBurnedToggleId); ////20180806 added
-        var toggleEstimateCaloriesBurned = new ctrls.OnOffControl(holderEstimateCaloriesBurnedToggle, null, "Estimate", -1); ////20180807 added
+        var holderEstimateCaloriesBurnedToggle = document.getElementById(ctrlIds.holderEstimateCaloriesBurnedToggleId); 
+        var toggleEstimateCaloriesBurned = new ctrls.OnOffControl(holderEstimateCaloriesBurnedToggle, null, "Estimate", -1);
 
-        var caloriesBurned = document.getElementById(ctrlIds.caloriesBurnedId); ////2080730 added
+        var caloriesBurned = document.getElementById(ctrlIds.caloriesBurnedId);
         var done = document.getElementById(ctrlIds.doneId);
         var cancel = document.getElementById(ctrlIds.cancelId);
         if (done)
@@ -9771,39 +9645,39 @@ Are you sure you want to delete the maps?";
         if (cancel)
             cancel.addEventListener('click', OnEditCancel, false);
 
-        date.addEventListener('change', function(event){ ////20180809 added
+        date.addEventListener('change', function(event){ 
             itemEditor.changeDateHandler();
         }, false);
 
-        time.addEventListener('change', function(event){ ////20180809 added
+        time.addEventListener('change', function(event){ 
             itemEditor.changeTimeHandler(); 
         }, false);
        
         distance.addEventListener('keydown', OnKeyDown, false);
-        distance.addEventListener('change', DistanceChangedHandler, false);  ////20180729Was SpeedChangedHandler
+        distance.addEventListener('change', DistanceChangedHandler, false); 
         runTimeMins.addEventListener('keydown', OnKeyDown, false);
-        runTimeMins.addEventListener('change', RunTimeChangedHandler, false);  ////20180729Was SpeedChangedHandler
+        runTimeMins.addEventListener('change', RunTimeChangedHandler, false); 
         runTimeSecs.addEventListener('keydown', OnKeyDown, false);
-        runTimeSecs.addEventListener('change', RunTimeChangedHandler, false);    ////20180729Was SpeedChangedHandler
+        runTimeSecs.addEventListener('change', RunTimeChangedHandler, false);  
         
-        caloriesBurned.addEventListener('keydown', OnKeyDown, false); ////20180729 added
-        caloriesBurned.addEventListener('change', CaloriesBurnedChangedHandler, false); ////20180729 added
+        caloriesBurned.addEventListener('keydown', OnKeyDown, false);
+        caloriesBurned.addEventListener('change', CaloriesBurnedChangedHandler, false);
         
         distance.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
 
-        caloriesBurned.addEventListener('focus', SelectNumberOnFocus, false); ////20180729 added
+        caloriesBurned.addEventListener('focus', SelectNumberOnFocus, false); 
 
-        toggleEstimateDistance.onChanged = function(nState) { ////20180807 added
+        toggleEstimateDistance.onChanged = function(nState) {
             itemEditor.toggleEstimatedDistanceHandler(nState);
         };
 
-        toggleEstimateRunTime.onChanged = function(nState) { ////20180807 added
+        toggleEstimateRunTime.onChanged = function(nState) {
             itemEditor.toggleEstimatedRunTimeHandler(nState);
         }; 
 
-        toggleEstimateCaloriesBurned.onChanged = function(nState) { ////20180807 added
+        toggleEstimateCaloriesBurned.onChanged = function(nState) { 
             itemEditor.toggleEstimateCaloriesBurnedHandler(nState);
         };
 
@@ -9949,8 +9823,8 @@ Are you sure you want to delete the maps?";
                     itemEditor.setTitle("Add a New Record Stats Item"); 
                     let itemData = itemEditor.newItemData();
                     itemData.nTimeStamp = Date.now();
-                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list.  ////20180728 added.
-                    itemEditor.setEstimateToggleCtrls();  ////20180808 added
+                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
+                    itemEditor.setEstimateToggleCtrls(); 
                     itemEditor.setEditCtrls(itemData);
                     ShowRecordStatsEditDiv(true); 
                 } 
@@ -9961,8 +9835,8 @@ Are you sure you want to delete the maps?";
                         itemEditor.bEditing = true;
                         itemEditor.setTitle("Edit a Record Stats Item"); 
                         let itemData = that.getItemData(arId[0]);
-                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited.  ////20180728 added.
-                        itemEditor.setEstimateToggleCtrls(); ////20180808 added
+                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
+                        itemEditor.setEstimateToggleCtrls();
                         itemEditor.setEditCtrls(itemData);
                         ShowRecordStatsEditDiv(true);
                     } else {
@@ -10023,7 +9897,7 @@ Are you sure you want to delete the maps?";
                             // Reload the history list since local stats have changed.
                             that.reload();
                         }
-                        recordStatsMetrics.init(view.onGetRecordStatsList()); ////20180727 added.
+                        recordStatsMetrics.init(view.onGetRecordStatsList()); 
                     });
                     if (!bStarted) {
                         // Some previous exchange with server has not completed. 

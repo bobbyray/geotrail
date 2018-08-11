@@ -984,8 +984,8 @@ label {
     box-sizing: border-box;
 }
 
-divRecordStatsRunTimeEstimate, /* ////20180809 added */
-#divRecordStatsMinsSec { /* ////20180809 added */
+divRecordStatsRunTimeEstimate, 
+#divRecordStatsMinsSec { 
     clear: both;
     float: left;
     height: 1.5em;
@@ -994,7 +994,7 @@ divRecordStatsRunTimeEstimate, /* ////20180809 added */
 
 #minsRecordStatsRunTime,
 #secsRecordStatsRunTime,
-#numRecordStatsCaloriesBurned, /* ////20180809 added */
+#numRecordStatsCaloriesBurned, 
 #numRecordStatsDistance {
     width: 4em;
     text-align: right;
@@ -1004,7 +1004,7 @@ divRecordStatsRunTimeEstimate, /* ////20180809 added */
 
 #holderEstimateDistanceToggle,
 #holderEstimateRunTimeToggle,
-#holderEstimateCaloriesBurnedToggle { /* ////20180808 added */
+#holderEstimateCaloriesBurnedToggle { 
     float: left;
 }
 
