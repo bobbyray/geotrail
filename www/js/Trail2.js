@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20180317-1541"; // Constant string for App version. // not yet RecStatsArchive
+    var sVersion = "1.1.034-20180812-1317"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -9122,25 +9122,6 @@ Are you sure you want to delete the maps?";
                 return itemData;
             };
 
-            // Sets average coeffient of friction for an array of item data.
-            // Arg:
-            //  arItemData: array of wigo_ws_GeoTrailRecordStats objs, or single wigo_ws_GeoTrailRecordStats.
-            //  nCountLimit: number, optional. Limit for number of items to check in arItemData. Defaults to 10.
-            this.setCoefficientOfFriction = function(arItemData, nCountLimit) { 
-                if (arItemData instanceof wigo_ws_GeoTrailRecordStats) 
-                    arItemData = [arItemData];      
-                if (typeof nCountLimit !== 'number')
-                    nCountLimit = 10;
-
-                let nCount = 0;
-                let nSumCoeffFriction = 0;
-                for (let i=0; i < arItemData.length; i++, nCount++) {
-                    nSumCoeffFriction += calcCoefficientOfFriction(arItemData[i]);
-                }
-
-                coeffFriction = nCount > 0 ? nSumCoeffFriction / nCount : 0;
-            };
-
             // Toggles state value for an of/off ctrl.
             // Arg:
             //  nState: number. current state, which is 0, 1 or -1.
@@ -9264,13 +9245,13 @@ Are you sure you want to delete the maps?";
             //          to use in the average. The most recent items are used for the average.
             this.setAV1ForAdd = function(arItemData, nLimit) {
                 if (typeof nLimit !== 'number')
-                    nLimit = 10;
+                    nLimit = 5;   
                 let sumR = {a: 0, v: 0};
                 let nCount = 0;
                 let r = {a: 0, v: 0};
                 for (let i=arItemData.length-1; i >= 0; i--) {
                     r = CalcAV1(arItemData[i]);
-                    if (r.a > 0 && r.v > 0) {
+                    if (arItemData[i].mDistance > 10 && r.a > 0 && r.v > 0) { 
                         sumR.a += r.a;
                         sumR.v += r.v;
                         nCount++;
@@ -9407,8 +9388,6 @@ Are you sure you want to delete the maps?";
                 return ms;
             }
 
-            // Coeffient of friction for calculating engery consumed.
-            let coeffFriction = 0.032; 
             let accelGravity = 9.81;
             let kjoulesPerCalorie = 4.184; // Kilojoules per food Calorie.
 

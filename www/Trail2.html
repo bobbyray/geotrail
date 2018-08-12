@@ -717,6 +717,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 The average speed and an estimate of the number of calories burned.
             </li>
         </ul>
+        <h3>Update History at Server</h3>
+        When the Stats History View is opened, any new recorded stats items saved locally are uploaded to the server 
+        provided the user is signed in.
+        Only stats items not already uploaded to the server are uploaded.
         <h3>Header for the Scrollable List.</h3>
            The Month and Year for the first item scrolled into view is shown in the header and changes
            as you scroll into a different month. A separator bar is included in the list to
@@ -796,6 +800,12 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 confirmed it can NOT be undone.</li>
             <li>Menu > Clear Selected<br/>
                 This clears selections that you have indicated in the Stats History list.
+            </li>
+            <li>Menu > Sync w/ Server<br/>
+                Synchronizes the recorded stats data saved locally with the stats history saved at the server.
+                Typically synchronization is not needed because new recorded stats items are uploaded when
+                the Stats History View is opened. However, if the stats local data is lost, synchronization
+                can restore the local stats data from the server.
             </li>
         </ul>
         <h2 id="helpMainMenu">Main Menu</h2>
