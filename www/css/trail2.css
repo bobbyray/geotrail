@@ -879,6 +879,7 @@ label {
     float: left;
     position: relative;  
     overflow-y: scroll;
+    width: 100%;  
 }
 .stats_item {
     width: 100%;
@@ -969,20 +970,42 @@ label {
 #divRecordStatsDate,
 #divRecordStatsTime,
 #divRecordStatsDistance,
-#divRecordStatsRunTime,
 #divRecordStatsClose {
     height: 3em;
     padding-top: 1em;
     padding-bottom: 0.5em;
     box-sizing: border-box;
 }
+
+#divRecordStatsRunTime {
+    height: 6em;
+    padding-top: 1em;
+    padding-bottom: 0.5em;
+    box-sizing: border-box;
+}
+
+divRecordStatsRunTimeEstimate, 
+#divRecordStatsMinsSec { 
+    clear: both;
+    float: left;
+    height: 1.5em;
+    box-sizing: border-box;
+}
+
 #minsRecordStatsRunTime,
 #secsRecordStatsRunTime,
+#numRecordStatsCaloriesBurned, 
 #numRecordStatsDistance {
     width: 4em;
     text-align: right;
     padding-right: 0.4em;
     font-size: 1.3em; 
+}
+
+#holderEstimateDistanceToggle,
+#holderEstimateRunTimeToggle,
+#holderEstimateCaloriesBurnedToggle { 
+    float: left;
 }
 
 

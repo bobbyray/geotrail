@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.033-20170202"; // Constant string for App version. 
+    var sVersion = "1.1.034-20180812-1317"; // Constant string for App version. // not yet RecStatsArchive
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -190,6 +190,10 @@ function wigo_ws_View() {
     // Arg: none.
     // Returns: Array of wigo_ws_GeoTrailRecordStat objects.
     this.onGetRecordStatsList = function() { return [];} 
+
+    // Accessor to  RecordStatsXfr info and residue.
+    // Returns: RecordStatsXfr obj.
+    this.onGetRecordStatsXfr = function() { return null};
  
     // Sets recorded stats in localStorage.
     // Args: 
@@ -239,7 +243,6 @@ function wigo_ws_View() {
     //      by EAuthStatus in Service.cs.
     this.onAuthenticationCompleted = function (result) { };
 
-    
     // Reset http request that may be in progress.
     // Handler Signature:
     //  nMode: byte value of this.eMode enumeration.
@@ -518,7 +521,7 @@ function wigo_ws_View() {
                     sStatusPebble += 'Accel Disabled\n';
                 }
             } 
-            // Note: For iPhone, not status at all because not used.
+            // Note: For iPhone, no status at all because not used.
         }
 
         // Form status message.
@@ -592,7 +595,7 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
-            if (recordStatsHistory)
+            if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  
                 recordStatsHistory.close();
         }
 
@@ -679,7 +682,8 @@ function wigo_ws_View() {
             case this.eMode.record_stats_view: 
                 HideAllBars();
                 titleBar.setTitle("Stats History");
-                recordStatsHistory.update(that.onGetRecordStatsList());
+                recordStatsHistory.update();
+                recordStatsHistory.uploadAdditions();  
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
@@ -798,7 +802,6 @@ function wigo_ws_View() {
             map.ClearPath();
     };
 
-
     // Updates item in the list of paths that user can select and 
     // the display for the item if it is currently selected.
     // Arg:
@@ -907,6 +910,11 @@ function wigo_ws_View() {
     this.IsRecordingSignInActive = function() {
         return recordFSM.isSignInActive();
     }
+
+    // Clears and initializes the RecordStatsHistory ui list.
+    this.clearRecordStatsHistory = function() {  
+        recordStatsHistory.clearStatsItems(); 
+    };
 
     // ** Private members for html elements
     var that = this;
@@ -1395,13 +1403,6 @@ function wigo_ws_View() {
             var settings = GetSettingsValues();
             SetSettingsParams(settings, false); // false => not initially setting when app is loaded. 
             that.onSaveSettings(settings);
-            // Save actual calories that user has entered.           
-            var actualCalories = cceActualCaloriesNumber.getValue();
-            var statsData = that.onGetLastRecordStats();
-            if (statsData) {
-                statsData.caloriesBurnedActual = actualCalories; 
-                that.onSetRecordStats(statsData); 
-            }
             titleBar.scrollIntoView();   
         }
     });
@@ -2803,15 +2804,24 @@ function wigo_ws_View() {
         var recordCtrl = null;
         var bOnline = true; 
 
-        // Saves stats for recorded trail locally.
-        // Note: Raises a event.stop, which transitions to StateStopped if reonding is on.
+        // Saves stats for recorded trail locally and returns to initial state 
+        // with record recorded path cleared. (Recorded path can be uncleared.)
+        // Note: Raises event.stop, which transitions to StateStopped if recornding is on.
+        //       Raise event.clear, which clears recorded trail (allowing it to be uncleared)
+        //       and transitions to StateInitial from StateStopped.
         this.saveStats = function() { 
             if (this.isOff())                                          
                 return; // Quit if recording off, no path for stats.   
             
-            // Ensure stopped.
+            // Ensure stopped. StateStopped saves stats locally.
             this.nextState(this.event.stop);  
 
+            this.nextState(this.event.clear); // Clear recorded trail.
+        };
+
+
+        // Saves stats and updates stats metrics.
+        function SaveStats() { 
             // Filter the record path.
             map.recordPath.filter();
             // Get stats and save locally.
@@ -2819,8 +2829,9 @@ function wigo_ws_View() {
             if (stats.bOk) {
                 var statsData = view.onSetRecordStats(stats); // Save stats data. 
                 recordStatsMetrics.update(statsData); // Update metrics for stats. 
+                recordStatsHistory.queueStatsUpdateItem(statsData); // Queue stats for display in Stats History.
             }
-        };
+        }
 
         // Transitions this FSM to its next state given an event.
         // Arg:
@@ -3048,14 +3059,12 @@ function wigo_ws_View() {
         // Record is off. Ready to start.
         function StateInitial() {
             // Reset for StateInitial.
-            // Note: Call if unclear is not available before calling this.prepare().
+            // Note: Does NOT reset geo points in recordPath. Need to call map.recordPath.reset() to reset geo points.
             this.reset = function() {
                 // Set default for recordShare droplist.
                 selectRecordShareDropDown.setSelected('private');
                 // Reset the uploader for the recorded trail.
                 uploader.clear();
-                // Reset the captured points for trail.
-                map.recordPath.reset();
                 // Initialize parameters for saving a Record trail offline.
                 localSaver.initParams();
             };
@@ -3078,6 +3087,7 @@ function wigo_ws_View() {
                 switch (event) {
                     case that.event.start: 
                         this.reset(); 
+                        map.recordPath.reset(); // Clear geo points for recordPath. 
                         stateOn.prepare();
                         map.recordPath.enableZoomToFirstCoordOnce(); 
                         curState = stateOn;
@@ -3112,6 +3122,7 @@ function wigo_ws_View() {
                     case that.event.stop:
                         var msTimeStamp = Date.now();
                         map.recordPath.appendPt(null, msTimeStamp, map.recordPath.eRecordPt.PAUSE); 
+                        SaveStats(); // Save stats locally when stopping. 
                         stateStopped.prepare();
                         curState = stateStopped;
                         view.ShowCurrentStatus(); // Show status for Record, Track, and Accel. 
@@ -3303,8 +3314,6 @@ function wigo_ws_View() {
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
                         sMsg += s;
                     }
-                    var statsData = view.onSetRecordStats(stats); // Save stats data. 
-                    recordStatsMetrics.update(statsData); // Update metrics for stats. 
                     var sStatsMetricsMsg = recordStatsMetrics.formStatusMsg();
                     view.ShowStatus(sStatsMetricsMsg, true); // Show stats metrics status as error for highlighting. Maybe change later.
                     view.AppendStatus(sMsg, false);
@@ -3371,6 +3380,7 @@ function wigo_ws_View() {
                         // Note: If somethng is wrong for saving, stay in same state.
                         break;
                     case that.event.cancel:
+                    case that.event.stop: 
                         stateStopped.prepare();
                         view.ClearStatus();    
                         ClearPathNameUI();  // Clear UI for defining path name.
@@ -5170,12 +5180,9 @@ function wigo_ws_View() {
             cceSpeedLabel.set(cceSpeed.speed, cceSpeed.unit); 
             cceKineticCaloriesLabel.set(lastStats.caloriesKinetic); 
             cceCaloriesBurnedLabel.set(lastStats.caloriesBurnedCalc, "");
-            cceActualCaloriesNumber.set(lastStats.caloriesBurnedActual);   
-            if (lastStats.caloriesBurnedActual > 0) {                      
-                cceNewEfficiencyNumber.set(lastStats.caloriesKinetic / lastStats.caloriesBurnedActual);
-            } else {
-                cceNewEfficiencyNumber.set(0);
-            }
+            cceActualCaloriesNumber.set(0); 
+            cceNewEfficiencyNumber.set(0);  
+
             var curEfficiency = lastStats.caloriesKinetic / lastStats.caloriesBurnedCalc;
             if (!Number.isFinite(curEfficiency)) {
                 curEfficiency = 0;
@@ -5210,6 +5217,11 @@ function wigo_ws_View() {
     function SetSettingsParams(settings, bInitial) {
         if (typeof(bInitial) !== 'boolean')
             bInitial = true;
+
+        // Set body in the BodyMass control.
+        bodyMass.setMass(settings.kgBodyMass); 
+        bodyMass.bMetric = settings.distanceUnits === 'metric';  
+
         EnableMapBarGeoTrackingOptions(settings, bInitial); 
         // Clear tracking timer if it not on to ensure it is stopped.
         map.bIgnoreMapClick = !settings.bClickForGeoLoc;
@@ -5224,12 +5236,13 @@ function wigo_ws_View() {
 
         // Set parameters for excessive acceleration.
         deviceMotion.bAvailable = settings.bAccelAlert; 
-        if (settings.bAccelAlert && window.app.deviceDetails.isAndroid())  // Accel Alert is not available for iPhone. 
-            deviceMotion.allow();
-        else
-            deviceMotion.disallow();
+        var bAllowAfterReset = settings.bAccelAlert && window.app.deviceDetails.isAndroid();
+        deviceMotion.reset(bAllowAfterReset);
         deviceMotion.setAccelThres(settings.nAccelThres);
         deviceMotion.setAccelVThres(settings.nAccelVThres); 
+        if (recordFSM.isRecording())           
+            deviceMotion.enableForRecording(); 
+        // Note: RunTrackTimer() below will enable device motion for tracking if tracking is on.
 
         // Set body mass. (Used to calculate calories for a recorded path and stats item editor.
         map.recordPath.setBodyMass(settings.kgBodyMass);  
@@ -6535,7 +6548,7 @@ function wigo_ws_View() {
     // Note: The webview support for the DeviceMotionEvent is supposed to work.
     //       It does work for mobile Chrome, but I could not get it to work for GeoTrail
     //       The DeviceEvent did work at one time for GeoTrail, but I cannot get it 
-    //       to work now. I tried hard, but no luck. Cannnot image what changed.
+    //       to work now. I tried hard, but no luck. Cannnot imagine what changed.
     // Object for detection device motion.
     // Constructor arg:
     //  view: ref to wigo_ws_View.
@@ -6608,6 +6621,17 @@ function wigo_ws_View() {
             }
             bRecording = false;
         };
+
+        // Resets device motion.
+        // Arg:
+        //  bAllow: boolean. true to allow device motion sensing after resetting.
+        this.reset = function(bAllow) { 
+            this.disallow();
+            this.disableForTracking();
+            this.disableForRecording();
+            if (bAllow) 
+                this.allow();
+        }
 
         // Returns true if acceleration is being sensed.
         this.isSensing = function() { // Added function.
@@ -7153,10 +7177,9 @@ function wigo_ws_View() {
                 }
             });
         } else if (!recordFSM.isOff()) { 
-            ConfirmYesNo("Recording a trail is in progress. OK to continue and delete the recording?", function(bConfirm){
+            ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.saveStats(); // Ensure stats for recording have been saved. 
-                    recordFSM.initialize(); // Reset recording.
                     AcceptModeChange();
                 } else {
                     // Restore the current mode selected before the change.
@@ -7209,6 +7232,21 @@ function wigo_ws_View() {
                 that.AppendStatus("Complete defining a new trail, then logout.", false);
             } else {
                 that.ClearStatus();
+                // Save record stats residue for current user if need be.
+                var sOwnerId =  that.getOwnerId();
+                var recordStatsXfr = that.onGetRecordStatsXfr();
+                var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
+                if (arUploadRecStats.length > 0) {
+                    if (sOwnerId) {
+                        recordStatsXfr.clearResidue(sOwnerId); 
+                        recordStatsXfr.appendResidueAry(sOwnerId, arUploadRecStats);
+                        recordStatsXfr.setUploadTimeStamp(arUploadRecStats[0].nTimeStamp); // Note: element 0 is most recent 
+                    }
+                }
+                // Save previous owner id before logging out.
+                if (sOwnerId ) {
+                    recordStatsXfr.setPreviousOwnerId(sOwnerId);
+                }
                 fb.LogOut();
             }
         } else if (dataValue === 'set') {
@@ -7589,81 +7627,6 @@ Are you sure you want to delete the maps?";
             monthDiv.innerHTML = month;
         };
 
-        // Add a stats item to the list.
-        // Arg:
-        //  recStats: wigo_ws_GeoTrailRecordStats object. Contains stats info for item to add to list.
-        //  bTop: boolean, optional. true to add at top of list, false appends to list. Defaults to true.
-        // Notes: 
-        // Class names for formatting stats item:
-        //  stats_history_title - div for title, iff title is given in constructor.
-        //  stats_item -- row for the stats item cells.
-        //  stats_date - cell for date and time.
-        //      stats_time       - start time, eg 01:15 pm
-        //      stats_month_day  - day of month, eg 19
-        //      stats_week_day   - day of week, eg Wed
-        //  stats_distance_time - distance in english or metric units and runtime in mins:secs.
-        //  stats_speed_calories - speed in english or metreic units and calories.
-        // Class names for formatting stats month, year row separator:
-        //  stats_separator:  - row for the stats separator, eg December 2017
-        this.addStatsItem = function(recStats, bTop) {
-            if (typeof(bTop) !== 'boolean') 
-                bTop = true;
-
-            // Helper to add row div to this list.
-            function AddRowDiv(rowDiv) {
-                if (bTop && stats.listDiv.children.length > 0) {
-                    stats.listDiv.insertBefore(rowDiv, stats.listDiv.children[0]);
-                } else {
-                    stats.listDiv.appendChild(rowDiv);
-                }
-            }
-            
-            var dt = new Date(recStats.nTimeStamp);
-            // Check for change in the month.
-            var bMonthChanged = curMonthYear.checkChange(dt.getMonth(), dt.getFullYear());
-            if (bMonthChanged) {
-                // append a div for month, year row separator.
-                var separator = this.create('div', null, 'stats_separator');
-                separator.innerHTML = "{0} {1}".format(prevdt.toLocaleString('en-US', {month: 'long'}),
-                                                       prevdt.toLocaleString('en-US', {year: 'numeric'}));
-                AddRowDiv(separator);
-            }
-
-            // Create item div.
-            var item = this.create('div', null, 'stats_item');
-            item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
-            var cellDate = this.create('div', null, 'stats_date');
-            cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
-            item.appendChild(cellDate);
-
-            var cellDistanceRunTime = this.create('div', null, 'stats_distance_time');    
-            item.appendChild(cellDistanceRunTime);
-            var cellSpeedCalories = this.create('div', null, 'stats_speed_calories');  
-            item.appendChild(cellSpeedCalories);
-
-            // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
-            // Display date cell.
-            var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
-            var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
-            // var sMonth = dt.toLocaleString('en-US', {month: 'short'});
-            var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
-            cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
-            // Display display distance, runtime cell and speed, calories cell.
-            var sDistance = lc.to(recStats.mDistance);
-            let runTime = new HourMinSec(recStats.msRunTime); 
-            var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
-            var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
-            cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); 
-            cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
-
-            // Add the item to the list.
-            AddRowDiv(item);
-
-            itemCount++;
-            prevdt = dt; // Save ref to Date of previous recStats.
-        };
-        var prevdt = null; // Ref to Date of previous RecStats object.
-
         // Returns number of stats items in the list.
         // Note: length of list is greater than item count because of separator rows.
         this.getItemCount = function() {
@@ -7687,21 +7650,94 @@ Are you sure you want to delete the maps?";
             return recStats;
         }
 
+        // Clears all the div rows in this list and initializes for an empty list.
+        this.clearStatsItems = function() { 
+            RemoveAllStatsRows(); 
+        };
+
         // Updates this list from an array of wigo_ws_GeoTrailRecordStats objects.
-        // Arg: 
-        //  arRecStats: array of wigo_ws_GeoTrailRecordStats objects.
         // Note: Updates efficiently. Only adds items new items at end of arRecStats.
-        this.update = function(arRecStats) {
+        this.update = function() { 
             // Add stats items that are not aready in this list.
+            var arRecStats = view.onGetRecordStatsList();
             if (!arRecStats)
                 return; // Quit if arRecStats is not defined or is null.
 
             //AddTestItems(arRecStats, 10);  // Only for debug. Add 10 test items before oldest item, which is element 0.
             var recStats;
+            if (itemCount === 0) {
+                // Update the display for all the stats items in arRecStats.
+                for (var i=itemCount; i < arRecStats.length; i++) {
+                    recStats = arRecStats[i];
+                    AddStatsItem(recStats);
+                }
+            } else {
+                var recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+                // Update for the display only for the queued rec stats items.
+                recStats = arStatsUpdate.next();
+                while (recStats) {
+                    AddStatsItem(recStats);
+                    // Reduce the upload needed timestamp if necessary.
+                    recordStatsXfr.reduceUploadTimeStamp(recStats.nTimeStamp);
+                    recStats = arStatsUpdate.next();
+                }
+            }
+            // Clear the stats update queue.
+            arStatsUpdate.clear();
+        };
+
+        // Reloads this list of items from localStorage.
+        this.reload = function() { 
+            itemCount = 0;
+            let arRecStats = view.onGetRecordStatsList();
+            // Set arRecStats to empty array if it is null or undefined.
+            if (!arRecStats)
+                arRecStats = []; 
+            
+            // Update the display for all the stats items in arRecStats.
+            let recStats; 
             for (var i=itemCount; i < arRecStats.length; i++) {
                 recStats = arRecStats[i];
-                this.addStatsItem(recStats);
+                AddStatsItem(recStats);
             }
+        }
+
+        // Queues stats to a list updates to be displayed.
+        // Arg:
+        //  stats: wigo_ws_GeoTrailRecordStats obj. the stats to queue.
+        this.queueStatsUpdateItem = function(stats) { 
+            arStatsUpdate.add(stats);
+        };
+
+        // Uploads to server record stats items that have been added since last upload.
+        // Synchronous Return: boolean. 
+        //      true indicates upload started. 
+        //      false indicates upload is not needed or upload failed to start.          
+        // Asynchronous Completion: If an uploaded is started, the completion is asynchronous
+        // Note: Iff upload is needed, shows status message for the result.
+        //       User must be signed in for upload to success.
+        this.uploadAdditions = function() { 
+            // Upload updated stats items to server if needed and if user is signed in.
+            var bStarted = false;
+            var recordStatsXfr = view.onGetRecordStatsXfr();
+            var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
+            if (arUploadRecStats.length > 0) {
+                if (view.getOwnerId()) {
+                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
+                    bStarted = recordStatsXfr.uploadRecordStatsList(arUploadRecStats, function(bOk, sStatus) { 
+                        if (bOk) { 
+                            recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
+                        }
+                        var sMsg = bOk ? "Uploaded {0} RecordStats item(s).".format(arUploadRecStats.length) : 
+                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
+                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
+                        view.ShowStatus(sMsg, !bOk);
+                    }); 
+                } else {
+                    view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
+                }
+            } 
+            return bStarted;
         };
 
         // Shows month/date for first item visible in the list.
@@ -7783,6 +7819,233 @@ Are you sure you want to delete the maps?";
             }
         }
 
+        // Add a stats item to the list keeping the list in descending display order of timestamps.
+        // The most recent is at the top of the list. List element at index 0 is the top item.
+        // Arg:
+        //  recStats: wigo_ws_GeoTrailRecordStats object. Contains stats info for item to add to list.
+        //            If recStats.nTimeStamp is the same as for an existing item in the list, the item 
+        //            is replaces.
+        // Notes: 
+        // Class names for formatting stats item:
+        //  stats_history_title - div for title, iff title is given in constructor.
+        //  stats_item -- row for the stats item cells.
+        //  stats_date - cell for date and time.
+        //      stats_time       - start time, eg 01:15 pm
+        //      stats_month_day  - day of month, eg 19
+        //      stats_week_day   - day of week, eg Wed
+        //  stats_distance_time - distance in english or metric units and runtime in mins:secs.
+        //  stats_speed_calories - speed in english or metreic units and calories.
+        // Class names for formatting stats month, year row separator:
+        //  stats_separator:  - row for the stats separator, eg December 2017
+        function AddStatsItem(recStats) {  
+            // Helper to insert row div to this list.
+            // Arg:
+            //  ixAt: integer: insertion is before stats.listDiv.children[ixAt].
+            //  row: HTML Div Element. the row div to insert in stats.listDiv.children[]
+            //  Note: if ixAt div is out of range for stats.listDiv.children[], row is append.
+            function InsertRowDiv(ixAt, rowDiv) {  
+                if (ixAt >= 0 && ixAt < stats.listDiv.children.length) {
+                        stats.listDiv.insertBefore(rowDiv, stats.listDiv.children[ixAt]); 
+                } else {
+                    stats.listDiv.appendChild(rowDiv); 
+                }
+            }
+            
+            // Compares compares two dates to see if month and year of each date are the same.
+            // Ars:
+            //  dt1: Date object or number for date timestamp in milliseconds.
+            //  dt2: Date object or number for date timestamp in milliseconds.
+            // Returns: boolean. true if dates are the same.
+            function IsMonthYearSame(dt1, dt2) {
+                if (typeof dt1 === 'number') 
+                    dt1 =  new Date(Number(dt1));
+                if (typeof dt2 === 'number') 
+                    dt2 = new Date(Number(dt2));
+                var bSame = dt1.getMonth() === dt2.getMonth() && dt1.getFullYear() === dt2.getFullYear();
+                return bSame;
+            }
+
+
+            // Returns true if a row is a separation header.
+            // Arg:
+            //  row: HTML Div element. the row to check.
+            function IsSeparatorDiv(row) {
+                var bYes = row.classList.contains('stats_separator');
+                return bYes;
+            }
+
+            // Inserts a separator div before an item row div.
+            // Arg: 
+            //  ixAt: integer. index of item row before which the separator div is inserted.
+            //        The separator div shows the month and year of the item row div.
+            // Returns: integer. the index of the inserted separator div.
+            function InsertSeparatorDiv(ixAt) {
+                while (ixAt - 1 >= 0 && IsSeparatorDiv(stats.listDiv.children[ixAt-1])) {
+                    stats.listDiv.removeChild(stats.listDiv.children[ixAt-1]);
+                    ixAt--;
+                }
+
+                var row = stats.listDiv.children[ixAt];
+                var separatorTimeStamp = row.getAttribute('data-timestamp');
+                if (separatorTimeStamp.length > 0) {
+                    var dt = new Date(Number(separatorTimeStamp));
+                    var separator = that.create('div', null, 'stats_separator');
+                    separator.innerHTML = "{0} {1}".format(dt.toLocaleString('en-US', {month: 'long'}),
+                                                           dt.toLocaleString('en-US', {year: 'numeric'}));
+                    InsertRowDiv(ixAt, separator);
+                }
+                return ixAt;
+            }
+
+            // Create item div. 
+            var dt = new Date(recStats.nTimeStamp); 
+            var item = that.create('div', null, 'stats_item');
+            item.setAttribute('data-timestamp', recStats.nTimeStamp.toFixed(0));
+            item.setAttribute('data-distance', recStats.mDistance); 
+            var cellDate = that.create('div', null, 'stats_date');
+            cellDate.addEventListener('click', OnSelectItem, false); // Add click handler to indicate item is to be deleted.
+            item.appendChild(cellDate);
+
+            var cellDistanceRunTime = that.create('div', null, 'stats_distance_time');    
+            item.appendChild(cellDistanceRunTime);
+            var cellSpeedCalories = that.create('div', null, 'stats_speed_calories');  
+            item.appendChild(cellSpeedCalories);
+
+            // Display date, example: // 01:30 PM, 10,  Fri  Note: month shown at top of list or by separator. 
+            // Display date cell.
+            var sTime = dt.toLocaleTimeString('en-US', {hour: "2-digit", minute: "2-digit"});
+            var sMonthDay = dt.toLocaleString('en-US', {day: '2-digit'});
+            // var sMonth = dt.toLocaleString('en-US', {month: 'short'});
+            var sWeekDay = dt.toLocaleString('en-US', {weekday: 'short'});
+            cellDate.innerHTML = "<span class='stats_time'>{0}</span><span class='stats_month_day'>{1}</span><span class='stats_week_day'>{2}</span>".format(sTime, sMonthDay, sWeekDay);    
+            // Display display distance, runtime cell and speed, calories cell.
+            var sDistance = lc.to(recStats.mDistance);
+            let runTime = new HourMinSec(recStats.msRunTime); 
+            var sSpeed = lc.toSpeed(recStats.mDistance, recStats.msRunTime/1000).text; // speed in metric or english units.            
+            var sCalories = recStats.caloriesBurnedCalc.toFixed(0);
+            cellDistanceRunTime.innerHTML = "{0}<br/>{1}".format(sDistance, runTime.getStr()); 
+            cellSpeedCalories.innerHTML = "{0}<br/>{1} cals".format(sSpeed, sCalories);
+            
+            // Search for insertion location.
+            var row;
+            var nRowTimeStamp = null;
+            var ixAt = stats.listDiv.children.length; // Set later to exact index at which to insert item.
+            var bReplaced = false;
+            var bSepartorNeeded = false;
+            for (var i=0; i < stats.listDiv.children.length; i++) {
+                row = stats.listDiv.children[i]; 
+                if (IsSeparatorDiv(row)) {
+                    // Ignore separator div.
+                    continue;
+                }
+                nRowTimeStamp = Number(row.getAttribute('data-timestamp')); 
+                if (recStats.nTimeStamp >= nRowTimeStamp) { 
+                    if (recStats.nTimeStamp === nRowTimeStamp) {
+                        // Replacement point found.
+                        bReplaced = true; 
+                        // Remove existing node and insert its replacement next.
+                        stats.listDiv.removeChild(row);
+                        InsertRowDiv(i, item);
+                        // Note: no need to check for month separator header for replacement.
+                    } else {
+                        // Insertion point found.
+                        ixAt = i;
+                    }
+                    break;
+                }
+            }
+
+            if (!bReplaced) {
+                // Check if a month separator header is needed for row at insertion index.
+                // Note: this checks if a separator div is needed after the item.
+                var bSameMonthYear =  nRowTimeStamp === null || IsMonthYearSame(dt, nRowTimeStamp);
+                if (ixAt >= 0 && ixAt < stats.listDiv.children.length) {
+                    if (!bSameMonthYear) {
+                        // Need a separator div because month has changed between item and row at insertion.
+                        ixAt = InsertSeparatorDiv(ixAt);
+                        // Note: ixAt is now ix of separator div, which is correct.
+                    } 
+                }
+                
+                // Insert the item.
+                InsertRowDiv(ixAt, item);
+                // Note: ixAt is now the index of item row.
+
+                if (!bSameMonthYear) {
+                    // Check if a month separator is needed before the item row just inserted.
+                    var ixBefore = ixAt - 1;
+                    var rowBefore = null;
+                    // Skip over any previous separator div (there should not be any to skip over).
+                    while (ixBefore >= 0) {
+                        rowBefore = stats.listDiv.children[ixBefore];
+                        if (IsSeparatorDiv(rowBefore)) {
+                            ixBefore--
+                            continue;
+                        }
+                        break;
+                    }
+                    if (rowBefore) { 
+                        var nRowBeforeTimeStamp = Number(rowBefore.getAttribute('data-timestamp')); 
+                        if (!IsMonthYearSame(dt, nRowBeforeTimeStamp)) {
+                            // Separator div is needed before the item row.
+                            // Insert the separator div.
+                            ixAt = InsertSeparatorDiv(ixAt);
+                            // Note: ixAt is now ix of separator div, which is correct.
+                        } 
+                    }
+                }
+                itemCount++;
+            }
+        }
+
+        // Object for list stats items that need to added the stats history list display.
+        function StatsUpdateAry() { 
+            // Adds a stats to the list of updates.
+            // If stats.nTimeStamp already exists in the list, the list element is replaced;
+            // otherwise the stats is added to the top (end) of the list.
+            // The list is kept in ascending order of timestamps
+            // Arg:
+            //  stats: wigo_ws_GeoTrailRecordStats obj. The stats to add to the list.
+            this.add = function(stats) {
+                for (var i=arStats.length-1; i >= 0; i--) {
+                    if (stats.nTimeStamp > arStats[i]) {
+                        arStats.splice(i, 0, stats);
+                        break;
+                    } else if (stats.nTimeStamp === arStats[i].nTimeStamp) {
+                        arStats[i] = stats;
+                        break;
+                    }
+                }
+                if (i < 0) {
+                    // Add stats to top (end) of the array.
+                    arStats.push(stats);
+                }
+            };
+
+            // Gets next element of the list in order from least timestamp to greatest timestamp (most recent).
+            // Returns: wigo_ws_GeoTrailRecordStats obj. the next stats element in the list.
+            //          null. There is no next element to get.
+            this.next = function() {
+                var stats = null;
+                if (iNext >= 0 && iNext < arStats.length) {
+                    stats = arStats[iNext];
+                    iNext++;
+                }
+                return stats;
+            };
+
+            // Clears the list.
+            this.clear = function() {
+                arStats.splice(0); // remove all the elements.
+                iNext = 0;
+            }
+
+            // ** Private Members
+            var arStats = []; // List of wigo_ws_GeoTrailRecordStats objs.
+            var iNext = 0;   // Index for getting next element of arStats.
+        }
+        var arStatsUpdate = new StatsUpdateAry();
+
         // Adds items to the list in order to test changing from month to month.
         // Only for debug. Delete when no longer needed.
         // Args:
@@ -7807,8 +8070,6 @@ Are you sure you want to delete the maps?";
                 stats.mDistance = stats0.mDistance + 100; 
                 stats.caloriesKinetic = stats0.caloriesKinetic + 11;      
                 stats.caloriesBurnedCalc = stats0.caloriesBurnedCalc + 12;   
-                stats.caloriesBurnedActual = stats0.caloriesBurnedActual + 20;
-
                 arRecStats.unshift(stats); // Insert at beginning of list.
                 stats0 = stats;  
             }
@@ -7861,6 +8122,7 @@ Are you sure you want to delete the maps?";
             let statsDiv = document.getElementById(id);
             if (statsDiv && statsDiv.parentElement) {
                 statsDiv.parentElement.removeChild(statsDiv);
+                itemCount--;  
             }
         }
 
@@ -7900,14 +8162,14 @@ Are you sure you want to delete the maps?";
 
         // Event handler for Done button on edit div.
         function OnEditDone(event) {
-            // Helper to check if two dates are the same, ignoring millisecond component.
+            // Helper to check if two dates are the same, ignoring seconds and millisecond component.
             // Returns true if same.
             // Arg:
             //  msTimeStamp1: number. timestamp in milliseconds for date1 to compare with date2.
             //  msTimeStamp2: number. timestamp in milliseconds for date2 to compare with date1.
-            // Note: Check year, month, day, hour, minute, and second.
-            //       The millisecond of component is not checked because
-            //       milliseconds is not given as an editor control.
+            // Note: Check year, month, day, hour, minute.
+            //       The seonds and milliseconds components are not checked because
+            //       they are not given as editor controls.
             function IsSameDate(msTimeStamp1, msTimeStamp2) {
                 let date1 = new Date(msTimeStamp1);
                 let date2 = new Date(msTimeStamp2); 
@@ -7915,8 +8177,7 @@ Are you sure you want to delete the maps?";
                             date1.getMonth() === date2.getMonth() &&
                             date1.getDate() === date2.getDate() &&
                             date1.getHours() === date2.getHours() &&
-                            date1.getMinutes() === date2.getMinutes() &&
-                            date1.getSeconds() === date2.getSeconds();
+                            date1.getMinutes() === date2.getMinutes();
                 return bSame;
             }
 
@@ -7929,11 +8190,69 @@ Are you sure you want to delete the maps?";
                 RemoveAllStatsRows();
                 // Get the new array of stats data recs from localStorage and
                 // update (display) the stats list.
-                that.update(view.onGetRecordStatsList());
+                that.update(); 
                 that.showMonthDate(); 
 
                 // Update the record stats metrics.
                 recordStatsMetrics.init(view.onGetRecordStatsList());  
+            }
+
+            // Helper to make a copy of RecordStats obj.
+            function NewRecordStatsObj(other) {
+                var stats = new wigo_ws_GeoTrailRecordStats();
+                wigo_ws_GeoTrailRecordStats.Copy(stats, other);
+                return stats;
+            }
+
+            // Helper to do async upload of itemData to server.
+            // Iff upload is successful, updates itemData in localStorage.
+            function DoUpload() {
+                // upload the new item to server.
+                var bStarted = recordStatsXfr.uploadRecordStatsList([itemData], function(bOk, sStatus) {
+                    if (bOk) {
+                        UploadCompleted();
+                    } else {
+                        var sMsg = "Failed to upload stats item to server: {0}".format(sStatus);
+                        view.ShowStatus(sMsg);
+                    }
+                });
+                if (!bStarted) {
+                    var sMsg = "Failed to start uploading stats items to server:<br/>{0}";
+                    view.ShowStatus(sMsg);
+                }
+            }
+
+            // Delete old stats item from server and from localStorage..
+            // Then iff update stats items at server and in localStorage.
+            function DoDeleteAndUpload() {
+                // Delete the old item at server.
+                var arUploadDelete = [];  
+                arUploadDelete.push(new wigo_ws_GeoTrailTimeStamp(nDeleteItemTimeStamp)); 
+                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
+                    if (bOk) {
+                        // Delete the item from localStorage.
+                        view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
+                        // upload the new item to server.
+                        DoUpload(); 
+                    } else {
+                        var sMsg = "Failed to delete old stats item at server: {0}".format(sStatus);
+                        view.ShowStatus(sMsg);
+                    }
+                });
+                if (!bStarted) {
+                    var sMsg = "Failed to start deleting old stats items from server:<br/>{0}";
+                    view.ShowStatus(sMsg);
+                }
+            }
+            
+            // Helper function called after successful upload to server.
+            function UploadCompleted() { 
+                // Update local storage, the stat history list, and stats metrics.
+                if (bChanged) {
+                    UpdateLocalStorage();
+                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; 
+                    view.ShowStatus(sMsg, false);                                                    
+                }
             }
 
             // Quit if stats item controls are not all valid.
@@ -7943,24 +8262,16 @@ Are you sure you want to delete the maps?";
 
             // Hide the editor's div.
             ShowRecordStatsEditDiv(false); 
-            
+            // Get the edited item data from the editor.
+            let nDeleteItemTimeStamp = null; // timestamp of item data to delete.
             let itemData = itemEditor.getEditData();
             let bAdd = !itemEditor.bEditing;
             let bChanged = false; 
-            if (itemEditor.bEditing) {
-                // Check if timestamp has been changed.
-                bChanged = false;  
-                let originalItemData = itemEditor.getOriginalItemData();
-                if (!itemEditor.isSpeedChanged()) {  
-                    // Set calorie fields from the original data item because
-                    // the speed has not changed. The item data from controls has estimated 
-                    // the calorie fields, so want to replace these fields.
-                    itemData.caloriesKinetic = originalItemData.caloriesKinetic;
-                    itemData.caloriesBurnedCalc = originalItemData.caloriesBurnedCalc;
-                    itemData.caloriesBurnedActual = originalItemData.caloriesBurnedActual;
-                } else {
-                    bChanged = true;
-                }
+            let originalItemData = itemEditor.getOriginalItemData(); // Get ref to original itemData before it was edited. 
+            if (itemEditor.bEditing && originalItemData) {  
+                // Check if stats item has been changed.
+                bChanged = itemEditor.isStatsChanged();  
+
                 let bSameDate = IsSameDate(originalItemData.nTimeStamp, itemData.nTimeStamp);
                 if (bSameDate) {
                     // Date entered has not changed. Use timestamp in milliseconds from original data.
@@ -7971,7 +8282,7 @@ Are you sure you want to delete the maps?";
                     // Therefore delete original item from data and add new item.
                     bChanged = true;
                     bAdd = true; // Add a new stats item to local data below.
-                    view.onDeleteRecordStats({0: originalItemData.nTimeStamp}); 
+                    nDeleteItemTimeStamp = originalItemData.nTimeStamp; 
                 }
             }
             if (bAdd) { 
@@ -7989,19 +8300,26 @@ Are you sure you want to delete the maps?";
                     bChanged = true;
                 } else {
                     AlertMsg("Failed to save item data!");
+                    return; 
                 }
             }
-            // Update local storage, the stat history list, and stats metrics.
-            if (bChanged) { 
-                UpdateLocalStorage();
-            }
 
-            itemEditor.clearItemData(); 
+            var recordStatsXfr = view.onGetRecordStatsXfr();
+            // Delete stats item data at server if need be.
+            if (nDeleteItemTimeStamp) { 
+                // Delete the old item at server and iff ok, delete locally.
+                // Then iff ok, upload edited item  to server and iff ok, save locally.
+                DoDeleteAndUpload();
+            } else {
+                if (bChanged) {
+                    // Upload change to server and then, iif ok, save to localStorage. 
+                    DoUpload();
+                }
+            }
         }
 
         // Event handler for Cancel button on edit div.
         function OnEditCancel(event) {
-            itemEditor.clearItemData(); 
             ShowRecordStatsEditDiv(false); 
         }
 
@@ -8013,6 +8331,25 @@ Are you sure you want to delete the maps?";
             }
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
+        }
+
+        // Get a list of stats items to be deleted from server.
+        // Returns: array of wigo_ws_GeoTrailTimeStamp objs. 
+        //          the deletion list for server wigo_ws_GeoPathsRESTfulApi(), DeleteRecordStatsList(..) method.
+        function GetServerDeleteSelections() { 
+            var arServerDelete = [];
+            let arId = Object.keys(itemsSelected);
+            let nTimeStamp = 0;
+            let itemDiv = null;
+            for (let i=0; i < arId.length; i++) {
+                // arId[i] is ith property name (string) of the div id for a selected row in the RecordStatsHistory list.
+                itemDiv = document.getElementById(arId[i]);
+                if (itemDiv) {
+                    nTimeStamp = Number(itemDiv.getAttribute('data-timestamp'));
+                    arServerDelete.push(new wigo_ws_GeoTrailTimeStamp(nTimeStamp));
+                }
+            }
+            return arServerDelete;
         }
 
         // Handler for keydown event for various controls.
@@ -8130,11 +8467,16 @@ Are you sure you want to delete the maps?";
                 // Add line to report list under last 30 days header.
                 // Returns: {item: div, label: span, value: span} object. See InsertLineAfter(..) function.
                 // Arg:
-                //  afterItem: HTML Div obj. item in report list after the new month-day item is inserted.
+                //  afterItem: HTML Div obj. item in report list after which the monthDayEl is inserted.
                 //  monthDayEl: MonthDayEl obj. info for month day to stats metrics report.
                 //              See function MonthDayEl() below for properties of a MonthDayEl obj.
                 function AddMonthDayLine(afterItem, monthDayEl) {
-                    var date = new Date(monthDayEl.nDate)
+                    var date = new Date(monthDayEl.nDate);
+                    // Convert UTC value of date to local component values.
+                    // Note: hour, minute, second, milliseconds of converted date is 12:00:00:000. 
+                    // Conversion is probably not necessary, but is done because some times have timezone offsets > 12,
+                    // which could throw off determining the correct date without a conversion.
+                    date = new Date(date.getTime() + date.getTimezoneOffset()*60*1000); 
                     var sLabel = "{0}: ".format(date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', weekday: 'short' })); 
                     var sValue; 
                     if (monthDayEl.nUpdates > 0) {
@@ -8330,15 +8672,15 @@ Are you sure you want to delete the maps?";
             }
             
             
-            // Inserts a line in the report list after and existing item.
-            // Returns: {item: div, label: span, value: span} object.
+            // Inserts a line in the report list after an existing item.
+            // Returns: {item: div, label: span, value: span} object. the new inserted item.
             //      item: HTML Div element ref for the item containing the label and value.
             //      label HTML Span element ref for the label.
             //      value HTML Span elenet ref for the value.
             // Arg:
-            // 
-            //  sLabel: string. text for a label.
-            //  sValue: string. text for a value. 
+            //  afterItem: HTML Div obj. item in report list after which a new item is inserted.
+            //  sLabel: string. text for a label for the new item.
+            //  sValue: string. text for a value for the new item. 
             function InsertLineAfter(afterItem, sLabel, sValue) { 
                 var item = that.insertItemAfter(afterItem);
                 return FormLineContent(item, sLabel, sValue);
@@ -8412,6 +8754,7 @@ Are you sure you want to delete the maps?";
 
         // Helper object for editing a stats item.
         function StatsItemEditor() { 
+            var that = this;
             // number for body mass in kilograms.
             this.kgBodyMass = 50.0; 
             
@@ -8455,10 +8798,9 @@ Are you sure you want to delete the maps?";
                     return digits;
                 }
 
-                // Save ref to itemData.
+                // Save ref to the orginal item data set into the edit controls.
                 originalItemData = itemData; 
-                // Clear speed changed flag.
-                this.setSpeedChanged(false); 
+
                 // Set starting date.
                 let itemDate = new Date(itemData.nTimeStamp);
                 let nYear = itemDate.getFullYear();
@@ -8472,46 +8814,121 @@ Are you sure you want to delete the maps?";
                 time.value = "{0}:{1}".format(TwoDigits(nHour), TwoDigits(nMinute));
 
                 // Set distance.
-                let distValue = lc.toDist(itemData.mDistance);  
-                distance.value = distValue.n.toFixed(2);
-                distanceUnit.innerText = distValue.unit;
+                SetDistanceCtrl(itemData.mDistance); 
 
                 // Set run time.
-                let runTime = new HourMinSec(itemData.msRunTime);
-                runTimeMins.value = runTime.getAllMins();
-                runTimeSecs.value = runTime.getSec();
+                SetRunTimeCtrl(itemData.msRunTime); 
+
+                // Set calories burned.
+                SetCaloriesBurnedCtrl(itemData.caloriesBurnedCalc);  
             };
-            let originalItemData = null; // wigo_ws_GeoTrailRecordStats obj saved by this.setEditCtrls(..). 
+
+            // Gets ref to the original item data that is arg to this.setEditCtrls(itemData); 
+            // Returns: ref to wigo_ws_GeoTrailRecordStats obj. 
+            //          Could be null if not set by this.setEditCtrls(itemData).
+            this.getOriginalItemData = function() { 
+                return originalItemData; 
+            };
 
             // Checks if control values are valid.
             // Shows error msg in status div for an invalid control value and sets
             // focus to the control.
             // Returns: boolean. true if all control values are valid.
             this.areCtrlsValid = function() {
-                // Helper that returns true if num is an integer.
-                function IsInteger(num) {
-                    let bYes = num === Math.floor(num);
-                    return bYes;
-                }
+                let bOk = IsDateTimeValid();
 
-                // Helper to indicate a ctrl has an invalid entry
-                // by setting focus to control and setting class name
-                // used to designate background color.
-                // Args
-                //  ctrl: HTML Element obj for the control.
-                //  bError: boolean. true indicates invalid entry.
-                function IndicateError(ctrl, bError) {
-                    if (bError) {
-                        ctrl.focus();
-                        ctrl.classList.add('stats_item_editor_ctrl_error');
-                    } else {
-                        ctrl.classList.remove('stats_item_editor_ctrl_error');
-                    }
-                }
-                
+                // Check that distance is not negative.
+                if (bOk)
+                    bOk = IsDistanceValid();
+
+                // Check run time minutes.
+                if (bOk)
+                    bOk = IsRunTimeValid();
+
+                // Check that caloriesBurned is valid. 
+                if (bOk)
+                    bOk = IsCaloriesBurnedValid();
+
+                return bOk;
+            };
+
+            // Checks if control value for CaloriesBurned is valid.
+            // Returns boolean. true if valid.
+            function IsCaloriesBurnedValid() {
                 let bOk = true;
-                let sMsg; 
-                this.clearStatus();
+                let nCaloriesBurned = GetNumFromCtrl(caloriesBurned);
+                if (nCaloriesBurned < 0) {
+                    status.addLine('Calories burned must be greater than 0.');
+                    IndicateError(caloriesBurned, true);
+                    bOk = false;
+                }
+                return bOk;
+            }
+
+            // Checks if control value for Run Time mins and secs are valid.
+            // Returns boolean. true if valid.
+            function IsRunTimeValid() {
+                let bOk = true;
+                let nMins = GetNumFromCtrl(runTimeMins);
+                if (nMins < 0) {
+                    status.addLine("Run Time Minutes cannot be negative.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                else if (!IsInteger(nMins)) {
+                    status.addLine("Run Time Minutes must be whole mumber.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(runTimeMins, false);
+                }
+                // Check run time seconds.
+                let nSecs = GetNumFromCtrl(runTimeSecs);
+                if (nSecs < 0) {
+                    status.addLine("Run Time Secs cannot be negative.");
+                    IndicateError(runTimeSecs, true);
+                    bOk = false;
+                }
+                else if (nSecs > 59 || !IsInteger(nSecs)) {
+                    status.addLine("Run Time Secs must be whole number from 0, 1, ... 59");
+                    IndicateError(runTimeSecs, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(runTimeSecs, false);
+                }
+                // Check run time is not zero.
+                if (nSecs <= 0 && nMins <= 0) {
+                    status.addLine("Run Time must be greater than 0.");
+                    IndicateError(runTimeMins, true);
+                    bOk = false;
+                }
+                return bOk;
+            }
+
+            // Checks if control value for Distance is valid.
+            // Returns boolean. true if valid.
+            function IsDistanceValid() {
+                let bOk = true;
+                let dist = GetNumFromCtrl(distance);
+                if (dist < 0) {
+                    status.addLine("Distance cannot be negative.");
+                    IndicateError(distance, true);
+                    bOk = false;
+                }
+                else {
+                    IndicateError(distance, false);
+                }
+                return bOk;
+            }
+
+            // Checks if control value for Date and Time controls are valid.
+            // Returns boolean. true if valid.
+            function IsDateTimeValid() {
+                let bOk = true;
+                let sMsg;
+                that.clearStatus(); 
                 // Check that date/time is < current time. Do not allow adding dates in the future
                 // because a date/time that may be added later by record needs to be after
                 // the date of last (oldest) item in the stats list because stats history only 
@@ -8523,126 +8940,379 @@ Are you sure you want to delete the maps?";
                     sMsg = "Starting Date/Time must be less than current Date/Time\nof {0}".format(dt.toLocaleString('en-US'));
                     status.addLine(sMsg);
                     IndicateError(date, true);
-                    IndicateError(time, true); 
+                    IndicateError(time, true);
                     bOk = false;
-                } else {
+                }
+                else {
                     // Indicate an error if either date or time is not given.
                     if (date.value.length === 0) {
                         status.addLine("Date must be entered.");
                         IndicateError(date, true);
                         bOk = false;
-                    } else if (time.value.length === 0) {
+                    }
+                    else if (time.value.length === 0) {
                         status.addLine("Time must be given.");
                         IndicateError(time, true);
                         bOk = false;
-                    } else {
+                    }
+                    else {
                         // date and time are ok.
                         IndicateError(date, false);
                         IndicateError(time, false);
                     }
                 }
-                // Check that distance is not negative.
-                let dist = GetNumFromCtrl(distance);
-                if (dist < 0) {
-                    status.addLine("Distance cannot be negative.");
-                    IndicateError(distance, true);
-                    bOk = false;
-                } else {
-                    IndicateError(distance, false);
-                }
-                // Check run time minutes.
-                let nMins = GetNumFromCtrl(runTimeMins);
-                if (nMins < 0) {
-                    status.addLine("Run Time Minutes cannot be negative.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                } else if (!IsInteger(nMins)) {
-                    status.addLine("Run Time Minutes must be whole mumber.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                } else {
-                    IndicateError(runTimeMins, false);
-                }
-                // Check run time seconds.
-                let nSecs = GetNumFromCtrl(runTimeSecs);
-                if (nSecs < 0) {
-                    status.addLine("Run Time Secs cannot be negative.");
-                    IndicateError(runTimeSecs, true);
-                    bOk = false;
-                } else if (nSecs > 59 || !IsInteger(nSecs)) { 
-                    status.addLine("Run Time Secs must be whole number from 0, 1, ... 59");
-                    IndicateError(runTimeSecs, true);
-                    bOk = false;
-                } else {
-                    IndicateError(runTimeSecs, false);
-                }
-                // Check run time is not zero.
-                if (nSecs <= 0 && nMins <= 0) {
-                    status.addLine("Run Time must be greater than 0.");
-                    IndicateError(runTimeMins, true);
-                    bOk = false;
-                }
-
                 return bOk;
+            }
+
+            // Helper that returns true if num is an integer.
+            function IsInteger(num) {  //20180810 refactored
+                let bYes = num === Math.floor(num);
+                return bYes;
+            }
+
+            // Helper to indicate a ctrl has an invalid entry
+            // by setting focus to control and setting class name
+            // used to designate background color.
+            // Args
+            //  ctrl: HTML Element obj for the control.
+            //  bError: boolean. true indicates invalid entry.
+            function IndicateError(ctrl, bError) { 
+                if (bError) {
+                    ctrl.focus();
+                    ctrl.classList.add('stats_item_editor_ctrl_error');
+                } else {
+                    ctrl.classList.remove('stats_item_editor_ctrl_error');
+                }
+            }
+            
+            var bStatsChanged = false; // Flag to indicate user has changed the stats item. 
+            
+            // boolean. Returns true if stats item has been changed.
+            this.isStatsChanged = function() {
+                return bStatsChanged;
+            }
+
+            // Indicate stats item has changed.
+            this.changeDateHandler = function() {
+                bStatsChanged = true;
+                let bOk = IsDateTimeValid(); 
+                if (bOk)            
+                    status.clear(); 
             };
 
-            // Sets flag to indicated speed has changed.
-            // Arg: 
-            //  bChanged: boolean. true indicates runtime mins, runtime secs, or distance control has been changed.
-            // 
-            this.setSpeedChanged = function(bChanged) { 
-                bSpeedChanged = bChanged;
+            // Indicate stats items has changed. 
+            this.changeTimeHandler = function() {
+                bStatsChanged = true;
+                let bOk = IsDateTimeValid();
+                if (bOk)          
+                    status.clear(); 
             };
-            var bSpeedChanged = false; 
 
-            // boolean. Returns true is distance or runtime control has been changed.
-            this.isSpeedChanged = function() { 
-                return bSpeedChanged;
+            // Update other ctrls for estimates if allowed when distance is changed.
+            // Reset toggle for Estimate Distance.
+            this.changeDistanceHandler = function() {
+                bStatsChanged = true;  
+                if (!IsDistanceValid() )
+                    return; 
+                else                   
+                    status.clear();
+
+                let mDistance = GetDistanceMetersFromCtrl();
+
+                let msRunTime = CalcRunTimeMilliSecsFromDistance(mDistance);
+                // Estimate run time if allowed.
+                if (toggleEstimateRunTime.getState() === 1) {
+                    SetRunTimeCtrl(msRunTime);
+                }
+                // Estimate calories burned if allowed.
+                if (toggleEstimateCaloriesBurned.getState() === 1) {
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
+                // Reset estimate distance toggle.
+                toggleEstimateDistance.setState(0);
+            };
+
+            // Update other ctrls for estimates if allowed when run time is changed.
+            // Reset toggle for Estimate Run Time.
+            this.changeRunTimeHandler = function() {
+                bStatsChanged = true; 
+                if (!IsRunTimeValid())
+                    return; 
+                else                  
+                    status.clear();
+
+                let msRunTime = GetRunTimeMilliSecsFromCtrl();
+                // Estimate distance if allowed.
+                let mDistance = CalcDistanceFromRunTimeMilliSecs(msRunTime);
+                if (toggleEstimateDistance.getState() === 1) {
+                    SetDistanceCtrl(mDistance);
+                }
+                // Estimate calories burned if allowed.
+                if (toggleEstimateCaloriesBurned.getState() === 1) {
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
+
+                // Reset estimate run time toggle.
+                toggleEstimateRunTime.setState(0); 
+            };
+
+            // Leave other ctrils as they are. 
+            // Reset toggle for Estimate Calories Burned.
+            this.changeCaloriesBurnedHandler = function() {
+                bStatsChanged = true; 
+                if (!IsCaloriesBurnedValid())
+                    return;
+                else                   
+                    status.clear();
+
+                // Reset estimate calories burned toggle.
+                toggleEstimateCaloriesBurned.setState(0); 
+            };
+
+            // Do and set estimate for distance ctrl if allowed.
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimatedDistanceHandler = function(nState) { 
+                // Do estimate distance if allowed.
+                if (nState === 1) {
+                    let msRunTime = GetRunTimeMilliSecsFromCtrl();
+                    let mDistance = CalcDistanceFromRunTimeMilliSecs(msRunTime);
+                    SetDistanceCtrl(mDistance);
+                }
+            };
+
+            // Do and set estimated for run time ctrl if allowed. 
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimatedRunTimeHandler = function(nState) {
+                // Do estimate run time if allowed.
+                if (nState === 1) {
+                    let mDistance = GetDistanceMetersFromCtrl();
+                    let msRunTime = CalcRunTimeMilliSecsFromDistance(mDistance);
+                    SetRunTimeCtrl(msRunTime);
+                }
+            }; 
+            
+            // Do and set estimate for calories burned ctrl if allowed. 
+            // Arg:
+            //  nState: number. state of the control.
+            this.toggleEstimateCaloriesBurnedHandler = function(nState) {
+                // Do calories burned estimate if allowed.
+                if (nState === 1) {
+                    let mDistance = GetDistanceMetersFromCtrl();
+                    let caloriesBurned = CalcCaloriesBurned(mDistance)
+                    SetCaloriesBurnedCtrl(caloriesBurned); 
+                }
             };
 
             // Returns new wigo_ws_GeoTrailRecordStats object based on values in the editor's ctrls.
             this.getEditData = function() {
                 let itemData = new wigo_ws_GeoTrailRecordStats();
                 // Set distance in meters from input in miles or kilometers.
-                itemData.mDistance = lc.toMeters(GetNumFromCtrl(distance));
+                itemData.mDistance = GetDistanceMetersFromCtrl();
                 // Set runtime in milliseconds.
-                let nMins = GetNumFromCtrl(runTimeMins);
-                let nSecs = GetNumFromCtrl(runTimeSecs);
-                itemData.msRunTime = (60 * nMins + nSecs) * 1000.0;
-                // Estimate calories.
-                if (itemData.msRunTime > 0) {
-                    // Calculate kinetic engery to move body mass in calories.
-                    let speed = itemData.mDistance / (itemData.msRunTime / 1000.0);
-                    let ke = 0.5 * this.kgBodyMass * speed * speed; // engery in joules to move body mass to ave velocity.
-                    ke += ke; // Add engery in joules to move body mass from ave velectity to rest.
-                    // Calculate  energy to overcome friction for traveling along the path in joules.
-                    // 0.032 is estimate for coefficient of friction.
-                    let fe = coeffFriction * this.kgBodyMass * accelGravity * itemData.mDistance;
-                    itemData.caloriesKinetic = (ke + fe)/1000; // Calculated energy in kilojoules.
-                    itemData.caloriesKinetic /= kjoulesPerCalorie; // kjoules converted to food calories.
-                    // Set calories burned accounting for conversion of food to calories.
-                    itemData.caloriesBurnedCalc = itemData.caloriesKinetic / this.calorieConversionEfficiency;
-                }
+                itemData.msRunTime = GetRunTimeMilliSecsFromCtrl();
+               itemData.caloriesBurnedCalc = GetNumFromCtrl(caloriesBurned); 
+               itemData.caloriesKinetic = itemData.caloriesBurnedCalc * this.calorieConversionEfficiency;
 
                 // Set timestamp from date and time ctrls.
                 itemData.nTimeStamp = ParseDateTime(date, time);
                 return itemData;
             };
 
+            // Toggles state value for an of/off ctrl.
+            // Arg:
+            //  nState: number. current state, which is 0, 1 or -1.
+            // Returns: number. new state after toggle:
+            //      1 -> 0
+            //      0 -> 1
+            //     -1 -> 1
+            function ToggleState(nState) {
+                let newState = nState === 1 ? 0 : 1;
+                return newState;
+            }
+
+            function SetCaloriesBurnedCtrl(caloriesBurnedCalc) { 
+                caloriesBurned.value = caloriesBurnedCalc.toFixed(0);
+            }
+
+            // Set run time ctrl for minutes and seconds.
+            // Arg:
+            //  msRunTime: number. run time in milliseconds.
+            function SetRunTimeCtrl(msRunTime) {
+                let runTime = new HourMinSec(msRunTime);
+                runTimeMins.value = runTime.getAllMins();
+                runTimeSecs.value = runTime.getSec();
+            }
+
+            // Set distance ctrl.
+            // Arg:
+            //  mDistance: number. distance in meters.
+            function SetDistanceCtrl(mDistance) { 
+                let distValue = lc.toDist(mDistance);
+                distance.value = distValue.n.toFixed(2);
+                distanceUnit.innerText = distValue.unit;
+            }
+
+            function GetDistanceMetersFromCtrl() {
+                return lc.toMeters(GetNumFromCtrl(distance));
+            }
+
+            function GetRunTimeMilliSecsFromCtrl() { 
+                let nMins = GetNumFromCtrl(runTimeMins);
+                let nSecs = GetNumFromCtrl(runTimeSecs);
+                return (60 * nMins + nSecs) * 1000.0;
+            }
+
+            // Calculates distance given run time.
+            // Arg:
+            //  msRunTime: number. run time in milliseconds.
+            // Returns: number. disntance in meters.
+            function CalcDistanceFromRunTimeMilliSecs(msRunTime) {
+                let d = 0;
+                if (velocity1 > 0 && msRunTime > 0) {
+                    d = velocity1 * (msRunTime/1000);
+                }
+                return d;
+            }
+
+            // Calculates run time given distance.
+            // Arg:
+            //  mDistance: number. distance in meters.
+            // Returns: number. run time in milliseconds.
+            function CalcRunTimeMilliSecsFromDistance(mDistance) {
+                let msRunTime = 0;
+                if (velocity1 > 0 && mDistance > 0) {
+                    msRunTime = (mDistance / velocity1) * 1000;
+                }
+                return msRunTime;
+            }
+
+            // Calculates calories based on distance.
+            // Arg: 
+            //  mDistance: number. distance in meters.
+            // Returns: number. calories burned.
+            function CalcCaloriesBurned(mDistance) {
+                let ke = that.kgBodyMass * acceleration1 * mDistance; // joules.
+                let kjoules = ke / 1000;
+                let calories = kjoules / kjoulesPerCalorie;
+                let caloriesBurned = calories / that.calorieConversionEfficiency;
+                return caloriesBurned;
+            }
+
+            // Calculates coeeficient of friction for itemData.
+            // Arg:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. 
+            // Returns: number. the coefficent friction.
+            //  Note: returns 0 if itemData.mDistance is 0 or if this.kgBodyMass is 0.
+            function calcCoefficientOfFriction(itemData) {
+                //  energy = kinetic_energy + friction_energy
+                //  e = ke + fe
+                //  fe = e - ke
+                //  fe = coefficient_friction *  mass*accel_gravity * distance   
+                //  coefficent_fricton = fe / (mass * accel_gravity * distance)
+                if (that.kgBodyMass === 0 || itemData.mDistance === 0) {
+                    return 0;  // Avoid divide by 0 in calculation below.
+                }
+
+                let e = itemData.caloriesKinetic * 1000; // convert kilojoules to joules.
+                let ke = 0.5 * that.kgBodyMass * speed * speed; // kinetic engery in joules moving from rest to ave velocity.
+                ke += ke; // Add kinetic engery in joules to move from ave velectity to rest.
+                let fe = e - ke;
+                let cf = fe / (that.kgBodyMass * accelGravity * itemData.mDistance);
+                return cf; 
+            } 
+            
+            // Sets the acceleration and velocity for editing an exiting item.
+            // Args:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. 
+            this.setAV1ForEdit = function(itemData) {
+                let r = CalcAV1(itemData);
+                acceleration1 = r.a;
+                velocity1 = r.v;
+            };
+
+            // Sets the acceleration and velocity for adding a new item.
+            // acceleration1 is set to average from the stats data.
+            // velocity1 is set to 0. 
+            // Args:
+            //  arItemData: array of wigo_ws_GeoTrailRecordStats objs.
+            //              The average acceleration and velocity is calculated.
+            //              This arg should be the stats data list obtained from the model.
+            //  nLimit: number, optional. Defaults to 10. Number of array elements
+            //          to use in the average. The most recent items are used for the average.
+            this.setAV1ForAdd = function(arItemData, nLimit) {
+                if (typeof nLimit !== 'number')
+                    nLimit = 5;   
+                let sumR = {a: 0, v: 0};
+                let nCount = 0;
+                let r = {a: 0, v: 0};
+                for (let i=arItemData.length-1; i >= 0; i--) {
+                    r = CalcAV1(arItemData[i]);
+                    if (arItemData[i].mDistance > 10 && r.a > 0 && r.v > 0) { 
+                        sumR.a += r.a;
+                        sumR.v += r.v;
+                        nCount++;
+                    }
+                    if (nCount >= nLimit)
+                        break;
+                }
+                let aveR = {a: 0, v: 0};
+                if (nCount > 0) {
+                    aveR.a = sumR.a / nCount;
+                    aveR.v = sumR.v / nCount;
+                }
+                acceleration1 = aveR.a;
+                velocity1 = aveR.v;  
+            };
+
+            // Sets the estimate toggle controls.
+            // Arg:
+            //  bSet: boolean, optional. true to set estimate on. defaults to true.
+            this.setEstimateToggleCtrls = function(bSet) {
+                if (typeof bSet !== 'boolean')
+                    bSet = true;
+                let nState = bSet ? 1 : 0;
+                toggleEstimateDistance.setState(nState);
+                toggleEstimateRunTime.setState(nState);
+                toggleEstimateCaloriesBurned.setState(nState);
+            };
+
+            // Calculates acceleration and velocity for a data item.
+            // Arg:
+            //  itemData: wigo_ws_GeoTrailRecordStats obj. the data item.
+            // Returns: {a: number, v: number}:
+            //  a: acceleration i meters/sec^2
+            //  v: velocity in meters / sec.
+            function CalcAV1(itemData) { 
+                let r = {a: 0, v: 0};
+                if (itemData.msRunTime > 0) {
+                    r.v = itemData.mDistance / (itemData.msRunTime/1000); // meters / sec.
+                    // w = m * a * d 
+                    //  a = w / (m * d)
+                    if (that.kgBodyMass > 0 & itemData.mDistance > 0) {
+                        let w = itemData.caloriesKinetic * kjoulesPerCalorie * 1000; // work (energy) joules.
+                        r.a = w / (that.kgBodyMass * itemData.mDistance);
+                    }
+                } 
+                return r;
+            }
+
+            // Returns number. joules converted to calories.
+            // Arg:
+            //  ke: number. Kinetic engery (units for joules same as units for newton-meter).
+            function JoulesToCalories(ke) {
+                let keKJoules = (ke/1000)
+                let keCalories = keKJoules /  kjoulesPerCalorie; 
+                return keCalories;
+            }
+
+
             // Clears the status div so that it is not shown.
             this.clearStatus = function() {  
                 status.clear();
-            };
-
-            // Clears ref to the items saved by this.setEditCtrls(..).
-            this.clearItemData = function() { 
-                originalItemData = null;
-            };
-
-            // Returns ref to original item data saved by this.setEditCtrls(..);
-            // Returns: wigo_ws_GeoTrailRecordStats obj ref.
-            this.getOriginalItemData = function() {
-                return originalItemData;
             };
 
             // Returns new wigo_ws_GeoTrailRecordStats object.
@@ -8661,35 +9331,73 @@ Are you sure you want to delete the maps?";
                 return num;
             }
 
-            // Parses a Date and Time input controls.
-            // Returns millisec value for a Date object.
-            // Returns 0 date or time control does not have a vailid value.
+            // Parses Date and Time input controls.
+            // Returns millisecond value for a Date object.
+            // Returns 0 date if date control does not have a valid value.
             // Args:
             //  dateCtrl: HTMLInput, type=date obj. ref to date ctrl.
             //  timeCtrl: HTMLInput, type=time obj. ref to time ctrl.
             function ParseDateTime(dateCtrl, timeCtrl) {
+                //let ms = 0; 
+                //let sDate = dateCtrl.value;
+                //let sTime = timeCtrl.value;
+                // The following worked differently for android and ios. 
+                // android used local time and ios used utc.
+                // Mozilla documents recommends NOT number Date(dateString) consructor.
+                //if (sDate.length > 0 && sTime.length > 0) {
+                //    let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
+                //    let datetime = new Date(sDateTime);
+                //    ms = datetime.getTime();
+                //} else if (sDate.length > 0) {
+                //    // The followinf worked different for android and ios.
+                //    let sDateFmt = "{0}".format(sDate);   
+                //    let date = new Date(sDateFmt);
+                //    ms = date.getTime();
+                //}
+                //return ms;
+
+                // Parses string for year, month, day.
+                // Arg:
+                //  sDate: string. date format is yyyy-mm-dd
+                //  sTime: string. time format is hh:ss
+                // Returns: {year: number, month: number_origin_0, date: number, hour: number, minute: number} or null if sDate is invalid.
+                //          If sTime is invalid, hour = 0 and minute = 0. 
+                //          Returned month is origin 0 for January for compatability with Date constructor.
+                //          sDate month part is origin 1 for January.
+                function ParseStr(sDate, sTime) {
+                    var matches =sDate.match(/(\d\d\d\d)\-(\d\d)\-(\d\d)/);
+                    var ymdhm = null;
+                    if (matches) {
+                        ymdhm = {year: Number(matches[1]), month: Number(matches[2]-1), date: Number(matches[3]), hour: 0, minute: 0};
+                        matches = sTime.match(/(\d\d)\:(\d\d)/);
+                        if (matches) {
+                            ymdhm.hour = Number(matches[1]);
+                            ymdhm.minute = Number(matches[2]);
+                        }
+                    }
+                    return ymdhm;
+                }
+
                 let ms = 0; 
                 let sDate = dateCtrl.value;
                 let sTime = timeCtrl.value;
-                if (sDate.length > 0 && sTime.length > 0) {
-                    let sDateTime = "{0}T{1}:00".format(sDate, sTime);   
-                    let datetime = new Date(sDateTime);
-                    ms = datetime.getTime();
-                } else if (sDate.length > 0) {
-                    let sDateFmt = "{0}".format(sDate);   
-                    let date = new Date(sDateFmt);
-                    ms = date.getTime();
+                let ymdhm = ParseStr(sDate, sTime);
+                if (ymdhm) {
+                    ms = (new Date(ymdhm.year, ymdhm.month, ymdhm.date, ymdhm.hour, ymdhm.minute)).getTime();
                 }
                 return ms;
             }
 
-            // Coeffient of friction for calculating engery consumed.
-            let coeffFriction = 0.032; 
             let accelGravity = 9.81;
             let kjoulesPerCalorie = 4.184; // Kilojoules per food Calorie.
 
+            let acceleration1 = 0; // acceleration in meter/sec^ for part1 for item data being added or edited. 
+            let velocity1 = 0;     // velocity in meter/sec for part1 for item data being added or edited.
+
             // Status msg div.
             let status = new ctrls.StatusDiv(); 
+
+            let originalItemData = null; // ref to wigo_ws_GeoTrailRecordStats. the item data that is set into the edit controls. 
 
             // Blur all ctrls that might have soft keyboard showing.
             distance.blur();
@@ -8725,11 +9433,150 @@ Are you sure you want to delete the maps?";
             ShowElement(metricsDiv, bShow);
         }
 
-        // Handler for change event for controls that affect a change in speed.
+        // Handler for change event for distance control.
         // Arg:
         //  event: html Event object.
-        function SpeedChangedHandler(event) { 
-            itemEditor.setSpeedChanged(true);
+        function DistanceChangedHandler(event) {
+            itemEditor.changeDistanceHandler();  
+        }
+
+        // Handler for change event for run time control.
+        // Arg:
+        //  event: html Event object.
+        function RunTimeChangedHandler(event) { 
+            itemEditor.changeRunTimeHandler();
+        }
+
+        // Handler for change event for calories burned control.
+        // Arg:
+        //  event: html Event object.
+        function CaloriesBurnedChangedHandler(event) { 
+            itemEditor.changeCaloriesBurnedHandler(); 
+        }
+
+        // Helper object for syncing stats data with server and localStorage.
+        function StatsSyncer() { 
+
+            // Synchronizes stats between server and local stats.
+            // Arg:
+            //  onDone: callback function with signature:
+            //    bOk: boolean. Successfully completed sync
+            //    nLocalStatsAdded: number. number of local stats added.
+            //    sStatus: string. message describing result of syncing.
+            // Synchronous return: boolean. 
+            //  true indicates sync started.
+            //  false indicates cannot start syncing because
+            //        some other exchange with server is in progrss.
+            this.sync = function(onDone) {
+                if (recordStatsXfr === null)
+                    recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+
+                let bStarted  = CompareStats(onDone);
+                return bStarted;
+            };
+            
+            // Compares stats downloaded from server with stats in localStorage.
+            // Adds stats from server that are missing to local stats and saves to localStorage.
+            // Adds stats from local stats that are missing in server data and uploads missing stats to server.
+            // Arg: 
+            //  OnDone: callback with this signature:
+            //      bOk: boolean: true for sucess.
+            //      nLocalStatsAdded: number. number of local stats added.
+            //      sStatus: string: description for the syncing result.
+            function CompareStats(onDone) {
+                let bStarted = recordStatsXfr.downloadRecordStatsAry(function(bOk, aryServerStats, sStatus){
+                    let sLineEnd = '<br/>';
+                    let sStatusMsg = '';
+                    let nLocalStatsAdded = 0; 
+
+                    
+                    function DoDone(bDoneOk) {
+                        if (onDone) {
+                            onDone(bDoneOk, nLocalStatsAdded, sStatusMsg);
+                        }
+                    }
+
+                    if (bOk) {
+                        // Add missing stats to local stats and saves to localStorage if there are missing stats.
+                        let arMissingStats = AddMissingToLocalStats(aryServerStats); 
+                        nLocalStatsAdded = arMissingStats.length;
+                        if (arMissingStats.length > 0) {
+                            sStatusMsg += 'Saved {0} stats from server missing in local data.{1}'.format(arMissingStats.length, sLineEnd);
+                        }
+                        
+                        // Add missing stats to server stats.
+                        arMissingStats = AddMissingToServerStats(aryServerStats);
+                        if (arMissingStats.length > 0) { 
+                            // Upload server stats that have been added.
+                            let bUploadStarted = recordStatsXfr.uploadRecordStatsList(arMissingStats, function(bOk, sStatus){
+                                if (bOk) {
+                                    sStatusMsg += 'Uploaded {0} stats missing at server.{1}'.format(arMissingStats.length, sLineEnd);
+                                } else {
+                                    sStatusMsg += 'Error uploading {0} stats missing at server.{1}{2}{1}'.format(arMissingStats.length, sLineEnd, sStatus);
+                                }
+                                DoDone(bOk);
+                            });
+                            if (!bUploadStarted) {
+                                // Failed to start uploading data to server. Should not happen.
+                                sStatusMsg += 'Failed to start uploading {0} missing stats to server.{1}'.format(arMissingStats.length, sLineEnd);
+                                DoDone(false);
+                            }
+                        } else {
+                            if (sStatusMsg.length === 0) {
+                                sStatusMsg += 'Sync determined local stats and stats saved at server are the same.{0}'.format(sLineEnd);
+                            }
+                            DoDone(bOk);
+                        }
+                    } else {
+                        sStatusMsg += 'Sync failed to download stats from server.{0}{1}{0}'.format(sLineEnd, sStatus);
+                        DoDone(bOk);
+                    }
+                });
+                return bStarted;  
+            }
+
+            // Add any missing stats from the server to local stats.
+            // If there are missing stats, the localStorage for stats is updated (saved).
+            // Arg:
+            //  aryServerStats: RecordStatsAryServer object. stats from server.
+            // Retuns: array of wigo_ws_GeoTrailRecordStats objs. the missing stats. Empty array if none are missing.
+            function AddMissingToLocalStats(aryServerStats) {
+                let arMissingStats = []; // Array of missing stats.
+                let bMissing = false;
+                let aryLocalStats = recordStatsXfr.getLocalRecordStatsAry();
+                let arServerStats = aryServerStats.getAll();
+                for (let i=0; i < arServerStats.length; i++) {
+                    bMissing = aryLocalStats.insertMissingNoSave(arServerStats[i]);                   
+                    if (bMissing) {
+                        arMissingStats.push(arServerStats[i]);
+                    }
+                }
+                if (arMissingStats.length > 0)
+                    aryLocalStats.SaveToLocalStorage();
+                return arMissingStats;
+            }
+
+            // Add any missing stats from the local stats to server stats.
+            // Note: Does NOT upload missing stats to server.
+            // Arg:
+            //  aryServerStats: RecordStatsAryServer object. stats from server.
+            // Retuns: number. number of missing stats added to server stats.
+            function AddMissingToServerStats(aryServerStats) {
+                let arMissingStats = []; // Array of missing stats.
+                let bMissing = false;
+                let aryLocalStats = recordStatsXfr.getLocalRecordStatsAry();
+                let arLocalStats = aryLocalStats.getAll();
+                for (let i=0; i < arLocalStats.length; i++) {
+                    bMissing = aryServerStats.insertMissingNoSave(arLocalStats[i]);
+                    if (bMissing) {
+                        arMissingStats.push(arLocalStats[i])
+                    }
+                }
+                return arMissingStats;
+            }
+
+            var that = this;
+            var recordStatsXfr = null; // ref to RecordStatsXfr set by this.sync().
         }
 
         // ** Constructor initialization.
@@ -8741,10 +9588,14 @@ Are you sure you want to delete the maps?";
                         statsEditInstrId: 'statsEditInstr',  // id for instructions for editing stats.
                         dateId: 'dateRecordStats', // id of input, type=date 
                         timeId: 'timeRecordStats', // id of input, type=time
+                        holderEstimateDistanceToggleId: 'holderEstimateDistanceToggle', 
                         distanceId: 'numRecordStatsDistance', // id of input, type=number
                         distanceUnitId: 'spanRecordStatsDistanceUnit', // id of span. Displays mi or km based on bEnglishUnit.
+                        holderEstimateRunTimeToggleId: 'holderEstimateRunTimeToggle', 
                         runTimeMinsId: 'minsRecordStatsRunTime', // id of input, type=number. 
                         runTimeSecsId: 'secsRecordStatsRunTime', // id of input,type=number.
+                        holderEstimateCaloriesBurnedToggleId: 'holderEstimateCaloriesBurnedToggle', 
+                        caloriesBurnedId: 'numRecordStatsCaloriesBurned', // id of input, type=number 
                         doneId: 'buRecordStatsEditDone', // id of button.
                         cancelId:'buRecordStatsEditCancel'};
         }
@@ -8754,26 +9605,60 @@ Are you sure you want to delete the maps?";
         var statsEditInstr = document.getElementById(ctrlIds.statsEditInstrId);  
         var date = document.getElementById(ctrlIds.dateId);
         var time = document.getElementById(ctrlIds.timeId);
+        var holderEstimateDistanceToggle = document.getElementById(ctrlIds.holderEstimateDistanceToggleId); 
+        var toggleEstimateDistance = new ctrls.OnOffControl(holderEstimateDistanceToggle, null, "Estimate", -1); 
         var distance = document.getElementById(ctrlIds.distanceId);
         var distanceUnit = document.getElementById(ctrlIds.distanceUnitId);
+        var holderEstimateRunTimeToggle = document.getElementById(ctrlIds.holderEstimateRunTimeToggleId);
+        var toggleEstimateRunTime = new ctrls.OnOffControl(holderEstimateRunTimeToggle, null, "Estimate", -1);
         var runTimeMins = document.getElementById(ctrlIds.runTimeMinsId); 
         var runTimeSecs = document.getElementById(ctrlIds.runTimeSecsId);
+        var holderEstimateCaloriesBurnedToggle = document.getElementById(ctrlIds.holderEstimateCaloriesBurnedToggleId); 
+        var toggleEstimateCaloriesBurned = new ctrls.OnOffControl(holderEstimateCaloriesBurnedToggle, null, "Estimate", -1);
+
+        var caloriesBurned = document.getElementById(ctrlIds.caloriesBurnedId);
         var done = document.getElementById(ctrlIds.doneId);
         var cancel = document.getElementById(ctrlIds.cancelId);
         if (done)
             done.addEventListener('click', OnEditDone, false); 
         if (cancel)
             cancel.addEventListener('click', OnEditCancel, false);
+
+        date.addEventListener('change', function(event){ 
+            itemEditor.changeDateHandler();
+        }, false);
+
+        time.addEventListener('change', function(event){ 
+            itemEditor.changeTimeHandler(); 
+        }, false);
        
         distance.addEventListener('keydown', OnKeyDown, false);
-        distance.addEventListener('change', SpeedChangedHandler, false); 
+        distance.addEventListener('change', DistanceChangedHandler, false); 
         runTimeMins.addEventListener('keydown', OnKeyDown, false);
-        runTimeMins.addEventListener('change', SpeedChangedHandler, false); 
+        runTimeMins.addEventListener('change', RunTimeChangedHandler, false); 
         runTimeSecs.addEventListener('keydown', OnKeyDown, false);
-        runTimeSecs.addEventListener('change', SpeedChangedHandler, false); 
+        runTimeSecs.addEventListener('change', RunTimeChangedHandler, false);  
+        
+        caloriesBurned.addEventListener('keydown', OnKeyDown, false);
+        caloriesBurned.addEventListener('change', CaloriesBurnedChangedHandler, false);
+        
         distance.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeMins.addEventListener('focus', SelectNumberOnFocus, false);
         runTimeSecs.addEventListener('focus', SelectNumberOnFocus, false);
+
+        caloriesBurned.addEventListener('focus', SelectNumberOnFocus, false); 
+
+        toggleEstimateDistance.onChanged = function(nState) {
+            itemEditor.toggleEstimatedDistanceHandler(nState);
+        };
+
+        toggleEstimateRunTime.onChanged = function(nState) {
+            itemEditor.toggleEstimatedRunTimeHandler(nState);
+        }; 
+
+        toggleEstimateCaloriesBurned.onChanged = function(nState) { 
+            itemEditor.toggleEstimateCaloriesBurnedHandler(nState);
+        };
 
         // Helper object for editing a stats item.
         var itemEditor = new StatsItemEditor(); 
@@ -8840,7 +9725,8 @@ Are you sure you want to delete the maps?";
                                       ['edit_stats_item','Edit Stats Item'],   // 2
                                       ['delete_selected','Delete Selected'],   // 3
                                       ['clear_selected', 'Clear Selected'],    // 4
-                                     ]; 
+                                      ['sync_server', 'Sync w/ Server'],       // 5 
+                                    ]; 
         menuStatsHistory.fill(menuStatsHistoryValues);
 
         // Ref to divs for month and year in header.
@@ -8852,6 +9738,55 @@ Are you sure you want to delete the maps?";
         // Call back handler for selection in menuStatsHistory.
         var metricsReport = null; 
         menuStatsHistory.onListElClicked = function(dataValue) {
+            // Helper that checks if user is signed in. 
+            // Arg:
+            //  sNotSignedInMsg: string. status msg shown if user is not signed in.
+            // Returns: boolean. true if signed.
+            function IsUserSignedIn(sNotSignedInMsg) { 
+                var bSignedIn = view.getOwnerId().length > 0;
+                if (!bSignedIn) {
+                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in> Facebook.";
+                    view.ShowStatus(sMsg);
+                }
+                return bSignedIn;
+            }
+
+            
+            // Helper that gets list of item descriptions.
+            // Arg:
+            //  arId: array of unique html id of selected data items.
+            // Returns: array of string. Each element is a description of the data itsm.
+            function GetItemDescrList(arId) { 
+                let itemData;
+                let arDescr = [];
+                let sDescr;
+                let date;
+                let sDate, sValue;
+                for (let i=0; i < arId.length; i++) {
+                    itemData = that.getItemData(arId[i]);
+                    date = new Date(itemData.nTimeStamp);
+                    sDate = "{0}, ".format(date.toLocaleDateString('en-US', {year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short', hour12: true, hour: '2-digit', minute: '2-digit' })); 
+                    sValue = " {0}".format(lc.to(itemData.mDistance));
+                    sDescr = sDate + sValue;
+                    arDescr.push(sDescr);
+                }
+                return arDescr;
+            }
+
+
+            // Helper to form a confirmation msg for deleting a list of items.
+            // Arg:
+            //  arId: array of unique html id of selected data items.
+            // Returns: string. Confirmation msg describing list of items to delete.
+            function GetConfirmDeleteListMsg(arId) { 
+                let sMsg = 'OK to delete these selected items?\n';
+                let arDescr = GetItemDescrList(arId);
+                for (let i=0; i < arDescr.length; i++) {
+                    sMsg += '{0}\n'.format(arDescr[i]);
+                }
+                return sMsg;
+            }
+
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 if (metricsReport)          
@@ -8862,40 +9797,97 @@ Are you sure you want to delete the maps?";
                 // Set metrics report to fill screen.
                 metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
-                itemEditor.bEditing = false; 
-                itemEditor.setTitle("Add a New Record Stats Item"); 
-                let itemData = itemEditor.newItemData();
-                itemData.nTimeStamp = Date.now();
-                itemEditor.setEditCtrls(itemData);
-                ShowRecordStatsEditDiv(true); 
-            } else if (dataValue === 'edit_stats_item') { 
-                let arId = Object.keys(itemsSelected);
-                if (arId.length === 1) {
-                    itemEditor.bEditing = true;
-                    itemEditor.setTitle("Edit a Record Stats Item"); 
-                    let itemData = that.getItemData(arId[0]);
+                if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { 
+                    itemEditor.bEditing = false; 
+                    itemEditor.setTitle("Add a New Record Stats Item"); 
+                    let itemData = itemEditor.newItemData();
+                    itemData.nTimeStamp = Date.now();
+                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
+                    itemEditor.setEstimateToggleCtrls(); 
                     itemEditor.setEditCtrls(itemData);
-                    ShowRecordStatsEditDiv(true);
-                } else {
-                    AlertMsg('Select only one item to edit.');
+                    ShowRecordStatsEditDiv(true); 
+                } 
+            } else if (dataValue === 'edit_stats_item') { 
+                if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { 
+                    let arId = Object.keys(itemsSelected);
+                    if (arId.length === 1) {
+                        itemEditor.bEditing = true;
+                        itemEditor.setTitle("Edit a Record Stats Item"); 
+                        let itemData = that.getItemData(arId[0]);
+                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
+                        itemEditor.setEstimateToggleCtrls();
+                        itemEditor.setEditCtrls(itemData);
+                        ShowRecordStatsEditDiv(true);
+                    } else {
+                        AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
+                    }
                 }
-
             } else if (dataValue === 'delete_selected') {
-                ConfirmYesNo("OK to delete all the selected items from local storage?",
-                    function(bConfirm){
-                        if (bConfirm) {
-                            view.onDeleteRecordStats(itemsSelected); 
-                            // Update the stats metrics 
-                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                            // Remove selected items from list displayed.
-                            DeleteSelections();
-                            that.showMonthDate(); 
-                        }
-                    }); 
+                if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { 
+                    // Prompt user if no item is selected.
+                    let arId = Object.keys(itemsSelected);  
+                    if (arId.length > 0) {  
+                        ConfirmYesNo(GetConfirmDeleteListMsg(arId),
+                            function(bConfirm) {
+                                if (bConfirm) {
+                                    // Delete the items at server first.
+                                    // Iff deletion at server is successful, then delete locally.
+                                    // Delete the old item at server first.
+                                    var arUploadDelete = GetServerDeleteSelections();
+                                    var recordStatsXfr = view.onGetRecordStatsXfr();  
+                                    var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
+                                        if (bOk) {
+                                            view.onDeleteRecordStats(itemsSelected); 
+                                            // Update the stats metrics 
+                                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                            // Remove selected items from list displayed.
+                                            DeleteSelections();
+                                            that.showMonthDate(); 
+                                            var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
+                                            view.ShowStatus(sMsg, false); 
+                                        } else {
+                                            var sMsg = "Failed to delete {0} stats item(s).".format(arUploadDelete.length);
+                                            view.ShowStatus(sMsg)
+                                        }
+                                    });
+                                    if (!bStarted) {
+                                        view.ShowStatus("Failed to start deleting stats item(s) at server.");
+                                    }
+                                }
+                            }); 
+                    } else { 
+                        let sMsg = "Select one or more items for deletion by touching the Date of an item.";
+                        AlertMsg(sMsg);
+                    } 
+                }
             } else if (dataValue === 'clear_selected') {
-                that.clearSelections(); 
+                // Prompt user if no item is selected.
+                let arId = Object.keys(itemsSelected);  
+                if (arId.length > 0) {  
+                    that.clearSelections(); 
+                } else {  
+                    AlertMsg("No item is selected.");
+                }
+            } else if (dataValue === 'sync_server') {  
+                if (IsUserSignedIn("You must sign-in to Sync Stats with Server.")) {
+                    let bStarted = statsSyncer.sync(function(bOk, nLocalStatsAdded, sStatus){
+                        view.ShowStatus(sStatus, !bOk);  
+                        if (nLocalStatsAdded > 0) {
+                            // Reload the history list since local stats have changed.
+                            that.reload();
+                        }
+                        recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                    });
+                    if (!bStarted) {
+                        // Some previous exchange with server has not completed. 
+                        // If exchange with server is hung, View > Sign-in/off > Sign-in > Reset Server Access may help.
+                        view.ShowStatus('Exchange with server is in progress. Wait and try again.', true);
+                    }    
+                }
             }
         };
+
+        var statsSyncer = new StatsSyncer(); // Object to sync stats with server. 
 
         // New ScrollComplete object. See ScrollableListBase in ws.wigo.cordovacontrols.js.
         var scrollComplete = this.newOnScrollComplete(stats.listDiv); 
@@ -8949,13 +9941,6 @@ Are you sure you want to delete the maps?";
             } else {
                 recBestDistance = recStats;
             }
-            // Check for personal best distance in last 30 days.
-            if (recBestMonthlyDistance) {
-                if (msNow - recStats.nTimeStamp < msMonth && recBestMonthlyDistance.mDistance < recStats.mDistance)
-                    recBestMonthlyDistance = recStats;
-            } else {
-                recBestMonthlyDistance = recStats;
-            }
 
             // Check for personal best speed.
             let speed = recStats.msRunTime > 0 ? recStats.mDistance / (recStats.msRunTime/1000) : 0;
@@ -8970,18 +9955,7 @@ Are you sure you want to delete the maps?";
                     bestSpeed = speed;
                 }
             }
-            // Check for personal best speed in last 30 days.
-            if (recBestMonthlySpeed) {
-                if (msNow - recStats.nTimeStamp < msMonth && bestMonthlySpeed < speed) {
-                    recBestMonthlySpeed = recStats;
-                    bestMonthlySpeed = speed;
-                }
-            } else {
-                if (speed > 0) {
-                    recBestMonthlySpeed = recStats;
-                    bestMonthlySpeed = speed;
-                }
-            }
+
             // Check for previous stats obj wrt to current (newest) recStats.
             if (recCurrent) {
                 if (recStats.nTimeStamp >= recCurrent.nTimeStamp) { // Note: equal is for case when resuming recording.
@@ -9171,7 +10145,7 @@ Are you sure you want to delete the maps?";
         // ** Private Members.
         // Object for element of MonthlyDayAry.
         // Construct Arg:
-        //  normalizedDate: Date object with hours, minutes, seconds, milliseconds of 12, 0, 0, 0.
+        //  normalizedDate: Date object with UTC value with hours, minutes, seconds, milliseconds of 12, 0, 0, 0.
         function MonthDayEl(normalizedDate) {
             this.nDate = normalizedDate.getTime(); // number for Data value for the date at 12:00 (noon).
             this.mDistance = 0; // number. distance in meters.
@@ -9184,20 +10158,31 @@ Are you sure you want to delete the maps?";
             // Fills this array from an array of stats objects.
             // Arg:
             //  arRecStat: array of wigo_ws_GeoTrailRecordStats objs used to fill this array.
+            // Returns: nothing
+            // Sets [out]: var recBestMonthlyDistance, var recBestMonthlySpeed, var bestMonthlySpeed. 
             this.fill = function(arRecStats) {
-                // Helper. Normalizes date for a day, which is useful for finding element of
+                // Helper. Normalizes date for a day using UTC, which is useful for finding element of
                 // arMonthDay by .nDate.
                 // Sets date components hours, minutes, seconds, milliseconds to 12,0,0,0.
                 // Arg:
-                //  date: Date object that is normalized.
+                //  date: ref to Date object that is normalized. data is NOT changed.
+                // Returns Date. the normalized date. 
                 function ClearHrMinSec(date) {
-                    date.setHours(12, 0, 0, 0); 
+                    //No date.setHours(12, 0, 0, 0); // Does not work because of daylight saving time
+                    //because a date one day before daylight saving time change and date the day after are NOT 24 hours apart.
+                    
+                    var normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0));
+                    // Must use UTC so that the day before daylight saving time change and the day after have the millisecond time difference of of one day.:
+                    // For example, Date before: 2018-03-10_04:00:00:00 -TZ 8 PST vs Date after: 2018-03-11_12:05:00:00:00 -TZ 7 PDT.
+                    // The getTime() value is one day difference, (24*12*60*1000) in milliseconds. 
+                    // The UTC time is 2018-03-10_12:00:00:00 vs 2018-03-11_12:00:00:00
+                    return normalizedDate;
                 }
                 
                 // Pads arMonthDay array by pushing new elements that are cleared
                 // except each has a previous date.
                 // Arg:
-                //  toDate: Date obj with in normalized hour, minute, second, millisecond components.
+                //  toDate: Date obj with normalized hour, minute, second, millisecond components.
                 //          Pads up to but not included toDate.
                 function PadTo(toDate) {
                     var monthDayEl;
@@ -9206,11 +10191,11 @@ Are you sure you want to delete the maps?";
                     
                     var msOneDay = 24*60*60*1000; // fime for one day in milliseconds.
                     var nFromDate = arMonthDay[arMonthDay.length-1].nDate;
-                    var nToDate = toDate.getTime();
+                    var nToDate = toDate.getTime();  
                     for (var i = arMonthDay.length; i < maxSizeOfArMonthDay; i++) {
                         nFromDate -= msOneDay;
-                        if (nFromDate === nToDate) {
-                            // quit when fromDate equals toDate.
+                        if (nFromDate <= nToDate) { 
+                            // quit when fromDate equals toDate. < should not happen, but check for safety.
                             break;
                         } else {
                             // push a pad element, which indicates no walking activity.
@@ -9222,7 +10207,7 @@ Are you sure you want to delete the maps?";
                 
                 arMonthDay = []; 
                 var now = new Date(Date.now());
-                ClearHrMinSec(now);
+                now = ClearHrMinSec(now);
                 var monthDayEl = new MonthDayEl(now);
 
                 if (arRecStats.length < 1) {
@@ -9233,7 +10218,7 @@ Are you sure you want to delete the maps?";
                 }
 
                 var statsDate = new Date(arRecStats[arRecStats.length-1].nTimeStamp);
-                ClearHrMinSec(statsDate);
+                statsDate = ClearHrMinSec(statsDate);
 
                 if (monthDayEl.nDate > statsDate.getTime()) {
                     // Current date more recent than last stats date.
@@ -9245,14 +10230,36 @@ Are you sure you want to delete the maps?";
                 // Loop thru arRecStats in descending order from most recent to least recent.
                 var stats;
                 var prevStatsDate = null;
+                var speed; 
+                recBestMonthlyDistance = null; 
+                recBestMonthlySpeed = null;    
+                bestMonthlySpeed = 0;   
                 for (var i=arRecStats.length-1; i >= 0; i--) {
 
                     if (arMonthDay.length >= maxSizeOfArMonthDay)
                         break; // Quit because arMonthDay if full.
 
                     stats = arRecStats[i];
-                    statsDate = new Date(stats.nTimeStamp);
-                    ClearHrMinSec(statsDate);
+                    
+                    // Check for best distance and speed within a month for each individual run
+                    // (not for sum of runs on same day).
+                    // Check for best distance.
+                    if (!recBestMonthlyDistance)
+                        recBestMonthlyDistance = stats;
+                    else if (stats.mDistance > recBestMonthlyDistance.mDistance)
+                        recBestMonthlyDistance = stats;
+                    // Check for best speed.
+                    speed = stats.msRunTime > 0 ? stats.mDistance / (stats.msRunTime/1000) : 0;
+                    if (!recBestMonthlySpeed) {
+                        recBestMonthlySpeed = stats;
+                        bestMonthlySpeed = speed;
+                    } else if (speed > bestMonthlySpeed) {
+                        recBestMonthlySpeed = stats;
+                        bestMonthlySpeed = speed;
+                    }
+
+                    statsDate = new Date(stats.nTimeStamp); 
+                    statsDate = ClearHrMinSec(statsDate); 
 
                     // Check if prevStatsDate is same as ith monthDay date.
                     if (prevStatsDate ) {
@@ -9345,7 +10352,7 @@ Are you sure you want to delete the maps?";
     fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 
     // Object for network (internet) connection state.
-    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails.isiPhone());
+    var networkInfo = wigo_ws_NewNetworkInformation(window.app.deviceDetails);
 
     // Object for navigating back from a link that has been followed in an HTML description. 
     // Construct Arg:
@@ -9413,7 +10420,7 @@ Are you sure you want to delete the maps?";
 function wigo_ws_Controller() {
     var that = this;
     var view = new wigo_ws_View();
-    var model = new wigo_ws_Model();
+    var model = new wigo_ws_Model(window.app.deviceDetails);
 
     // ** Handlers for events fired by view.
 
@@ -9798,6 +10805,12 @@ function wigo_ws_Controller() {
         model.clearRecordStats();
     };
 
+    // Gets accessor to RecordStatsXfr info and residue.
+    // Returns: ref to RecordStatsXfr obj.
+    view.onGetRecordStatsXfr = function() { 
+        return model.getRecordStatsXfr();
+    };
+
     // Saves app version to localStorage.
     // Arg:
     //  version: wigo_ws.GeoTrailVersion object to save to localStorage.
@@ -9816,13 +10829,17 @@ function wigo_ws_Controller() {
     };
 
     view.onAuthenticationCompleted = function (result) {
+
         // result = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus}
         var eStatus = view.eAuthStatus();
         if (result.status === eStatus.Ok) {
-            // Show success, refine later.
+            // Show success.
             view.ShowStatus("Successfully authenticated by OAuth.", false);
             // Update database for authenticated owner.
-            model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
+            var bOk = model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
+                var recordStatsXfr = model.getRecordStatsXfr();
+                var sPreviousOwnerId = recordStatsXfr.getPreviousOwnerId();
+                var bSameUser = result.userID === sPreviousOwnerId; 
                 // Save user info to localStorage.
                 model.setOwnerId(result.userID);
                 model.setOwnerName(result.userName);
@@ -9830,22 +10847,140 @@ function wigo_ws_Controller() {
                 view.setOwnerName(result.userName);
                 view.setOwnerId(result.userID);
                 if (result.status === model.eAuthStatus().Ok) {
-                    view.ShowStatus("User successfully logged in.", false);
-                    var nMode = view.curMode();
-                    if (nMode === view.eMode.online_view) {
-                        // Check if logon is due to recording a trail, in which case 
-                        // do not call view.onGetPaths(..) because the download from server
-                        // takes time and the upload for the recorded trail fails if another transfer
-                        // request is in already in progress. Always calling view.onGetPaths() works
-                        // fairly well, but can be confusing to user if it causes uploading a new trail to fail,
-                        // in which case the user would need to retry uploading the trail.
-                        if (!view.IsRecordingSignInActive())   
-                            view.onGetPaths(view.curMode(), view.getOwnerId());
-                    } else if (nMode === view.eMode.online_edit ||
-                               nMode === view.eMode.online_define) {
-                        // Fire SignedIn event.
-                        var fsm = view.fsmEdit();
-                        fsm.DoEditTransition(fsm.eventEdit.SignedIn);
+                    // Upload record stats residue if need be for user that signed in and download record stats.
+                    // Helper to complete successful athentication after download Record Stats items for new user.
+                    function DoForAuthOk() { 
+                        view.AppendStatus("User successfully logged in.", false);
+                        var nMode = view.curMode();
+                        if (nMode === view.eMode.online_view) {
+                            // Check if logon is due to recording a trail, in which case 
+                            // do not call view.onGetPaths(..) because the download from server
+                            // takes time and the upload for the recorded trail fails if another transfer
+                            // request is in already in progress. Always calling view.onGetPaths() works
+                            // fairly well, but can be confusing to user if it causes uploading a new trail to fail,
+                            // in which case the user would need to retry uploading the trail.
+                            if (!view.IsRecordingSignInActive())   
+                                view.onGetPaths(view.curMode(), view.getOwnerId());
+                        } else if (nMode === view.eMode.online_edit ||
+                                   nMode === view.eMode.online_define) {
+                            // Fire SignedIn event.
+                            var fsm = view.fsmEdit();
+                            fsm.DoEditTransition(fsm.eventEdit.SignedIn);
+                        }
+    
+                    }
+
+                    // Helper to upload residue for result.sOwnerId.
+                    // Arg:
+                    //  onDone: Async callback after upload is completed. Signature:
+                    //              Arg:
+                    //                  bOk: boolean: true for successful upload of residue.
+                    //              Return: none.
+                    //          If there is no residue to upload, callback is immediate  with bOk true.
+                    // Synchronous Return: boolean. true for ok. false for failed to start upload.
+                    function DoUploadResidue(onDone) {
+                        // Upload record stats residue if there is a residue then download record stats.
+                        var bOk = true;
+                        var arResidueRecStats = recordStatsXfr.getResideAry(result.userID);
+                        if (arResidueRecStats.length > 0) {
+                            bOk = model.uploadRecordStatsList(arResidueRecStats, function(bOk, sStatus) {
+                                if (bOk) {
+                                    recordStatsXfr.clearResidue(result.userID); 
+                                } else { 
+                                    view.AppendStatus("Failed to upload residual Record Stats items: " + sStatus);
+                                }
+                                onDone(bOk);
+                            });
+                        } else {
+                            onDone(true);
+                        }
+                        return bOk;
+                    }
+
+                    // Helper to download record stats for user.
+                    // Note: Only call afer a successful upload.
+                    function DoDownloadRecStats() {
+                        var bOk = model.downloadRecordStatsList(function(bOk, arRecStats, sStatus){
+                            if (bOk) {
+                                // Know that any residue for new user has been uploaded.
+                                // Thus, the first time a user signs in with some record stats, those stats have
+                                // been uploaded as a residue. If the download for new user is empty, the new
+                                // user has no record stats.
+                                
+                                // Set Record Stats History data in localStorage for the new user.
+                                model.setRecordStatsList(arRecStats);
+                                // Set the most recent upload timestamp for updating a new record stats item at server.
+                                var nUploadTimeStamp = arRecStats.length > 0 ? arRecStats[arRecStats.length-1].nTimeStamp : 0;
+                                recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
+                                // Clear the RecordStatsHistory ui.
+                                view.clearRecordStatsHistory(); 
+                                // If view is Stats History, reload the view.
+                                if (view.curMode() === view.eMode.record_stats_view) {
+                                    view.setModeUI(view.eMode.record_stats_view);
+                                } 
+                            } else {
+                                view.AppendStatus("Failed to download Record Stats items: " + sStatus);
+                                DoXfrErrorCleanup();
+                            }
+                            // Complete the successful authentication.
+                            DoForAuthOk();
+                        });
+                        // Check syncrhonous return. Expect to always be ok.
+                        if (!bOk) { 
+                            DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
+                            DoForAuthOk(); 
+                        }
+                    }
+
+                    // Helper to clean up after an upload or download error.
+                    // Resets the local stats history data if for a different user.
+                    // Clears the RecordStatsHistory ui list.
+                    function DoXfrErrorCleanup() { 
+                        // If sPreviousOwnerId is empty, the local record stats are for no user signed in.
+                        // In this case leave the them as is, otherwise reset for the new user.
+                        if (sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId) {
+                            // The local record stats are for a different user.
+                            // Clear the list of record stats in memory and in localStorage.
+                            model.setRecordStatsList([]); 
+                            recordStatsXfr.setUploadTimeStamp(0);
+                        }
+                        // Clear the RecordStatsHistory ui so it will be loaded again when Stats History View is selected.
+                        view.clearRecordStatsHistory();   
+                    }
+
+                    view.ClearStatus();
+                    // Append existing record stats that have not been uploade (if any) to residie of new user.
+                    var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
+                    recordStatsXfr.appendResidueAry(result.userID, arUploadRecStats); 
+                    if (bSameUser) {
+                        // Upload residue (if any) of new user.
+                        DoUploadResidue(function(bOk){
+                            // For an upload error, do cleanup.
+                            if (!bOk) {
+                                DoXfrErrorCleanup();
+                            }
+                            // Complete the successful authentication regardless.
+                            DoForAuthOk();
+                        });
+                    } else {
+                        // User has changed so need to get the record stats history for the new user.
+                        // For new user upload record stats residue (if any) then download record stats.
+                        var bOk = DoUploadResidue(function(bOk) {
+                            // Download stats for new user.
+                            if (bOk) {
+                                DoDownloadRecStats();
+                            } else {
+                                // Clean up after a residue upload error.
+                                DoXfrErrorCleanup();
+                                // Complete successful authentication regardless.
+                                DoForAuthOk();
+                            }  
+                        });
+                        // Check syncrhonous return. Expect to always be ok.
+                        if (!bOk) { 
+                            DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
+                            DoForAuthOk(); 
+                        }
                     }
                 } else {
                     // var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
@@ -9858,6 +10993,11 @@ function wigo_ws_Controller() {
                     view.ShowStatus(sMsg);
                 }
             });
+            // Check synchronous return. Expect to always be ok. 
+            if (!bOk) { 
+                // Failed to start transfer with server. 
+                view.ShowStatus("Sign-in failed. Check network access and try again."); 
+            }
         } else if (result.status === eStatus.Logout) {
             // Note: result not meaningful on logout completed because 
             //       result.userID, result.accessToken have been set to empty.
@@ -9916,14 +11056,14 @@ function wigo_ws_Controller() {
     var gpxArray = null; // Array of wigo_ws_Gpx object obtained from model.
     var gpxOfflineArray = null; // Array of wigo_ws_GeoPathMap.OfflineParams objects obtained from model.
 
-    // Converts record path stats to data to save to save to local storage.
+    // Converts record path stats to data to save to local storage.
     // Returns: wigo_ws_GeoTrailRecordStats object. 
     //  Args: 
     //    stats: literal obj. stats from recordPath.getStats() member of wigo_ws_GeoPathMap object.
     // Note: 
     // literal obj for stats:
     //   {bOk: boolean, dTotal:number,  msRecordTime: number, msElapsedTime: number, 
-    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}; 
+    //    tStart: Date | null, kJoules: number, calories: number, nExcessiveV: number, calories2: number, calories3: number}
     function ConvertRecordStatsToData(stats) {
         var data = new wigo_ws_GeoTrailRecordStats();
         data.nTimeStamp = stats.tStart ? stats.tStart.getTime() : 0;
@@ -9931,7 +11071,6 @@ function wigo_ws_Controller() {
         data.mDistance = stats.dTotal;
         data.caloriesKinetic = stats.calories;
         data.caloriesBurnedCalc = stats.calories3;
-        // data.caloriesBurnedActual is not set. Value is default set by constructor.
         return data;
     }
 

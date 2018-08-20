@@ -1,5 +1,5 @@
 ﻿/* 
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015, 2016, 2018 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -90,6 +90,73 @@ function wigo_ws_GeoPathsRESTfulApi() {
         return bOk;
     };
 
+    //20180225 Add members for Record Stats.
+    // Downloads list of record stats items from server.
+    // Args
+    //  sOwnerId: string for owner id.
+    //  ah: string for access handler for verification of owner.
+    //  OnDone: Asynchronous completion handler. Signature:
+    //      bOk: successful or not.
+    //      arStats [out]: ref to array of wigo_ws_GeoTrailRecordStats objects received.
+    //      sStatus: status message
+    //      Return: void
+    //  Synchronous return: boolean. true indicates download successfully started.
+    this.DownloadRecordStatsList = function (sOwnerId, ah, onDone) {
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onDownloadRecordStatsList = onDone;
+        else
+            onDownloadRecordStatsList = function (bOk, arStats, sStatus) { };
+        var bOk = base.Get(eState.DownloadRecordStatsList, sDownloadRecordStatsListUri(sOwnerId, ah));
+        return bOk;
+    };
+
+    // Uploads to web server a list of record stats items.
+    // An item is replaced if it already exists at server, or is 
+    // created if it does not exist.
+    // Arg:
+    //  sOwnerId: string for owner id.
+    //  ah: string for access handler for verification of owner.
+    //  arStats: ref to array of wigo_ws_GeoTrailRecordStats objs. the list to upload.
+    //  onDone: Asynchronous completion handler. Signature:
+    //      bOk: boolean: true for sucessful upload.
+    //      sStatus: string: description for the upload result.
+    //      Returns: void
+    //  Synchronous return: boolean. true indicates download successfully started.
+    // Remarks: If a database record already exists and is exactly the same as the arStats element,
+    // the database is not written, only read.
+    // If the arStats element does not exist in the database, it is inserted.
+    this.UploadRecordStatsList = function (sOwnerId, ah, arStats, onDone) {  
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onUploadRecordStatsList = onDone;
+        else
+            onUploadRecordStatsList = function (bOk, sStatus) { };
+        var bOk = base.Post(eState.UploadRecordStatsList, sUploadRecordStatsListUri(sOwnerId, ah), arStats);
+        return bOk;
+    };
+
+    // Deletes at web server a list of record stats items.
+    // Arg:
+    //  sOwnerId: string for owner id.
+    //  ah: string for access handler for verification of owner.
+    //  arTimeStamp: ref to array of wigo_ws_GeoTrailTimeStamp objs. the list of timestamps identifying the record stats to delete.
+    //  onDone: Asynchronous completion handler. Signature:
+    //      bOk: boolean: true for sucessful deletion.
+    //      sStatus: string: description for the deletion result.
+    //      Returns: void
+    //  Synchronous return: boolean. true indicates delete successfully started.
+    // Remarks: It is not an error if a database record does not exist for an arStats element.
+    this.DeleteRecordStatsList = function (sOwnerId, ah, arTimeStamp, onDone) { 
+        // Save async completion handler.
+        if (typeof (onDone) === 'function')
+            onDeleteRecordStatsList = onDone;
+        else
+            onDeleteRecordStatsList = function (bOk, sStatus) { };
+        var bOk = base.Post(eState.DeleteRecordStatsList, sDeleteRecordStatsListUri(sOwnerId, ah), arTimeStamp);
+        return bOk;
+    }
+
     // Authenticates user with the server.
     // Args 
     //  authData, json {accessToken, userID, userName}
@@ -132,6 +199,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
             onAuthenticate = function (status) { };
         // Post ajax to geopaths server.
         var bOk = base.Post(eState.Authenticate, sAuthenticateUri(), authData);
+        return bOk; 
     };
 
     // Logs out user with the server (revokes authentication).
@@ -141,6 +209,8 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  onDone: callback handler for logout completed.
     //  Handler signature:
     //      boolean indicating success.
+    // Synchronous Return: boolean for successful post to server.
+    // Note: OnDone handler called for asynchronous completion. 
     this.Logout = function (logoutData, onDone) {
         // Save async completion handler.
         if (typeof (onDone) === 'function')
@@ -149,6 +219,7 @@ function wigo_ws_GeoPathsRESTfulApi() {
             onLogout = function (bOk) { };
         // Post ajax to geopaths server.
         var bOk = base.Post(eState.Logout, sLogoutUri(), logoutData, onDone);
+        return bOk; 
     };
 
     // Resets flag that indicates http request (get or post) is still in progress.
@@ -178,7 +249,8 @@ function wigo_ws_GeoPathsRESTfulApi() {
     var eDuplicate = { NotDup: 0, Match: 1, Renamed: 2, Dup: 3, Error: 4 };
 
     // Enumeration for api transfer state. 
-    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, GpxDelete: 5, GpxGetListByLatLon: 6};
+    var eState = { Initial: 0, GpxPut: 1, GpxGetList: 2, Authenticate: 3, Logout: 4, GpxDelete: 5, GpxGetListByLatLon: 6, 
+                   DownloadRecordStatsList: 7, UploadRecordStatsList: 8, DeleteRecordStatsList: 9}; 
 
     // Enumeration for login status return by OAuth server.
     // Note: same values as for FacebookAuthentication.eAuthResult (keep synced).
@@ -289,6 +361,34 @@ function wigo_ws_GeoPathsRESTfulApi() {
         return s;
     }
 
+    //20180227 addition for record stats
+    // Returns relative URI for UploadRecordStatsList api.
+    // Args:
+    //  sOwnerId: string. owner id for stats.
+    //  ah: string: access handle for server authentication verification.
+    function sUploadRecordStatsListUri(sOwnerId, ah) {
+        var s = "uploadrecordstatslist/{0}?ah={1}".format(sOwnerId, ah);
+        return s;
+    }
+
+    // Returns relative URI for DeleteRecordStatsList api.
+    // Args:
+    //  sOwnerId: string. owner id for stats.
+    //  ah: string: access handle for server authentication verification.
+    function sDeleteRecordStatsListUri(sOwnerId, ah) {  
+        var s = "deleterecordstatslist/{0}?ah={1}".format(sOwnerId, ah);
+        return s;
+    }
+
+    // Returns relative URI for DownloadRecordStatsList api.
+    // Args:
+    //  sOwnerId: string. owner id for stats.
+    //  ah: string: access handle for server authentication verification.
+    function sDownloadRecordStatsListUri(sOwnerId, ah) {
+        var s = "downloadrecordstatslist/{0}?ah={1}".format(sOwnerId, ah);
+        return s;
+    }
+
     // ** Async completion event handlers
     // Note: Initialized to empty handlers.
     //       Caller of api method (GpxPut, GpxGetList, etc.) provides the 
@@ -330,6 +430,28 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  Returns nothing.
     var onGpxGetListByLatLon = function (bOk, gpxList, sStatus) { };
 
+    // DownloadRecordStatsList has completed asynchronously.
+    // Handler Signature:
+    //      bOk: successful or not.
+    //      arStats [out]: ref to array of wigo_ws_GeoTrailRecordStats objects received.
+    //      sStatus: status message.
+    //      Return: void
+    var onDownloadRecordStatsList = function (bOk, arStats, sStatus) { }; 
+
+    // UploadRecordStatsList has completed asynchronously.
+    // Handler Signature:
+    //      bOk: boolean: true for sucessful upload.
+    //      sStatus: string: description for the upload result.
+    //      Returns: void
+    var onUploadRecordStatsList = function (bOk, sStatus) { };
+
+    // DeleteRecordStatsList has completed asynchronously.
+    // Handler Signature:
+    //      bOk: boolean: true for sucessful delete at server.
+    //      sStatus: string: description for the delete result.
+    //      Returns: void
+    var onDeleteRecordStatsList = function (bOk, sStatus) { };
+
     // Authentication has completed.
     // Handler signature:
     //  status: ref to authentication status received.
@@ -349,15 +471,17 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //var base = new wigo_ws_Ajax("http://localhost:54545/Service.svc/"); // Local debug (works)
     // var base = new wigo_ws_Ajax("http://localhost:63651/Service.svc/"); // Local debug (works)
     //var base = new wigo_ws_Ajax("https://localhost:44301/Service.svc/"); // Local debug https not working!
-    // var base = new wigo_ws_Ajax("http://www.wigo.ws/geopaths/Service.svc/"); // Remote host http protocol
-    var base = new wigo_ws_Ajax("https://www.wigo.ws/geopathsx/Service.svc/"); // Remote host https protocol
-    //20150808 I cannot get the ajax requests to work locally with the IIS Express Server.
+    //20150808!!!! I cannot get the ajax requests to work locally with the IIS Express Server.
     //         IIS Express does work locally to get a page (https://localhost:44301/gpxpaths.html), 
     //         but the ajaxs requests for this api fail if https is used for the apis.
     //         I think the problem is a configuration problem with IIS Express,
     //         and that https for the ajax requests may work properly 
     //         at the (GoDaddy) remote host. For now, not using https for these apis.
-
+    var base = new wigo_ws_Ajax("https://www.wigo.ws/geopathsx/Service.svc/"); // Remote host (Would like to try https)
+    var bDebugging = typeof (bLocalDebug) === 'boolean' && bLocalDebug;   
+    console.log("js/GeoPathsApi2.js bDebugging = " + bDebugging); 
+    if (bDebugging) // If local debugging, use local IIS Express server. 
+        base = new wigo_ws_Ajax("http://localhost:51765/Service.svc/");  
     // Handler in base class to handle completion of ajax request.
     base.onRequestServed = function (nState, bOk, req) {
         var sStatus = "";
@@ -437,6 +561,40 @@ function wigo_ws_GeoPathsRESTfulApi() {
             case eState.Logout:
                 var sLogoutMsg = base.FormCompletionStatus(req);
                 onLogout(bOk, sLogoutMsg);
+                break;  
+            case eState.UploadRecordStatsList:  
+                if (bOk)
+                    sStatus = "UploadRecordStatsList succeeded."
+                else
+                    sStatus = base.FormCompletionStatus(req);
+                onUploadRecordStatsList(bOk, sStatus);
+                break;
+            case eState.DeleteRecordStatsList:  
+                if (bOk)
+                    sStatus = "DeleteRecordStatsList succeeded";
+                else
+                    sStatus = base.FormCompletionStatus(req);
+                onDeleteRecordStatsList(bOk, sStatus);
+                break;
+            case eState.DownloadRecordStatsList: 
+                var arStats;
+                if (bOk) {
+                    if (req && req.readyState == 4 && req.status === 200) {
+                        arStats = JSON.parse(req.responseText);
+                        sStatus = "DownloadRecordStatsList succeeded.";
+                    } else {
+                        arStats = [];
+                        sStatus = "Invalid response received for DownloadRecordStatsList."
+                    }
+                } else {
+                    sStatus = base.FormCompletionStatus(req);
+                    arStats = [];
+                    if (req && req.readyState == 4 && req.status === 403) {
+                        sStatus = "Authentication failed. Sign In again because authorization has probably expired.";
+                    }
+                }
+                onDownloadRecordStatsList(bOk, arStats, sStatus)
+                break;
         }
     };
 
@@ -769,5 +927,43 @@ wigo_ws_GpxPath.AttachFcns = function (me) {
     };
     // May want to attach Parse(xmlData) also, but not needed now.
 };
+
+// wigo_ws_GeoTrailRecordStats in Model.js is object exchanged with 
+// for stats for a recorded trail. 
+// JavaScript Object                    Server Object
+// wigo_ws_GeoTrailRecordStats          GeoTrailRecordStats
+// [] of wigo_ws_GeoTrailRecordStats    GeoTrailRecordStatsList
+
+// Object for exchanging with server statistics for a trail that has been recorded. 
+// Note: Also used by Model2.js to save to localStorage.
+function wigo_ws_GeoTrailRecordStats() {
+    this.nTimeStamp = 0; // integer. Time value of javascript Date object as an integer. Creation timesamp.
+    this.msRunTime = 0;  // number. Run time for the recorded path in milliseconds.
+    this.mDistance = 0;  // number. Distance of path in meters.
+    this.caloriesKinetic = 0;      // number. Kinetic engery in calories to move body mass along the path.
+    this.caloriesBurnedCalc = 0;   // number. Calories burned calculated by the GeoTrail app.
+    //20180215 this.caloriesBurnedActual = 0; // Removed. 
+}
+
+// Static function that copies one wigo_ws_GeoTrailRecordStats obj to another.
+// Args:
+//  to:   wigo_ws_GeoTrailRecordStats obj assigned to (the target).
+//  from: wigo_ws_GeoTrailRecordStats obj assigned from (the source).
+wigo_ws_GeoTrailRecordStats.Copy = function(to, from) {  
+    if (to instanceof wigo_ws_GeoTrailRecordStats && from instanceof wigo_ws_GeoTrailRecordStats) {
+        to.nTimeStamp = from.nTimeStamp; // integer. Time value of javascript Date object as an integer. Creation timesamp.
+        to.msRunTime = from.msRunTime;  // number. Run time for the recorded path in milliseconds.
+        to.mDistance = from.mDistance;  // number. Distance of path in meters.
+        to.caloriesKinetic = from.caloriesKinetic;      // number. Kinetic engery in calories to move body mass along the path.
+        to.caloriesBurnedCalc = from.caloriesBurnedCalc;   // number. Calories burned calculated by the GeoTrail app.
+    }
+}
+
+// Object for exchanging with server a timestamp.
+function wigo_ws_GeoTrailTimeStamp(nTimeStamp) {
+    this.nTimeStamp = 0; // integer for Date value in milliseconds.
+    if (typeof nTimeStamp === 'number')
+        this.nTimeStamp = nTimeStamp;
+}
 
 
