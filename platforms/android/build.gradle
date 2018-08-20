@@ -168,8 +168,8 @@ android {
             minSdkVersion cdvMinSdkVersion
         }
         applicationId 'ws.wigo.geotrail'
-        versionCode 101330
-        versionName '1.1.033'
+        versionCode 101340
+        versionName '1.1.034'
     }
     lintOptions {
         abortOnError false;
@@ -235,15 +235,17 @@ android {
     }
     buildToolsVersion '23.0.3'
     compileSdkVersion 'Google Inc.:Google APIs:23'
+    buildTypes {
+    }
 }
 
 dependencies {
     compile fileTree(include: '*.jar', dir: 'libs')
     // SUB-PROJECT DEPENDENCIES START
-    debugCompile project(path: "CordovaLib", configuration: "debug")
-    releaseCompile project(path: "CordovaLib", configuration: "release")
-    debugCompile project(path: "com.phonegap.plugins.facebookconnect:FacebookLib", configuration: "debug")
-    releaseCompile project(path: "com.phonegap.plugins.facebookconnect:FacebookLib", configuration: "release")
+    debugCompile project(path: 'CordovaLib', configuration: 'debug')
+    releaseCompile project(path: 'CordovaLib', configuration: 'release')
+    debugCompile project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib', configuration: 'debug')
+    releaseCompile project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib', configuration: 'release')
     // SUB-PROJECT DEPENDENCIES END
 }
 
