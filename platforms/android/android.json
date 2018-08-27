@@ -9,7 +9,7 @@
         "parents": {
           "/*": [
             {
-              "xml": "<feature name=\"WakeupPlugin\"><param name=\"android-package\" value=\"org.nypr.cordova.wakeupplugin.WakeupPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
+              "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
               "count": 1
             },
             {
@@ -37,42 +37,6 @@
               "count": 1
             },
             {
-              "xml": "<feature name=\"FileTransfer\"><param name=\"android-package\" value=\"org.apache.cordova.filetransfer.FileTransfer\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Geolocation\"><param name=\"android-package\" value=\"org.apache.cordova.geolocation.Geolocation\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Notification\"><param name=\"android-package\" value=\"org.apache.cordova.dialogs.Notification\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Vibration\"><param name=\"android-package\" value=\"org.apache.cordova.vibration.Vibration\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Whitelist\"><param name=\"android-package\" value=\"org.apache.cordova.whitelist.WhitelistPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"File\"><param name=\"android-package\" value=\"org.apache.cordova.file.FileUtils\" /><param name=\"onload\" value=\"true\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Compass\"><param name=\"android-package\" value=\"org.apache.cordova.deviceorientation.CompassListener\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"Pebble\"><param name=\"android-package\" value=\"com.jetboystudio.pebble.PebblePGPlugin\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"NetworkStatus\"><param name=\"android-package\" value=\"org.apache.cordova.networkinformation.NetworkManager\" /></feature>",
-              "count": 1
-            },
-            {
               "xml": "<feature name=\"Device\"><param name=\"android-package\" value=\"org.apache.cordova.device.Device\" /></feature>",
               "count": 1
             },
@@ -91,69 +55,41 @@
             {
               "xml": "<feature name=\"Accelerometer\"><param name=\"android-package\" value=\"org.apache.cordova.devicemotion.AccelListener\" /></feature>",
               "count": 1
-            }
-          ]
-        }
-      },
-      "AndroidManifest.xml": {
-        "parents": {
-          "/*": [
+            },
             {
-              "xml": "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />",
+              "xml": "<feature name=\"Compass\"><param name=\"android-package\" value=\"org.apache.cordova.deviceorientation.CompassListener\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
+              "xml": "<feature name=\"Notification\"><param name=\"android-package\" value=\"org.apache.cordova.dialogs.Notification\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+              "xml": "<feature name=\"File\"><param name=\"android-package\" value=\"org.apache.cordova.file.FileUtils\" /><param name=\"onload\" value=\"true\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
+              "xml": "<feature name=\"FileTransfer\"><param name=\"android-package\" value=\"org.apache.cordova.filetransfer.FileTransfer\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+              "xml": "<feature name=\"Geolocation\"><param name=\"android-package\" value=\"org.apache.cordova.geolocation.Geolocation\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />",
-              "count": 1
-            }
-          ],
-          "/manifest": [
-            {
-              "xml": "<uses-permission android:name=\"android.permission.VIBRATE\" />",
+              "xml": "<feature name=\"NetworkStatus\"><param name=\"android-package\" value=\"org.apache.cordova.networkinformation.NetworkManager\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
-              "count": 1
-            }
-          ],
-          "/manifest/application": [
-            {
-              "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupReceiver\" />",
+              "xml": "<feature name=\"Vibration\"><param name=\"android-package\" value=\"org.apache.cordova.vibration.Vibration\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupBootReceiver\"><intent-filter><action android:name=\"android.intent.action.BOOT_COMPLETED\" /></intent-filter></receiver>",
+              "xml": "<feature name=\"Whitelist\"><param name=\"android-package\" value=\"org.apache.cordova.whitelist.WhitelistPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
               "count": 1
             },
             {
-              "xml": "<service android:name=\"de.appplant.cordova.plugin.background.ForegroundService\" />",
-              "count": 1
-            }
-          ],
-          "application": [
-            {
-              "xml": "<meta-data android:name=\"com.facebook.sdk.ApplicationId\" android:value=\"@string/fb_app_id\" />",
-              "count": 1
-            },
-            {
-              "xml": "<activity android:label=\"@string/fb_app_name\" android:name=\"com.facebook.LoginActivity\" android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />",
+              "xml": "<feature name=\"WakeupPlugin\"><param name=\"android-package\" value=\"org.nypr.cordova.wakeupplugin.WakeupPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
               "count": 1
             }
           ]
@@ -172,46 +108,80 @@
             }
           ]
         }
+      },
+      "AndroidManifest.xml": {
+        "parents": {
+          "application": [
+            {
+              "xml": "<meta-data android:name=\"com.facebook.sdk.ApplicationId\" android:value=\"@string/fb_app_id\" />",
+              "count": 1
+            },
+            {
+              "xml": "<activity android:label=\"@string/fb_app_name\" android:name=\"com.facebook.LoginActivity\" android:theme=\"@android:style/Theme.Translucent.NoTitleBar\" />",
+              "count": 1
+            }
+          ],
+          "/manifest/application": [
+            {
+              "xml": "<service android:name=\"de.appplant.cordova.plugin.background.ForegroundService\" />",
+              "count": 1
+            },
+            {
+              "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupReceiver\" />",
+              "count": 1
+            },
+            {
+              "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupBootReceiver\"><intent-filter><action android:name=\"android.intent.action.BOOT_COMPLETED\" /></intent-filter></receiver>",
+              "count": 1
+            }
+          ],
+          "/manifest": [
+            {
+              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.VIBRATE\" />",
+              "count": 1
+            }
+          ],
+          "/*": [
+            {
+              "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
+              "count": 2
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+              "count": 2
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
+              "count": 1
+            }
+          ]
+        }
       }
     }
   },
   "installed_plugins": {
-    "org.nypr.cordova.wakeupplugin": {
+    "com.jetboystudio.pebble.PebblePGPlugin": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
     "com.phonegap.plugins.facebookconnect": {
       "APP_ID": "694318660701967",
       "APP_NAME": "WigoGeoTrail",
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-file-transfer": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-geolocation": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-dialogs": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-vibration": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-whitelist": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-compat": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-file": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-device-orientation": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "com.jetboystudio.pebble.PebblePGPlugin": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-network-information": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
     "cordova-plugin-device": {
@@ -222,159 +192,226 @@
     },
     "cordova-plugin-device-motion": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-device-orientation": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-dialogs": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-file": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-file-transfer": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-geolocation": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-network-information": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-vibration": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "org.nypr.cordova.wakeupplugin": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
     }
   },
   "dependent_plugins": {},
   "modules": [
     {
-      "file": "plugins/org.nypr.cordova.wakeupplugin/www/wakeup.js",
-      "id": "org.nypr.cordova.wakeupplugin.Wakeup",
+      "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
+      "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
+      "pluginId": "com.jetboystudio.pebble.PebblePGPlugin",
       "clobbers": [
-        "wakeuptimer"
+        "Pebble"
       ]
     },
     {
-      "file": "plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js",
       "id": "com.phonegap.plugins.facebookconnect.FacebookConnectPlugin",
+      "file": "plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js",
+      "pluginId": "com.phonegap.plugins.facebookconnect",
       "clobbers": [
         "facebookConnectPlugin"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file-transfer/www/FileTransferError.js",
-      "id": "cordova-plugin-file-transfer.FileTransferError",
+      "id": "cordova-plugin-device.device",
+      "file": "plugins/cordova-plugin-device/www/device.js",
+      "pluginId": "cordova-plugin-device",
       "clobbers": [
-        "window.FileTransferError"
+        "device"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file-transfer/www/FileTransfer.js",
-      "id": "cordova-plugin-file-transfer.FileTransfer",
+      "id": "cordova-plugin-background-mode.BackgroundMode",
+      "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
+      "pluginId": "cordova-plugin-background-mode",
       "clobbers": [
-        "window.FileTransfer"
+        "cordova.plugins.backgroundMode",
+        "plugin.backgroundMode"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-geolocation/www/android/geolocation.js",
-      "id": "cordova-plugin-geolocation.geolocation",
+      "id": "cordova-plugin-device-motion.Acceleration",
+      "file": "plugins/cordova-plugin-device-motion/www/Acceleration.js",
+      "pluginId": "cordova-plugin-device-motion",
       "clobbers": [
-        "navigator.geolocation"
+        "Acceleration"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-geolocation/www/PositionError.js",
-      "id": "cordova-plugin-geolocation.PositionError",
-      "runs": true
+      "id": "cordova-plugin-device-motion.accelerometer",
+      "file": "plugins/cordova-plugin-device-motion/www/accelerometer.js",
+      "pluginId": "cordova-plugin-device-motion",
+      "clobbers": [
+        "navigator.accelerometer"
+      ]
     },
     {
-      "file": "plugins/cordova-plugin-dialogs/www/notification.js",
+      "id": "cordova-plugin-device-orientation.CompassError",
+      "file": "plugins/cordova-plugin-device-orientation/www/CompassError.js",
+      "pluginId": "cordova-plugin-device-orientation",
+      "clobbers": [
+        "CompassError"
+      ]
+    },
+    {
+      "id": "cordova-plugin-device-orientation.CompassHeading",
+      "file": "plugins/cordova-plugin-device-orientation/www/CompassHeading.js",
+      "pluginId": "cordova-plugin-device-orientation",
+      "clobbers": [
+        "CompassHeading"
+      ]
+    },
+    {
+      "id": "cordova-plugin-device-orientation.compass",
+      "file": "plugins/cordova-plugin-device-orientation/www/compass.js",
+      "pluginId": "cordova-plugin-device-orientation",
+      "clobbers": [
+        "navigator.compass"
+      ]
+    },
+    {
       "id": "cordova-plugin-dialogs.notification",
+      "file": "plugins/cordova-plugin-dialogs/www/notification.js",
+      "pluginId": "cordova-plugin-dialogs",
       "merges": [
         "navigator.notification"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-dialogs/www/android/notification.js",
       "id": "cordova-plugin-dialogs.notification_android",
+      "file": "plugins/cordova-plugin-dialogs/www/android/notification.js",
+      "pluginId": "cordova-plugin-dialogs",
       "merges": [
         "navigator.notification"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-vibration/www/vibration.js",
-      "id": "cordova-plugin-vibration.notification",
-      "merges": [
-        "navigator.notification",
-        "navigator"
-      ]
-    },
-    {
-      "file": "plugins/cordova-plugin-file/www/DirectoryEntry.js",
       "id": "cordova-plugin-file.DirectoryEntry",
+      "file": "plugins/cordova-plugin-file/www/DirectoryEntry.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.DirectoryEntry"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/DirectoryReader.js",
       "id": "cordova-plugin-file.DirectoryReader",
+      "file": "plugins/cordova-plugin-file/www/DirectoryReader.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.DirectoryReader"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/Entry.js",
       "id": "cordova-plugin-file.Entry",
+      "file": "plugins/cordova-plugin-file/www/Entry.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.Entry"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/File.js",
       "id": "cordova-plugin-file.File",
+      "file": "plugins/cordova-plugin-file/www/File.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.File"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileEntry.js",
       "id": "cordova-plugin-file.FileEntry",
+      "file": "plugins/cordova-plugin-file/www/FileEntry.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileEntry"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileError.js",
       "id": "cordova-plugin-file.FileError",
+      "file": "plugins/cordova-plugin-file/www/FileError.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileError"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileReader.js",
       "id": "cordova-plugin-file.FileReader",
+      "file": "plugins/cordova-plugin-file/www/FileReader.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileReader"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileSystem.js",
       "id": "cordova-plugin-file.FileSystem",
+      "file": "plugins/cordova-plugin-file/www/FileSystem.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileSystem"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileUploadOptions.js",
       "id": "cordova-plugin-file.FileUploadOptions",
+      "file": "plugins/cordova-plugin-file/www/FileUploadOptions.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileUploadOptions"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileUploadResult.js",
       "id": "cordova-plugin-file.FileUploadResult",
+      "file": "plugins/cordova-plugin-file/www/FileUploadResult.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileUploadResult"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/FileWriter.js",
       "id": "cordova-plugin-file.FileWriter",
+      "file": "plugins/cordova-plugin-file/www/FileWriter.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.FileWriter"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/Flags.js",
       "id": "cordova-plugin-file.Flags",
+      "file": "plugins/cordova-plugin-file/www/Flags.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.Flags"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/LocalFileSystem.js",
       "id": "cordova-plugin-file.LocalFileSystem",
+      "file": "plugins/cordova-plugin-file/www/LocalFileSystem.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.LocalFileSystem"
       ],
@@ -383,133 +420,150 @@
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/Metadata.js",
       "id": "cordova-plugin-file.Metadata",
+      "file": "plugins/cordova-plugin-file/www/Metadata.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.Metadata"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/ProgressEvent.js",
       "id": "cordova-plugin-file.ProgressEvent",
+      "file": "plugins/cordova-plugin-file/www/ProgressEvent.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.ProgressEvent"
       ]
     },
     {
+      "id": "cordova-plugin-file.fileSystems",
       "file": "plugins/cordova-plugin-file/www/fileSystems.js",
-      "id": "cordova-plugin-file.fileSystems"
+      "pluginId": "cordova-plugin-file"
     },
     {
-      "file": "plugins/cordova-plugin-file/www/requestFileSystem.js",
       "id": "cordova-plugin-file.requestFileSystem",
+      "file": "plugins/cordova-plugin-file/www/requestFileSystem.js",
+      "pluginId": "cordova-plugin-file",
       "clobbers": [
         "window.requestFileSystem"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/resolveLocalFileSystemURI.js",
       "id": "cordova-plugin-file.resolveLocalFileSystemURI",
+      "file": "plugins/cordova-plugin-file/www/resolveLocalFileSystemURI.js",
+      "pluginId": "cordova-plugin-file",
       "merges": [
         "window"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/browser/isChrome.js",
       "id": "cordova-plugin-file.isChrome",
+      "file": "plugins/cordova-plugin-file/www/browser/isChrome.js",
+      "pluginId": "cordova-plugin-file",
       "runs": true
     },
     {
-      "file": "plugins/cordova-plugin-file/www/android/FileSystem.js",
       "id": "cordova-plugin-file.androidFileSystem",
+      "file": "plugins/cordova-plugin-file/www/android/FileSystem.js",
+      "pluginId": "cordova-plugin-file",
       "merges": [
         "FileSystem"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-file/www/fileSystems-roots.js",
       "id": "cordova-plugin-file.fileSystems-roots",
+      "file": "plugins/cordova-plugin-file/www/fileSystems-roots.js",
+      "pluginId": "cordova-plugin-file",
       "runs": true
     },
     {
-      "file": "plugins/cordova-plugin-file/www/fileSystemPaths.js",
       "id": "cordova-plugin-file.fileSystemPaths",
+      "file": "plugins/cordova-plugin-file/www/fileSystemPaths.js",
+      "pluginId": "cordova-plugin-file",
       "merges": [
         "cordova"
       ],
       "runs": true
     },
     {
-      "file": "plugins/cordova-plugin-device-orientation/www/CompassError.js",
-      "id": "cordova-plugin-device-orientation.CompassError",
+      "id": "cordova-plugin-file-transfer.FileTransferError",
+      "file": "plugins/cordova-plugin-file-transfer/www/FileTransferError.js",
+      "pluginId": "cordova-plugin-file-transfer",
       "clobbers": [
-        "CompassError"
+        "window.FileTransferError"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-device-orientation/www/CompassHeading.js",
-      "id": "cordova-plugin-device-orientation.CompassHeading",
+      "id": "cordova-plugin-file-transfer.FileTransfer",
+      "file": "plugins/cordova-plugin-file-transfer/www/FileTransfer.js",
+      "pluginId": "cordova-plugin-file-transfer",
       "clobbers": [
-        "CompassHeading"
+        "window.FileTransfer"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-device-orientation/www/compass.js",
-      "id": "cordova-plugin-device-orientation.compass",
+      "id": "cordova-plugin-geolocation.geolocation",
+      "file": "plugins/cordova-plugin-geolocation/www/android/geolocation.js",
+      "pluginId": "cordova-plugin-geolocation",
       "clobbers": [
-        "navigator.compass"
+        "navigator.geolocation"
       ]
     },
     {
-      "file": "plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js",
-      "id": "com.jetboystudio.pebble.PebblePGPlugin.Pebble",
-      "clobbers": [
-        "Pebble"
-      ]
+      "id": "cordova-plugin-geolocation.PositionError",
+      "file": "plugins/cordova-plugin-geolocation/www/PositionError.js",
+      "pluginId": "cordova-plugin-geolocation",
+      "runs": true
     },
     {
-      "file": "plugins/cordova-plugin-network-information/www/network.js",
       "id": "cordova-plugin-network-information.network",
+      "file": "plugins/cordova-plugin-network-information/www/network.js",
+      "pluginId": "cordova-plugin-network-information",
       "clobbers": [
         "navigator.connection",
         "navigator.network.connection"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-network-information/www/Connection.js",
       "id": "cordova-plugin-network-information.Connection",
+      "file": "plugins/cordova-plugin-network-information/www/Connection.js",
+      "pluginId": "cordova-plugin-network-information",
       "clobbers": [
         "Connection"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-device/www/device.js",
-      "id": "cordova-plugin-device.device",
-      "clobbers": [
-        "device"
+      "id": "cordova-plugin-vibration.notification",
+      "file": "plugins/cordova-plugin-vibration/www/vibration.js",
+      "pluginId": "cordova-plugin-vibration",
+      "merges": [
+        "navigator.notification",
+        "navigator"
       ]
     },
     {
-      "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
-      "id": "cordova-plugin-background-mode.BackgroundMode",
+      "id": "org.nypr.cordova.wakeupplugin.Wakeup",
+      "file": "plugins/org.nypr.cordova.wakeupplugin/www/wakeup.js",
+      "pluginId": "org.nypr.cordova.wakeupplugin",
       "clobbers": [
-        "cordova.plugins.backgroundMode",
-        "plugin.backgroundMode"
-      ]
-    },
-    {
-      "file": "plugins/cordova-plugin-device-motion/www/Acceleration.js",
-      "id": "cordova-plugin-device-motion.Acceleration",
-      "clobbers": [
-        "Acceleration"
-      ]
-    },
-    {
-      "file": "plugins/cordova-plugin-device-motion/www/accelerometer.js",
-      "id": "cordova-plugin-device-motion.accelerometer",
-      "clobbers": [
-        "navigator.accelerometer"
+        "wakeuptimer"
       ]
     }
-  ]
+  ],
+  "plugin_metadata": {
+    "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6",
+    "com.phonegap.plugins.facebookconnect": "0.11.0",
+    "cordova-plugin-device": "1.1.6",
+    "cordova-plugin-background-mode": "0.7.2",
+    "cordova-plugin-device-motion": "1.2.5",
+    "cordova-plugin-device-orientation": "1.0.3",
+    "cordova-plugin-dialogs": "1.2.1",
+    "cordova-plugin-file": "4.2.0",
+    "cordova-plugin-file-transfer": "1.5.1",
+    "cordova-plugin-geolocation": "2.2.0",
+    "cordova-plugin-network-information": "1.3.2",
+    "cordova-plugin-vibration": "2.1.1",
+    "cordova-plugin-whitelist": "1.2.2",
+    "org.nypr.cordova.wakeupplugin": "0.1.0"
+  }
 }

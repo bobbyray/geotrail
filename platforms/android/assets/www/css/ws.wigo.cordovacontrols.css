@@ -1,0 +1,170 @@
+﻿/* 
+Copyright (c) 2015, 2016 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
+
+.wigo_ws_NoShow {
+    display: none;
+}
+
+.wigo_ws_Show {
+    display: block;
+}
+
+.wigo_ws_Dim {
+    background-color: whitesmoke;
+    border-top: 2px solid white;
+    border-left: 2px solid white;
+    border-right: 2px solid white;
+}
+
+.wigo_ws_NoDim {
+    background-color: lightcyan;
+    border-top: 2px solid lightcyan;
+    border-left: 2px solid lightcyan;
+    border-right: 2px solid lightcyan;
+}
+
+.wigo_ws_Title {
+    font-size: 1.5em;
+    font-weight: bold;  
+}
+.wigo_ws_BackIcon {
+    height: 100%;
+    width: auto;
+    margin-top: 0.1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: 0.5em;
+    float: right;
+}
+.wigo_ws_TitleBarHelp {
+    height: 100%;
+    width: 1.0em;
+    margin-top: 0.1em;
+    margin-left: 0.5em;
+    font-size: 140%;
+    color: white;
+    float: right;
+}
+
+.wigo_ws_StatusMsg {
+    background-color: aliceblue;    
+    font-size: 1.12em;  
+    width: 95%;  
+    top: 0px;
+    left: 0px;
+    cursor: none;
+    position: relative;
+    min-height: 1.6em;
+}
+.wigo_ws_StatusClose {
+    position: absolute;  
+    top: 0.2em;
+    right: 0px;
+
+    width: 4.5%;  
+    height: 1.5em;
+    text-align: center;
+    background-color: gray;
+    cursor: pointer;
+}
+.wigo_ws_StatusError {
+    background-color: lightpink;
+}
+.wigo_ws_StatusNoError {
+    background-color: lightcyan;
+}
+
+.wigo_ws_Bar {
+    background-color: lightgray;
+}
+.wigo_ws_DropDownControl {
+    position:relative;
+    height: 100%;
+    width: 100%;
+}
+
+
+.wigo_ws_DropDownLabel {
+    cursor: none;
+    position: absolute;
+    top: 0%;
+    width: 28%;
+    text-align: right;
+}
+
+.wigo_ws_DropDownIcon {
+    cursor: pointer;
+    position: absolute;
+    left: 30%;
+    width: auto;
+    height: 100%;
+}
+
+.wigo_ws_DropDownList {
+    position: absolute;
+    top: 100%;
+    left: 0px;
+    width: 100%;   
+    background-color: white;
+    z-index: 2;
+}
+
+.wigo_ws_DropDownListItem {
+    cursor: pointer;
+    clear: both;
+    width: 98%;
+    height: 2em;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    border: 2px solid black;
+}
+.wigo_ws_DropDownListItemHidden {
+    background-color: gray; 
+    display: none;
+}
+.wigo_ws_DropDownValue {
+    cursor: pointer;
+    position: absolute;
+    top: 30%;
+    left: 0%;
+    background-color: whitesmoke;
+}
+
+.wigo_ws_OnOffControl {
+    width: 100%;
+    height: 80%;
+    margin-top: 0.1em;
+}
+.wigo_ws_OnOffLabel {
+    clear: both;
+    float: left;
+    height: 100%;
+    margin-top: 0.2em;
+    margin-left: 0.1em;
+}
+.wigo_ws_OnCtrl {
+    float: right;
+    margin-left: 0.5em;  
+    margin-right: 0.5em; 
+    margin-top: 0.2em;
+    border: 1px solid black;
+}
+.wigo_ws_OffCtrl {
+    float: right;
+    margin-left: 0.5em;  
+    margin-right: 0.5em; 
+    margin-top: 0.2em;
+    border: 1px solid black;
+}
+.wigo_ws_Unknown {
+    background-color: whitesmoke;
+}
+.wigo_ws_Off {
+    background-color: lightpink
+}
+.wigo_ws_On {
+    background-color: lightgreen;
+}

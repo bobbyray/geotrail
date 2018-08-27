@@ -17,13 +17,15 @@
        under the License.
 */
 
-// GENERATED FILE! DO NOT EDIT!
-
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
+        maven {
+            url "https://maven.google.com"
+        }
+        google()
     }
 
     // Switch the Android Gradle plugin version requirement depending on the
@@ -31,20 +33,22 @@ buildscript {
     // http://tools.android.com/tech-docs/new-build-system/version-compatibility
     // and https://issues.apache.org/jira/browse/CB-8143
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:3.1.4'
     }
-
-    // 20160613 added line below to work around cordova requiring v2.10 when v2.2.1 is current version. Later fixed.
-    // System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
-   }
+}
 
 // Allow plugins to declare Maven dependencies via build-extras.gradle.
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url "https://maven.google.com"
+        }
+    }
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.8'
+    gradleVersion = '4.1.0'
 }
 
 // Configuration properties. Set these via environment variables, build-extras.gradle, or gradle.properties.
@@ -164,26 +168,29 @@ android {
         }
     }
     defaultConfig {
+        versionCode 101350
+        applicationId privateHelpers.extractStringFromManifest("package")
         if (cdvMinSdkVersion != null) {
             minSdkVersion cdvMinSdkVersion
         }
-        applicationId 'ws.wigo.geotrail'
-        versionCode 101340
-        versionName '1.1.034'
+        versionName '1.1.035'
+        minSdkVersion 26
     }
     lintOptions {
         abortOnError false;
     }
+    compileSdkVersion 26
+    buildToolsVersion '27.0.3'
     if (Boolean.valueOf(cdvBuildMultipleApks)) {
         productFlavors {
             armv7 {
-                versionCode defaultConfig.versionCode + 2
+                versionCode defaultConfig.versionCode * 10 + 2
                 ndk {
                     abiFilters "armeabi-v7a", ""
                 }
             }
             x86 {
-                versionCode defaultConfig.versionCode + 4
+                versionCode defaultConfig.versionCode * 10 + 4
                 ndk {
                     abiFilters "x86", ""
                 }
@@ -194,18 +201,23 @@ android {
                 }
             }
         }
-    } else if (!cdvVersionCode) {
-        def minSdkVersion = cdvMinSdkVersion ?: privateHelpers.extractIntFromManifest("minSdkVersion")
-        // Vary versionCode by the two most common API levels:
-        // 14 is ICS, which is the lowest API level for many apps.
-        // 20 is Lollipop, which is the lowest API level for the updatable system webview.
-        if (minSdkVersion >= 20) {
-
-            defaultConfig.versionCode += 9
-        } else if (minSdkVersion >= 14) {
-            defaultConfig.versionCode += 8
-        }
     }
+    /*
+
+    ELSE NOTHING! DON'T MESS WITH THE VERSION CODE IF YOU DON'T HAVE TO!
+
+    else if (!cdvVersionCode) {
+      def minSdkVersion = cdvMinSdkVersion ?: privateHelpers.extractIntFromManifest("minSdkVersion")
+      // Vary versionCode by the two most common API levels:
+      // 14 is ICS, which is the lowest API level for many apps.
+      // 20 is Lollipop, which is the lowest API level for the updatable system webview.
+      if (minSdkVersion >= 20) {
+        defaultConfig.versionCode += 9
+      } else if (minSdkVersion >= 14) {
+        defaultConfig.versionCode += 8
+      }
+    }
+    */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
@@ -233,19 +245,13 @@ android {
     }
     productFlavors {
     }
-    buildToolsVersion '23.0.3'
-    compileSdkVersion 'Google Inc.:Google APIs:23'
-    buildTypes {
-    }
 }
 
 dependencies {
-    compile fileTree(include: '*.jar', dir: 'libs')
+    implementation fileTree(include: '*.jar', dir: 'libs')
     // SUB-PROJECT DEPENDENCIES START
-    debugCompile project(path: 'CordovaLib', configuration: 'debug')
-    releaseCompile project(path: 'CordovaLib', configuration: 'release')
-    debugCompile project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib', configuration: 'debug')
-    releaseCompile project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib', configuration: 'release')
+    implementation project(path: 'CordovaLib')
+    implementation project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib')
     // SUB-PROJECT DEPENDENCIES END
 }
 
@@ -263,7 +269,7 @@ def promptForReleaseKeyPassword() {
 
 gradle.taskGraph.whenReady { taskGraph ->
     taskGraph.getAllTasks().each() { task ->
-        if (task.name == 'validateReleaseSigning') {
+        if (['validateReleaseSigning', 'validateSigningRelease', 'validateSigningArmv7Release', 'validateSigningX86Release'].contains(task.name)) {
             promptForReleaseKeyPassword()
         }
     }
