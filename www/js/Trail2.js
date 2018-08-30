@@ -8332,6 +8332,10 @@ Are you sure you want to delete the maps?";
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
         }
+        ////20180828 // Threshold in meters for distance to nearest point on path.
+        ////20180828 // If distance from geolocation to nearest point on the path
+        ////20180828 // is > dCloseToPathThres, then geo location is off-path.
+        ////20180828 this.dCloseToPathThres = -1;
 
         // Get a list of stats items to be deleted from server.
         // Returns: array of wigo_ws_GeoTrailTimeStamp objs. 

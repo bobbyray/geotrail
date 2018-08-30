@@ -5,3 +5,49 @@
 .gradle
 .vscode/settings.json
 /node_modules
+
+# 
+# Additions to the above std ignores provided by Android Studio itself.
+# From https://gist.github.com/vtanathip/9414323#file-gitignore-android-studio-list
+
+# Ignore platform/android files that platorm/android/.gitignore is not ignoring.
+# platform/android/ignore is replaced if cordpva=android platform is removed and added (as a higher version)/
+# Therefore put some ignores for platform/android in this project .gitignore file.
+# Ignore assets/www subdirectory, generated when built.
+/platform/android/assets/www
+#ignore release signing file
+/platform/android/**/release-signing.properties
+
+# built application files
+/platform/android/**/*.apk
+/platform/android/**/*.ap_
+
+# files for the dex VM
+/platform/android/**/*.dex
+
+# Java class files
+/platform/android/**/.class
+
+# generated files
+/platform/android/**/bin/
+/platform/android/**/gen/
+
+# Local configuration file (sdk path, etc)
+#AlreadyIncluded local.properties
+
+# Eclipse project files
+/platform/android/**/.classpath
+/platform/android/**/.project
+
+# Android Studio
+/platform/android/.idea/
+/platform/android/**/.gradle
+/platform/android/*/local.properties
+/platform/android/*/out
+/platform/android/*/*/build
+/platform/android/*/*/production
+/platform/android/**/*.iml
+/platform/android/**/*.iws
+/platform/android/**/*.ipr
+/platform/android/**/*~
+/platform/android/**/*.swp
