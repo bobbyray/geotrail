@@ -201,7 +201,7 @@ module.exports = [
             "Pebble"
         ]
     },
-    {
+    {  ////20180823 restored
         "file": "plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js",
         "id": "com.phonegap.plugins.facebookconnect.FacebookConnectPlugin",
         "clobbers": [

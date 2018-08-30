@@ -20,14 +20,6 @@
       "APP_NAME": "WigoGeoTrail"
     }
   },
-  "cordova-plugin-compat": {
-    "source": {
-      "type": "registry",
-      "id": "cordova-plugin-compat"
-    },
-    "is_top_level": false,
-    "variables": {}
-  },
   "cordova-plugin-file-transfer": {
     "source": {
       "type": "registry",
@@ -129,6 +121,14 @@
     "source": {
       "type": "registry",
       "id": "cordova-plugin-device-motion@1.2.5"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "cordova-plugin-compat": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-compat@1.2"
     },
     "is_top_level": true,
     "variables": {}

@@ -5,15 +5,71 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="781d3f66-e214-486b-83e0-a5b776b9b678" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/gradle.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change beforePath="$PROJECT_DIR$/../../config.xml" afterPath="$PROJECT_DIR$/../../config.xml" />
-      <change beforePath="$PROJECT_DIR$/../../package-lock.json" afterPath="$PROJECT_DIR$/../../package-lock.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/gradle.properties" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/android_sdk_version.bat" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/lib/AndroidStudio.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/lib/android_sdk.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/lib/getASPath.bat" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/loggingHelper.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/nopt" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/nopt.cmd" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/semver" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/semver.cmd" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/shjs" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/.bin/shjs.cmd" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/abbrev/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/abbrev/abbrev.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/abbrev/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/.jshintignore" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/.jshintrc" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/.travis.yml" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/android-versions/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/.jshintrc" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/History.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/LICENSE" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/examples/beep/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/examples/clear/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/examples/cursorPosition.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/examples/progress/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/lib/ansi.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/lib/newlines.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/balanced-match/.npmignore" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/balanced-match/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/balanced-match/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/balanced-match/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/BigInteger.d.ts" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/BigInteger.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/BigInteger.min.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/bower.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/tsconfig.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/brace-expansion/README.md" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/brace-expansion/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/brace-expansion/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/package.json" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/.eslintignore" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/.eslintrc.yml" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/.travis.yml" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/appveyor.yml" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/src/CordovaCheck.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/src/CordovaLogger.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/src/FileUpdater.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/src/PluginManager.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/src/util/addProperty.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/.npmignore" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/index.js" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/package.json" />
+      <change beforePath="$PROJECT_DIR$/../../.gitignore" afterPath="$PROJECT_DIR$/../../.gitignore" />
+      <change beforePath="$PROJECT_DIR$/../../LICENSE" afterPath="$PROJECT_DIR$/../../LICENSE" />
       <change beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change beforePath="$PROJECT_DIR$/.project" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/AndroidManifest.xml" afterPath="$PROJECT_DIR$/AndroidManifest.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/CordovaLib/.gitignore" afterPath="" />
       <change beforePath="$PROJECT_DIR$/CordovaLib/.project" afterPath="" />
       <change beforePath="$PROJECT_DIR$/CordovaLib/build.gradle" afterPath="$PROJECT_DIR$/CordovaLib/build.gradle" />
@@ -34,11 +90,458 @@
       <change beforePath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemCookieManager.java" afterPath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemCookieManager.java" />
       <change beforePath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemWebChromeClient.java" afterPath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemWebChromeClient.java" />
       <change beforePath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemWebViewEngine.java" afterPath="$PROJECT_DIR$/CordovaLib/src/org/apache/cordova/engine/SystemWebViewEngine.java" />
-      <change beforePath="$PROJECT_DIR$/android.json" afterPath="$PROJECT_DIR$/android.json" />
-      <change beforePath="$PROJECT_DIR$/assets/_where-is-www.txt" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" afterPath="$PROJECT_DIR$/build.gradle" />
-      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/AndroidManifest.xml" afterPath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/AndroidManifest.xml" />
-      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle" afterPath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle" />
+      <change beforePath="$PROJECT_DIR$/assets/www/.vscode/settings.json" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/Trail2.html" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova-js-src/android/nativeapiprovider.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova-js-src/android/promptbasednativeapi.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova-js-src/exec.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova-js-src/platform.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova-js-src/plugin/android/app.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova_plugins - Copy.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/cordova_plugins.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/css/iphone.css" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/css/trail2.css" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/css/ws.wigo.cordovacontrols.css" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/marker-bike-green-shadowed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/recordicon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/snowcoverscale.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/ws.wigo.backicon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/ws.wigo.dropdownhorizontalicon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/ws.wigo.dropdownicon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/ws.wigo.dropdowniconview.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/img/ws.wigo.menuicon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/Ajax2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/AnimatedMarker.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/GeoPathMapView2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/GeoPathsApi2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/Helper2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/LocalDebug.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/Model2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/PebbleAdapter.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/Trail2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/devicedetails.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/jquery-1.11.3.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/leaflet-tilelayer-cordova.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/oms.min.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/ws.wigo.cordovacontrols.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/ws.wigo.cordovadevicedetails.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/js/ws.wigo.networkinfo.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/jsAuthCordova/FbAuthentication2.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/images/layers-2x.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/images/layers.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/images/marker-icon-2x.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/images/marker-icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/images/marker-shadow.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/leaflet-src.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/leaflet.css" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/leaflet-0.7.3/leaflet.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/com.jetboystudio.pebble.PebblePGPlugin/www/Pebble.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/com.phonegap.plugins.facebookconnect/facebookConnectPlugin.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-background-mode/www/background-mode.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device-motion/www/Acceleration.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device-motion/www/accelerometer.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device-orientation/www/CompassError.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device-orientation/www/CompassHeading.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device-orientation/www/compass.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-device/www/device.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-dialogs/www/android/notification.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-dialogs/www/notification.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file-transfer/www/FileTransfer.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file-transfer/www/FileTransferError.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/DirectoryEntry.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/DirectoryReader.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/Entry.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/File.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileEntry.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileError.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileReader.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileSystem.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileUploadOptions.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileUploadResult.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/FileWriter.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/Flags.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/LocalFileSystem.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/Metadata.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/ProgressEvent.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/android/FileSystem.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/browser/isChrome.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/fileSystemPaths.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/fileSystems-roots.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/fileSystems.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/requestFileSystem.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-file/www/resolveLocalFileSystemURI.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-geolocation/www/PositionError.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-geolocation/www/android/geolocation.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-network-information/www/Connection.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-network-information/www/network.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-vibration/www/vibration.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/cordova-plugin-whitelist/whitelist.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/assets/www/plugins/org.nypr.cordova.wakeupplugin/www/wakeup.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/generated/source/buildConfig/release/com/facebook/android/BuildConfig.java" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/generated/source/r/release/android/support/v4/R.java" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/generated/source/r/release/com/facebook/android/R.java" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/R.txt" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-hdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-ldpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-mdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xxhdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xxhdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xxhdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xxhdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable-xxhdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_blue.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_check.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_check_off.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_check_on.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_button_like_selected.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_list_divider.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_list_section_header_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_loginbutton_silver.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_item_background.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_longpressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_selector.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_selector_background_transition.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_list_selector_disabled.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_picker_top_button.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_place_default_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_profile_default_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_profile_picture_blank_portrait.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_profile_picture_blank_square.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_top_background.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_top_button.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/drawable/com_facebook_usersettingsfragment_background_gradient.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_friendpickerfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_login_activity_layout.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_activity_circle_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_checkbox.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_image.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_list_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_list_section_header.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_search_box.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_title_bar.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_picker_title_bar_stub.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_placepickerfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_placepickerfragment_list_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_search_bar_layout.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_tooltip_bubble.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/layout/com_facebook_usersettingsfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-es/values-es.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-hdpi-v4/values-hdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-he/values-he.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-iw/values-iw.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-ldpi-v4/values-ldpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-mdpi-v4/values-mdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values-xhdpi-v4/values-xhdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/debug/res/values/values.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/R.txt" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-hdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-ldpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-mdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_picker_magnifier.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_black_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_black_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_black_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_black_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_bottomnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_topnub.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xhdpi-v4/com_facebook_tooltip_blue_xout.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xxhdpi-v4/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xxhdpi-v4/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xxhdpi-v4/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xxhdpi-v4/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable-xxhdpi-v4/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_blue.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_blue_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_blue_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_blue_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_check.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_check_off.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_check_on.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_grey_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_grey_normal.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_grey_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_background.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_background_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_icon_selected.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_pressed.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_button_like_selected.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_close.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_inverse_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_list_divider.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_list_section_header_background.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_loginbutton_silver.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_logo.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_item_background.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_focused.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_longpressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_pressed.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_selector.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_selector_background_transition.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_list_selector_disabled.9.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_picker_top_button.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_place_default_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_profile_default_icon.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_profile_picture_blank_portrait.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_profile_picture_blank_square.png" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_top_background.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_top_button.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/drawable/com_facebook_usersettingsfragment_background_gradient.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_friendpickerfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_login_activity_layout.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_activity_circle_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_checkbox.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_image.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_list_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_list_section_header.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_search_box.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_title_bar.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_picker_title_bar_stub.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_placepickerfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_placepickerfragment_list_row.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_search_bar_layout.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_tooltip_bubble.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/layout/com_facebook_usersettingsfragment.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-es/values-es.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-hdpi-v4/values-hdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-he/values-he.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-iw/values-iw.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-ldpi-v4/values-ldpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-mdpi-v4/values-mdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values-xhdpi-v4/values-xhdpi-v4.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/bundles/release/res/values/values.xml" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/android/support/v4/R.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AccessToken$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AccessToken$SerializationProxyV1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AccessToken$SerializationProxyV2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AccessToken.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AccessTokenSource.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsConstants.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$3.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$4.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$5.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$6.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$7.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$AccessTokenAppIdPair$SerializationProxyV1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$AccessTokenAppIdPair.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$AppEvent$SerializationProxyV1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$AppEvent.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$FlushBehavior.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$FlushReason.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$FlushResult.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$FlushStatistics.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$PersistedAppSessionInfo$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$PersistedAppSessionInfo.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$PersistedEvents.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger$SessionEventsState.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppEventsLogger.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppLinkData$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppLinkData$CompletionHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AppLinkData.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$3.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$4.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$5.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$AuthDialogBuilder.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$AuthHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$AuthorizationRequest.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$BackgroundProcessingListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$GetTokenAuthHandler$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$GetTokenAuthHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$KatanaAuthHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$KatanaProxyAuthHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$OnCompletedListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$Result$Code.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$Result.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$StartActivityDelegate.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$WebViewAuthHandler$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient$WebViewAuthHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/AuthorizationClient.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/BoltsMeasurementEventListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookAppLinkResolver$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookAppLinkResolver$2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookAppLinkResolver.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookAuthorizationException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookBroadcastReceiver.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookDialogException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookGraphObjectException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookOperationCanceledException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookRequestError$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookRequestError$Category.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookRequestError$Range.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookRequestError.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookSdkVersion.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookServiceException.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookTimeSpentData$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookTimeSpentData$SerializationProxyV1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookTimeSpentData$SerializationProxyV2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/FacebookTimeSpentData.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/GetTokenClient.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/HttpMethod.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/InsightsLogger.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/AsyncFacebookRunner$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/AsyncFacebookRunner$2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/AsyncFacebookRunner$RequestListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/AsyncFacebookRunner.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/BuildConfig.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/DialogError.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$DialogListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$ServiceListener.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$SetterTokenCachingStrategy.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$TokenRefreshConnectionHandler.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook$TokenRefreshServiceConnection.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Facebook.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/FacebookError.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/FbDialog$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/FbDialog.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$attr.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$color.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$dimen.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$drawable.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$id.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$layout.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$string.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$style.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R$styleable.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/R.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/android/Util.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/AnalyticsEvents.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/AttributionIdentifiers.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/BundleJSONConverter$1.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/BundleJSONConverter$2.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/BundleJSONConverter$3.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build/intermediates/classes/debug/com/facebook/internal/BundleJSONConverter$4.class" afterPath="" />
       <change beforePath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/project.properties" afterPath="$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/project.properties" />
       <change beforePath="$PROJECT_DIR$/cordova/.jshintrc" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/Api.js" afterPath="$PROJECT_DIR$/cordova/Api.js" />
@@ -79,35 +582,35 @@
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/README.md" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/README.md" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/RELEASENOTES.md" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/RELEASENOTES.md" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/cordova-common.js" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-common/cordova-common.js" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/.npmignore" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/README.md" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/bplistParser.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/.npmignore" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/.npmignore" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/README.md" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/README.md" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/bplistParser.js" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/bplistParser.js" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/.gitconfig" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/.zuul.yml" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/.zuulrc" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/BigInteger.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/BigInteger.min.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/LICENSE" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/LICENSE" afterPath="$PROJECT_DIR$/cordova/node_modules/big-integer/LICENSE" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/README.md" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/node_modules/big-integer/package.json" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/package.json" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/airplay.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/iTunes-small.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/int64.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/int64.xml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/parseTest.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/sample1.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/sample2.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/uid.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/utf16.bplist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/utf16_chinese.plist" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/.npmignore" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/.travis.yml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/README.md" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/airplay.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/airplay.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/iTunes-small.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/iTunes-small.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/int64.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/int64.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/int64.xml" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/int64.xml" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/parseTest.js" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/parseTest.js" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/sample1.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/sample1.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/sample2.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/sample2.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/uid.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/uid.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/utf16.bplist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/utf16.bplist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/bplist-parser/test/utf16_chinese.plist" afterPath="$PROJECT_DIR$/cordova/node_modules/bplist-parser/test/utf16_chinese.plist" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/.npmignore" afterPath="$PROJECT_DIR$/cordova/node_modules/ansi/.npmignore" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/.travis.yml" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/.travis.yml" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/README.md" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/README.md" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/index.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/package.json" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/tests/test.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/LICENSE" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/cordova-registry-mapper/tests/test.js" afterPath="$PROJECT_DIR$/cordova/node_modules/cordova-registry-mapper/tests/test.js" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/LICENSE" afterPath="$PROJECT_DIR$/cordova/node_modules/abbrev/LICENSE" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/README.md" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/common.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/glob.js" afterPath="" />
@@ -137,20 +640,20 @@
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/index.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/.npmignore" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/.travis.yml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/LICENSE.md" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/LICENSE.md" afterPath="$PROJECT_DIR$/cordova/node_modules/balanced-match/LICENSE.md" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/Makefile" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/README.md" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/example.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/index.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/package.json" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/balanced-match/test/balanced.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/.travis.yml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/LICENSE" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/README.markdown" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/.travis.yml" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/.travis.yml" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/LICENSE" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/LICENSE" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/README.markdown" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/README.markdown" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/example/map.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/index.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/index.js" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/index.js" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/package.json" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/test/map.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/node_modules/concat-map/test/map.js" afterPath="$PROJECT_DIR$/cordova/node_modules/concat-map/test/map.js" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/node_modules/brace-expansion/package.json" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/minimatch/package.json" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/glob/node_modules/once/LICENSE" afterPath="" />
@@ -199,14 +702,14 @@
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/lib/node.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/lib/parse.js" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/lib/plist.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/.travis.yml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/LICENSE.MIT" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/README.md" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/bench/bench.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/lib/b64.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/.travis.yml" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/.travis.yml" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/LICENSE.MIT" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/LICENSE.MIT" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/README.md" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/README.md" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/bench/bench.js" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/bench/bench.js" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/lib/b64.js" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/lib/b64.js" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/package.json" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/test/convert.js" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/test/url-safe.js" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/test/convert.js" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/test/convert.js" />
+      <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/base64-js/test/url-safe.js" afterPath="$PROJECT_DIR$/cordova/node_modules/base64-js/test/url-safe.js" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/util-deprecate/History.md" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/util-deprecate/LICENSE" afterPath="" />
       <change beforePath="$PROJECT_DIR$/cordova/node_modules/cordova-common/node_modules/plist/node_modules/util-deprecate/README.md" afterPath="" />
@@ -788,7 +1291,11 @@
       <change beforePath="$PROJECT_DIR$/../../plugins/cordova-plugin-compat/package.json" afterPath="$PROJECT_DIR$/../../plugins/cordova-plugin-compat/package.json" />
       <change beforePath="$PROJECT_DIR$/../../plugins/cordova-plugin-compat/plugin.xml" afterPath="$PROJECT_DIR$/../../plugins/cordova-plugin-compat/plugin.xml" />
       <change beforePath="$PROJECT_DIR$/../../plugins/fetch.json" afterPath="$PROJECT_DIR$/../../plugins/fetch.json" />
+      <change beforePath="$PROJECT_DIR$/../../www/Trail2.html" afterPath="$PROJECT_DIR$/../../www/Trail2.html" />
       <change beforePath="$PROJECT_DIR$/../../www/cordova_plugins.js" afterPath="$PROJECT_DIR$/../../www/cordova_plugins.js" />
+      <change beforePath="$PROJECT_DIR$/../../www/js/GeoPathMapView2.js" afterPath="$PROJECT_DIR$/../../www/js/GeoPathMapView2.js" />
+      <change beforePath="$PROJECT_DIR$/../../www/js/Model2.js" afterPath="$PROJECT_DIR$/../../www/js/Model2.js" />
+      <change beforePath="$PROJECT_DIR$/../../www/js/Trail2.js" afterPath="$PROJECT_DIR$/../../www/js/Trail2.js" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -814,11 +1321,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="build.gradle" pinned="false" current-in-tab="true">
+      <file leaf-file-name="build.gradle" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="238">
+              <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -4816,6 +5333,13 @@
       </map>
     </option>
   </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/.gitignore" />
+      </list>
+    </option>
+  </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-7" />
     <option name="width" value="974" />
@@ -4823,7 +5347,7 @@
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
-    <navigator currentView="AndroidView" proportions="" version="1">
+    <navigator proportions="" version="1">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -4836,13 +5360,7 @@
       <manualOrder />
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="AndroidView" />
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
-      <pane id="Scratches" />
-      <pane id="ProjectPane" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="android.sdk.path" value="$USER_HOME$/AppData/Local/Android/Sdk" />
@@ -5050,24 +5568,24 @@
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <layout>
-      <window_info id="Android Profiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android Profiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49573562" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2585288" sideWeight="0.50617284" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2585288" sideWeight="0.52733684" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37069923" sideWeight="0.25906184" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37069923" sideWeight="0.26865673" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.4978678" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.49573562" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.4914712" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.4936034" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Logcat" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32963374" sideWeight="0.4978678" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.5117271" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37069923" sideWeight="0.7409382" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37069923" sideWeight="0.73134327" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2585288" sideWeight="0.49382716" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2585288" sideWeight="0.47266313" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Device File Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -5097,10 +5615,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/com.phonegap.plugins.facebookconnect/geotrail-FacebookLib/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
           <folding />
         </state>
       </provider>

@@ -1,9 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="ws.wigo.geotrail" version="1.1.034" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <preference name="loglevel" value="DEBUG" />
-    <feature name="WakeupPlugin">
-        <param name="android-package" value="org.nypr.cordova.wakeupplugin.WakeupPlugin" />
-        <param name="onload" value="true" />
+<widget id="ws.wigo.geotrail" version="1.1.035" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <feature name="Pebble">
+        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
     </feature>
     <feature name="FacebookConnectPlugin">
         <param name="android-package" value="org.apache.cordova.facebook.ConnectPlugin" />
@@ -13,14 +11,33 @@
     <access origin="https://api.facebook.com" />
     <access origin="https://*.fbcdn.net" />
     <access origin="https://*.akamaihd.net" />
+    <feature name="Device">
+        <param name="android-package" value="org.apache.cordova.device.Device" />
+    </feature>
+    <feature name="BackgroundMode">
+        <param name="android-package" value="de.appplant.cordova.plugin.background.BackgroundMode" />
+    </feature>
+    <feature name="Accelerometer">
+        <param name="android-package" value="org.apache.cordova.devicemotion.AccelListener" />
+    </feature>
+    <feature name="Compass">
+        <param name="android-package" value="org.apache.cordova.deviceorientation.CompassListener" />
+    </feature>
+    <feature name="Notification">
+        <param name="android-package" value="org.apache.cordova.dialogs.Notification" />
+    </feature>
+    <feature name="File">
+        <param name="android-package" value="org.apache.cordova.file.FileUtils" />
+        <param name="onload" value="true" />
+    </feature>
     <feature name="FileTransfer">
         <param name="android-package" value="org.apache.cordova.filetransfer.FileTransfer" />
     </feature>
     <feature name="Geolocation">
         <param name="android-package" value="org.apache.cordova.geolocation.Geolocation" />
     </feature>
-    <feature name="Notification">
-        <param name="android-package" value="org.apache.cordova.dialogs.Notification" />
+    <feature name="NetworkStatus">
+        <param name="android-package" value="org.apache.cordova.networkinformation.NetworkManager" />
     </feature>
     <feature name="Vibration">
         <param name="android-package" value="org.apache.cordova.vibration.Vibration" />
@@ -29,31 +46,10 @@
         <param name="android-package" value="org.apache.cordova.whitelist.WhitelistPlugin" />
         <param name="onload" value="true" />
     </feature>
-    <feature name="File">
-        <param name="android-package" value="org.apache.cordova.file.FileUtils" />
+    <feature name="WakeupPlugin">
+        <param name="android-package" value="org.nypr.cordova.wakeupplugin.WakeupPlugin" />
         <param name="onload" value="true" />
     </feature>
-    <feature name="Compass">
-        <param name="android-package" value="org.apache.cordova.deviceorientation.CompassListener" />
-    </feature>
-    <feature name="Pebble">
-        <param name="android-package" value="com.jetboystudio.pebble.PebblePGPlugin" />
-    </feature>
-    <feature name="NetworkStatus">
-        <param name="android-package" value="org.apache.cordova.networkinformation.NetworkManager" />
-    </feature>
-    <feature name="Device">
-        <param name="android-package" value="org.apache.cordova.device.Device" />
-    </feature>
-    <feature name="BackgroundMode">
-        <param name="android-package" value="de.appplant.cordova.plugin.background.BackgroundMode" />
-    </feature>
-    <preference name="KeepRunning" value="true" />
-    <preference name="AndroidLaunchMode" value="singleInstance" />
-    <feature name="Accelerometer">
-        <param name="android-package" value="org.apache.cordova.devicemotion.AccelListener" />
-    </feature>
-    <allow-intent href="market:*" />
     <name>GeoTrail</name>
     <description>
         A Cordova application for viewing trail map online or offline.
@@ -70,5 +66,9 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
     <icon platform="android" src="res/android/geotrail512x512.png" />
+    <allow-intent href="market:*" />
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="AndroidLaunchMode" value="singleInstance" />
     <preference name="AndroidPersistentFileLocation" value="Compatibility" />
 </widget>
