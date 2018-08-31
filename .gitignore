@@ -52,3 +52,6 @@
 /platforms/android/**/*~
 /platforms/android/**/*.swp
 
+# 20180831
+/platforms/android/**/build
+
