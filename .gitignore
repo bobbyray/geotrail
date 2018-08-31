@@ -52,6 +52,6 @@
 /platforms/android/**/*~
 /platforms/android/**/*.swp
 
-# 20180831
+# 20180831 Seems like /platforms/android/*/*/build should be sufficient, but following helped.
 /platforms/android/**/build
 
