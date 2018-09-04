@@ -250,8 +250,8 @@ android {
 dependencies {
     implementation fileTree(include: '*.jar', dir: 'libs')
     // SUB-PROJECT DEPENDENCIES START
-    implementation project(path: 'CordovaLib')
-    implementation project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib')
+    implementation(project(path: "CordovaLib"))
+    implementation(project(path: "com.phonegap.plugins.facebookconnect:FacebookLib"))
     // SUB-PROJECT DEPENDENCIES END
 }
 
