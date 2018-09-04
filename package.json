@@ -1,0 +1,21 @@
+{
+  "name": "ws.wigo.geotrail",
+  "version": "1.1.034",
+  "displayName": "GeoTrail",
+  "cordova": {
+    "platforms": [
+      "android"
+    ],
+    "plugins": {
+      "cordova-plugin-compat": {},
+      "cordova-plugin-file": {},
+      "cordova-plugin-device-motion": {}
+    }
+  },
+  "dependencies": {
+    "cordova-android": "^6.4.0",
+    "cordova-plugin-compat": "^1.2.0",
+    "cordova-plugin-device-motion": "~1.2.5",
+    "cordova-plugin-file": "~2.0.0"
+  }
+}

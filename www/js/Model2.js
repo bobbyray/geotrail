@@ -71,6 +71,9 @@ function wigo_ws_GeoTrailSettings() {
     this.bTopologyLayer = false;
     // Boolean to show snow cover layer on map.   
     this.bSnowCoverLayer = true; 
+    ////20180828 // Boolean to indicate a mouse click (touch) simulates getting the geolocation
+    ////20180828 // for previous geolocation to be updated wrt to current geolocation.
+    ////20180828 this.dPrevGeoLocThres = 40.0;
     // Boolean to indicate a mouse click (touch) simulates getting the geolocation
     // at the click point. For debug only.
     this.bClickForGeoLoc = false;

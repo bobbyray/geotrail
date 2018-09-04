@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.034-20180812-1317"; // Constant string for App version. // not yet RecStatsArchive
+    var sVersion = "1.1.035-20180820-1310"; // Constant string for App version. // Preparing for Android 8, Api 26
 
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -8332,6 +8332,10 @@ Are you sure you want to delete the maps?";
             // Empty the itemsSelected obj since no items are selected.
             itemsSelected = {}; // Empty the list 
         }
+        ////20180828 // Threshold in meters for distance to nearest point on path.
+        ////20180828 // If distance from geolocation to nearest point on the path
+        ////20180828 // is > dCloseToPathThres, then geo location is off-path.
+        ////20180828 this.dCloseToPathThres = -1;
 
         // Get a list of stats items to be deleted from server.
         // Returns: array of wigo_ws_GeoTrailTimeStamp objs. 

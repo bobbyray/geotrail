@@ -1,0 +1,27 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:18:1-22:12
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:18:1-22:12
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:18:1-22:12
+	package
+		ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:19:7-37
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:18:11-69
+application
+ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:20:5-19
+uses-sdk
+ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+	android:targetSdkVersion
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
+		ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:5-43
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
+	android:minSdkVersion
+		ADDED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml:21:15-40
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
+		INJECTED from C:\ac\geotrail\platforms\android\com.phonegap.plugins.facebookconnect\geotrail-FacebookLib\AndroidManifest.xml
