@@ -168,12 +168,12 @@ android {
         }
     }
     defaultConfig {
-        versionCode 101350
+        versionCode 101360
         applicationId privateHelpers.extractStringFromManifest("package")
         if (cdvMinSdkVersion != null) {
             minSdkVersion cdvMinSdkVersion
         }
-        versionName '1.1.035'
+        versionName '1.1.036'
         minSdkVersion 26
     }
     lintOptions {
@@ -250,8 +250,8 @@ android {
 dependencies {
     implementation fileTree(include: '*.jar', dir: 'libs')
     // SUB-PROJECT DEPENDENCIES START
-    implementation(project(path: "CordovaLib"))
-    implementation(project(path: "com.phonegap.plugins.facebookconnect:FacebookLib"))
+    implementation project(path: 'CordovaLib')
+    implementation project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib')
     // SUB-PROJECT DEPENDENCIES END
 }
 

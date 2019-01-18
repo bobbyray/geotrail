@@ -1,6 +1,6 @@
 ﻿'use strict';
 /* 
-Copyright (c) 2015, 2016 Robert R Schomburg
+Copyright (c) 2015, 2016, 2019 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -116,7 +116,7 @@ function wigo_ws_FaceBookAuthentication(yourAppId) {
             if (response.status != "connected") {
                 // Not connected, so present div for facebook login.
 
-                facebookConnectPlugin.login(["public_profile"], CheckFaceBookLoginStatusResponse,
+                facebookConnectPlugin.login([""], CheckFaceBookLoginStatusResponse,  // was public_profile permission instead of "" for default.
                     function (response) {
                         // Failure. response is likely an error string. 
                         fnAuthenticated(that.EAuthResult.Error, response);
@@ -155,7 +155,7 @@ function wigo_ws_FaceBookAuthentication(yourAppId) {
                     _accessToken = response.authResponse.accessToken;
                     _userID = response.authResponse.userID;
 
-                    facebookConnectPlugin.api('/me', ["public_profile"], function (responseMe) {
+                    facebookConnectPlugin.api('/me', [], function (responseMe) { // Remove "",  // Was public_profile, instead of "" for default.
                         // Save User name.
                         var sError = "";
                         var bError = responseMe.error !== undefined;

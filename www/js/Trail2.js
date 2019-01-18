@@ -1,6 +1,6 @@
 ﻿'use strict';
 /* 
-Copyright (c) 2015 - 2017 Robert R Schomburg
+Copyright (c) 2015 - 2019 Robert R Schomburg
 Licensed under terms of the MIT License, which is given at
 https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 */
@@ -42,8 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.035-20180820-1310"; // Constant string for App version. // Preparing for Android 8, Api 26
-
+    var sVersion = "1.1.036-20190117-1419"; // Constant string for App version. // For default Facebook permissions.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -4209,7 +4208,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sCopyright = "2015 - 2018";
+        var sCopyright = "2015 - 2019";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
         return sMsg;
