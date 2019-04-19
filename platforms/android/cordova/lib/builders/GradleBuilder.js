@@ -197,7 +197,8 @@ GradleBuilder.prototype.prepEnv = function (opts) {
         var distributionUrlRegex = /distributionUrl.*zip/;
         /* jshint -W069 */
         //20180831 use gradle-4.4-all.zip instead of gradle-4.1-all.zip.
-        var distributionUrl = process.env['CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL'] || 'https\\://services.gradle.org/distributions/gradle-4.4-all.zip';
+        //20190419 use gradle-4.10.1-all.zip isntead of gradle-4.4-all.zip
+        var distributionUrl = process.env['CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL'] || 'https\\://services.gradle.org/distributions/gradle-4.10.1-all.zip';
         /* jshint +W069 */
         var gradleWrapperPropertiesPath = path.join(self.root, 'gradle', 'wrapper', 'gradle-wrapper.properties');
         shell.chmod('u+w', gradleWrapperPropertiesPath);

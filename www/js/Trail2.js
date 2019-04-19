@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.036-20190117-1419"; // Constant string for App version. // For default Facebook permissions.
+    var sVersion = "1.1.036-20190419-1525"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
