@@ -11,7 +11,6 @@ module.exports = function(context) {
     }
   
     const path = context.requireCordovaModule('path');
-    ////20180821 const androidStudioPath = path.join(context.opts.projectRoot, 'platforms/android/cordova/lib/AndroidStudio');
     const androidStudioPath = path.join(context.opts.projectRoot, 'platforms/android/cordovaLib/AndroidStudio');
     const androidStudio = context.requireCordovaModule(androidStudioPath);
     androidStudio.isAndroidStudioProject = function() {  return true; };

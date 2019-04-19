@@ -7,23 +7,19 @@ repositories {
 project.group = 'com.facebook.android'
 
 dependencies {
-    compile 'com.android.support:support-v4:[20,21)'
-    compile 'com.parse.bolts:bolts-android:1.1.2'
+    implementation 'com.android.support:support-fragment:28.0.0' //20190418Was implementation 'com.android.support:support-v4:[20,21)'
+    implementation 'com.parse.bolts:bolts-android:1.1.2'
 }
 
 android {
-    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
-    buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
-
+    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION) 
     defaultConfig {
         minSdkVersion Integer.parseInt(project.ANDROID_BUILD_MIN_SDK_VERSION)
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
     }
-
     lintOptions {
         abortOnError false
     }
-
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -31,6 +27,7 @@ android {
             res.srcDirs = ['res']
         }
     }
+    buildToolsVersion '28.0.3'
 }
 
 apply plugin: 'maven'
@@ -128,4 +125,6 @@ artifacts {
 
 afterEvaluate {
     androidJavadocs.classpath += project.android.libraryVariants.toList().first().javaCompile.classpath
+    //20190418 androidJavadocs.classpath += project.android.libraryVariants.toList().first().javaCompileProvider().classpath
+    //20190418 Might need the above stmt later because .javaCompile.classpath is obsolete after 2019. However above does not work now.
 }

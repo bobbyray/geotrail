@@ -340,7 +340,7 @@ public class PebblePGPlugin extends CordovaPlugin {
                 type = Constants.PebbleAppType.GOLF;
             }
             
-            ////20180824 byte[] decodedByte = Base64.decode(args.getString(2), 0);
+            //20180824 byte[] decodedByte = Base64.decode(args.getString(2), 0);
             byte[] decodedByte = android.util.Base64.decode(args.getString(2), 0); // Fix ambiguity between java.util.Base64 and android.util.Base64
             Bitmap icon = BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
 
