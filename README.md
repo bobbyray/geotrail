@@ -1,6 +1,6 @@
 # geotrail
 ##### Mobile phone app for geo location around a defined trail.
-The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and tested for Android phones, v4.2.2 and v7.1.2. The project also uses Android Studio so that java code for plugins can be written and debugged. A pc running Linux should work too.
+The [Apache / Cordova Platform](https://cordova.apache.org/) is used to build this app. The app has been built and run on Android phones, v4.2.2, v7.1.2, and v9. The project also uses Android Studio so that java code for plugins can be written and debugged. A pc running Linux should work too although Linux has not been tried.
 
 There is also a version for the iPhone in the [geotrail-pgb repository](https://github.com/bobbyray/geotrail-pgb).
 #### To try this app
@@ -40,9 +40,19 @@ Chrome must be installed on the phone device and on your pc.
 
 From Chrome on your pc:
 * chrome://inspect/#devices
- * Port forwarding needs to be enabled in Chrome on your pc. Cick on the _Port Forwarding_ button to do so and for help. 
+  * Port forwarding needs to be enabled in Chrome on your pc. Cick on the _Port Forwarding_ button to do so and for help. 
 * Click on WebView ws.wigo.geotrail to debug the app.
- * The familiar Chrome Debugger showing the HTML, CSS, and javacript for the app appears in a separate Chrome window. 
+  * The familiar Chrome Debugger showing the HTML, CSS, and javacript for the app appears in a separate Chrome window. 
 
 #### Server Side Code
 The [GeoPathsx project](https://github.com/bobbyray/GeoPathsx) is the repository for the server side code required by the GeoTrail app.
+
+#### Version of Tools Currently Used to Build
+* Cordova Platform v8.0.0
+* Gradle Distribution v4.10.1
+* Android Studio 3.3.2
+  * SDK Tools 26.1.1 
+  * SDK Build Tools 28.0.3 
+  * Gradle Plugin v3.3.2
+ 
+
