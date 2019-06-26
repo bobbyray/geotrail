@@ -356,7 +356,7 @@ function wigo_ws_View() {
     // Enumeration of mode for processing geo paths.
     // NOTE: the values must match the index of the option in selectMode drop list in trail2.html.
     this.eMode = {
-        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, record_stats_view: 6, unknown: 7,
+        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, record_stats_view: 6, walking_view: 7, unknown: 8,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -373,6 +373,8 @@ function wigo_ws_View() {
                 case this.select_mode:sMode = 'select_mode'; break;
                 case this.tou_not_accepted: sMode = 'tou_not_accepted'; break;
                 case this.record_stats_view: sMode = 'record_stats_view'; break;  
+                case this.walking_view: sMode = 'walking_view'; break;
+                case this.unknown: sMode = 'unknown'; break;
                 default: sMode = 'online_view'; break;  
             }
             return sMode;
@@ -594,6 +596,7 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
+            ShowElement(divWalkingBar, false);    ////20190622 added
             if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  
                 recordStatsHistory.close();
         }
@@ -613,7 +616,7 @@ function wigo_ws_View() {
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
-                titleBar.setTitle("Online Map"); 
+                titleBar.setTitle("Trail Maps");   ////20190624 was Online Map
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
                 ShowPathInfoDiv(true); 
@@ -665,7 +668,7 @@ function wigo_ws_View() {
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
-                // Note: view show sign-on bar.
+                // Note: view show sign-on bar. //20190622 Not used for quite awhile. Instead signin is shown without changing mode.
                 HideAllBars();
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
@@ -686,6 +689,13 @@ function wigo_ws_View() {
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
+            case this.eMode.walking_view:  ////20190622 added
+                HideAllBars();
+                titleBar.setTitle("Walking Map");
+                ShowElement(divWalkingBar, true);
+                walkingView.initialize();
+                break;
+
         }
     };
 
@@ -1221,6 +1231,8 @@ function wigo_ws_View() {
     }
 
     var divRecordStatsEdit = document.getElementById('divRecordStatsEdit'); 
+
+    var divWalkingBar = document.getElementById('divWalkingBar');  ////20190622 added.
     
     // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
@@ -3098,6 +3110,9 @@ function wigo_ws_View() {
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
+                    case that.event.show_stats:  ////20190625 added for WalkingView.
+                        stateStopped.showStats();
+                        break;
                 }
             };
         }
@@ -3162,6 +3177,11 @@ function wigo_ws_View() {
                 if (!bSavePathValid) { 
                     view.ShowAlert("There is no recorded trail.");
                 }
+            };
+
+            // Expose local function ShowStats(). Added for WalkingView. ////20190625 
+            this.showStats = function() {
+                ShowStats();
             };
 
             this.nextState = function(event) {
@@ -6925,7 +6945,8 @@ function wigo_ws_View() {
         // object unless Settings indicates a click for geo location on.
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view || 
-            nMode === that.eMode.offline) {
+            nMode === that.eMode.offline || 
+            nMode === that.eMode.walking_view )  {  ////20190625 added walking_view
             // First check if testing reccording a point.
             var bRecordedPt = recordFSM.testWatchPt(llAt);
             // If not a recorded point, update geo location wrt main trail.
@@ -7139,11 +7160,12 @@ function wigo_ws_View() {
     parentEl = document.getElementById('selectMode');
     var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
-                            ['online_view',   'Online'],        
-                            ['offline',       'Offline'],       
+                            ['online_view',   'Trail Maps'],           ////20190624 was Online
+                            ['offline',       'Offline Map'],          ////20190622 added word Map
                             ['online_edit',   'Edit a Trail'],        
                             ['online_define', 'Draw a Trail'],
-                            ['record_stats_view', 'Stats History']      
+                            ['record_stats_view', 'Stats History'],
+                            ['walking_view', 'Walking Map']             ////20190622 Added     
                            ]; 
     selectMode.fill(selectModeValues);
 
@@ -10331,6 +10353,163 @@ Are you sure you want to delete the maps?";
         var monthDayAry = new MonthDayAry(); // MonthDay obj. Used to fill array of days 30 before most recent stats.
     }
     var recordStatsMetrics = new RecordStatsMetrics(); 
+
+    ////20190622 added
+    // Object for the Walking mode, which simplifies recoring a trail.
+    // Walking mode is similar to the recording for the Online Map mode.
+    // However, only recording can be done; the option to also select a
+    // trail to follow is not available.  
+    // Constructor args:
+    //  view: ref to wigo_ws_View object.
+    //  ctrlIds: object of ids for the html controls. Defauts are provided.
+    function WalkingView(view, ctrlIds) {
+        // Prepares the walking mode.
+        // Note: open() does not show the walking control bar.
+        //       The bar is shown or not by view.setModeUI().
+        this.initialize = function() {
+            recordFSM.initialize(recordCtrl);
+            map.ClearPath(); 
+            map.ClearPathMarkers();
+            buWalkingPauseResume.value = NONE; ////20190625
+        };
+
+        // Returns from the walking mode to previous mode.
+        this.close = function() {
+
+        };
+
+        // ** private members
+        // An object that has the same interface as the DropDownControl object ddefined
+        // in the Wigo_Ws_CordovaControls object.
+        // Remarks: WalkingView uses this PsuedoDropListCtrl object in its use of
+        // the RecordFSM object. 
+        // Only the members of DropDownCtrl used by RecordFSM are provided.
+        // Construct Arg:
+        //  label: HtmlElement for a label. Required, cannot be undefined.
+        function PsuedoDropDownCtrl(label) {
+            // Empties the droplist.
+            // Arg:
+            //  iKeep: integer, optional. Keeps items before index given by iKeep in the list.
+            //          Defaults to 0, which removes all items.
+            this.empty = function(iKeep) {
+                if (typeof iKeep !== 'number') 
+                    var iKeep = 0;
+                if (iKeep < 0)
+                    iKeep = 0;
+                list.splice(iKeep);
+            };
+
+            // Appends item to the droplist.
+            // Args:
+            //  sDataValue: string for data-value attribute.
+            //  sText: string for text shown for item in the droplist.
+            //  bSelected: boolean, optional. If given, sets the value div to indicate
+            //             the item is selected. Only one item can be selected.
+            //             For multiple selects, the last one is effective.
+            this.appendItem = function(sDataValue, sText, bSelected) {
+                if (typeof bSelected !== 'boolean')
+                    bSelected = false;
+                if (typeof sDataValue !== 'string ')
+                    sDataValue = 'data_value';
+                if (typeof sText !== 'string')
+                    sText = 'text';
+                let item = {'sDataValue': sDataValue, 'sText': sText, 'bSelected': bSelected};
+            };
+
+            // Sets text for the label.
+            // Arg:
+            //  sLabel: string. text shown for the label.
+            this.setLabel = function(sLabel) {  
+                if (label) {
+                    label.innerText = sLabel;
+                }
+            };
+        
+
+            // ** Private members.
+            const list = []; // array of {[sDatValue: string , sText: string, bSelected: boolean]}obj:
+                             //   sDataValue is a key. 
+                             //   sText is the string value to display. 
+                             //   bSelected is true for array item selected.
+        }
+
+        // ** Constructor initialization.
+        if (!ctrlIds) {
+            ctrlIds = { labelWalkingState: 'labelWalkingState',     // Label for state of recording.
+                        buWalkingStartStop: 'buWalkingStartStop',               // Start_Stop button.
+                        buWalkingPauseResume: 'buWalkingPauseResume',           // Pause_Resume button.
+                        divWalkingMoreMenu: 'divWalkingMoreMenu'  // Container div for Menu for more options.
+                      };
+        }
+        const labelWalkingState = document.getElementById('labelWalkingState');
+        const buWalkingStartStop = document.getElementById(ctrlIds.buWalkingStartStop);
+        const buWalkingPauseResume = document.getElementById(ctrlIds.buWalkingPauseResume);
+        const parentEl = document.getElementById(ctrlIds.divWalkingMoreMenu);
+        const menuWalkingMore = new ctrls.DropDownControl(parentEl, "menuWalkingMore", "More", null, "img/ws.wigo.dropdownicon.png");
+        const menuWalkingMoreValues = [['stats_history', 'Stats History'],
+                                       ['my_loc', 'My Location']
+                                      ];
+        menuWalkingMore.fill(menuWalkingMoreValues);
+
+        const recordCtrl = new PsuedoDropDownCtrl(labelWalkingState); 
+        
+        // Attach event handlers for the controls
+        //   Consts for button values (text)
+        const STOP = 'End';       ////20190625 Was Stop
+        const START = 'Record';
+        const PAUSE = 'Pause';
+        const RESUME = 'Resume';
+        const UNCLEAR = 'Unclear';
+        const CLEAR = 'Clear';
+        const NONE = '';  // No text showing on button.
+
+        buWalkingStartStop.addEventListener('click', function(ev){
+            if (this.value === START) {  
+                // Change text for buttons
+                this.value = STOP;              
+                buWalkingPauseResume.value = PAUSE;   ////20190625 Was RESUME, a bug.
+                // Fire event for recordFSM.
+                recordFSM.nextState(recordFSM.event.start); 
+            } else if (this.value === STOP ) {
+                // Change text for buttons
+                this.value = START; 
+                buWalkingPauseResume.value = UNCLEAR;
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.stop); 
+                recordFSM.nextState(recordFSM.event.clear);
+                recordFSM.nextState(recordFSM.event.show_stats); ////20190625 move to after clear
+            }
+        }, false);
+        
+        buWalkingPauseResume.addEventListener('click', function(ev) {
+            if (this.value === RESUME) {
+                // Change text for buttons
+                this.value = PAUSE;
+                buWalkingStartStop.value = STOP; ////20190625 added
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.resume);
+            } else if (this.value === PAUSE) {
+                // Change text for buttons
+                this.value = RESUME;
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.stop);
+                recordFSM.nextState(recordFSM.event.show_stats);
+            } else if (this.value === UNCLEAR) {
+                // Change text for buttons
+                this.value = RESUME; // Can resume previous walk which ended. ////20190625 was CLEAR;
+                buWalkingStartStop.value = START;  // Can start new walk
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.unclear);
+                recordFSM.nextState(recordFSM.event.show_stats);
+            } else if (this.value === CLEAR) {
+                // Change text for buttons
+                this.value = UNCLEAR;
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.clear);
+            }
+        }, false);
+    }
+    var walkingView = new WalkingView(this);  ////20190622 added
 
     // Object for sending message to Pebble watch.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
