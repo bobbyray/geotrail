@@ -1080,27 +1080,15 @@ divRecordStatsRunTimeEstimate,
     width: 100%;
     padding-top: 0.5em;
 }
-/* ////20190623 not needed
-#labelWalkingState
-{
-    clear: both;
-}
-*/
 .WalkingCtrl {
     float: left;
     box-sizing: border-box;
     width: 24%;
-    /* ////20190623 height: 3em; */
     padding-top: 0.2em;
     padding-bottom: 0.2em;
     padding-left: 3%;
     padding-right: 5%;
 }
-/* ////20190623 not needed
-#divWalkingMoreMenu .wigo_ws_DropDownLabel {
-    left: 20%
-}
-*/
 #divWalkingMoreMenu .wigo_ws_DropDownIcon {
     left: inherit;
     right: 0px;

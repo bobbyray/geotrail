@@ -596,7 +596,7 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
-            ShowElement(divWalkingBar, false);    ////20190622 added
+            ShowElement(divWalkingBar, false);   
             if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  
                 recordStatsHistory.close();
         }
@@ -616,7 +616,7 @@ function wigo_ws_View() {
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
-                titleBar.setTitle("Trail Maps");   ////20190624 was Online Map
+                titleBar.setTitle("Trail Maps");   
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
                 ShowPathInfoDiv(true); 
@@ -689,7 +689,7 @@ function wigo_ws_View() {
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
-            case this.eMode.walking_view:  ////20190622 added
+            case this.eMode.walking_view:  
                 HideAllBars();
                 titleBar.setTitle("Walking Map");
                 ShowElement(divWalkingBar, true);
@@ -1232,7 +1232,7 @@ function wigo_ws_View() {
 
     var divRecordStatsEdit = document.getElementById('divRecordStatsEdit'); 
 
-    var divWalkingBar = document.getElementById('divWalkingBar');  ////20190622 added.
+    var divWalkingBar = document.getElementById('divWalkingBar');  
     
     // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
@@ -3110,9 +3110,6 @@ function wigo_ws_View() {
                         stateStopped.prepare();
                         curState = stateStopped;
                         break;
-                    ////20190626NotUsed case that.event.show_stats:  ////20190625 added for WalkingView.
-                    ////20190626NotUsed     stateStopped.showStats();
-                    ////20190626NotUsed     break;
                 }
             };
         }
@@ -3178,11 +3175,6 @@ function wigo_ws_View() {
                     view.ShowAlert("There is no recorded trail.");
                 }
             };
-
-            ////20190626NotUsed // Expose local function ShowStats(). Added for WalkingView. ////20190625 
-            ////20190626NotUsed this.showStats = function() {
-            ////20190626NotUsed     ShowStats();
-            ////20190626NotUsed };
 
             this.nextState = function(event) {
                 switch (event) {
@@ -6946,7 +6938,7 @@ function wigo_ws_View() {
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view || 
             nMode === that.eMode.offline || 
-            nMode === that.eMode.walking_view )  {  ////20190625 added walking_view
+            nMode === that.eMode.walking_view )  {  
             // First check if testing reccording a point.
             var bRecordedPt = recordFSM.testWatchPt(llAt);
             // If not a recorded point, update geo location wrt main trail.
@@ -7160,12 +7152,12 @@ function wigo_ws_View() {
     parentEl = document.getElementById('selectMode');
     var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
-                            ['online_view',   'Trail Maps'],           ////20190624 was Online
-                            ['offline',       'Offline Map'],          ////20190622 added word Map
+                            ['online_view',   'Trail Maps'],           
+                            ['offline',       'Offline Map'],          
                             ['online_edit',   'Edit a Trail'],        
                             ['online_define', 'Draw a Trail'],
                             ['record_stats_view', 'Stats History'],
-                            ['walking_view', 'Walking Map']             ////20190622 Added     
+                            ['walking_view', 'Walking Map']             
                            ]; 
     selectMode.fill(selectModeValues);
 
@@ -10354,7 +10346,7 @@ Are you sure you want to delete the maps?";
     }
     var recordStatsMetrics = new RecordStatsMetrics(); 
 
-    ////20190622 added
+    //20190622 added
     // Object for the Walking mode, which simplifies recoring a trail.
     // Walking mode is similar to the recording for the Online Map mode.
     // However, only recording can be done; the option to also select a
@@ -10370,10 +10362,9 @@ Are you sure you want to delete the maps?";
             recordFSM.initialize(recordCtrl);
             map.ClearPath(); 
             map.ClearPathMarkers();
-            HidebuWalkingPauseResume();        // Intially hide the PauseResume buttonn. ////20190627 added
-            buWalkingPauseResume.value = NONE; ////20190625
-            buWalkingStartStop.value = START;  ////20190625
-            ////DoGeoLocation(); ////20190627 added
+            HidebuWalkingPauseResume();        // Intially hide the PauseResume buttonn. 
+            buWalkingPauseResume.value = NONE; 
+            buWalkingStartStop.value = START;  
             // Show current location on the map and then zoom the map.
             TrackGeoLocation(-1, function(updResult, positionErr){ // -1 => no close to path check, always show.
                 if (positionErr === null) {
@@ -10480,76 +10471,18 @@ Are you sure you want to delete the maps?";
         const recordCtrl = new PsuedoDropDownCtrl(labelWalkingState); 
         
         // Attach event handlers for the controls
-        //   Consts for button values (text)
-
-        /* ////20190626 Worked (pretty much), but want to redo to not have UNCLEAR, except maybe in droplist.
-        const STOP = 'End';       ////20190625 Was Stop
-        const START = 'Record';
-        const PAUSE = 'Pause';
-        const RESUME = 'Resume';
-        const UNCLEAR = 'Unclear';
-        const CLEAR = 'Clear';
-        const NONE = '';  // No text showing on button.
-        buWalkingStartStop.addEventListener('click', function(ev){
-            if (this.value === START) {  
-                // Change text for buttons
-                this.value = STOP;              
-                buWalkingPauseResume.value = PAUSE;   ////20190625 Was RESUME, a bug.
-                // Fire event for recordFSM.
-                recordFSM.nextState(recordFSM.event.start); 
-            } else if (this.value === STOP ) {
-                // Change text for buttons
-                this.value = START; 
-                buWalkingPauseResume.value = UNCLEAR;
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.stop); 
-                recordFSM.nextState(recordFSM.event.clear);
-                recordFSM.nextState(recordFSM.event.show_stats); ////20190625 move to after clear
-            }
-        }, false);
-        
-        buWalkingPauseResume.addEventListener('click', function(ev) {
-            if (this.value === RESUME) {
-                // Change text for buttons
-                this.value = PAUSE;
-                buWalkingStartStop.value = STOP; ////20190625 added
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.resume);
-            } else if (this.value === PAUSE) {
-                // Change text for buttons
-                this.value = RESUME;
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.stop);
-                recordFSM.nextState(recordFSM.event.show_stats);
-            } else if (this.value === UNCLEAR) {
-                // Change text for buttons
-                this.value = RESUME; // Can resume previous walk which ended. ////20190625 was CLEAR;
-                buWalkingStartStop.value = START;  // Can start new walk
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.unclear);
-                recordFSM.nextState(recordFSM.event.show_stats);
-            } else if (this.value === CLEAR) {
-                // Change text for buttons
-                this.value = UNCLEAR;
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.clear);
-            }
-        }, false);
-        */
         const M_TO_SIDE = 400; // Number of meters to side of initial bounding rect for walking map.
-
-        const STOP = 'End';       ////20190625 Was Stop
-        const START = 'Start';    ////20190626 Try Start again, was Record.
-        const PAUSE = 'Pause';    ////20190626 was Stop, put back to Pause.
+        //   Consts for button values (text)
+        const STOP = 'End';       
+        const START = 'Start';    
+        const PAUSE = 'Pause';    
         const RESUME = 'Resume';
-        ////20190626NotUsed const UNCLEAR = 'Unclear';
-        ////20190626NotUsed const CLEAR = 'Clear';
         const NONE = '';  // No text showing on button.
         buWalkingStartStop.addEventListener('click', function(ev) {
             HidebuWalkingPauseResume(false); // Ensure button buWalkingPauseResume is visible.
             if (this.value === START) {  
                 // Ensure geolocation circle is removed.
-                map.ClearGeoLocationUpdate(); ////201927 added
+                map.ClearGeoLocationUpdate(); 
                 // Change text for buttons
                 this.value = STOP;              
                 buWalkingPauseResume.value = PAUSE;   
@@ -10572,7 +10505,7 @@ Are you sure you want to delete the maps?";
             if (this.value === RESUME) {
                 // Change text for buttons
                 this.value = PAUSE;
-                buWalkingStartStop.value = STOP;  // Needed for RESUME and ending recording. ////20190625 added
+                buWalkingStartStop.value = STOP;  // Needed for RESUME and ending recording. 
                 // Fire event for recordFSM
                 recordFSM.nextState(recordFSM.event.resume);
             } else if (this.value === PAUSE) {
@@ -10582,24 +10515,9 @@ Are you sure you want to delete the maps?";
                 recordFSM.nextState(recordFSM.event.stop);
                 recordFSM.nextState(recordFSM.event.show_stats);
             }
-            /* ////20190626 remove unclear and clear
-            else if (this.value === UNCLEAR) {
-                // Change text for buttons
-                this.value = RESUME; // Can resume previous walk which ended. ////20190625 was CLEAR;
-                buWalkingStartStop.value = START;  // Can start new walk
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.unclear);
-                recordFSM.nextState(recordFSM.event.show_stats);
-            } else if (this.value === CLEAR) {
-                // Change text for buttons
-                this.value = UNCLEAR;
-                // Fire event for recordFSM
-                recordFSM.nextState(recordFSM.event.clear);
-            }
-            */
         }, false);
     }
-    var walkingView = new WalkingView(this);  ////20190622 added
+    var walkingView = new WalkingView(this);  
 
     // Object for sending message to Pebble watch.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
