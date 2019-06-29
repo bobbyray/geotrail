@@ -581,6 +581,9 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
 
+
+    // Previous mode // Now has scope of View for RecordStatsHistory obj to see.
+    var nPrevMode = this.eMode.online_view; /////2019061; // this.eMode.online_view is 1, but not available until View is instantiated; // $$$$$ fix  // Previous mode ////20190628 made scope of view for RecordStatsHistory obj to see.
     // Set the user interface for a new mode.
     // Arg:
     //  newMode: eMode enumeration value for the new mode.
@@ -601,7 +604,8 @@ function wigo_ws_View() {
                 recordStatsHistory.close();
         }
 
-        var nPrevMode = nMode; 
+        ////20190628 var nPrevMode = nMode;  ////Moved to View scope.
+        nPrevMode = nMode;  ////20190628 changed to View scope.
 
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
@@ -4138,7 +4142,7 @@ function wigo_ws_View() {
 
     var recordFSM = new RecordFSM(this); 
 
-    var nMode = that.eMode.online_view; // Current mode.
+    var nMode = that.eMode.walking_view;////20190629Was that.eMode.online_view; // Current mode.
     
     // Initial home area is rectangle area around Oregon.
     var homeArea = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
@@ -6954,7 +6958,8 @@ function wigo_ws_View() {
     // Note: EditFSM object has its own OnMapClick2 event handler.
     function OnMapClick2(llAt) { 
         if (nMode === that.eMode.online_view || 
-            nMode === that.eMode.offline) {
+            nMode === that.eMode.offline || 
+            nMode === that.eMode.walking_view) {  ////20190629 added walking_view.
                 // Clear trail animation in case it is running.
                 map.ClearPathAnimation();
                 map.recordPath.clearPathAnimation(); 
@@ -7212,6 +7217,7 @@ function wigo_ws_View() {
     selectSignIn.fill([['facebook', 'Facebook'],
                        ['logout', 'Logout'],
                        ['reset','Reset Server Access'], 
+                       ['hide', 'Hide'],   ////20190629 added
                       ]);
 
     selectSignIn.onListElClicked = function(dataValue) {
@@ -7220,6 +7226,12 @@ function wigo_ws_View() {
         if (dataValue === 'reset') {  
             that.onResetRequest(nMode);
             that.ShowStatus("Reset server access.", false);
+            return;
+        }
+
+        // Check for hiding owner id div, ie the sign-in div. ////20190630 added now
+        if (dataValue === 'hide') {
+            ShowOwnerIdDiv(false);
             return;
         }
 
@@ -7587,6 +7599,9 @@ Are you sure you want to delete the maps?";
         //  nShrinkPels: number, optional. number of pels to reduce calculated height.
         //               Defaults to 0.
         this.open = function(nShrinkPels) {
+            // Add Close button to cell3 of header. ////20190628 added
+
+
             // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
             // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
             this.clearSelections(); 
@@ -9747,6 +9762,21 @@ Are you sure you want to delete the maps?";
         monthDiv.className = 'stats_history_month'; 
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
         yearDiv.className = 'stats_history_year'; 
+
+        ////20190628 Added Close button to cell3 of header div.
+        var closeDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell3')[0];
+        closeDiv.className = 'stats_history_close_div';
+        // Create input button: tag, input; id=buStatsHistoryClose; class: stats_history_close_btn
+        // Note: this.create is found by going up the prototype change to reach ControlBase.
+        var closeBtn = this.create('input', 'buStatsHistoryClose', 'stats_history_close_btn'); 
+        closeBtn.setAttribute('type', 'button');
+        closeBtn.setAttribute('value', 'Close');
+        // Append closeBtn to the closeDiv of the headerDiv.
+        closeDiv.appendChild(closeBtn);
+        // Callback handler for closeBtn.
+        closeBtn.addEventListener('click', function(ev){
+            view.setModeUI(nPrevMode); 
+        }, false);
         
         // Call back handler for selection in menuStatsHistory.
         var metricsReport = null; 
@@ -10362,8 +10392,16 @@ Are you sure you want to delete the maps?";
             recordFSM.initialize(recordCtrl);
             map.ClearPath(); 
             map.ClearPathMarkers();
-            HidebuWalkingPauseResume();        // Intially hide the PauseResume buttonn. 
-            buWalkingPauseResume.value = NONE; 
+
+            // Check for providing an unclear option for old path. //////20190629 added
+            if ( map.recordPath.isEmpty()) {
+                HidebuWalkingPauseResume();   // Intially hide the PauseResume button. 
+            } else {
+                HidebuWalkingPauseResume(false);      // Ensure PauseResume button is visible.
+                buWalkingPauseResume.value = UNCLEAR; // Old path can be uncleared.
+            }
+
+            ////20190629 buWalkingPauseResume.value = NONE; 
             buWalkingStartStop.value = START;  
             // Show current location on the map and then zoom the map.
             TrackGeoLocation(-1, function(updResult, positionErr){ // -1 => no close to path check, always show.
@@ -10401,6 +10439,8 @@ Are you sure you want to delete the maps?";
                 if (iKeep < 0)
                     iKeep = 0;
                 list.splice(iKeep);
+                // Update memuMoreWalking for animate trail.
+                menuWalkingMore.removeItem('animate_trail');
             };
 
             // Appends item to the droplist.
@@ -10413,11 +10453,16 @@ Are you sure you want to delete the maps?";
             this.appendItem = function(sDataValue, sText, bSelected) {
                 if (typeof bSelected !== 'boolean')
                     bSelected = false;
-                if (typeof sDataValue !== 'string ')
+                if (typeof sDataValue !== 'string')
                     sDataValue = 'data_value';
                 if (typeof sText !== 'string')
                     sText = 'text';
                 let item = {'sDataValue': sDataValue, 'sText': sText, 'bSelected': bSelected};
+                list.push(item); ////20190629 added not needed now but this is clearer if ever needed
+                // Update menuWalkingMore for animate trail.
+                if (sDataValue === 'animate_trail') { 
+                    menuWalkingMore.appendItem(sDataValue, sText, bSelected);
+                }
             };
 
             // Sets text for the label.
@@ -10463,10 +10508,41 @@ Are you sure you want to delete the maps?";
         const buWalkingPauseResume = document.getElementById(ctrlIds.buWalkingPauseResume);
         const parentEl = document.getElementById(ctrlIds.divWalkingMoreMenu);
         const menuWalkingMore = new ctrls.DropDownControl(parentEl, "menuWalkingMore", "More", null, "img/ws.wigo.dropdownicon.png");
-        const menuWalkingMoreValues = [['stats_history', 'Stats History'],
+        const menuWalkingMoreValues = [['record_stats_view', 'Stats History'],
                                        ['my_loc', 'My Location']
                                       ];
         menuWalkingMore.fill(menuWalkingMoreValues);
+        menuWalkingMore.onListElClicked = function(dataValue) {
+            // this.value is value of memuWalkingMore control.
+
+            // Helper function to change mode.
+            function AcceptModeChange() {
+                that.ClearStatus();
+                // Inform controller of the mode change, not needed.
+                // that.onModeChanged(nMode); // not needed.
+                var nMode = that.eMode.toNum(dataValue);  
+                that.setModeUI(nMode);
+            }
+
+            if (dataValue === 'record_stats_view') {
+                // Switch to Stats History View.
+                if (!recordFSM.isOff()) {
+                    ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
+                        if (bConfirm) {
+                            recordFSM.saveStats(); // Ensure stats for recording have been saved. 
+                            AcceptModeChange();
+                        } 
+                    } );
+                } else {
+                    AcceptModeChange(); 
+                }
+            } else if (dataValue === 'my_loc') {
+                DoGeoLocation();
+            } else if (dataValue === 'animate_trail') {
+                // Animate the trail.
+                recordFSM.nextState(recordFSM.event.animate_trail); 
+            }
+        };
 
         const recordCtrl = new PsuedoDropDownCtrl(labelWalkingState); 
         
@@ -10477,6 +10553,7 @@ Are you sure you want to delete the maps?";
         const START = 'Start';    
         const PAUSE = 'Pause';    
         const RESUME = 'Resume';
+        const UNCLEAR = 'Unclear';  ////20190629 added
         const NONE = '';  // No text showing on button.
         buWalkingStartStop.addEventListener('click', function(ev) {
             HidebuWalkingPauseResume(false); // Ensure button buWalkingPauseResume is visible.
@@ -10514,6 +10591,14 @@ Are you sure you want to delete the maps?";
                 // Fire event for recordFSM
                 recordFSM.nextState(recordFSM.event.stop);
                 recordFSM.nextState(recordFSM.event.show_stats);
+            } else if (this.value === UNCLEAR) {  ////20190629 added case
+                // Change text for buttons
+                this.value = PAUSE;  // Pause after resuming.
+                buWalkingStartStop.value = STOP; 
+                // Fire event for recordFSM to unclear and resuume from stopped state.
+                recordFSM.nextState(recordFSM.event.unclear);
+                // recordFSM.nextState(recordFSM.event.show_stats); // No point showing stats because resume overwrites.
+                recordFSM.nextState(recordFSM.event.resume)
             }
         }, false);
     }

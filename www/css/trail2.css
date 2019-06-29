@@ -873,6 +873,15 @@ label {
     float: left;
     padding-top: 0.3em;   
 }
+.stats_history_close_div { /* ////20190628 add cose div and btn  */
+    float: left;
+    width: 4em;
+    padding-left: 10%;
+    padding-top: 1em;  
+}
+.stats_history_close_btn {
+    width: inherit;
+}
 
 .stats_history_list { 
     clear: both;
@@ -1083,6 +1092,7 @@ divRecordStatsRunTimeEstimate,
 .WalkingCtrl {
     float: left;
     box-sizing: border-box;
+    height: 100%;
     width: 24%;
     padding-top: 0.2em;
     padding-bottom: 0.2em;
