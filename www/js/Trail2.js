@@ -10597,12 +10597,12 @@ Are you sure you want to delete the maps?";
                 recordFSM.nextState(recordFSM.event.show_stats);
             } else if (this.value === UNCLEAR) {  
                 // Change text for buttons
-                this.value = PAUSE;  // Pause after resuming.
+                this.value = RESUME;  // Do not automatically resume, have user touch button to resume.
                 buWalkingStartStop.value = STOP; 
                 // Fire event for recordFSM to unclear and resuume from stopped state.
                 recordFSM.nextState(recordFSM.event.unclear);
-                // recordFSM.nextState(recordFSM.event.show_stats); // No point showing stats because resume overwrites.
-                recordFSM.nextState(recordFSM.event.resume)
+                recordFSM.nextState(recordFSM.event.show_stats); // Show stats but do not  resume.
+                // recordFSM.nextState(recordFSM.event.resume);  // Remain paused
             }
         }, false);
     }
