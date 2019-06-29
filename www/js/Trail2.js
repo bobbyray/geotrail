@@ -481,9 +481,13 @@ function wigo_ws_View() {
     this.FormCurrentStatus = function() {  
         let sStatus = '';
         let sStatusPebble = '';
+        // For WalkingView, only show Record status. 
+        const bWalkingView = that.curMode() === that.eMode.walking_view; 
 
         // Helper to update status for tracking.
         function TrackStatus() {
+            if (bWalkingView)
+                return;
             if (trackTimer.bOn) {
                 sStatus += "Track On<br/>"
                 sStatusPebble += "Track On\n";
@@ -512,6 +516,8 @@ function wigo_ws_View() {
         
         // Helper to update status for acceleration sensing.
         function AccelStatus() {
+            if (bWalkingView)
+                return; 
             if (app.deviceDetails.isAndroid()) {
                 if (deviceMotion.bAvailable) {
                     let sSensing = deviceMotion.isSensing() ? 'On' : 'Off';
