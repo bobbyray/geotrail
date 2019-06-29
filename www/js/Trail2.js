@@ -583,7 +583,7 @@ function wigo_ws_View() {
 
 
     // Previous mode // Now has scope of View for RecordStatsHistory obj to see.
-    var nPrevMode = this.eMode.online_view; /////2019061; // this.eMode.online_view is 1, but not available until View is instantiated; // $$$$$ fix  // Previous mode ////20190628 made scope of view for RecordStatsHistory obj to see.
+    var nPrevMode = this.eMode.online_view; 
     // Set the user interface for a new mode.
     // Arg:
     //  newMode: eMode enumeration value for the new mode.
@@ -604,8 +604,7 @@ function wigo_ws_View() {
                 recordStatsHistory.close();
         }
 
-        ////20190628 var nPrevMode = nMode;  ////Moved to View scope.
-        nPrevMode = nMode;  ////20190628 changed to View scope.
+        nPrevMode = nMode; 
 
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
@@ -4142,7 +4141,7 @@ function wigo_ws_View() {
 
     var recordFSM = new RecordFSM(this); 
 
-    var nMode = that.eMode.walking_view;////20190629Was that.eMode.online_view; // Current mode.
+    var nMode = that.eMode.walking_view; //20190629Was that.eMode.online_view; // Current mode.
     
     // Initial home area is rectangle area around Oregon.
     var homeArea = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
@@ -6959,7 +6958,7 @@ function wigo_ws_View() {
     function OnMapClick2(llAt) { 
         if (nMode === that.eMode.online_view || 
             nMode === that.eMode.offline || 
-            nMode === that.eMode.walking_view) {  ////20190629 added walking_view.
+            nMode === that.eMode.walking_view) {  
                 // Clear trail animation in case it is running.
                 map.ClearPathAnimation();
                 map.recordPath.clearPathAnimation(); 
@@ -7217,7 +7216,7 @@ function wigo_ws_View() {
     selectSignIn.fill([['facebook', 'Facebook'],
                        ['logout', 'Logout'],
                        ['reset','Reset Server Access'], 
-                       ['hide', 'Hide'],   ////20190629 added
+                       ['hide', 'Hide'],   
                       ]);
 
     selectSignIn.onListElClicked = function(dataValue) {
@@ -7229,7 +7228,7 @@ function wigo_ws_View() {
             return;
         }
 
-        // Check for hiding owner id div, ie the sign-in div. ////20190630 added now
+        // Check for hiding owner id div, ie the sign-in div. 
         if (dataValue === 'hide') {
             ShowOwnerIdDiv(false);
             return;
@@ -7599,7 +7598,7 @@ Are you sure you want to delete the maps?";
         //  nShrinkPels: number, optional. number of pels to reduce calculated height.
         //               Defaults to 0.
         this.open = function(nShrinkPels) {
-            // Add Close button to cell3 of header. ////20190628 added
+            // Add Close button to cell3 of header.
 
 
             // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
@@ -9763,7 +9762,7 @@ Are you sure you want to delete the maps?";
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
         yearDiv.className = 'stats_history_year'; 
 
-        ////20190628 Added Close button to cell3 of header div.
+        // Add Close button to cell3 of header div.
         var closeDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell3')[0];
         closeDiv.className = 'stats_history_close_div';
         // Create input button: tag, input; id=buStatsHistoryClose; class: stats_history_close_btn
@@ -10393,7 +10392,7 @@ Are you sure you want to delete the maps?";
             map.ClearPath(); 
             map.ClearPathMarkers();
 
-            // Check for providing an unclear option for old path. //////20190629 added
+            // Check for providing an unclear option for old path. 
             if ( map.recordPath.isEmpty()) {
                 HidebuWalkingPauseResume();   // Intially hide the PauseResume button. 
             } else {
@@ -10401,7 +10400,6 @@ Are you sure you want to delete the maps?";
                 buWalkingPauseResume.value = UNCLEAR; // Old path can be uncleared.
             }
 
-            ////20190629 buWalkingPauseResume.value = NONE; 
             buWalkingStartStop.value = START;  
             // Show current location on the map and then zoom the map.
             TrackGeoLocation(-1, function(updResult, positionErr){ // -1 => no close to path check, always show.
@@ -10458,7 +10456,7 @@ Are you sure you want to delete the maps?";
                 if (typeof sText !== 'string')
                     sText = 'text';
                 let item = {'sDataValue': sDataValue, 'sText': sText, 'bSelected': bSelected};
-                list.push(item); ////20190629 added not needed now but this is clearer if ever needed
+                list.push(item); 
                 // Update menuWalkingMore for animate trail.
                 if (sDataValue === 'animate_trail') { 
                     menuWalkingMore.appendItem(sDataValue, sText, bSelected);
@@ -10553,7 +10551,7 @@ Are you sure you want to delete the maps?";
         const START = 'Start';    
         const PAUSE = 'Pause';    
         const RESUME = 'Resume';
-        const UNCLEAR = 'Unclear';  ////20190629 added
+        const UNCLEAR = 'Unclear';  
         const NONE = '';  // No text showing on button.
         buWalkingStartStop.addEventListener('click', function(ev) {
             HidebuWalkingPauseResume(false); // Ensure button buWalkingPauseResume is visible.
@@ -10591,7 +10589,7 @@ Are you sure you want to delete the maps?";
                 // Fire event for recordFSM
                 recordFSM.nextState(recordFSM.event.stop);
                 recordFSM.nextState(recordFSM.event.show_stats);
-            } else if (this.value === UNCLEAR) {  ////20190629 added case
+            } else if (this.value === UNCLEAR) {  
                 // Change text for buttons
                 this.value = PAUSE;  // Pause after resuming.
                 buWalkingStartStop.value = STOP; 

@@ -873,7 +873,7 @@ label {
     float: left;
     padding-top: 0.3em;   
 }
-.stats_history_close_div { /* ////20190628 add cose div and btn  */
+.stats_history_close_div { 
     float: left;
     width: 4em;
     padding-left: 10%;
