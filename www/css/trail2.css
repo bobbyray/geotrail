@@ -1087,7 +1087,8 @@ divRecordStatsRunTimeEstimate,
     box-sizing: border-box;
     height: 3.5em; 
     width: 100%;
-   padding-top: 0.5em; 
+    padding-top: 0.5em; 
+    padding-bottom: 0.5em;
 }
 .WalkingCtrl {
     float: left;
