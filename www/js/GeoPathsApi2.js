@@ -143,6 +143,8 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //  arTimeStamp: ref to array of wigo_ws_GeoTrailTimeStamp objs. the list of timestamps identifying the record stats to delete.
     //  onDone: Asynchronous completion handler. Signature:
     //      bOk: boolean: true for sucessful deletion.
+    //           If record is not found at server for the timestamp, bOk is still true 
+    //           because there is no record to delete. ////20190715 added not found comment.
     //      sStatus: string: description for the deletion result.
     //      Returns: void
     //  Synchronous return: boolean. true indicates delete successfully started.

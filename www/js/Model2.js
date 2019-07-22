@@ -111,6 +111,18 @@ function wigo_ws_RecordStatsXfrInfo() {
     this.nUploadTimeStamp = 0; 
     // Owner (user) id of  previously signed in user.
     this.sPreviousOwnerId = "";
+    ////20190714 added this.arDeleteId and this.arEditId
+    // Array for keeping track of deletions done locally that are yet to be transferred to sever.
+    this.arDeleteId = [];  // array of id, ie nTimeStamp of wigo_ws_GeoTrailRecordStats, to delete. 
+    // Array for keeping track of ids (timestamp) of wigo_ws_GeoTrailRecordStats that have been 
+    // added or edited but not yet uploaded to server.
+    this.arEditId = []; // element can be existing item to replace or an addition at the server.
+    // Array for ids copied from arEditId to indicate the wigo_ws_GeoTrailRecordStats ojbs whose 
+    // deletion at the server is in progress.
+    this.arDeleteIdPending =  []; 
+    // Array for of ids copied from arEditId to indicate the wigo_ws_GeoTrailRecordStats obj whose
+    // upload to the server is in progress.
+    this.arEditIdPending = []; 
 }
 
 // Object for element of array of residual RecordStats items than need to be 
@@ -118,6 +130,8 @@ function wigo_ws_RecordStatsXfrInfo() {
 function wigo_ws_RecordStatsXfrResidue() { 
     this.sOwnerId = ""; // String for owner id.
     this.arRecStats = []; // Array of wigo_ws_GeoTrailRecordStats objects for sOwnerId.        
+    ////20190715 add array of deletions for the residue
+    this.arRecStatsDeletedId = []; // Array of id (timestamp) for wigo_ws_GeoTrailRecordStats that have been deleted. 
 }
 
 // Object for the Model (data) used by html page.
@@ -230,7 +244,8 @@ function wigo_ws_Model(deviceDetails) {
 
     // Deletes recorded stats list at server.
     // Args:
-    //  arTimeStamp: ref to array of number. the list of timestamps identifying wigo_ws_GeoTrailRecordStats objs to delete. 
+    //  arTimeStamp: ref to array of wigo_ws_GeoTrailTimeStamp objs. the list of timestamps identifying the record stats to delete.
+    //               Note that array[i].nTimeStamp is the timestamp.
     //  onDone: Asynchronous completion handler. Signature:
     //      bOk: boolean: true for sucessful delete.
     //      sStatus: string: description for the delete result.
@@ -1265,6 +1280,104 @@ function wigo_ws_Model(deviceDetails) {
             }
         };
 
+        ////20190704 Add methods to access recordStatsXfrInfo.arEditId and .arDeleteId to delete, edit, and clear.
+        ////         Maybe no longer need recordStatsXfrInfo.nUploadTimeStamp,
+        ////         which would obviate member functions getUploadTimeStamp, setUploadTimeStamp, reduceUploadTimeStamp
+        //// $$$$ start here
+        // Adds to the edit list of timestamps (ids) of wigo_ws_GeoTrailRecordStats objs that need to be uploaded to server.
+        // The list is updated and saved to localStorage.
+        // Arg:
+        //  nTimestamp: number. nTimestamp of wigo_ws_GeoTrailRecordStats obj to add.
+        // Returns: nothing.
+        // Remarks: 
+        //   There is an edit list of ids for stats items. An item in the edit list can be a new item
+        //   or a replacement of an existing item. There is no distinction between new or replacement.
+        //   The server replaces a record for an existing id, or creates a new record if one dones not exist.
+        //   There is also delete list of ids for stats items. If nTimeStamp for the edit is in the delete list,
+        //   nTimeStamp is removed from the delete list. 
+        this.addUploadEditTimeStamp = function(nTimeStamp) {
+            AddInDescendingOrder(recordStatsXfrInfo.arEditId, nTimeStamp);
+            RemoveGivenDescendingList(recordStatsXfrInfo.arDeleteId, nTimeStamp);
+            SaveInfoToLocalStorage();
+        };
+
+        // Adds to the delete list of timestamps (ids) of wigo_ws_GeoTrailRecordStats objs that need to be deleted at server.
+        // The list is updated and saved to localStorage.
+        // Arg:
+        //  nTimestamp: number. nTimestamp of wigo_ws_GeoTrailRecordStats obj to add.
+        // Returns: nothing.
+        // Remarks: 
+        //   In addition to the delete list, there is an edit list.
+        //   If nTimeStamp for the delete is in the edit list,
+        //   nTimeStamp is removed from the edit list.
+        //   Also, it is not an error for the server to try to delete a record for which nTimeStamp
+        //   does not exist, in which case the server considers the record already deleted.
+        this.addUploadDeleteTimeStamp = function(nTimeStamp) {
+            AddInDescendingOrder(recordStatsXfrInfo.arDeleteId, nTimeStamp);
+            RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, nTimeStamp);
+            SaveInfoToLocalStorage();
+        };
+
+        
+        // Adds to the delete list of timestamps (ids) of wigo_ws_GeoTrailRecordStats objs that need to be deleted at server.
+        // Arg:
+        //  arGeoTrailTimestamp: array of wigo_ws_GeoTrailTimeStamp objs with the timestamps to add.
+        //                       Note that arGeoTrailTimestamp[i].nTimeStamp is the timestamp.
+        // Remarks:
+        //  See remarks for this.addUploadDeleteTimeStamp function above.
+        this.addUploadDeleteGeoTrailTimesmapList = function(arGeoTrailTimestamp) { ////20190720 added
+            for (let i=0; i < arGeoTrailTimestamp.length; i++) {
+                AddInDescendingOrder(recordStatsXfrInfo.arDeleteId, arGeoTrailTimestamp[i].nTimeStamp);
+                RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, arGeoTrailTimestamp[i].nTimeStamp);
+            }
+            if (arGeoTrailTimestamp.length > 0) {
+                SaveInfoToLocalStorage();
+            }
+        }; 
+
+
+        // Helper for adding nId to an array of number. An addition
+        // keeps the list in descending order with [0] being largest number (most recent timestamp).
+        // Args:
+        //  ar: array to which which to add nId.
+        //  nId: number added to ar. if nId is already in the list, it not added again.
+        function AddInDescendingOrder(ar, nId) {
+            let bDone = false;
+            for (let i = 0; i < ar.length; i++) {
+                if (nId > ar[i]) {
+                    // add nId at element 0.
+                    ar.splice(i, 0, nId);
+                    bDone = true;
+                    break;
+                } else if (nId === ar[i]) {
+                    // nId is already in the list. nothing to do.
+                    bDone = true;
+                    break;
+                }
+            }
+            if (!bDone) {
+                // nId is least number so add it to end of the list.
+                ar.push(nId); 
+            }
+        }
+
+        // Helper for removing nId from an array that is in descending order with element[0] being largest number.
+        // If nId is not in the array, does nothing.
+        //  ar: array of number in descending order, element [0] is largest number.
+        //  nId: number. id (timestamp) to remove.
+        function RemoveGivenDescendingList(ar, nId) {
+            for (let i=0; i < ar.length; i++) {
+                if (nId > ar[i]) {
+                    // nId cannot be in list that is in descending order, so quit looking.
+                    break;
+                } else if (nId === ar[i]) {
+                    // Found nId so delete it from the list.
+                    ar.splice(i,1);
+                    break;
+                }
+            }
+        }
+
         // Sets the previous signed in owner (user) id and saves to localStorage.
         this.setPreviousOwnerId = function(sOwnerId) {
             recordStatsXfrInfo.sPreviousOwnerId = sOwnerId;
@@ -1279,6 +1392,7 @@ function wigo_ws_Model(deviceDetails) {
             return recordStatsXfrInfo.sPreviousOwnerId;
         };
 
+        /* ////20190716 redo to use list of timestamps saved in localStorage for additions and deletions need at server.
         // Checks if there are RecordStats items that need to be uploaded to server.
         // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded
         //          for current user (owner). 
@@ -1304,6 +1418,194 @@ function wigo_ws_Model(deviceDetails) {
             }
             return arUploadRecStats;
         };
+        */
+        this.getRecordStatsUploadNeeded = function() {  ////20190717 Use this.doServerUpdates function instead ////20190716 re-written 
+            const aryRecStats = this.getLocalRecordStatsAry();
+            const arUploadRecStats = [];
+            let recStats = null;
+            for (let i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
+                recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i].nTimeStamp);
+                if (recStats !== null) {
+                    arUploadRecStats.push(recStats);
+                }
+            }
+            return arUploadRecStats;            
+        };
+
+        // Uploads to server updates for wigo_ws_GeoTrailRecordStats objs that have been added or edited.
+        // Also deletes at server detetions for wigo_ws_GeoTrailRecordStats objs.
+        // Synchronous return: boolean. true for update started. aync completion is indicated by the onDone callback.
+        // Arg:
+        //  OnDone: callback function with signature:
+        //      bOk: boolean: true for successful update. Also true if no update is needed.
+        //      sStatus: string. status message. bOk true && sStatus empty, indicates no update needed. 
+        // Remarks:
+        //  doServerUpdata() uses a temporary array of edits and deletions that is filled from
+        //  the edits and deletions that have been accumulated, which are cleared when the transfer
+        //  to the server begins. This allows more edits or deletions to be accumulated during the
+        //  transfer just in case more edits or deletions occur during the transfer. Once the transfer
+        //  for the edits and deletions has completed, the temporary arrays are emptied so they are
+        /// ready to be filled by the next update with the server.
+        this.doServerUpdates = function(onDone) {
+            if (bServerUpdatesInProgress) {
+                return false;
+            }
+
+            if (typeof onDone !== 'function')
+                onDone = function(bOk, sStatus) {}; // Set callback to noop if onDone is not given.
+
+            // Local helper to do async upload to server.
+            // Arg:
+            //  onDone: callback called upon completion of exchange with server. Signature:
+            //      bOk: boolean. true for successful.
+            //      sStatus: string. status message. bOk true && sStatus empty indicates no upload needed.
+            // Synchronous Return: boolean. true for async upload started or no upload needed.
+            function DoUpload(onDone) {
+                // Upload new or changed stats items.
+                let bStarted = true;
+                const arRecStats = GetRecordStatsUploadNeeded(); ////20190717 changed GetRecordStatsUploadNeeded() for upload stats pending.
+                if (arRecStats.length > 0) {
+                    bStarted = model.uploadRecordStatsList(arRecStats, function(bUploadOk, sStatus) {
+                        if (bUploadOk) {
+                            sStatus = "Uploaded {0} stats item(s)\n".format(arRecStats.length);
+                            // Successful uploaded to server. Clear the pending stats ids for the completed upload.
+                            recordStatsXfrInfo.arEditIdPending.splice(0);
+                            SaveInfoToLocalStorage();
+                        }
+                        onDone(bUploadOk, sStatus);
+                    });
+                } else {
+                    onDone(true, ""); // Ok, no upload needed.
+                }
+                return bStarted
+            }
+
+            // Local helper to do async deletions at server.
+            // Arg:
+            //  onDone: callback called upon completion of exchange with server. Signature.
+            //      bOk: boolean. true for successful.
+            //      sStatus: string. status message. bOk true && sStatus empty indicates no deletions needed.
+            // Synchronous Return: boolean. true for async deletion started or no deletions needed.
+            function DoDeleteAtServer(onDone) {
+                let bStarted = true;
+                const arDeleteId = GetRecordStatsDeleteNeeded();
+                if (arDeleteId.length > 0) {
+                    bStarted = model.deleteRecordStatsList(arDeleteId, function(bOk, sStatus) {
+                        if (bOk) {
+                            sStatus = "Deleted from server {0} stats item(s)\n".format(arDeleteId.length);
+                            // Successful deleted at server. Clear the pending stats ids for the completed upload.
+                            recordStatsXfrInfo.arDeleteIdPending.splice(0);
+                            SaveInfoToLocalStorage();
+                        }
+                        onDone(bOk, sStatus);
+                    }); 
+                } else {
+                    onDone(true, ""); // Ok, no upload needed.
+                }
+                return bStarted;
+            }
+
+            bServerUpdatesInProgress = true;
+            let sMsg = ""; // Status message for async completion of all updates (edits and deletes).
+            // Do upload to server if needed.
+            const bStarted = DoUpload(function(bOk, sStatus) {
+                if (bOk) {
+                    // Completed successful upload to server or no upload needed.
+                    sMsg += sStatus;
+                    // Do deletions at server if needed.
+                    const bDeleteStarted = DoDeleteAtServer(function(bOk, sStatus) {
+                        // Completed deletions at server or none needed. (May successs or error.)
+                        bServerUpdatesInProgress = false;
+                        sMsg += sStatus;
+                        onDone(bOk, sMsg);                        
+                    });
+                    if (!bDeleteStarted) {
+                        // Report an error if doing deletions at servr fails to start.
+                        bServerUpdatesInProgress = false;
+                        sMsg += "Cannot do deletions because server is busy.\n";
+                        onDone(false, sMsg);
+                    }
+                } else {
+                    // Error trying to upload so quit.
+                    bServerUpdatesInProgress = false;
+                    sMsg += sStatus;
+                    onDone(bOk, sMsg);
+                }
+            });
+            return bStarted;
+        };
+        let bServerUpdatesInProgress = false;  // Flag to avoid doing another server update until after completion of current update. 
+
+        // Helper to Check if there are RecordStats items that need to be uploaded to server.
+        // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded
+        //          for current user (owner). 
+        //          Returned array is empty if there is nothing to upload
+        //          Element 0 of the returned array is the most recent timestamp.
+        function GetRecordStatsUploadNeeded() {  ////20190717 added as helper 
+            // Append ids in arEditId to arEditPendingId.
+            let i=0;
+            for (i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
+                AddInDescendingOrder(recordStatsXfrInfo.arEditIdPending, recordStatsXfrInfo.arEditId[i]);
+            }
+            recordStatsXfrInfo.arEditId.splice(0); // clear the array that is now pending upload to server.
+            SaveInfoToLocalStorage(); 
+
+            const aryRecStats =   model.getRecordStatsAry(); ////20190718 this.getLocalRecordStatsAry();
+            const arUploadRecStats = [];
+            let recStats = null;
+            for (i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
+                recStats = aryRecStats.getId(recordStatsXfrInfo.arEditIdPending[i]);
+                if (recStats !== null) {
+                    arUploadRecStats.push(recStats);
+                }
+            }
+            return arUploadRecStats;            
+        };
+
+        // Help to check if there RecordStats items that need to be deleted at the server.
+        // Returns: array of wigo_ws_GeoTrailTimeStamp objs. the list of ids (timestamps) for stats obj to delete.
+        //          Returned array is empty if there is nothing to delete.
+        // Remarks
+        //  For the array returned, array[i].nTimeStamp is the timestamp. 
+        //  The array of wigo_ws_GeoTrailTimeStamp objs returned is what is needed by 
+        // wigo_ws_GeoPathsRESTfulApi.DeleteRecordStatsList(..) to delete records at the server. 
+        function GetRecordStatsDeleteNeeded() { ////20190717 added
+            let i=0;
+            for (i=0; i < recordStatsXfrInfo.arDeleteId.length; i++) {
+                AddInDescendingOrder(recordStatsXfrInfo.arDeleteIdPending, recordStatsXfrInfo.arDeleteId[i]); ////20190720 .arDeleteId was missing.
+            }
+            recordStatsXfrInfo.arDeleteId.splice(0); // clear the array for deletions that are now pending.
+            SaveInfoToLocalStorage();
+            let arGeoTrailTimeStamp = [];
+            for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
+                arGeoTrailTimeStamp.push(new wigo_ws_GeoTrailTimeStamp(recordStatsXfrInfo.arDeleteIdPending[i]));
+            }
+            return arGeoTrailTimeStamp;
+        }
+        
+        ////20190717 Write this.doServerUpdates = function {} instead.
+        ////20190717 // Clears in localStorage the list of ids for wigo_ws_GeoTrailRecordStats objs
+        ////20190717 // that need to be uploaded to server.
+        ////20190717 this.clearRecordStatsUploadNeeded = function() { ////20190716 added
+        ////20190717     recordStatsXfrInfo.arEditId.splice(0);
+        ////20190717     SaveInfoToLocalStorage();
+        ////20190717 };
+        ////20190717 
+        ////20190717 // Checks if there wigo_ws_GeoTrailRecordStats items that need to be deleted from the server.
+        ////20190717 // Returns: array of nTimeStamp of wigo_ws_GeoTrailRecordStats objs that need to be deleted
+        ////20190717 //          for current user (owner). 
+        ////20190717 //          Returned array is empty if there is nothing to upload
+        ////20190717 //          Element 0 of the returned array is the most recent timestamp.
+        ////20190717 this.getRecordStatsServerDeletesNeeded = function() { ////20190716 added
+        ////20190717     return recordStatsAryServer.arDeleteId; 
+        ////20190717 };
+        ////20190717 
+        ////20190717 // Clears in localStorage the list of ids for wigo_ws_GeoTrailRecordStats objs
+        ////20190717 // that need to be deleted from server.
+        ////20190717 this.clearRecordStatsServerDeletesNeeded = function() { ////20190716 added
+        ////20190717     recordStatsXfrInfo.arDeleteId.splice(0);
+        ////20190717     SaveInfoToLocalStorage();
+        ////20190717 };
 
         // Uploads record stats list to server.
         // Same as model.uploadRecordStatsList(arRecStats, onDone)
@@ -1312,7 +1614,7 @@ function wigo_ws_Model(deviceDetails) {
         };
 
         // Deletes record stats list at server.
-        // Same as model.uploadRecordStatsList(arTimeStamp, onDone);
+        // Same as model.deleteRecordStatsList(arTimeStamp, onDone);
         this.deleteRecordStatsList = function(arTimeStamp, onDone) { 
             return model.deleteRecordStatsList(arTimeStamp, onDone); 
         };
@@ -1418,6 +1720,20 @@ function wigo_ws_Model(deviceDetails) {
         function LoadInfoFromLocalStorage() {
             if (localStorage && localStorage[sRecordStatsXfrInfoKey]) { 
                 recordStatsXfrInfo = JSON.parse(localStorage[sRecordStatsXfrInfoKey]);
+                ////201907015 Initialize new members that may be missing.
+                // Initialize new members that may be missing.
+                if (recordStatsXfrInfo.arDeleteId === undefined) {
+                    recordStatsXfrInfo.arDeleteId = [];
+                }
+                if (recordStatsXfrInfo.arEditId === undefined) {
+                    recordStatsXfrInfo.arEditId = [];
+                }
+                if (recordStatsXfrInfo.arDeleteIdPending === undefined) {
+                    recordStatsXfrInfo.arDeleteIdPending = [];
+                }
+                if (recordStatsXfrInfo.arEditIdPending === undefined) {
+                    recordStatsXfrInfo.arEditIdPending  = [];
+                }
             }
             return recordStatsXfrInfo;
         };
@@ -1433,6 +1749,13 @@ function wigo_ws_Model(deviceDetails) {
         function LoadResidueFromLocalStorage() {
             if (localStorage && localStorage[sRecordStatsXfrResidueKey]) { 
                 arResidue = JSON.parse(localStorage[sRecordStatsXfrResidueKey]);
+                ////20190715 added check for new, undefined member.
+                // Initialize new members that may be missing.
+                for (let i=0; i < arResidue.length; i++) {
+                    if (arResidue[i].arRecStatsDeletedId === undefined) {
+                        arResidue[i].arRecStatsDeletedId = []; 
+                    }
+                }
             } else {
                 arResidue = [];
             }
