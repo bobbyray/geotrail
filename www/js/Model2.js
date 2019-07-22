@@ -111,7 +111,6 @@ function wigo_ws_RecordStatsXfrInfo() {
     this.nUploadTimeStamp = 0; 
     // Owner (user) id of  previously signed in user.
     this.sPreviousOwnerId = "";
-    ////20190714 added this.arDeleteId and this.arEditId
     // Array for keeping track of deletions done locally that are yet to be transferred to sever.
     this.arDeleteId = [];  // array of id, ie nTimeStamp of wigo_ws_GeoTrailRecordStats, to delete. 
     // Array for keeping track of ids (timestamp) of wigo_ws_GeoTrailRecordStats that have been 
@@ -130,7 +129,6 @@ function wigo_ws_RecordStatsXfrInfo() {
 function wigo_ws_RecordStatsXfrResidue() { 
     this.sOwnerId = ""; // String for owner id.
     this.arRecStats = []; // Array of wigo_ws_GeoTrailRecordStats objects for sOwnerId.        
-    ////20190715 add array of deletions for the residue
     this.arRecStatsDeletedId = []; // Array of id (timestamp) for wigo_ws_GeoTrailRecordStats that have been deleted. 
 }
 
@@ -1280,10 +1278,6 @@ function wigo_ws_Model(deviceDetails) {
             }
         };
 
-        ////20190704 Add methods to access recordStatsXfrInfo.arEditId and .arDeleteId to delete, edit, and clear.
-        ////         Maybe no longer need recordStatsXfrInfo.nUploadTimeStamp,
-        ////         which would obviate member functions getUploadTimeStamp, setUploadTimeStamp, reduceUploadTimeStamp
-        //// $$$$ start here
         // Adds to the edit list of timestamps (ids) of wigo_ws_GeoTrailRecordStats objs that need to be uploaded to server.
         // The list is updated and saved to localStorage.
         // Arg:
@@ -1325,7 +1319,7 @@ function wigo_ws_Model(deviceDetails) {
         //                       Note that arGeoTrailTimestamp[i].nTimeStamp is the timestamp.
         // Remarks:
         //  See remarks for this.addUploadDeleteTimeStamp function above.
-        this.addUploadDeleteGeoTrailTimesmapList = function(arGeoTrailTimestamp) { ////20190720 added
+        this.addUploadDeleteGeoTrailTimesmapList = function(arGeoTrailTimestamp) { 
             for (let i=0; i < arGeoTrailTimestamp.length; i++) {
                 AddInDescendingOrder(recordStatsXfrInfo.arDeleteId, arGeoTrailTimestamp[i].nTimeStamp);
                 RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, arGeoTrailTimestamp[i].nTimeStamp);
@@ -1392,34 +1386,7 @@ function wigo_ws_Model(deviceDetails) {
             return recordStatsXfrInfo.sPreviousOwnerId;
         };
 
-        /* ////20190716 redo to use list of timestamps saved in localStorage for additions and deletions need at server.
-        // Checks if there are RecordStats items that need to be uploaded to server.
-        // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded
-        //          for current user (owner). 
-        //          Returned array is empty if there is nothing to upload
-        //          Element 0 of the returned array is the most recent timestamp.
-        // Note: the wigo_ws_GeoTrailRecordStats objs in the returned array are those
-        //       whose timestamp is more recent than timestamp given by this.getUploadTimeStamp().
-        this.getRecordStatsUploadNeeded = function() { 
-            var arRecStats = model.getRecordStatsList();
-            var nPreviousUploadTimeStamp = this.getUploadTimeStamp();
-            // Check if RecordStats items have been added locally that have not been uploaded to server.
-            var recStats; 
-            var arUploadRecStats = []; 
-            for (var i= arRecStats.length-1; i >= 0; i--) {
-                recStats = arRecStats[i];
-                // If recent local RecStats item is more recent (greater) than last upload, add
-                // the item to the upload list.
-                if (recStats.nTimeStamp > nPreviousUploadTimeStamp) {
-                    arUploadRecStats.push(recStats);
-                } else {
-                    break;
-                }
-            }
-            return arUploadRecStats;
-        };
-        */
-        this.getRecordStatsUploadNeeded = function() {  ////20190717 Use this.doServerUpdates function instead ////20190716 re-written 
+        this.getRecordStatsUploadNeeded = function() {  
             const aryRecStats = this.getLocalRecordStatsAry();
             const arUploadRecStats = [];
             let recStats = null;
@@ -1463,7 +1430,7 @@ function wigo_ws_Model(deviceDetails) {
             function DoUpload(onDone) {
                 // Upload new or changed stats items.
                 let bStarted = true;
-                const arRecStats = GetRecordStatsUploadNeeded(); ////20190717 changed GetRecordStatsUploadNeeded() for upload stats pending.
+                const arRecStats = GetRecordStatsUploadNeeded(); 
                 if (arRecStats.length > 0) {
                     bStarted = model.uploadRecordStatsList(arRecStats, function(bUploadOk, sStatus) {
                         if (bUploadOk) {
@@ -1541,7 +1508,7 @@ function wigo_ws_Model(deviceDetails) {
         //          for current user (owner). 
         //          Returned array is empty if there is nothing to upload
         //          Element 0 of the returned array is the most recent timestamp.
-        function GetRecordStatsUploadNeeded() {  ////20190717 added as helper 
+        function GetRecordStatsUploadNeeded() {  
             // Append ids in arEditId to arEditPendingId.
             let i=0;
             for (i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
@@ -1550,7 +1517,7 @@ function wigo_ws_Model(deviceDetails) {
             recordStatsXfrInfo.arEditId.splice(0); // clear the array that is now pending upload to server.
             SaveInfoToLocalStorage(); 
 
-            const aryRecStats =   model.getRecordStatsAry(); ////20190718 this.getLocalRecordStatsAry();
+            const aryRecStats =   model.getRecordStatsAry(); 
             const arUploadRecStats = [];
             let recStats = null;
             for (i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
@@ -1569,10 +1536,10 @@ function wigo_ws_Model(deviceDetails) {
         //  For the array returned, array[i].nTimeStamp is the timestamp. 
         //  The array of wigo_ws_GeoTrailTimeStamp objs returned is what is needed by 
         // wigo_ws_GeoPathsRESTfulApi.DeleteRecordStatsList(..) to delete records at the server. 
-        function GetRecordStatsDeleteNeeded() { ////20190717 added
+        function GetRecordStatsDeleteNeeded() { 
             let i=0;
             for (i=0; i < recordStatsXfrInfo.arDeleteId.length; i++) {
-                AddInDescendingOrder(recordStatsXfrInfo.arDeleteIdPending, recordStatsXfrInfo.arDeleteId[i]); ////20190720 .arDeleteId was missing.
+                AddInDescendingOrder(recordStatsXfrInfo.arDeleteIdPending, recordStatsXfrInfo.arDeleteId[i]); 
             }
             recordStatsXfrInfo.arDeleteId.splice(0); // clear the array for deletions that are now pending.
             SaveInfoToLocalStorage();
@@ -1583,30 +1550,6 @@ function wigo_ws_Model(deviceDetails) {
             return arGeoTrailTimeStamp;
         }
         
-        ////20190717 Write this.doServerUpdates = function {} instead.
-        ////20190717 // Clears in localStorage the list of ids for wigo_ws_GeoTrailRecordStats objs
-        ////20190717 // that need to be uploaded to server.
-        ////20190717 this.clearRecordStatsUploadNeeded = function() { ////20190716 added
-        ////20190717     recordStatsXfrInfo.arEditId.splice(0);
-        ////20190717     SaveInfoToLocalStorage();
-        ////20190717 };
-        ////20190717 
-        ////20190717 // Checks if there wigo_ws_GeoTrailRecordStats items that need to be deleted from the server.
-        ////20190717 // Returns: array of nTimeStamp of wigo_ws_GeoTrailRecordStats objs that need to be deleted
-        ////20190717 //          for current user (owner). 
-        ////20190717 //          Returned array is empty if there is nothing to upload
-        ////20190717 //          Element 0 of the returned array is the most recent timestamp.
-        ////20190717 this.getRecordStatsServerDeletesNeeded = function() { ////20190716 added
-        ////20190717     return recordStatsAryServer.arDeleteId; 
-        ////20190717 };
-        ////20190717 
-        ////20190717 // Clears in localStorage the list of ids for wigo_ws_GeoTrailRecordStats objs
-        ////20190717 // that need to be deleted from server.
-        ////20190717 this.clearRecordStatsServerDeletesNeeded = function() { ////20190716 added
-        ////20190717     recordStatsXfrInfo.arDeleteId.splice(0);
-        ////20190717     SaveInfoToLocalStorage();
-        ////20190717 };
-
         // Uploads record stats list to server.
         // Same as model.uploadRecordStatsList(arRecStats, onDone)
         this.uploadRecordStatsList = function(arRecStats, onDone) { 
@@ -1720,7 +1663,6 @@ function wigo_ws_Model(deviceDetails) {
         function LoadInfoFromLocalStorage() {
             if (localStorage && localStorage[sRecordStatsXfrInfoKey]) { 
                 recordStatsXfrInfo = JSON.parse(localStorage[sRecordStatsXfrInfoKey]);
-                ////201907015 Initialize new members that may be missing.
                 // Initialize new members that may be missing.
                 if (recordStatsXfrInfo.arDeleteId === undefined) {
                     recordStatsXfrInfo.arDeleteId = [];
@@ -1749,7 +1691,6 @@ function wigo_ws_Model(deviceDetails) {
         function LoadResidueFromLocalStorage() {
             if (localStorage && localStorage[sRecordStatsXfrResidueKey]) { 
                 arResidue = JSON.parse(localStorage[sRecordStatsXfrResidueKey]);
-                ////20190715 added check for new, undefined member.
                 // Initialize new members that may be missing.
                 for (let i=0; i < arResidue.length; i++) {
                     if (arResidue[i].arRecStatsDeletedId === undefined) {

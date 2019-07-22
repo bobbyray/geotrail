@@ -7711,8 +7711,6 @@ Are you sure you want to delete the maps?";
                 recStats = arStatsUpdate.next();
                 while (recStats) {
                     AddStatsItem(recStats);
-                    ////20190718NoLongerUsed // Reduce the upload needed timestamp if necessary.
-                    ////20190718NoLongerUsed recordStatsXfr.reduceUploadTimeStamp(recStats.nTimeStamp);
                     recStats = arStatsUpdate.next();
                 }
             }
@@ -7743,13 +7741,11 @@ Are you sure you want to delete the maps?";
         //  stats: wigo_ws_GeoTrailRecordStats obj. the stats to queue.
         this.queueStatsUpdateItem = function(stats) { 
             arStatsUpdate.add(stats);
-            ////20190716 Also save to localStorage id of stats obj that needs to be upload to server.
             // Also save to localStorage id of stats obj that needs to be upload to server.
             const recordStatsXfr = view.onGetRecordStatsXfr();
             recordStatsXfr.addUploadEditTimeStamp(stats.nTimeStamp);
         };
 
-        /* ////20190718 redo 
         // Uploads to server record stats items that have been added since last upload.
         // Synchronous Return: boolean. 
         //      true indicates upload started. 
@@ -7758,38 +7754,6 @@ Are you sure you want to delete the maps?";
         // Note: Iff upload is needed, shows status message for the result.
         //       User must be signed in for upload to success.
         this.uploadAdditions = function() { 
-            // Upload updated stats items to server if needed and if user is signed in.
-            var bStarted = false;
-            var recordStatsXfr = view.onGetRecordStatsXfr();
-            var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-            if (arUploadRecStats.length > 0) {
-                if (view.getOwnerId()) {
-                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    bStarted = recordStatsXfr.uploadRecordStatsList(arUploadRecStats, function(bOk, sStatus) { 
-                        if (bOk) { 
-                            recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
-                        }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats item(s).".format(arUploadRecStats.length) : 
-                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
-                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
-                        view.ShowStatus(sMsg, !bOk);
-                    }); 
-                } else {
-                    view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
-                }
-            } 
-            return bStarted;
-        };
-        */
-
-        // Uploads to server record stats items that have been added since last upload.
-        // Synchronous Return: boolean. 
-        //      true indicates upload started. 
-        //      false indicates upload is not needed or upload failed to start.          
-        // Asynchronous Completion: If an uploaded is started, the completion is asynchronous
-        // Note: Iff upload is needed, shows status message for the result.
-        //       User must be signed in for upload to success.
-        this.uploadAdditions = function() { ////20190718 new rewrite
             // Upload updated stats items to server if needed and if user is signed in.
             const recordStatsXfr = view.onGetRecordStatsXfr();
             const bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus){
@@ -8226,9 +8190,8 @@ Are you sure you want to delete the maps?";
             curMonthYear.reset(); 
         }
 
-        /* ////20190710 redo to use recordStatsXfr.doServerUpdates() 
         // Event handler for Done button on edit div.
-        function OnEditDone(event) {
+        function OnEditDone(event) {  
             // Helper to check if two dates are the same, ignoring seconds and millisecond component.
             // Returns true if same.
             // Arg:
@@ -8249,250 +8212,7 @@ Are you sure you want to delete the maps?";
             }
 
             // Helper to update localStorage for itemData.
-            function UpdateLocalStorage() {
-                // Timestamp for itemData to add is unique.
-                // Set itemData in localStorage.
-                view.onSetRecordStats(itemData);
-                // Clear the stats list by removing all html child elements.
-                RemoveAllStatsRows();
-                // Get the new array of stats data recs from localStorage and
-                // update (display) the stats list.
-                that.update(); 
-                that.showMonthDate(); 
-
-                // Update the record stats metrics.
-                recordStatsMetrics.init(view.onGetRecordStatsList());  
-            }
-
-            // Helper to make a copy of RecordStats obj.
-            function NewRecordStatsObj(other) {
-                var stats = new wigo_ws_GeoTrailRecordStats();
-                wigo_ws_GeoTrailRecordStats.Copy(stats, other);
-                return stats;
-            }
-
-            // Helper to do async upload of itemData to server.
-            // Iff upload is successful, updates itemData in localStorage.
-            function DoUpload() {
-                // upload the new item to server.
-                var bStarted = recordStatsXfr.uploadRecordStatsList([itemData], function(bOk, sStatus) {
-                    if (bOk) {
-                        UploadCompleted();
-                    } else {
-                        var sMsg = "Failed to upload stats item to server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start uploading stats items to server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-
-            // Delete old stats item from server and from localStorage..
-            // Then iff update stats items at server and in localStorage.
-            function DoDeleteAndUpload() {
-                // Delete the old item at server.
-                var arUploadDelete = [];  
-                arUploadDelete.push(new wigo_ws_GeoTrailTimeStamp(nDeleteItemTimeStamp)); 
-                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                    if (bOk) {
-                        // Delete the item from localStorage.
-                        view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
-                        // upload the new item to server.
-                        DoUpload(); 
-                    } else {
-                        var sMsg = "Failed to delete old stats item at server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start deleting old stats items from server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-            
-            // Helper function called after successful upload to server.
-            function UploadCompleted() { 
-                // Update local storage, the stat history list, and stats metrics.
-                if (bChanged) {
-                    UpdateLocalStorage();
-                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; 
-                    view.ShowStatus(sMsg, false);                                                    
-                }
-            }
-
-            // Quit if stats item controls are not all valid.
-            if (!itemEditor.areCtrlsValid()) {
-                return; // Note that a status error has been displayed.
-            }
-
-            // Hide the editor's div.
-            ShowRecordStatsEditDiv(false); 
-            // Get the edited item data from the editor.
-            let nDeleteItemTimeStamp = null; // timestamp of item data to delete.
-            let itemData = itemEditor.getEditData();
-            let bAdd = !itemEditor.bEditing;
-            let bChanged = false; 
-            let originalItemData = itemEditor.getOriginalItemData(); // Get ref to original itemData before it was edited. 
-            if (itemEditor.bEditing && originalItemData) {  
-                // Check if stats item has been changed.
-                bChanged = itemEditor.isStatsChanged();  
-
-                let bSameDate = IsSameDate(originalItemData.nTimeStamp, itemData.nTimeStamp);
-                if (bSameDate) {
-                    // Date entered has not changed. Use timestamp in milliseconds from original data.
-                    // timestamp is key for finding the element to update so must match original date exactly.
-                    itemData.nTimeStamp = originalItemData.nTimeStamp;
-                } else {
-                    // Date entered by user has changed. 
-                    // Therefore delete original item from data and add new item.
-                    bChanged = true;
-                    bAdd = true; // Add a new stats item to local data below.
-                    nDeleteItemTimeStamp = originalItemData.nTimeStamp; 
-                }
-            }
-            if (bAdd) { 
-                let itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
-                // Adding new stats item. nTimeStamp of new stats item must be unique.
-                for (let i=0; itemFound && i < 100; i++) {
-                    itemData.nTimeStamp++; // Increment timestamp by one millisecond to make it unique.
-                    itemFound = FindStatsItem(itemData.nTimeStamp.toFixed(0));
-                    if (!itemFound) {
-                        // Now itemData.nTimeStamp is unique.
-                        break;
-                    }
-                }
-                if (!itemFound) {
-                    bChanged = true;
-                } else {
-                    AlertMsg("Failed to save item data!");
-                    return; 
-                }
-            }
-
-            var recordStatsXfr = view.onGetRecordStatsXfr();
-            // Delete stats item data at server if need be.
-            if (nDeleteItemTimeStamp) { 
-                // Delete the old item at server and iff ok, delete locally.
-                // Then iff ok, upload edited item  to server and iff ok, save locally.
-                DoDeleteAndUpload();
-            } else {
-                if (bChanged) {
-                    // Upload change to server and then, iif ok, save to localStorage. 
-                    DoUpload();
-                }
-            }
-        }
-        */
-
-        // Event handler for Done button on edit div.
-        function OnEditDone(event) {  ////20190720 re-written to use recordStatsXfr.doServerUpdates()
-            // Helper to check if two dates are the same, ignoring seconds and millisecond component.
-            // Returns true if same.
-            // Arg:
-            //  msTimeStamp1: number. timestamp in milliseconds for date1 to compare with date2.
-            //  msTimeStamp2: number. timestamp in milliseconds for date2 to compare with date1.
-            // Note: Check year, month, day, hour, minute.
-            //       The seonds and milliseconds components are not checked because
-            //       they are not given as editor controls.
-            function IsSameDate(msTimeStamp1, msTimeStamp2) {
-                let date1 = new Date(msTimeStamp1);
-                let date2 = new Date(msTimeStamp2); 
-                let bSame = date1.getFullYear() === date2.getFullYear() &&
-                            date1.getMonth() === date2.getMonth() &&
-                            date1.getDate() === date2.getDate() &&
-                            date1.getHours() === date2.getHours() &&
-                            date1.getMinutes() === date2.getMinutes();
-                return bSame;
-            }
-
-            /* ////20190719 not used
-            // Helper to update localStorage for itemData.
-            function UpdateLocalStorage() {
-                // Timestamp for itemData to add is unique.
-                // Set itemData in localStorage.
-                view.onSetRecordStats(itemData);
-                // Clear the stats list by removing all html child elements.
-                RemoveAllStatsRows();
-                // Get the new array of stats data recs from localStorage and
-                // update (display) the stats list.
-                that.update(); 
-                that.showMonthDate(); 
-
-                // Update the record stats metrics.
-                recordStatsMetrics.init(view.onGetRecordStatsList());  
-            }
-            */
-
-            /* ////20190719 not used
-            // Helper to make a copy of RecordStats obj.
-            function NewRecordStatsObj(other) {
-                var stats = new wigo_ws_GeoTrailRecordStats();
-                wigo_ws_GeoTrailRecordStats.Copy(stats, other);
-                return stats;
-            }
-            */
-
-            /* ////20190719 not used
-            // Helper to do async upload of itemData to server.
-            // Iff upload is successful, updates itemData in localStorage.
-            function DoUpload() {
-                // upload the new item to server.
-                var bStarted = recordStatsXfr.uploadRecordStatsList([itemData], function(bOk, sStatus) {
-                    if (bOk) {
-                        UploadCompleted();
-                    } else {
-                        var sMsg = "Failed to upload stats item to server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start uploading stats items to server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-            */
-
-            /* ////20190719 not used
-            // Delete old stats item from server and from localStorage..
-            // Then iff update stats items at server and in localStorage.
-            function DoDeleteAndUpload() {
-                // Delete the old item at server.
-                var arUploadDelete = [];  
-                arUploadDelete.push(new wigo_ws_GeoTrailTimeStamp(nDeleteItemTimeStamp)); 
-                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                    if (bOk) {
-                        // Delete the item from localStorage.
-                        view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
-                        // upload the new item to server.
-                        DoUpload(); 
-                    } else {
-                        var sMsg = "Failed to delete old stats item at server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start deleting old stats items from server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-            */
-            
-            /* ////20190719 not used
-            // Helper function called after successful upload to server.
-            function UploadCompleted() { 
-                // Update local storage, the stat history list, and stats metrics.
-                if (bChanged) {
-                    UpdateLocalStorage();
-                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; 
-                    view.ShowStatus(sMsg, false);                                                    
-                }
-            }
-            */
-
-            // Helper to update localStorage for itemData.
-            function UpdateLocalStorageAndDisplay() {  ////20190721 renamed from UpdateLocalStorage
+            function UpdateLocalStorageAndDisplay() {  
                 // Timestamp for itemData to add is unique.
                 // Set itemData in localStorage.
                 view.onSetRecordStats(itemData);
@@ -8558,19 +8278,6 @@ Are you sure you want to delete the maps?";
             }
 
             var recordStatsXfr = view.onGetRecordStatsXfr();
-            /* ////20190719 redo 
-            // Delete stats item data at server if need be.
-            if (nDeleteItemTimeStamp) { 
-                // Delete the old item at server and iff ok, delete locally.
-                // Then iff ok, upload edited item  to server and iff ok, save locally.
-                DoDeleteAndUpload();
-            } else {
-                if (bChanged) {
-                    // Upload change to server and then, iif ok, save to localStorage. 
-                    DoUpload();
-                }
-            }
-            */
             // Save locally the id of the stats item that needs to be updated at the server.
             if (nDeleteItemTimeStamp !== null) {
                 // Add the id of stats item that needs to be deleted at the server.
@@ -8580,17 +8287,16 @@ Are you sure you want to delete the maps?";
             // Save locally the id of stats item that needs to be edited at the server.
             recordStatsXfr.addUploadEditTimeStamp(itemData.nTimeStamp);
 
-            // Update the display for the edited item.  ////20190721 added this part
+            // Update the display for the edited item.  
             if (nDeleteItemTimeStamp !== null) {
                 view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
             }
             // Update local storage, the stat history list, and stats metrics.
             if (bChanged) {
                 UpdateLocalStorageAndDisplay();
-                var sMsg = !itemEditor.bEditing ? "Successfully Added stats item." : "Successfully Edited stats item."; ////20190721 was bAdd 
+                var sMsg = !itemEditor.bEditing ? "Successfully Added stats item." : "Successfully Edited stats item."; 
                 view.ShowStatus(sMsg, false);                                                    
             }
-            ////20190721 end of addition
             
             // Update the server for the edit user is logged in.
             if (bChanged) {
@@ -10043,21 +9749,6 @@ Are you sure you want to delete the maps?";
         // Call back handler for selection in menuStatsHistory.
         var metricsReport = null; 
         menuStatsHistory.onListElClicked = function(dataValue) {
-            /* ////20190720 move outside of function do OnEditDone() can cal too.
-            // Helper that checks if user is signed in. 
-            // Arg:
-            //  sNotSignedInMsg: string. status msg shown if user is not signed in.
-            // Returns: boolean. true if signed.
-            function IsUserSignedIn(sNotSignedInMsg) { 
-                var bSignedIn = view.getOwnerId().length > 0;
-                if (!bSignedIn) {
-                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in> Facebook.";
-                    view.ShowStatus(sMsg);
-                }
-                return bSignedIn;
-            }
-            */
-            
             // Helper that gets list of item descriptions.
             // Arg:
             //  arId: array of unique html id of selected data items.
@@ -10093,7 +9784,7 @@ Are you sure you want to delete the maps?";
                 return sMsg;
             }
 
-            view.ClearStatus();  // Clear status div.  ////20190721 added
+            view.ClearStatus();  // Clear status div.  
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 if (metricsReport)          
@@ -10104,96 +9795,65 @@ Are you sure you want to delete the maps?";
                 // Set metrics report to fill screen.
                 metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
-                ////20190719 if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { 
-                    itemEditor.bEditing = false; 
-                    itemEditor.setTitle("Add a New Record Stats Item"); 
-                    let itemData = itemEditor.newItemData();
-                    itemData.nTimeStamp = Date.now();
-                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
-                    itemEditor.setEstimateToggleCtrls(); 
-                    itemEditor.setEditCtrls(itemData);
-                    ShowRecordStatsEditDiv(true); 
-                ////20190719 } 
+                itemEditor.bEditing = false; 
+                itemEditor.setTitle("Add a New Record Stats Item"); 
+                let itemData = itemEditor.newItemData();
+                itemData.nTimeStamp = Date.now();
+                itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
+                itemEditor.setEstimateToggleCtrls(); 
+                itemEditor.setEditCtrls(itemData);
+                ShowRecordStatsEditDiv(true); 
             } else if (dataValue === 'edit_stats_item') { 
-                ////20190719 if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { 
-                    let arId = Object.keys(itemsSelected);
-                    if (arId.length === 1) {
-                        itemEditor.bEditing = true;
-                        itemEditor.setTitle("Edit a Record Stats Item"); 
-                        let itemData = that.getItemData(arId[0]);
-                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
-                        itemEditor.setEstimateToggleCtrls();
-                        itemEditor.setEditCtrls(itemData);
-                        ShowRecordStatsEditDiv(true);
-                    } else {
-                        AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
-                    }
-                ////20190719 }
+                let arId = Object.keys(itemsSelected);
+                if (arId.length === 1) {
+                    itemEditor.bEditing = true;
+                    itemEditor.setTitle("Edit a Record Stats Item"); 
+                    let itemData = that.getItemData(arId[0]);
+                    itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
+                    itemEditor.setEstimateToggleCtrls();
+                    itemEditor.setEditCtrls(itemData);
+                    ShowRecordStatsEditDiv(true);
+                } else {
+                    AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
+                }
             } else if (dataValue === 'delete_selected') {
-                ////20190719 if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { 
-                    // Prompt user if no item is selected.
-                    let arId = Object.keys(itemsSelected);  
-                    if (arId.length > 0) {  
-                        ConfirmYesNo(GetConfirmDeleteListMsg(arId),
-                            function(bConfirm) {
-                                if (bConfirm) {
-                                    /* ////20190719 redo to allow deleting stats items locally without first deleting at server.
-                                    // Delete the items at server first.
-                                    // Iff deletion at server is successful, then delete locally.
-                                    // Delete the old item at server first.
-                                    var arUploadDelete = GetServerDeleteSelections();
-                                    var recordStatsXfr = view.onGetRecordStatsXfr();  
-                                    var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                                        if (bOk) {
-                                            view.onDeleteRecordStats(itemsSelected); 
-                                            // Update the stats metrics 
-                                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                                            // Remove selected items from list displayed.
-                                            DeleteSelections();
-                                            that.showMonthDate(); 
-                                            var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
-                                            view.ShowStatus(sMsg, false); 
-                                        } else {
-                                            var sMsg = "Failed to delete {0} stats item(s).".format(arUploadDelete.length);
-                                            view.ShowStatus(sMsg)
+                // Prompt user if no item is selected.
+                let arId = Object.keys(itemsSelected);  
+                if (arId.length > 0) {  
+                    ConfirmYesNo(GetConfirmDeleteListMsg(arId),
+                        function(bConfirm) {
+                            if (bConfirm) {
+                                // Get list of deletion id (timestamps) for deletion at the server. 
+                                const arUploadDelete = GetServerDeleteSelections();
+                                // Update in localStorage the list of stats ids to be deleted at the server.
+                                var recordStatsXfr = view.onGetRecordStatsXfr();  
+                                recordStatsXfr.addUploadDeleteGeoTrailTimesmapList(arUploadDelete);
+                                
+                                // Delete the stats items locally. 
+                                view.onDeleteRecordStats(itemsSelected); 
+                                // Update the stats metrics 
+                                recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                // Remove selected items from list displayed.
+                                DeleteSelections();
+                                that.showMonthDate(); 
+                                var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
+                                view.ShowStatus(sMsg, false); 
+                                // if user is signed in, delete items at the server.
+                                if (IsUserSignedIn("To also delete Stats at server, sign-in.")) {
+                                    // User is signed in so update the server to delete stats.
+                                    recordStatsXfr.doServerUpdates(function(bOk, sStatus){
+                                        // Show result for the server update only if there is an error..
+                                        if (!bOk) {
+                                            view.AppendStatusDiv(sStatus, true); // true => error
                                         }
-                                    });
-                                    if (!bStarted) {
-                                        view.ShowStatus("Failed to start deleting stats item(s) at server.");
-                                    }
-                                    */
-                                    // Get list of deletion id (timestamps) for deletion at the server. ////20190719 redo starts here
-                                    const arUploadDelete = GetServerDeleteSelections();
-                                    // Update in localStorage the list of stats ids to be deleted at the server.
-                                    var recordStatsXfr = view.onGetRecordStatsXfr();  
-                                    recordStatsXfr.addUploadDeleteGeoTrailTimesmapList(arUploadDelete);
-                                    
-                                    // Delete the stats items locally. 
-                                    view.onDeleteRecordStats(itemsSelected); 
-                                    // Update the stats metrics 
-                                    recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                                    // Remove selected items from list displayed.
-                                    DeleteSelections();
-                                    that.showMonthDate(); 
-                                    var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
-                                    view.ShowStatus(sMsg, false); 
-                                    // if user is signed in, delete items at the server.
-                                    if (IsUserSignedIn("To also delete Stats at server, sign-in.")) {
-                                        // User is signed in so update the server to delete stats.
-                                        recordStatsXfr.doServerUpdates(function(bOk, sStatus){
-                                            // Show result for the server update only if there is an error..
-                                            if (!bOk) {
-                                                view.AppendStatusDiv(sStatus, true); // true => error
-                                            }
-                                        }); 
-                                    }
+                                    }); 
                                 }
-                            }); 
-                    } else { 
-                        let sMsg = "Select one or more items for deletion by touching the Date of an item.";
-                        AlertMsg(sMsg);
-                    } 
-                ////20190719 }
+                            }
+                        }); 
+                } else { 
+                    let sMsg = "Select one or more items for deletion by touching the Date of an item.";
+                    AlertMsg(sMsg);
+                } 
             } else if (dataValue === 'clear_selected') {
                 // Prompt user if no item is selected.
                 let arId = Object.keys(itemsSelected);  
