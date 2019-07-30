@@ -32,7 +32,8 @@ Class Names for CSS
     wigo_ws_StatusClose
     wigo_ws_StatusError
     wigo_ws_StatusNoError
-    wigo_ws_status_item
+    wigo_ws_status_item         (for a span)
+    wigo_ws_status_item_div     (for a div)
 
     wigo_ws_NoShow
     wigo_ws_Show
@@ -930,7 +931,7 @@ function Wigo_Ws_CordovaControls() {
         //  bError: boolean. true indicated error highlighting.
         // Note: appends div element to status, whereas this.add appends a span element.
         this.addDiv = function(text, bError) {  
-            var item = this.create('div', null, 'wigo_ws_status_item');
+            var item = this.create('div', null, 'wigo_ws_status_item_div');  ////20190728 was wigo_ws_status_item same as for span
             item.innerHTML = text;
             statusDiv.appendChild(item);
             item.scrollIntoView(false);  // false => align to bottom of parent.

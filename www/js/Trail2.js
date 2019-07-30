@@ -465,9 +465,10 @@ function wigo_ws_View() {
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     // Note: appends a div element, whereas this.AppendStatus appends a span element.
     this.AppendStatusDiv = function (sStatus, bError) {  
-        if (!divStatus.isEmpty()) {
-            sStatus = "<br/>" + sStatus;
-        }
+        ////20190728 Use css for class wigo_ws_status_item_div to position div.
+        ////20190728 if (!divStatus.isEmpty()) {
+        ////20190728     sStatus = "<br/>" + sStatus;
+        ////20190728 }
 
         divStatus.addDiv(sStatus, bError);
         titleBar.scrollIntoView(); 
@@ -7266,14 +7267,11 @@ function wigo_ws_View() {
                 // Save record stats residue for current user if need be.
                 var sOwnerId =  that.getOwnerId();
                 var recordStatsXfr = that.onGetRecordStatsXfr();
-                var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-                if (arUploadRecStats.length > 0) {
-                    if (sOwnerId) {
-                        recordStatsXfr.clearResidue(sOwnerId); 
-                        recordStatsXfr.appendResidueAry(sOwnerId, arUploadRecStats);
-                        recordStatsXfr.setUploadTimeStamp(arUploadRecStats[0].nTimeStamp); // Note: element 0 is most recent 
-                    }
+                ////20190729Oops if (recordStatsXfr.isaResidue()) {  
+                if (sOwnerId) {
+                    recordStatsXfr.moveEditsAndDeletesIntoResidue(sOwnerId); 
                 }
+                ////20190729Oops }
                 // Save previous owner id before logging out.
                 if (sOwnerId ) {
                     recordStatsXfr.setPreviousOwnerId(sOwnerId);
@@ -9465,9 +9463,31 @@ Are you sure you want to delete the maps?";
             //        some other exchange with server is in progrss.
             this.sync = function(onDone) {
                 if (recordStatsXfr === null)
-                    recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+                    recordStatsXfr =  view.onGetRecordStatsXfr(); 
 
-                let bStarted  = CompareStats(onDone);
+                ////20190730 let bStarted  = CompareStats(onDone);
+                ////20190730 return bStarted;
+                // First update at server any edits and deletes done locally but not at server,
+                // then sync with the server.
+                let bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {
+                    // Helper to return calling onDone(..) when server is busy.
+                    function OnDoneForServerBusy() {
+                        // bOk is false.
+                        // nLocalStatsAdded is 0.
+                        onDone(false, 0, "Cannot sync now because Server is busy.");
+                    }
+
+                    if (bOk) {
+                        const bStarted  = CompareStats(function(bOk, nLocalStatsAdded, sStatus){
+                            onDone(bOk, nLocalStatsAdded, sStatus); 
+                        });
+                        if (!bStarted) {
+                            OnDoneForServerBusy();
+                        }
+                    } else {
+                        OnDoneForServerBusy();
+                    }
+                });
                 return bStarted;
             };
             
@@ -9827,7 +9847,7 @@ Are you sure you want to delete the maps?";
                                 const arUploadDelete = GetServerDeleteSelections();
                                 // Update in localStorage the list of stats ids to be deleted at the server.
                                 var recordStatsXfr = view.onGetRecordStatsXfr();  
-                                recordStatsXfr.addUploadDeleteGeoTrailTimesmapList(arUploadDelete);
+                                recordStatsXfr.addUploadDeleteGeoTrailTimeStampList(arUploadDelete);
                                 
                                 // Delete the stats items locally. 
                                 view.onDeleteRecordStats(itemsSelected); 
@@ -9839,7 +9859,8 @@ Are you sure you want to delete the maps?";
                                 var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
                                 view.ShowStatus(sMsg, false); 
                                 // if user is signed in, delete items at the server.
-                                if (IsUserSignedIn("To also delete Stats at server, sign-in.")) {
+                                const sNotSignedInMsg = sMsg + "<br>To also delete Stats at server, sign-in:"; ////20192029 changed not signed in msg a little bit.
+                                if (IsUserSignedIn(sNotSignedInMsg)) {  
                                     // User is signed in so update the server to delete stats.
                                     recordStatsXfr.doServerUpdates(function(bOk, sStatus){
                                         // Show result for the server update only if there is an error..
@@ -9887,7 +9908,7 @@ Are you sure you want to delete the maps?";
         function IsUserSignedIn(sNotSignedInMsg) { 
             var bSignedIn = view.getOwnerId().length > 0;
             if (!bSignedIn) {
-                var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in> Facebook.";
+                var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in > Facebook.";
                 view.ShowStatus(sMsg);
             }
             return bSignedIn;
@@ -11062,7 +11083,6 @@ function wigo_ws_Controller() {
     };
 
     view.onAuthenticationCompleted = function (result) {
-
         // result = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus}
         var eStatus = view.eAuthStatus();
         if (result.status === eStatus.Ok) {
@@ -11072,18 +11092,25 @@ function wigo_ws_Controller() {
             var bOk = model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
                 var recordStatsXfr = model.getRecordStatsXfr();
                 var sPreviousOwnerId = recordStatsXfr.getPreviousOwnerId();
-                var bSameUser = result.userID === sPreviousOwnerId; 
+                ////20190728MoveDownAndRedo var bSameUser = sPreviousOwnerId.length === 0 || result.userID === sPreviousOwnerId; 
                 // Save user info to localStorage.
                 model.setOwnerId(result.userID);
                 model.setOwnerName(result.userName);
                 model.setAccessHandle(result.accessHandle);
                 view.setOwnerName(result.userName);
                 view.setOwnerId(result.userID);
+                const bSameUser = recordStatsXfr.isSameUser();  ////20190728 moved here and redid
                 if (result.status === model.eAuthStatus().Ok) {
-                    // Upload record stats residue if need be for user that signed in and download record stats.
+                    // Upload record stats residue if need be for user that signed in and download record stats for a new user.
+
+                    // Helper to show status message that server is busy, i.e. failed to start transfer with server.
+                    function ShowServerBusyStatus() {
+                        view.AppendStatusDiv("Fail to update server because it is busy.", true); // true => error.
+                    }
+
                     // Helper to complete successful athentication after download Record Stats items for new user.
                     function DoForAuthOk() { 
-                        view.AppendStatus("User successfully logged in.", false);
+                        view.AppendStatusDiv("User successfully logged in.", false);
                         var nMode = view.curMode();
                         if (nMode === view.eMode.online_view) {
                             // Check if logon is due to recording a trail, in which case 
@@ -11103,33 +11130,6 @@ function wigo_ws_Controller() {
     
                     }
 
-                    // Helper to upload residue for result.sOwnerId.
-                    // Arg:
-                    //  onDone: Async callback after upload is completed. Signature:
-                    //              Arg:
-                    //                  bOk: boolean: true for successful upload of residue.
-                    //              Return: none.
-                    //          If there is no residue to upload, callback is immediate  with bOk true.
-                    // Synchronous Return: boolean. true for ok. false for failed to start upload.
-                    function DoUploadResidue(onDone) {
-                        // Upload record stats residue if there is a residue then download record stats.
-                        var bOk = true;
-                        var arResidueRecStats = recordStatsXfr.getResideAry(result.userID);
-                        if (arResidueRecStats.length > 0) {
-                            bOk = model.uploadRecordStatsList(arResidueRecStats, function(bOk, sStatus) {
-                                if (bOk) {
-                                    recordStatsXfr.clearResidue(result.userID); 
-                                } else { 
-                                    view.AppendStatus("Failed to upload residual Record Stats items: " + sStatus);
-                                }
-                                onDone(bOk);
-                            });
-                        } else {
-                            onDone(true);
-                        }
-                        return bOk;
-                    }
-
                     // Helper to download record stats for user.
                     // Note: Only call afer a successful upload.
                     function DoDownloadRecStats() {
@@ -11142,9 +11142,6 @@ function wigo_ws_Controller() {
                                 
                                 // Set Record Stats History data in localStorage for the new user.
                                 model.setRecordStatsList(arRecStats);
-                                // Set the most recent upload timestamp for updating a new record stats item at server.
-                                var nUploadTimeStamp = arRecStats.length > 0 ? arRecStats[arRecStats.length-1].nTimeStamp : 0;
-                                recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                                 // Clear the RecordStatsHistory ui.
                                 view.clearRecordStatsHistory(); 
                                 // If view is Stats History, reload the view.
@@ -11152,7 +11149,7 @@ function wigo_ws_Controller() {
                                     view.setModeUI(view.eMode.record_stats_view);
                                 } 
                             } else {
-                                view.AppendStatus("Failed to download Record Stats items: " + sStatus);
+                                view.AppendStatusDiv("Failed to download Record Stats items: " + sStatus);
                                 DoXfrErrorCleanup();
                             }
                             // Complete the successful authentication.
@@ -11160,6 +11157,7 @@ function wigo_ws_Controller() {
                         });
                         // Check syncrhonous return. Expect to always be ok.
                         if (!bOk) { 
+                            ShowServerBusyStatus();
                             DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
                             DoForAuthOk(); 
                         }
@@ -11171,38 +11169,58 @@ function wigo_ws_Controller() {
                     function DoXfrErrorCleanup() { 
                         // If sPreviousOwnerId is empty, the local record stats are for no user signed in.
                         // In this case leave the them as is, otherwise reset for the new user.
-                        if (sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId) {
+                        if (!bSameUser) { ////20190728 if cond was sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId
                             // The local record stats are for a different user.
                             // Clear the list of record stats in memory and in localStorage.
                             model.setRecordStatsList([]); 
-                            recordStatsXfr.setUploadTimeStamp(0);
                         }
                         // Clear the RecordStatsHistory ui so it will be loaded again when Stats History View is selected.
                         view.clearRecordStatsHistory();   
                     }
 
                     view.ClearStatus();
-                    // Append existing record stats that have not been uploaded (if any) to residue of new user.
-                    var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-                    recordStatsXfr.appendResidueAry(result.userID, arUploadRecStats); 
+
+                    // If the signed in user is not the previous user, then append the edits and deletes
+                    // to the residue of the previous user.
+                    if (!bSameUser) {   ////20190728 if cond was !bSameUser  && sPreviousOwnerId.length > 0
+                        recordStatsXfr.moveEditsAndDeletesIntoResidue(sPreviousOwnerId); 
+                    }
+
+                    // Merge the residue (if any) for the user that signed in with existing edits and updates needed at the server.
+                    recordStatsXfr.moveResidueIntoEditsAndDeletes(result.userID, bSameUser);  ////20190728 added bSameUser arg
                     if (bSameUser) {
-                        // Upload residue (if any) of new user.
-                        DoUploadResidue(function(bOk){
+                        // update server for edits (additions) and deletes (if any) for user that signed in. 
+                        // The user that signed in is the same as the user previously signed in.
+                        let bOk = recordStatsXfr.doServerUpdates(function(bOk, sStatus){   
                             // For an upload error, do cleanup.
                             if (!bOk) {
+                                view.AppendStatusDiv(sStatus, true); // true => error.
                                 DoXfrErrorCleanup();
+                            } else { ////20190728 added else body
+                                // Updates ok. Show status only only if not empty (empty means no updates).
+                                if (sStatus.length > 0) {
+                                    view.AppendStatusDiv(sStatus, false); // false => no error.
+                                }
                             }
                             // Complete the successful authentication regardless.
                             DoForAuthOk();
                         });
+                        // Check syncrhonous return. Expect to always be ok.
+                        if (!bOk) { 
+                            ShowServerBusyStatus();
+                            DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
+                            DoForAuthOk(); 
+                        }
                     } else {
                         // User has changed so need to get the record stats history for the new user.
-                        // For new user upload record stats residue (if any) then download record stats.
-                        var bOk = DoUploadResidue(function(bOk) {
+                        // update server for edits (additions) and deletes (if any) for new user that signed in,
+                        // then download the record stats for the useer.
+                        let bOk = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {  
                             // Download stats for new user.
                             if (bOk) {
                                 DoDownloadRecStats();
                             } else {
+                                view.AppendStatusDiv(sStatus, true); // true => error.
                                 // Clean up after a residue upload error.
                                 DoXfrErrorCleanup();
                                 // Complete successful authentication regardless.
@@ -11211,6 +11229,7 @@ function wigo_ws_Controller() {
                         });
                         // Check syncrhonous return. Expect to always be ok.
                         if (!bOk) { 
+                            ShowServerBusyStatus();
                             DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
                             DoForAuthOk(); 
                         }
@@ -11276,7 +11295,6 @@ function wigo_ws_Controller() {
             view.ShowStatus(sError);
         }
     };
-
 
     // Reset http request that may be in progress.
     // Handler Signature:
