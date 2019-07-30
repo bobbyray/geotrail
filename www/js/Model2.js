@@ -1363,7 +1363,7 @@ function wigo_ws_Model(deviceDetails) {
         // If nId is not in the array, does nothing.
         //  ar: array of wigo_ws_GeoTrailRecordStats obj in descending order, element [0].nTimeStamp is largest number.
         //  nId: number. id (timestamp) to remove, ie id needs to  match [i].nTimeStamp for removal from ar.
-        function RemoveGivenDescendingRecStatsList(ar, nId) { ////20190727 added 
+        function RemoveGivenDescendingRecStatsList(ar, nId) { 
             for (let i=0; i < ar.length; i++) {
                 if (nId > ar[i].nTimeStamp) {
                     // nId cannot be in list that is in descending order, so quit looking.
@@ -1391,7 +1391,7 @@ function wigo_ws_Model(deviceDetails) {
             return recordStatsXfrInfo.sPreviousOwnerId;
         };
 
-        // Returns true there is a residue currently exists. 
+        // Returns true there a residue currently exists. Note: Probably not used.
         this.isaResidue = function() { 
             const bYes = recordStatsXfrInfo.arDeleteId.length > 0 || 
                          recordStatsXfrInfo.arEditId > 0  || 
@@ -1610,7 +1610,7 @@ function wigo_ws_Model(deviceDetails) {
         // Returns true if current user id is same as previous user id,
         // or if previous user id is empty.
         // Note: user id means the same as owner id.
-        this.isSameUser = function() { ////20190728 added
+        this.isSameUser = function() { 
             const  bSameUser = recordStatsXfrInfo.sPreviousOwnerId.length === 0 ||
                                model.getOwnerId() === recordStatsXfrInfo.sPreviousOwnerId;
             return bSameUser;
@@ -1646,7 +1646,7 @@ function wigo_ws_Model(deviceDetails) {
         //  sOwnerId: string for owner id (user id) of the residue.
         // Returns: ref to wigo_ws_RecordStatsXfrResidue obj. the residue that was updated.
         this.moveEditsAndDeletesIntoResidue = function(sOwnerId) {
-            if (!sOwnerId) { ////20190728 added safety check.
+            if (!sOwnerId) { 
                 // Quit if sOwner is invalid, ie emtpy string, null, or undefined.
                 // Should not happen.
                 console.log("RecordStatsXfr moveEditsAndDeletesIntoResidue(sOwner) called with invalid sOwnerId" );
@@ -1668,7 +1668,7 @@ function wigo_ws_Model(deviceDetails) {
             }
 
             // Get ref to list of current RecStats in memory.
-            const aryRecStats =   model.getRecordStatsAry(); ////20190727 move to here from below
+            const aryRecStats =   model.getRecordStatsAry(); 
 
             // Note: Append pending edits and deletes first to the residue for 
             // coherence of changes over time. The pending edits and pending deletes
@@ -1679,7 +1679,7 @@ function wigo_ws_Model(deviceDetails) {
                 recStats = aryRecStats.getId(recordStatsXfrInfo.arEditIdPending[i]);
                 if (recStats !== null) {
                     AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
-                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp);  ////20190727 added
+                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp);  
                 }
             }
             recordStatsXfrInfo.arEditIdPending.splice(0);
@@ -1687,7 +1687,7 @@ function wigo_ws_Model(deviceDetails) {
             // Append the stats pending deletes to residue of the owner (user).
             for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
                 AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteIdPending[i]);
-                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteIdPending[i]); ////20190727 added
+                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteIdPending[i]); 
             }
             recordStatsXfrInfo.arDeleteIdPending.splice(0);
 
@@ -1696,7 +1696,7 @@ function wigo_ws_Model(deviceDetails) {
                 recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i]);
                 if (recStats !== null) {
                     AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
-                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp); ////20190727 added
+                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp); 
                 }
             }
             recordStatsXfrInfo.arEditId.splice(0);
@@ -1704,7 +1704,7 @@ function wigo_ws_Model(deviceDetails) {
             // Append the stats in the list of deletes to the residue of the owner (user).
             for (let i=0; i < recordStatsXfrInfo.arDeleteId.length; i++) {
                 AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteId[i]);
-                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteId[i]); ////20190727 added
+                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteId[i]); 
 
             }
             recordStatsXfrInfo.arDeleteId.splice(0);
@@ -1735,7 +1735,6 @@ function wigo_ws_Model(deviceDetails) {
                         aryRecStats.setId(residue.arRecStats[i]);
                     } else {
                         // Found the RecStats in the current list in memory of all RecStats.
-                        ////20190728WrongUseArg const bSameUser = residue.sPreviousOwnerId.length === 0 || residue.sPreviousOwnerId === sOwnerId;
                         if (!bSameUser) {
                             // Replace the residue RecStats in the memory list of all RecStats.
                             // Note: For same user, the RecStats in memory is not replaced because the RecStats in memory
@@ -1747,7 +1746,6 @@ function wigo_ws_Model(deviceDetails) {
                 return arEditId;
             }
 
-            ////20190729 added function
             // Helper to return an array of numbers that are delete ids.
             // Note: A new array is formed and returned as opposed to assigning residue.arDeleteId
             //       because residue.arDeleteId is set to empty by arDeleteId.splice(0), 
@@ -1772,18 +1770,12 @@ function wigo_ws_Model(deviceDetails) {
             //       the residue edits and residue deletes occurred first.
             
             // Set the residue for edits at the beginning of the edits.
-            ////20190728 const arCurEditId = recordStatsXfrInfo.arEditId.splice(0); // Now recordStatsXfrInfo.arEdit is empty.
-            ////20190728 ////20190727 fix next stmt -- use concat array -- instead of concat  use  arEditId = GetResidueEditIdList();
-            ////20190728 recordStatsXfrInfo.arEditId.splice(0,0,GetResidueEditIdList()); // Put residue for edit ids at the beginning of the list.
             const arCurEditId = recordStatsXfrInfo.arEditId;
             recordStatsXfrInfo.arEditId = GetResidueEditIdList();
 
             // Set the residue of deletes at the beginning of the deletes.
-            ////20190728 const arCurDeleteId = recordStatsXfrInfo.arDeleteId.splice(0); // Now recordStatsXfrInfo.arDeleteId is empty.
-            ////20190728 ////20190727 fix next stmt
-            ////20190728 recordStatsXfrInfo.arDeleteId.splice(0,0,residue.arDeleteId);  // Put residue for delete ids at beginning of the list.
             const arCurDeleteId = recordStatsXfrInfo.arDeleteId; 
-            recordStatsXfrInfo.arDeleteId = GetResidueDeleteIdList(); // Note: cannot use = residue.arDeleteId;  ////20190729 fix
+            recordStatsXfrInfo.arDeleteId = GetResidueDeleteIdList(); // Note: cannot use = residue.arDeleteId;  
 
             // Note: adding pending edits and deletes before adding back edits and deletes keeps a 
             //       a time coherence of doing edits and deletes because the pending ones occurred first.

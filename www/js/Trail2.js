@@ -465,11 +465,6 @@ function wigo_ws_View() {
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     // Note: appends a div element, whereas this.AppendStatus appends a span element.
     this.AppendStatusDiv = function (sStatus, bError) {  
-        ////20190728 Use css for class wigo_ws_status_item_div to position div.
-        ////20190728 if (!divStatus.isEmpty()) {
-        ////20190728     sStatus = "<br/>" + sStatus;
-        ////20190728 }
-
         divStatus.addDiv(sStatus, bError);
         titleBar.scrollIntoView(); 
     };
@@ -7267,11 +7262,9 @@ function wigo_ws_View() {
                 // Save record stats residue for current user if need be.
                 var sOwnerId =  that.getOwnerId();
                 var recordStatsXfr = that.onGetRecordStatsXfr();
-                ////20190729Oops if (recordStatsXfr.isaResidue()) {  
                 if (sOwnerId) {
                     recordStatsXfr.moveEditsAndDeletesIntoResidue(sOwnerId); 
                 }
-                ////20190729Oops }
                 // Save previous owner id before logging out.
                 if (sOwnerId ) {
                     recordStatsXfr.setPreviousOwnerId(sOwnerId);
@@ -9465,8 +9458,6 @@ Are you sure you want to delete the maps?";
                 if (recordStatsXfr === null)
                     recordStatsXfr =  view.onGetRecordStatsXfr(); 
 
-                ////20190730 let bStarted  = CompareStats(onDone);
-                ////20190730 return bStarted;
                 // First update at server any edits and deletes done locally but not at server,
                 // then sync with the server.
                 let bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {
@@ -9859,7 +9850,7 @@ Are you sure you want to delete the maps?";
                                 var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
                                 view.ShowStatus(sMsg, false); 
                                 // if user is signed in, delete items at the server.
-                                const sNotSignedInMsg = sMsg + "<br>To also delete Stats at server, sign-in:"; ////20192029 changed not signed in msg a little bit.
+                                const sNotSignedInMsg = sMsg + "<br>To also delete Stats at server, sign-in:"; 
                                 if (IsUserSignedIn(sNotSignedInMsg)) {  
                                     // User is signed in so update the server to delete stats.
                                     recordStatsXfr.doServerUpdates(function(bOk, sStatus){
@@ -11092,14 +11083,13 @@ function wigo_ws_Controller() {
             var bOk = model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
                 var recordStatsXfr = model.getRecordStatsXfr();
                 var sPreviousOwnerId = recordStatsXfr.getPreviousOwnerId();
-                ////20190728MoveDownAndRedo var bSameUser = sPreviousOwnerId.length === 0 || result.userID === sPreviousOwnerId; 
                 // Save user info to localStorage.
                 model.setOwnerId(result.userID);
                 model.setOwnerName(result.userName);
                 model.setAccessHandle(result.accessHandle);
                 view.setOwnerName(result.userName);
                 view.setOwnerId(result.userID);
-                const bSameUser = recordStatsXfr.isSameUser();  ////20190728 moved here and redid
+                const bSameUser = recordStatsXfr.isSameUser();  
                 if (result.status === model.eAuthStatus().Ok) {
                     // Upload record stats residue if need be for user that signed in and download record stats for a new user.
 
@@ -11169,7 +11159,7 @@ function wigo_ws_Controller() {
                     function DoXfrErrorCleanup() { 
                         // If sPreviousOwnerId is empty, the local record stats are for no user signed in.
                         // In this case leave the them as is, otherwise reset for the new user.
-                        if (!bSameUser) { ////20190728 if cond was sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId
+                        if (!bSameUser) { 
                             // The local record stats are for a different user.
                             // Clear the list of record stats in memory and in localStorage.
                             model.setRecordStatsList([]); 
@@ -11182,12 +11172,12 @@ function wigo_ws_Controller() {
 
                     // If the signed in user is not the previous user, then append the edits and deletes
                     // to the residue of the previous user.
-                    if (!bSameUser) {   ////20190728 if cond was !bSameUser  && sPreviousOwnerId.length > 0
+                    if (!bSameUser) {   
                         recordStatsXfr.moveEditsAndDeletesIntoResidue(sPreviousOwnerId); 
                     }
 
                     // Merge the residue (if any) for the user that signed in with existing edits and updates needed at the server.
-                    recordStatsXfr.moveResidueIntoEditsAndDeletes(result.userID, bSameUser);  ////20190728 added bSameUser arg
+                    recordStatsXfr.moveResidueIntoEditsAndDeletes(result.userID, bSameUser);  
                     if (bSameUser) {
                         // update server for edits (additions) and deletes (if any) for user that signed in. 
                         // The user that signed in is the same as the user previously signed in.
@@ -11196,7 +11186,7 @@ function wigo_ws_Controller() {
                             if (!bOk) {
                                 view.AppendStatusDiv(sStatus, true); // true => error.
                                 DoXfrErrorCleanup();
-                            } else { ////20190728 added else body
+                            } else { 
                                 // Updates ok. Show status only only if not empty (empty means no updates).
                                 if (sStatus.length > 0) {
                                     view.AppendStatusDiv(sStatus, false); // false => no error.

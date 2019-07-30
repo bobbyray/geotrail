@@ -49,12 +49,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
     float: right;
 }
 
-.wigo_ws_status_item_div {  /* ////20190728 added */
+.wigo_ws_status_item_div {  
     clear: both;
     float: left;
     width: inherit;
 }
-
 
 .wigo_ws_StatusMsg {
     background-color: aliceblue;    
