@@ -1828,6 +1828,13 @@ function wigo_ws_Model(deviceDetails) {
             }
         };
 
+        
+        // Clears arRecordSat in memory and saves to localStorage.
+        this.clearRecordStatsAndSave = function() {  
+            arRecordStats.Clear(); 
+            arRecordStats.SaveToLocalStorage();
+        };
+
         // **** Private members
 
         // Loads record stats xfr info from localStorage.

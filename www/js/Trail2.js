@@ -11182,6 +11182,12 @@ function wigo_ws_Controller() {
                     // to the residue of the previous user.
                     if (!bSameUser) {   
                         recordStatsXfr.moveEditsAndDeletesIntoResidue(sPreviousOwnerId); 
+                        // clear arRecordStats because it is no longer valid for the signed in user.
+                        // Note: 20190801 Clearing RecStats was added although probably not needed 
+                        //       because residue for the user that signed will replace edits in arRecordStats.
+                        //       Seems safer to me clear arRecordStats because it is no longer valid for
+                        //       the signed in user.
+                        recordStatsXfr.clearRecordStatsAndSave();
                     }
 
                     // Merge the residue (if any) for the user that signed in with existing edits and updates needed at the server.
