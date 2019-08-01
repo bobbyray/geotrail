@@ -108,7 +108,7 @@ function wigo_ws_GeoTrailVersion() { // 20160610 added.
 // Object for RecordStats Xfr with Server
 function wigo_ws_RecordStatsXfrInfo() { 
     // number of milliseconds for timestamp of most recent stats item uploaded to server.
-    this.nUploadTimeStamp = 0; 
+    this.nUploadTimeStamp = 0; // Note: No longer used. Any value is not meaningful.
     // Owner (user) id of  previously signed in user.
     this.sPreviousOwnerId = "";
     // Array for keeping track of deletions done locally that are yet to be transferred to sever.

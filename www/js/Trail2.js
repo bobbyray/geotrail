@@ -7596,9 +7596,6 @@ Are you sure you want to delete the maps?";
         //  nShrinkPels: number, optional. number of pels to reduce calculated height.
         //               Defaults to 0.
         this.open = function(nShrinkPels) {
-            // Add Close button to cell3 of header.
-
-
             // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
             // Note: Do NOT hide map-canvas because it would cause problem when returning from stats history view.
             this.clearSelections(); 
@@ -7609,7 +7606,13 @@ Are you sure you want to delete the maps?";
             this.setListHeight(stats, titleHolder.offsetHeight); 
             // Set item editor to fill screen so touching map is not a problem.
             itemEditor.setHeight(titleHolder.offsetHeight); 
+
+            // Save previous mode for returning by the close button.
+            if (nPrevMode !== view.eMode.record_stats_view) {
+                nReturnMode = nPrevMode;
+            }
         };
+        let nReturnMode = view.eMode.walking_view; // mote to which the close button returns.
 
         // Ends showing stats history.
         this.close =function() {
@@ -9754,7 +9757,12 @@ Are you sure you want to delete the maps?";
         closeDiv.appendChild(closeBtn);
         // Callback handler for closeBtn.
         closeBtn.addEventListener('click', function(ev){
-            view.setModeUI(nPrevMode); 
+            if (nReturnMode === view.eMode.record_stats_view)
+            {
+                // Show not happen. Ensure nReturnMode does not cause endless loop
+                nReturnMode = view.eMode.walking_view;
+            }
+            return view.setModeUI(nReturnMode);
         }, false);
         
         // Call back handler for selection in menuStatsHistory.
@@ -10352,7 +10360,7 @@ Are you sure you want to delete the maps?";
     var recordStatsMetrics = new RecordStatsMetrics(); 
 
     //20190622 added
-    // Object for the Walking mode, which simplifies recoring a trail.
+    // Object for the Walking mode, which simplifies recording a trail.
     // Walking mode is similar to the recording for the Online Map mode.
     // However, only recording can be done; the option to also select a
     // trail to follow is not available.  
