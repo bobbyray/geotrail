@@ -888,10 +888,7 @@ function wigo_ws_Model(deviceDetails) {
 
         // Clears this array.
         this.Clear = function() {  
-            var nCount = arRecordStats.length;
-            for (var i=0; i < nCount; i++) {
-                arRecordStats.pop();
-            }
+            arRecordStats.splice(0);
         };
 
         // Loads this object from local storage.
@@ -1675,6 +1672,7 @@ function wigo_ws_Model(deviceDetails) {
             // have occurred before the edits and deletes.
             
             // Append the stats for pending edits to the residue of the owner (user).
+            let recStats = null;  
             for (let i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
                 recStats = aryRecStats.getId(recordStatsXfrInfo.arEditIdPending[i]);
                 if (recStats !== null) {
@@ -1691,7 +1689,6 @@ function wigo_ws_Model(deviceDetails) {
             }
             recordStatsXfrInfo.arDeleteIdPending.splice(0);
 
-            let recStats = null;
             for (let i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
                 recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i]);
                 if (recStats !== null) {

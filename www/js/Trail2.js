@@ -11192,9 +11192,8 @@ function wigo_ws_Controller() {
 
                     // Merge the residue (if any) for the user that signed in with existing edits and updates needed at the server.
                     recordStatsXfr.moveResidueIntoEditsAndDeletes(result.userID, bSameUser);  
-                    ////20190801Added  Save current user as previous user because any edits or deletes are now for the user that is signed in.
                     // Save current user id as previous user id because any edits or deletes are now for the user that is signed in.
-                    recordStatsXfr.setPreviousOwnerId(result.userID);  ////20190801 added
+                    recordStatsXfr.setPreviousOwnerId(result.userID);  
                     if (bSameUser) {
                         // update server for edits (additions) and deletes (if any) for user that signed in. 
                         // The user that signed in is the same as the user previously signed in.

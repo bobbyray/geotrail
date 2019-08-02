@@ -220,8 +220,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <button id='buRejectConfirmDialogBar'>Reject</button>
     </div>
 
-
-
     <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
         <div id='divSettingsTitle'>
@@ -368,7 +366,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>The Help symbol ("?") displays this Help - Guide.</li>
             <li>The View DropList on the right selects the <a href="#helpSelectMapView">Map View</a>.</li>
         </ul>    
-        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p>
+        <p>The app starts showing the <a href="#helpWalkingMap">Walking Map</a>.</p>
         <p>More details about the map views and Main Menu follow.</p>
         <h2 id="helpSelectMapView">Select Map View</h2>
         Select a view from the View droplist on the Title Bar:
@@ -381,14 +379,17 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
             <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
             you have saved online.</li> 
-            <li><a href="#helpStatsHistory">Stats History</a> lets you view a history of statistics saved when you record a trail.</li>
+            <li><a href="#helpStatsHistory">Stats History</a> lets you view a history of statistics saved when you record a walk or trail.</li>
+            <li><a href="#helpWalkingMap">Walking Map</a> lets you record a walk.</li>
         </ul>
         <h2 id="helpSignInOffBar">Sign-in/off Bar</h2>
         <p>If you do not sign in, you can only view public trails created by others.
         However, if you sign in, you can create trails and edit your trails, which can be marked
         as Private for only you to view, or Public for anyone to view.</p>
-        If you are not signed in, but need to be to complete an action such as editing, drawing, or finding
-        your trails, you are automatically shown the Sign in/off Bar.
+        <p>Also if you are signed in, your statistics for recorded trails and walks are backed up
+        to a web server when you switch to the <a hfref="#helpStatsHistory">Stats History</a> view.</p>
+        <p>If you are not signed in, but need to be to complete an action such as editing, drawing, or finding
+        your trails, you are automatically shown the Sign in/off Bar.</p>
         <p>On the left side, the User name is shown when you are signed in. If you are not signed, the User name is blank. 
         You do not type in the User name box, it is filled in automatically when you sign in.</p>
         <p>The Sign-in DropList is shown on the right:
@@ -401,11 +402,14 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             to Facebook to force a logout.</li>
             <li>Reset Server Access<br/>
             Resets server access in case access to the web server has hung. 
-            It not likely you need to do this. However if accessing the web server seem stuck,
+            It not likely you need to do this. However if accessing the web server seems stuck,
             try resetting. 
+            <li>Hide<br/>
+            Hides the Sign-in/off bar. Tyically if the Sign-in/off bar is not shown and goes away
+            automatically. However, if is shown, you can hide it.</li>
         </li> 
         </ul>
-        <h2 id="helpOnlineMap">Online Map</h2>
+        <h2 id="helpOnlineMap">Trail Maps</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
         from which you select a trail to view. 
         Also you can select a trail by touching a blue marker on the map that indicates where a trail is. If the markers overlap, 
@@ -602,8 +606,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </li>
         </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
-        You select a trail you have saved when you are viewing the Online Map. 
-        Offline Map works the same as <a href="#helpOnlineMap">Online Map</a>,
+        You select a trail you have saved when you are viewing Trail Maps. 
+        Offline Map works the same as <a href="#helpOnlineMap">Trail Maps</a>,
         except that the map is shown from map tiles saved on your phone instead of from the web, 
         which means that the map is limited and is blank if you pan or zoom beyond the bounds
         of the saved map.
@@ -647,7 +651,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             server by going to Edit a Trail available from the View droplist.
             </li>
         </ul>
-        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
+        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for Trail Maps.</p>
         <h2 id="helpDrawTrail">Draw a Trail</h2>
         <p>Provides a way to create a trail and save it online.</p>
         <p>You must be signed into Facebook to create a trail.</p>
@@ -738,6 +742,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
            The Month and Year for the first item scrolled into view is shown in the header and changes
            as you scroll into a different month. A separator bar is included in the list to
            to show a change in month.
+        <h3>Close Button</h3>
+        On the right side of the stats list header is the Close button. 
+        Touch Close to return from Stats History to the view from which you
+        opened Stats History (Walking Map, Trail Maps, or Offline Map).
         <h3>Marking an Item for Selection</h3>
         Touch the day of month number on the left side of the item to select
         the item. The background of a selected item is set to gray to indicate selection.<br/>
@@ -820,6 +828,46 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 the Stats History View is opened. However, if the stats local data is lost, synchronization
                 can restore the local stats data from the server.
             </li>
+        </ul>
+        <h2 id="helpWalkingMap">Walking Map</h2>
+        The Walking Map lets you easily record the path for your walk. 
+        The Start/End button and the Pause/Resume button control recording.
+        <ul>
+            <li>Start button<br/>
+            Touch the Start to begin recording your walk. The Start button becomes the End button.</li>
+            <li>End button<br/>
+            Touch End to complete your walk, which saves on your phone the statistics for the walk.
+            The End button becomes the Start button again and the Resume button is shown.</li>
+            <li>Pause button<br/>
+            The Pause button is shown when you start or resume. Touch the Pause button to pause recording your walk.
+            The Pause button becomes the Resume button.</li>
+            <li>Resume button<br/>
+            Touch the Resume button to resume recording. The Resume button becomes the Pause button again.</li>
+            <li>Unclear button<br/>
+            The Unclear button is one of the functions of the Pause/Resume/Unclear button.
+            The Unclear button is shown when you return from the <a href="#helpStatsHistory">Stats History</a> view. Touch Unclear to
+            see the path for the recent walk that was cleared because you switched to the Stats History view.</li>
+        </ul>
+        <h3>Statistic for a Walk</h3>
+        The statistic for your walk are saved when you end a walk. 
+        <ul>
+            <li>Date and time a walk begins.</li>
+            <li>Distance walked.</li>
+            <li>Run time. The total time in minutes and seconds for the walk.</li>
+            <li>Speed. The average speed for the walk.</li>
+            <li>Calories burned. An estimate of food calories burned by the walk.</li>
+        </ul>
+        The statistics do not include times and distance when the walk is paused.
+        <h3>More Menu</h3>
+        The More menu has these options:
+        <ul>
+            <li>Stats History<br>
+            Switches to the <a href="#helpStatsHistory">Stats History</a> view that shows
+            statistics for all your walks and recorded trails.</li>
+            <li>My Location<br/>
+            Shows a green dot for your location on the map.</li>
+            <li>Animate Trail<br/>
+            Animates the walk showing the path taken from beginning to end.</li>
         </ul>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
@@ -980,7 +1028,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Touch the Set button to set your home area to be that shown on the screen<br/>
             First, pan, zoom, and pinch to display the area you want on the screen.<br/>
             The trails in the Home Area are found when the app starts.
-            Also, the Home Area can be chosen in Online Map, from the Find Trails droplist.<br/>
+            Also, the Home Area can be chosen in Trail Maps, from the Find Trails droplist.<br/>
             <li>Done Button<br/>
             Touch Done to save the changes and close the Settings dialog.
             <li>Cancel Button<br/>
