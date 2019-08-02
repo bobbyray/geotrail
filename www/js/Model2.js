@@ -293,11 +293,13 @@ function wigo_ws_Model(deviceDetails) {
         return bStarted;
     }
 
-    // Resets flag that indicates http request (get or post) is still in progress.
+    // Resets flag that indicates http request (get or post) is still in progress and
+    // the busy flag for updating Record Stats at the server.
     // Note: May be needed if trying to issue subsequent requests fails due to 
     //       a previous request not completed. 
     this.resetRequest = function() { 
         api.ResetRequest();     
+        geoTrailRecordStatsXfr.resetServerUpdatesBusy(); 
     };
 
     // Authenticates user with database server.
@@ -1509,6 +1511,13 @@ function wigo_ws_Model(deviceDetails) {
             return bStarted;
         };
         let bServerUpdatesInProgress = false;  // Flag to avoid doing another server update until after completion of current update. 
+
+        // Resets server updates busy. 
+        // Note: Should not be needed. Provided in case server updates get hung
+        //       in the in-progress state.
+        this.resetServerUpdatesBusy = function() { 
+            bServerUpdatesInProgress = false;
+        }
 
         // Helper to Check if there are RecordStats items that need to be uploaded to server.
         // Returns: array of wigo_ws_GeoTrailRecordStats objs that need to be uploaded

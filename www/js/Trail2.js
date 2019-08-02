@@ -7746,8 +7746,14 @@ Are you sure you want to delete the maps?";
         //      false indicates upload is not needed or upload failed to start.          
         // Asynchronous Completion: If an uploaded is started, the completion is asynchronous
         // Note: Iff upload is needed, shows status message for the result.
-        //       User must be signed in for upload to success.
+        //       If a user is not signed in, does nothing and returns false.
         this.uploadAdditions = function() { 
+            // Do nothing if user is not signed in.
+            const bSignedIn = view.getOwnerId().length > 0;
+            if (!bSignedIn) {
+                return false;
+            }
+
             // Upload updated stats items to server if needed and if user is signed in.
             const recordStatsXfr = view.onGetRecordStatsXfr();
             const bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus){
