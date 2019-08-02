@@ -1682,13 +1682,14 @@ function wigo_ws_Model(deviceDetails) {
             }
             recordStatsXfrInfo.arEditIdPending.splice(0);
 
-            // Append the stats pending deletes to residue of the owner (user).
+            // Append the stats for pending deletes to residue of the owner (user).
             for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
                 AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteIdPending[i]);
                 RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteIdPending[i]); 
             }
             recordStatsXfrInfo.arDeleteIdPending.splice(0);
 
+            // Append the stats in list of edits to the residue of the owner (user).
             for (let i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
                 recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i]);
                 if (recStats !== null) {
@@ -1783,7 +1784,7 @@ function wigo_ws_Model(deviceDetails) {
             }
             // Add pending deletes to deletes.
             for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
-                AddInDescendingOrder(reccordStatsXfrInfo.arDeleteId,  recordStatsXfrInfo.arDeleteIdPending[i]);
+                AddInDescendingOrder(recordStatsXfrInfo.arDeleteId,  recordStatsXfrInfo.arDeleteIdPending[i]);
                 RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, recordStatsXfrInfo.arDeleteIdPending[i]);
             }
 
