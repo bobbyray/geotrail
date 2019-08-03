@@ -9914,7 +9914,7 @@ Are you sure you want to delete the maps?";
             var bSignedIn = view.getOwnerId().length > 0;
             if (!bSignedIn) {
                 var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in > Facebook.";
-                view.ShowStatus(sMsg);
+                view.ShowStatus(sMsg, false);  // false => not an error.
             }
             return bSignedIn;
         }
