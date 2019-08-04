@@ -1650,76 +1650,85 @@ function wigo_ws_Model(deviceDetails) {
         // (recordStatsXfrInfo) to localStorage.
         // Args:
         //  sOwnerId: string for owner id (user id) of the residue.
-        // Returns: ref to wigo_ws_RecordStatsXfrResidue obj. the residue that was updated.
+        // Returns: none 
         this.moveEditsAndDeletesIntoResidue = function(sOwnerId) {
-            if (!sOwnerId) { 
-                // Quit if sOwner is invalid, ie emtpy string, null, or undefined.
-                // Should not happen.
-                console.log("RecordStatsXfr moveEditsAndDeletesIntoResidue(sOwner) called with invalid sOwnerId" );
-                return;
-            }
+            try {  
+                // It is important an uncaught exception does not occurred 
+                // in order to avoid arRecordStat being for the wrong owner (user).
+                // throw "testing exception for RecordStatsXfr moveEditsAndDeletesIntoResidue(sOwnerId)."; // Only for testing.
 
-            let residue = null;
-            for (let i=0; i < arResidue.length; i++) {
-                if (arResidue[i].sOwnerId === sOwnerId) {
-                    residue = arResidue[i];
-                    break;
+                if (!sOwnerId) { 
+                    // Quit if sOwner is invalid, ie emtpy string, null, or undefined.
+                    // Should not happen.
+                    console.log("RecordStatsXfr moveEditsAndDeletesIntoResidue(sOwner) called with invalid sOwnerId" );
+                    return;
                 }
-            }
-            if (!residue) {
-                // Add new element for owner to arResidue.
-                residue = new wigo_ws_RecordStatsXfrResidue();
-                residue.sOwnerId = sOwnerId;
-                arResidue.push(residue);
-            }
 
-            // Get ref to list of current RecStats in memory.
-            const aryRecStats =   model.getRecordStatsAry(); 
-
-            // Note: Append pending edits and deletes first to the residue for 
-            // coherence of changes over time. The pending edits and pending deletes
-            // have occurred before the edits and deletes.
-            
-            // Append the stats for pending edits to the residue of the owner (user).
-            let recStats = null;  
-            for (let i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
-                recStats = aryRecStats.getId(recordStatsXfrInfo.arEditIdPending[i]);
-                if (recStats !== null) {
-                    AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
-                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp);  
+                let residue = null;
+                for (let i=0; i < arResidue.length; i++) {
+                    if (arResidue[i].sOwnerId === sOwnerId) {
+                        residue = arResidue[i];
+                        break;
+                    }
                 }
-            }
-            recordStatsXfrInfo.arEditIdPending.splice(0);
-
-            // Append the stats for pending deletes to residue of the owner (user).
-            for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
-                AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteIdPending[i]);
-                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteIdPending[i]); 
-            }
-            recordStatsXfrInfo.arDeleteIdPending.splice(0);
-
-            // Append the stats in list of edits to the residue of the owner (user).
-            for (let i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
-                recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i]);
-                if (recStats !== null) {
-                    AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
-                    RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp); 
+                if (!residue) {
+                    // Add new element for owner to arResidue.
+                    residue = new wigo_ws_RecordStatsXfrResidue();
+                    residue.sOwnerId = sOwnerId;
+                    arResidue.push(residue);
                 }
-            }
-            recordStatsXfrInfo.arEditId.splice(0);
-            
-            // Append the stats in the list of deletes to the residue of the owner (user).
-            for (let i=0; i < recordStatsXfrInfo.arDeleteId.length; i++) {
-                AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteId[i]);
-                RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteId[i]); 
 
+
+                // Get ref to list of current RecStats in memory.
+                const aryRecStats =   model.getRecordStatsAry(); 
+
+                // Note: Append pending edits and deletes first to the residue for 
+                // coherence of changes over time. The pending edits and pending deletes
+                // have occurred before the edits and deletes.
+                
+                // Append the stats for pending edits to the residue of the owner (user).
+                let recStats = null;  
+                for (let i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
+                    recStats = aryRecStats.getId(recordStatsXfrInfo.arEditIdPending[i]);
+                    if (recStats !== null) {
+                        AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
+                        RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp);  
+                    }
+                }
+                recordStatsXfrInfo.arEditIdPending.splice(0);
+
+                // Append the stats for pending deletes to residue of the owner (user).
+                for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
+                    AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteIdPending[i]);
+                    RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteIdPending[i]); 
+                }
+                recordStatsXfrInfo.arDeleteIdPending.splice(0);
+
+                // Append the stats in list of edits to the residue of the owner (user).
+                for (let i=0; i < recordStatsXfrInfo.arEditId.length; i++) {
+                    recStats = aryRecStats.getId(recordStatsXfrInfo.arEditId[i]);
+                    if (recStats !== null) {
+                        AddRecStatsInDescendingOrder(residue.arRecStats, recStats);
+                        RemoveGivenDescendingList(residue.arDeleteId, recStats.nTimeStamp); 
+                    }
+                }
+                recordStatsXfrInfo.arEditId.splice(0);
+                
+                // Append the stats in the list of deletes to the residue of the owner (user).
+                for (let i=0; i < recordStatsXfrInfo.arDeleteId.length; i++) {
+                    AddInDescendingOrder(residue.arDeleteId, recordStatsXfrInfo.arDeleteId[i]);
+                    RemoveGivenDescendingRecStatsList(residue.arRecStats, recordStatsXfrInfo.arDeleteId[i]); 
+
+                }
+                recordStatsXfrInfo.arDeleteId.splice(0);
+            } catch (ex) {
+                console.log("Exception occurred in RecordStatsXfr moveEditsAndDeletesIntoResidue(sOwnerId).");
             }
-            recordStatsXfrInfo.arDeleteId.splice(0);
 
             // Save the changes to localStorage.
             SaveInfoToLocalStorage();
             SaveResidueToLocalStorage();
-            return residue; 
+            return; 
         };
 
         // Moves stats residue into existing stats edits and deletes and
@@ -1727,97 +1736,105 @@ function wigo_ws_Model(deviceDetails) {
         // Arg:
         //  sOwnerId: string. user id for the residue.
         this.moveResidueIntoEditsAndDeletes = function(sOwnerId, bSameUser) { 
-            // get ref to RecStats array to check if a RecStats residue is missing and needs to be added.
-            const aryRecStats = model.getRecordStatsAry(); 
+            try { 
+                // It is important to avoid an uncaught exception in order
+                // to ensure continuation will load the RecordStats for a new user.
+                // throw "Test exception in RecordStatsXfr moveResidueIntoEditsAndDeletes(sOwnerId, bSameUser). ";  // only for testing
 
-            // Helper to return an array of numbers for edit ids.
-            function GetResidueEditIdList() {
-                let found = null;
-                let arEditId = [];
-                for (let i=0; i < residue.arRecStats.length; i++) {
-                    arEditId.push(residue.arRecStats[i].nTimeStamp);
-                    found = arRecordStats.getId(residue.arRecStats[i].nTimeStamp);
-                    if (found === null) {
-                        // Add to aryRecStats the residue that is missing.
-                        aryRecStats.setId(residue.arRecStats[i]);
-                    } else {
-                        // Found the RecStats in the current list in memory of all RecStats.
-                        if (!bSameUser) {
-                            // Replace the residue RecStats in the memory list of all RecStats.
-                            // Note: For same user, the RecStats in memory is not replaced because the RecStats in memory
-                            //       is more recent than the residue RecStats.
+                // get ref to RecStats array to check if a RecStats residue is missing and needs to be added.
+                const aryRecStats = model.getRecordStatsAry(); 
+
+                // Helper to return an array of numbers for edit ids.
+                function GetResidueEditIdList() {
+                    let found = null;
+                    let arEditId = [];
+                    for (let i=0; i < residue.arRecStats.length; i++) {
+                        arEditId.push(residue.arRecStats[i].nTimeStamp);
+                        found = arRecordStats.getId(residue.arRecStats[i].nTimeStamp);
+                        if (found === null) {
+                            // Add to aryRecStats the residue that is missing.
                             aryRecStats.setId(residue.arRecStats[i]);
+                        } else {
+                            // Found the RecStats in the current list in memory of all RecStats.
+                            if (!bSameUser) {
+                                // Replace the residue RecStats in the memory list of all RecStats.
+                                // Note: For same user, the RecStats in memory is not replaced because the RecStats in memory
+                                //       is more recent than the residue RecStats.
+                                aryRecStats.setId(residue.arRecStats[i]);
+                            }
                         }
                     }
+                    return arEditId;
                 }
-                return arEditId;
-            }
 
-            // Helper to return an array of numbers that are delete ids.
-            // Note: A new array is formed and returned as opposed to assigning residue.arDeleteId
-            //       because residue.arDeleteId is set to empty by arDeleteId.splice(0), 
-            //       which still refers to same memory location, when this.clearResidue(sOwnerId) is called. 
-            //       What is needed is residue.arDeleteId before it is emptied.
-            function GetResidueDeleteIdList() {  
-                let arDeleteId = [];
-                for (let i=0; i < residue.arDeleteId.length; i++) {
-                    arDeleteId.push(residue.arDeleteId[i]);
+                // Helper to return an array of numbers that are delete ids.
+                // Note: A new array is formed and returned as opposed to assigning residue.arDeleteId
+                //       because residue.arDeleteId is set to empty by arDeleteId.splice(0), 
+                //       which still refers to same memory location, when this.clearResidue(sOwnerId) is called. 
+                //       What is needed is residue.arDeleteId before it is emptied.
+                function GetResidueDeleteIdList() {  
+                    let arDeleteId = [];
+                    for (let i=0; i < residue.arDeleteId.length; i++) {
+                        arDeleteId.push(residue.arDeleteId[i]);
+                    }
+                    return arDeleteId;
                 }
-                return arDeleteId;
-            }
 
-            const residue = this.getResidue(sOwnerId);
-            if (residue === null) {
-                // Quit when there is no residue for the user (sOwnerId).
-                return; 
-            }
+                const residue = this.getResidue(sOwnerId);
+                if (residue === null) {
+                    // Quit when there is no residue for the user (sOwnerId).
+                    return; 
+                }
 
-            // Note: setting the residue for edits and deletes to the beginning of the newly formed
-            //       edits and deletes keeps a time coherence for doing edits and deletes because
-            //       the residue edits and residue deletes occurred first.
-            
-            // Set the residue for edits at the beginning of the edits.
-            const arCurEditId = recordStatsXfrInfo.arEditId;
-            recordStatsXfrInfo.arEditId = GetResidueEditIdList();
+                // Note: setting the residue for edits and deletes to the beginning of the newly formed
+                //       edits and deletes keeps a time coherence for doing edits and deletes because
+                //       the residue edits and residue deletes occurred first.
+                
+                // Set the residue for edits at the beginning of the edits.
+                const arCurEditId = recordStatsXfrInfo.arEditId;
+                recordStatsXfrInfo.arEditId = GetResidueEditIdList();
 
-            // Set the residue of deletes at the beginning of the deletes.
-            const arCurDeleteId = recordStatsXfrInfo.arDeleteId; 
-            recordStatsXfrInfo.arDeleteId = GetResidueDeleteIdList(); // Note: cannot use = residue.arDeleteId;  
+                // Set the residue of deletes at the beginning of the deletes.
+                const arCurDeleteId = recordStatsXfrInfo.arDeleteId; 
+                recordStatsXfrInfo.arDeleteId = GetResidueDeleteIdList(); // Note: cannot use = residue.arDeleteId;  
 
-            // Note: adding pending edits and deletes before adding back edits and deletes keeps a 
-            //       a time coherence of doing edits and deletes because the pending ones occurred first.
-            // Add pending edits to edits.
-            for (let i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
-                AddInDescendingOrder(recordStatsXfrInfo.arEditId, recordStatsXfrInfo.arEditIdPending);
-                RemoveGivenDescendingList(recordStatsXfrInfo.arDeleteId, recordStatsXfrInfo.arEditIdPending); 
-            }
-            // Add pending deletes to deletes.
-            for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
-                AddInDescendingOrder(recordStatsXfrInfo.arDeleteId,  recordStatsXfrInfo.arDeleteIdPending[i]);
-                RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, recordStatsXfrInfo.arDeleteIdPending[i]);
-            }
+                // Note: adding pending edits and deletes before adding back edits and deletes keeps a 
+                //       a time coherence of doing edits and deletes because the pending ones occurred first.
+                // Add pending edits to edits.
+                for (let i=0; i < recordStatsXfrInfo.arEditIdPending.length; i++) {
+                    AddInDescendingOrder(recordStatsXfrInfo.arEditId, recordStatsXfrInfo.arEditIdPending);
+                    RemoveGivenDescendingList(recordStatsXfrInfo.arDeleteId, recordStatsXfrInfo.arEditIdPending); 
+                }
+                // Add pending deletes to deletes.
+                for (let i=0; i < recordStatsXfrInfo.arDeleteIdPending.length; i++) {
+                    AddInDescendingOrder(recordStatsXfrInfo.arDeleteId,  recordStatsXfrInfo.arDeleteIdPending[i]);
+                    RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, recordStatsXfrInfo.arDeleteIdPending[i]);
+                }
 
-            // Clear the pending edits and deletes regardless whether the owner was the same or not.
-            recordStatsXfrInfo.arDeleteIdPending.splice(0);
-            recordStatsXfrInfo.arEditIdPending.splice(0);
+                // Clear the pending edits and deletes regardless whether the owner was the same or not.
+                recordStatsXfrInfo.arDeleteIdPending.splice(0);
+                recordStatsXfrInfo.arEditIdPending.splice(0);
 
-            // Add back the current edit ids.
-            for (let i=0; i < arCurEditId.length; i++) {
-                AddInDescendingOrder(recordStatsXfrInfo.arEditId, arCurEditId[i]);
-                RemoveGivenDescendingList(recordStatsXfrInfo.arDeleteId, arCurEditId[i]); // add edit is not in delete list.
-            }
-            // Add back the current delete ids.
-            for (let i=0; i < arCurDeleteId.length; i++) {
-                AddInDescendingOrder(recordStatsXfrInfo.arDeleteId, arCurDeleteId[i]);
-                RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, arCurDeleteId[i]);
-            }
+                // Add back the current edit ids.
+                for (let i=0; i < arCurEditId.length; i++) {
+                    AddInDescendingOrder(recordStatsXfrInfo.arEditId, arCurEditId[i]);
+                    RemoveGivenDescendingList(recordStatsXfrInfo.arDeleteId, arCurEditId[i]); // add edit is not in delete list.
+                }
+                // Add back the current delete ids.
+                for (let i=0; i < arCurDeleteId.length; i++) {
+                    AddInDescendingOrder(recordStatsXfrInfo.arDeleteId, arCurDeleteId[i]);
+                    RemoveGivenDescendingList(recordStatsXfrInfo.arEditId, arCurDeleteId[i]);
+                }
 
-            // Save the changes for the newly formed edits and deletes to localStorage.
-            SaveInfoToLocalStorage();
+                // Save the changes for the newly formed edits and deletes to localStorage.
+                SaveInfoToLocalStorage();
 
-            // clear residue that has been merged into current edits and
-            // save the residue to localStorage.
-            this.clearResidue(sOwnerId);
+                // clear residue that has been merged into current edits and
+                // save the residue to localStorage.
+                this.clearResidue(sOwnerId);
+            } catch (ex) {
+                console.log("Exception occurred in RecordStats XfrmoveResidueIntoEditsAndDeletes(OwnerId, bSameUser).");
+            } 
         }
 
         // Clears the residue for an owner and saves to localStorage.

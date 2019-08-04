@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.036-20190419-1525"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.037-20190803-1708"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -815,6 +815,17 @@ function wigo_ws_View() {
         if (map)
             map.ClearPath();
     };
+
+    // Initialized the current record path. 
+    this.initRecordPath = function() {  
+        // Reset to record path coords and clear from map.
+        map.recordPath.reset(); 
+        if (nMode === this.eMode.walking_view) {
+            walkingView.initialize();
+        } else {
+            recordFSM.initialize(); 
+        }
+    }; 
 
     // Updates item in the list of paths that user can select and 
     // the display for the item if it is currently selected.
@@ -10379,7 +10390,7 @@ Are you sure you want to delete the maps?";
         //       The bar is shown or not by view.setModeUI().
         this.initialize = function() {
             recordFSM.initialize(recordCtrl);
-            map.ClearPath(); 
+            map.recordPath.clear(); //20190803  was map.ClearPath(); 
             map.ClearPathMarkers();
 
             // Check for providing an unclear option for old path. 
@@ -10491,7 +10502,7 @@ Are you sure you want to delete the maps?";
                         divWalkingMoreMenu: 'divWalkingMoreMenu'  // Container div for Menu for more options.
                       };
         }
-        const labelWalkingState = document.getElementById('labelWalkingState');
+        const labelWalkingState = document.getElementById(ctrlIds.labelWalkingState);   
         const buWalkingStartStop = document.getElementById(ctrlIds.buWalkingStartStop);
         const buWalkingPauseResume = document.getElementById(ctrlIds.buWalkingPauseResume);
         const parentEl = document.getElementById(ctrlIds.divWalkingMoreMenu);
@@ -11227,6 +11238,7 @@ function wigo_ws_Controller() {
                         // User has changed so need to get the record stats history for the new user.
                         // update server for edits (additions) and deletes (if any) for new user that signed in,
                         // then download the record stats for the useer.
+                        view.initRecordPath();  // Ensure geo record path is initialized for the different user.
                         let bOk = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {  
                             // Download stats for new user.
                             if (bOk) {
