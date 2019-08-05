@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.036-20190419-1525"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.037-20190804-1502"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -356,7 +356,7 @@ function wigo_ws_View() {
     // Enumeration of mode for processing geo paths.
     // NOTE: the values must match the index of the option in selectMode drop list in trail2.html.
     this.eMode = {
-        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, record_stats_view: 6, unknown: 7,
+        online_view: 0, offline: 1, online_edit: 2, online_define: 3, select_mode: 4, tou_not_accepted: 5, record_stats_view: 6, walking_view: 7, unknown: 8,
         toNum: function (sMode) { // Returns byte value for sMode property name.
             var nMode = this[sMode];
             if (nMode === undefined)
@@ -373,6 +373,8 @@ function wigo_ws_View() {
                 case this.select_mode:sMode = 'select_mode'; break;
                 case this.tou_not_accepted: sMode = 'tou_not_accepted'; break;
                 case this.record_stats_view: sMode = 'record_stats_view'; break;  
+                case this.walking_view: sMode = 'walking_view'; break;
+                case this.unknown: sMode = 'unknown'; break;
                 default: sMode = 'online_view'; break;  
             }
             return sMode;
@@ -463,10 +465,6 @@ function wigo_ws_View() {
     //  bError: boolean, optional. Indicates an error msg. Default to true.
     // Note: appends a div element, whereas this.AppendStatus appends a span element.
     this.AppendStatusDiv = function (sStatus, bError) {  
-        if (!divStatus.isEmpty()) {
-            sStatus = "<br/>" + sStatus;
-        }
-
         divStatus.addDiv(sStatus, bError);
         titleBar.scrollIntoView(); 
     };
@@ -479,9 +477,13 @@ function wigo_ws_View() {
     this.FormCurrentStatus = function() {  
         let sStatus = '';
         let sStatusPebble = '';
+        // For WalkingView, only show Record status. 
+        const bWalkingView = that.curMode() === that.eMode.walking_view; 
 
         // Helper to update status for tracking.
         function TrackStatus() {
+            if (bWalkingView)
+                return;
             if (trackTimer.bOn) {
                 sStatus += "Track On<br/>"
                 sStatusPebble += "Track On\n";
@@ -510,6 +512,8 @@ function wigo_ws_View() {
         
         // Helper to update status for acceleration sensing.
         function AccelStatus() {
+            if (bWalkingView)
+                return; 
             if (app.deviceDetails.isAndroid()) {
                 if (deviceMotion.bAvailable) {
                     let sSensing = deviceMotion.isSensing() ? 'On' : 'Off';
@@ -579,6 +583,9 @@ function wigo_ws_View() {
         titleBar.scrollIntoView(); 
     };
 
+
+    // Previous mode // Now has scope of View for RecordStatsHistory obj to see.
+    var nPrevMode = this.eMode.online_view; 
     // Set the user interface for a new mode.
     // Arg:
     //  newMode: eMode enumeration value for the new mode.
@@ -594,11 +601,12 @@ function wigo_ws_View() {
             ShowElement(mapBar, false);
             ShowOwnerIdDiv(false);
             ShowPathInfoDiv(false);  
+            ShowElement(divWalkingBar, false);   
             if (recordStatsHistory && nMode !== that.eMode.record_stats_view)  
                 recordStatsHistory.close();
         }
 
-        var nPrevMode = nMode; 
+        nPrevMode = nMode; 
 
         nMode = newMode;
         var bOffline = nMode === this.eMode.offline;
@@ -613,7 +621,7 @@ function wigo_ws_View() {
                 selectOnceAfterSetPathList.nPrevMode = nPrevMode;                         
                 selectOnceAfterSetPathList.sPathName = selectGeoTrail.getSelectedText();  
                 HideAllBars();
-                titleBar.setTitle("Online Map"); 
+                titleBar.setTitle("Trail Maps");   
                 ShowElement(onlineOfflineEditBar, true);
                 ShowElement(onlineAction, true);
                 ShowPathInfoDiv(true); 
@@ -665,7 +673,7 @@ function wigo_ws_View() {
                 fsmEdit.Initialize(true); // true => new, ie define new path.
                 break;
             case this.eMode.select_mode: 
-                // Note: view show sign-on bar.
+                // Note: view show sign-on bar. //20190622 Not used for quite awhile. Instead signin is shown without changing mode.
                 HideAllBars();
                 titleBar.setTitle("Select Map View", false); // false => do not show back arrow.
                 this.ClearStatus();
@@ -686,6 +694,13 @@ function wigo_ws_View() {
                 // Ensure no items are displayed (marked) as selected because selected indicates to be deleted.
                 recordStatsHistory.open(titleHolder.offsetHeight); 
                 break;
+            case this.eMode.walking_view:  
+                HideAllBars();
+                titleBar.setTitle("Walking Map");
+                ShowElement(divWalkingBar, true);
+                walkingView.initialize();
+                break;
+
         }
     };
 
@@ -800,6 +815,17 @@ function wigo_ws_View() {
         if (map)
             map.ClearPath();
     };
+
+    // Initialized the current record path. 
+    this.initRecordPath = function() {  
+        // Reset to record path coords and clear from map.
+        map.recordPath.reset(); 
+        if (nMode === this.eMode.walking_view) {
+            walkingView.initialize();
+        } else {
+            recordFSM.initialize(); 
+        }
+    }; 
 
     // Updates item in the list of paths that user can select and 
     // the display for the item if it is currently selected.
@@ -1221,6 +1247,8 @@ function wigo_ws_View() {
     }
 
     var divRecordStatsEdit = document.getElementById('divRecordStatsEdit'); 
+
+    var divWalkingBar = document.getElementById('divWalkingBar');  
     
     // ** Attach event handler for controls.
     var onlineSaveOffline = document.getElementById('onlineSaveOffline');
@@ -2866,6 +2894,17 @@ function wigo_ws_View() {
             return bYes;
         };
 
+        // Returns true if rcording is active.
+        // Note: true for recording on or uploading a recorded trail.
+        //       stateStopped is NOT considered active to aid switching 
+        //       from WalkingView to RecordStatsHistory view.
+        //       isRecordingActive() being true is used to present a warning regarding
+        //       switching views. 
+        this.isRecordingActive = function() { 
+            const bYes = curState === stateOn || curState === stateDefineTrailName;
+            return bYes;
+        };
+
         // Returns true if recording points for a path is stopped.
         this.isStopped = function() {
             var bYes = curState === stateStopped;
@@ -3305,9 +3344,10 @@ function wigo_ws_View() {
                     // Elapsed time does not seem useful, probably confusing.
                     // s = "Elapsed Time: {0}<br/>".format(TimeInterval(stats.msElapsedTime));
                     // sMsg += s;
-                    s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(1)); 
-                    sMsg += s;
-                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0));  
+                    // Kinetic Calories does not seem useful, probably confusing.
+                    // s = "Kinetic Calories: {0}<br/>".format(stats.calories.toFixed(1)); 
+                    // sMsg += s;
+                    s = "Calories Burned: {0}<br/>".format(stats.calories3.toFixed(0)); 
                     sMsg += s;   
                     if (stats.nExcessiveV > 0) { // Check for points ommitted because of excessive velocity. 
                         s = "{0} points ignored because of excessive velocity.<br/>".format(stats.nExcessiveV);
@@ -4126,7 +4166,7 @@ function wigo_ws_View() {
 
     var recordFSM = new RecordFSM(this); 
 
-    var nMode = that.eMode.online_view; // Current mode.
+    var nMode = that.eMode.walking_view; //20190629Was that.eMode.online_view; // Current mode.
     
     // Initial home area is rectangle area around Oregon.
     var homeArea = { gptSW: new wigo_ws_GeoPt(), gptNE: new wigo_ws_GeoPt() };
@@ -6925,7 +6965,8 @@ function wigo_ws_View() {
         // object unless Settings indicates a click for geo location on.
         var nMode = that.curMode();
         if (nMode === that.eMode.online_view || 
-            nMode === that.eMode.offline) {
+            nMode === that.eMode.offline || 
+            nMode === that.eMode.walking_view )  {  
             // First check if testing reccording a point.
             var bRecordedPt = recordFSM.testWatchPt(llAt);
             // If not a recorded point, update geo location wrt main trail.
@@ -6941,7 +6982,8 @@ function wigo_ws_View() {
     // Note: EditFSM object has its own OnMapClick2 event handler.
     function OnMapClick2(llAt) { 
         if (nMode === that.eMode.online_view || 
-            nMode === that.eMode.offline) {
+            nMode === that.eMode.offline || 
+            nMode === that.eMode.walking_view) {  
                 // Clear trail animation in case it is running.
                 map.ClearPathAnimation();
                 map.recordPath.clearPathAnimation(); 
@@ -7139,11 +7181,12 @@ function wigo_ws_View() {
     parentEl = document.getElementById('selectMode');
     var selectMode = new ctrls.DropDownControl(parentEl, "selectModeDropDown", "View", null, "img/ws.wigo.dropdownicon.png");
     var selectModeValues = [['select_mode', 'Sign-in/off'],   
-                            ['online_view',   'Online'],        
-                            ['offline',       'Offline'],       
+                            ['online_view',   'Trail Maps'],           
+                            ['offline',       'Offline Map'],          
                             ['online_edit',   'Edit a Trail'],        
                             ['online_define', 'Draw a Trail'],
-                            ['record_stats_view', 'Stats History']      
+                            ['record_stats_view', 'Stats History'],
+                            ['walking_view', 'Walking Map']             
                            ]; 
     selectMode.fill(selectModeValues);
 
@@ -7175,7 +7218,7 @@ function wigo_ws_View() {
                     selectMode.selectedIndex = that.curMode();
                 }
             });
-        } else if (!recordFSM.isOff()) { 
+        } else if (recordFSM.isRecordingActive()) {   
             ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.saveStats(); // Ensure stats for recording have been saved. 
@@ -7198,6 +7241,7 @@ function wigo_ws_View() {
     selectSignIn.fill([['facebook', 'Facebook'],
                        ['logout', 'Logout'],
                        ['reset','Reset Server Access'], 
+                       ['hide', 'Hide'],   
                       ]);
 
     selectSignIn.onListElClicked = function(dataValue) {
@@ -7206,6 +7250,12 @@ function wigo_ws_View() {
         if (dataValue === 'reset') {  
             that.onResetRequest(nMode);
             that.ShowStatus("Reset server access.", false);
+            return;
+        }
+
+        // Check for hiding owner id div, ie the sign-in div. 
+        if (dataValue === 'hide') {
+            ShowOwnerIdDiv(false);
             return;
         }
 
@@ -7234,13 +7284,8 @@ function wigo_ws_View() {
                 // Save record stats residue for current user if need be.
                 var sOwnerId =  that.getOwnerId();
                 var recordStatsXfr = that.onGetRecordStatsXfr();
-                var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-                if (arUploadRecStats.length > 0) {
-                    if (sOwnerId) {
-                        recordStatsXfr.clearResidue(sOwnerId); 
-                        recordStatsXfr.appendResidueAry(sOwnerId, arUploadRecStats);
-                        recordStatsXfr.setUploadTimeStamp(arUploadRecStats[0].nTimeStamp); // Note: element 0 is most recent 
-                    }
+                if (sOwnerId) {
+                    recordStatsXfr.moveEditsAndDeletesIntoResidue(sOwnerId); 
                 }
                 // Save previous owner id before logging out.
                 if (sOwnerId ) {
@@ -7583,7 +7628,13 @@ Are you sure you want to delete the maps?";
             this.setListHeight(stats, titleHolder.offsetHeight); 
             // Set item editor to fill screen so touching map is not a problem.
             itemEditor.setHeight(titleHolder.offsetHeight); 
+
+            // Save previous mode for returning by the close button.
+            if (nPrevMode !== view.eMode.record_stats_view) {
+                nReturnMode = nPrevMode;
+            }
         };
+        let nReturnMode = view.eMode.walking_view; // mote to which the close button returns.
 
         // Ends showing stats history.
         this.close =function() {
@@ -7676,8 +7727,6 @@ Are you sure you want to delete the maps?";
                 recStats = arStatsUpdate.next();
                 while (recStats) {
                     AddStatsItem(recStats);
-                    // Reduce the upload needed timestamp if necessary.
-                    recordStatsXfr.reduceUploadTimeStamp(recStats.nTimeStamp);
                     recStats = arStatsUpdate.next();
                 }
             }
@@ -7701,11 +7750,16 @@ Are you sure you want to delete the maps?";
             }
         }
 
-        // Queues stats to a list updates to be displayed.
+        // Queues stats to a list of updates to be displayed.
+        // Also saves to localStorage stats.nTimeStamp to identify 
+        // stats obj that needs to be uploaded to server.
         // Arg:
         //  stats: wigo_ws_GeoTrailRecordStats obj. the stats to queue.
         this.queueStatsUpdateItem = function(stats) { 
             arStatsUpdate.add(stats);
+            // Also save to localStorage id of stats obj that needs to be upload to server.
+            const recordStatsXfr = view.onGetRecordStatsXfr();
+            recordStatsXfr.addUploadEditTimeStamp(stats.nTimeStamp);
         };
 
         // Uploads to server record stats items that have been added since last upload.
@@ -7714,29 +7768,28 @@ Are you sure you want to delete the maps?";
         //      false indicates upload is not needed or upload failed to start.          
         // Asynchronous Completion: If an uploaded is started, the completion is asynchronous
         // Note: Iff upload is needed, shows status message for the result.
-        //       User must be signed in for upload to success.
+        //       If a user is not signed in, does nothing and returns false.
         this.uploadAdditions = function() { 
+            // Do nothing if user is not signed in.
+            const bSignedIn = view.getOwnerId().length > 0;
+            if (!bSignedIn) {
+                return false;
+            }
+
             // Upload updated stats items to server if needed and if user is signed in.
-            var bStarted = false;
-            var recordStatsXfr = view.onGetRecordStatsXfr();
-            var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-            if (arUploadRecStats.length > 0) {
-                if (view.getOwnerId()) {
-                    var nUploadTimeStamp = arUploadRecStats[0].nTimeStamp; // Note: arUploadRecStats[0].nTimeStamp is most recent (greatest).
-                    bStarted = recordStatsXfr.uploadRecordStatsList(arUploadRecStats, function(bOk, sStatus) { 
-                        if (bOk) { 
-                            recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
-                        }
-                        var sMsg = bOk ? "Uploaded {0} RecordStats item(s).".format(arUploadRecStats.length) : 
-                                        "Upload failed for {0} Record Stats items.<br/>{1}".format(arUploadRecStats.length, sStatus +
-                                        "You may need to Sign-in (View > Sign-in/off) so that uploading is allowed.");
-                        view.ShowStatus(sMsg, !bOk);
-                    }); 
+            const recordStatsXfr = view.onGetRecordStatsXfr();
+            const bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus){
+                if (bOk) {
+                    if (sStatus.length > 0) {
+                        view.ShowStatus(sStatus, false); // false => no error.
+                    }
                 } else {
-                    view.ShowStatus("To upload recent stats, first sign-in (View > Sign-in/off, Sign-in > Facebook).", false);
+                    view.ShowStatus(sStatus, true); // true => error
                 }
-            } 
-            return bStarted;
+            });
+            if (!bStarted) {
+                view.ShowStatus("Failed to update server because server is busy.", true); 
+            }
         };
 
         // Shows month/date for first item visible in the list.
@@ -8160,7 +8213,7 @@ Are you sure you want to delete the maps?";
         }
 
         // Event handler for Done button on edit div.
-        function OnEditDone(event) {
+        function OnEditDone(event) {  
             // Helper to check if two dates are the same, ignoring seconds and millisecond component.
             // Returns true if same.
             // Arg:
@@ -8181,7 +8234,7 @@ Are you sure you want to delete the maps?";
             }
 
             // Helper to update localStorage for itemData.
-            function UpdateLocalStorage() {
+            function UpdateLocalStorageAndDisplay() {  
                 // Timestamp for itemData to add is unique.
                 // Set itemData in localStorage.
                 view.onSetRecordStats(itemData);
@@ -8196,63 +8249,6 @@ Are you sure you want to delete the maps?";
                 recordStatsMetrics.init(view.onGetRecordStatsList());  
             }
 
-            // Helper to make a copy of RecordStats obj.
-            function NewRecordStatsObj(other) {
-                var stats = new wigo_ws_GeoTrailRecordStats();
-                wigo_ws_GeoTrailRecordStats.Copy(stats, other);
-                return stats;
-            }
-
-            // Helper to do async upload of itemData to server.
-            // Iff upload is successful, updates itemData in localStorage.
-            function DoUpload() {
-                // upload the new item to server.
-                var bStarted = recordStatsXfr.uploadRecordStatsList([itemData], function(bOk, sStatus) {
-                    if (bOk) {
-                        UploadCompleted();
-                    } else {
-                        var sMsg = "Failed to upload stats item to server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start uploading stats items to server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-
-            // Delete old stats item from server and from localStorage..
-            // Then iff update stats items at server and in localStorage.
-            function DoDeleteAndUpload() {
-                // Delete the old item at server.
-                var arUploadDelete = [];  
-                arUploadDelete.push(new wigo_ws_GeoTrailTimeStamp(nDeleteItemTimeStamp)); 
-                var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                    if (bOk) {
-                        // Delete the item from localStorage.
-                        view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
-                        // upload the new item to server.
-                        DoUpload(); 
-                    } else {
-                        var sMsg = "Failed to delete old stats item at server: {0}".format(sStatus);
-                        view.ShowStatus(sMsg);
-                    }
-                });
-                if (!bStarted) {
-                    var sMsg = "Failed to start deleting old stats items from server:<br/>{0}";
-                    view.ShowStatus(sMsg);
-                }
-            }
-            
-            // Helper function called after successful upload to server.
-            function UploadCompleted() { 
-                // Update local storage, the stat history list, and stats metrics.
-                if (bChanged) {
-                    UpdateLocalStorage();
-                    var sMsg = bAdd ? "Successfully Added stats item." : "Successfully Edited stats item."; 
-                    view.ShowStatus(sMsg, false);                                                    
-                }
-            }
 
             // Quit if stats item controls are not all valid.
             if (!itemEditor.areCtrlsValid()) {
@@ -8304,15 +8300,38 @@ Are you sure you want to delete the maps?";
             }
 
             var recordStatsXfr = view.onGetRecordStatsXfr();
-            // Delete stats item data at server if need be.
-            if (nDeleteItemTimeStamp) { 
-                // Delete the old item at server and iff ok, delete locally.
-                // Then iff ok, upload edited item  to server and iff ok, save locally.
-                DoDeleteAndUpload();
-            } else {
-                if (bChanged) {
-                    // Upload change to server and then, iif ok, save to localStorage. 
-                    DoUpload();
+            // Save locally the id of the stats item that needs to be updated at the server.
+            if (nDeleteItemTimeStamp !== null) {
+                // Add the id of stats item that needs to be deleted at the server.
+                // This happens when the date/time of stats item has been changed.
+                recordStatsXfr.addUploadDeleteTimeStamp(nDeleteItemTimeStamp); 
+            }
+            // Save locally the id of stats item that needs to be edited at the server.
+            recordStatsXfr.addUploadEditTimeStamp(itemData.nTimeStamp);
+
+            // Update the display for the edited item.  
+            if (nDeleteItemTimeStamp !== null) {
+                view.onDeleteRecordStats({0: nDeleteItemTimeStamp}); 
+            }
+            // Update local storage, the stat history list, and stats metrics.
+            if (bChanged) {
+                UpdateLocalStorageAndDisplay();
+                var sMsg = !itemEditor.bEditing ? "Successfully Added stats item." : "Successfully Edited stats item."; 
+                view.ShowStatus(sMsg, false);                                                    
+            }
+            
+            // Update the server for the edit user is logged in.
+            if (bChanged) {
+                if (IsUserSignedIn("To update server too, you need to sign-in.")) {
+                    // Already signed-in so update the server.
+                    const bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus){
+                        if (!bOk) {
+                            view.AppendStatus(sStatus, true); // true => error.
+                        }
+                    });
+                    if (!bStarted) {
+                        view.ShowStatus("Failed to tranfer changes to server because it is busy.", true); // true => error
+                    }
                 }
             }
         }
@@ -9468,9 +9487,29 @@ Are you sure you want to delete the maps?";
             //        some other exchange with server is in progrss.
             this.sync = function(onDone) {
                 if (recordStatsXfr === null)
-                    recordStatsXfr =  view.onGetRecordStatsXfr(); // 
+                    recordStatsXfr =  view.onGetRecordStatsXfr(); 
 
-                let bStarted  = CompareStats(onDone);
+                // First update at server any edits and deletes done locally but not at server,
+                // then sync with the server.
+                let bStarted = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {
+                    // Helper to return calling onDone(..) when server is busy.
+                    function OnDoneForServerBusy() {
+                        // bOk is false.
+                        // nLocalStatsAdded is 0.
+                        onDone(false, 0, "Cannot sync now because Server is busy.");
+                    }
+
+                    if (bOk) {
+                        const bStarted  = CompareStats(function(bOk, nLocalStatsAdded, sStatus){
+                            onDone(bOk, nLocalStatsAdded, sStatus); 
+                        });
+                        if (!bStarted) {
+                            OnDoneForServerBusy();
+                        }
+                    } else {
+                        OnDoneForServerBusy();
+                    }
+                });
                 return bStarted;
             };
             
@@ -9733,24 +9772,30 @@ Are you sure you want to delete the maps?";
         monthDiv.className = 'stats_history_month'; 
         var yearDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell2')[0];
         yearDiv.className = 'stats_history_year'; 
+
+        // Add Close button to cell3 of header div.
+        var closeDiv = stats.headerDiv.getElementsByClassName('wigo_ws_cell3')[0];
+        closeDiv.className = 'stats_history_close_div';
+        // Create input button: tag, input; id=buStatsHistoryClose; class: stats_history_close_btn
+        // Note: this.create is found by going up the prototype change to reach ControlBase.
+        var closeBtn = this.create('input', 'buStatsHistoryClose', 'stats_history_close_btn'); 
+        closeBtn.setAttribute('type', 'button');
+        closeBtn.setAttribute('value', 'Close');
+        // Append closeBtn to the closeDiv of the headerDiv.
+        closeDiv.appendChild(closeBtn);
+        // Callback handler for closeBtn.
+        closeBtn.addEventListener('click', function(ev){
+            if (nReturnMode === view.eMode.record_stats_view)
+            {
+                // Show not happen. Ensure nReturnMode does not cause endless loop
+                nReturnMode = view.eMode.walking_view;
+            }
+            return view.setModeUI(nReturnMode);
+        }, false);
         
         // Call back handler for selection in menuStatsHistory.
         var metricsReport = null; 
         menuStatsHistory.onListElClicked = function(dataValue) {
-            // Helper that checks if user is signed in. 
-            // Arg:
-            //  sNotSignedInMsg: string. status msg shown if user is not signed in.
-            // Returns: boolean. true if signed.
-            function IsUserSignedIn(sNotSignedInMsg) { 
-                var bSignedIn = view.getOwnerId().length > 0;
-                if (!bSignedIn) {
-                    var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in> Facebook.";
-                    view.ShowStatus(sMsg);
-                }
-                return bSignedIn;
-            }
-
-            
             // Helper that gets list of item descriptions.
             // Arg:
             //  arId: array of unique html id of selected data items.
@@ -9786,6 +9831,7 @@ Are you sure you want to delete the maps?";
                 return sMsg;
             }
 
+            view.ClearStatus();  // Clear status div.  
             if (dataValue === 'show_metrics') {
                 recordStatsMetrics.updateMonthDays(view.onGetRecordStatsList()); 
                 if (metricsReport)          
@@ -9796,69 +9842,66 @@ Are you sure you want to delete the maps?";
                 // Set metrics report to fill screen.
                 metricsReport.setListHeight(titleHolder.offsetHeight); 
             } else if (dataValue === 'add_stats_item') {
-                if (IsUserSignedIn("You must sign-in to Add a Stats Item.")) { 
-                    itemEditor.bEditing = false; 
-                    itemEditor.setTitle("Add a New Record Stats Item"); 
-                    let itemData = itemEditor.newItemData();
-                    itemData.nTimeStamp = Date.now();
-                    itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
-                    itemEditor.setEstimateToggleCtrls(); 
-                    itemEditor.setEditCtrls(itemData);
-                    ShowRecordStatsEditDiv(true); 
-                } 
+                itemEditor.bEditing = false; 
+                itemEditor.setTitle("Add a New Record Stats Item"); 
+                let itemData = itemEditor.newItemData();
+                itemData.nTimeStamp = Date.now();
+                itemEditor.setAV1ForAdd(view.onGetRecordStatsList()); // Set acceleration and velocity based on item data list. 
+                itemEditor.setEstimateToggleCtrls(); 
+                itemEditor.setEditCtrls(itemData);
+                ShowRecordStatsEditDiv(true); 
             } else if (dataValue === 'edit_stats_item') { 
-                if (IsUserSignedIn("You must sign-n to Edit a Stats Item.")) { 
-                    let arId = Object.keys(itemsSelected);
-                    if (arId.length === 1) {
-                        itemEditor.bEditing = true;
-                        itemEditor.setTitle("Edit a Record Stats Item"); 
-                        let itemData = that.getItemData(arId[0]);
-                        itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
-                        itemEditor.setEstimateToggleCtrls();
-                        itemEditor.setEditCtrls(itemData);
-                        ShowRecordStatsEditDiv(true);
-                    } else {
-                        AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
-                    }
+                let arId = Object.keys(itemsSelected);
+                if (arId.length === 1) {
+                    itemEditor.bEditing = true;
+                    itemEditor.setTitle("Edit a Record Stats Item"); 
+                    let itemData = that.getItemData(arId[0]);
+                    itemEditor.setAV1ForEdit(itemData); // Set acceleration and velecoity based itemData being edited. 
+                    itemEditor.setEstimateToggleCtrls();
+                    itemEditor.setEditCtrls(itemData);
+                    ShowRecordStatsEditDiv(true);
+                } else {
+                    AlertMsg('Select only one item to edit.\nTouch a Date of an item to select it.');
                 }
             } else if (dataValue === 'delete_selected') {
-                if (IsUserSignedIn("You must sign-n to Delete Stats Item(s).")) { 
-                    // Prompt user if no item is selected.
-                    let arId = Object.keys(itemsSelected);  
-                    if (arId.length > 0) {  
-                        ConfirmYesNo(GetConfirmDeleteListMsg(arId),
-                            function(bConfirm) {
-                                if (bConfirm) {
-                                    // Delete the items at server first.
-                                    // Iff deletion at server is successful, then delete locally.
-                                    // Delete the old item at server first.
-                                    var arUploadDelete = GetServerDeleteSelections();
-                                    var recordStatsXfr = view.onGetRecordStatsXfr();  
-                                    var bStarted = recordStatsXfr.deleteRecordStatsList(arUploadDelete, function(bOk, sStatus) { 
-                                        if (bOk) {
-                                            view.onDeleteRecordStats(itemsSelected); 
-                                            // Update the stats metrics 
-                                            recordStatsMetrics.init(view.onGetRecordStatsList()); 
-                                            // Remove selected items from list displayed.
-                                            DeleteSelections();
-                                            that.showMonthDate(); 
-                                            var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
-                                            view.ShowStatus(sMsg, false); 
-                                        } else {
-                                            var sMsg = "Failed to delete {0} stats item(s).".format(arUploadDelete.length);
-                                            view.ShowStatus(sMsg)
+                // Prompt user if no item is selected.
+                let arId = Object.keys(itemsSelected);  
+                if (arId.length > 0) {  
+                    ConfirmYesNo(GetConfirmDeleteListMsg(arId),
+                        function(bConfirm) {
+                            if (bConfirm) {
+                                // Get list of deletion id (timestamps) for deletion at the server. 
+                                const arUploadDelete = GetServerDeleteSelections();
+                                // Update in localStorage the list of stats ids to be deleted at the server.
+                                var recordStatsXfr = view.onGetRecordStatsXfr();  
+                                recordStatsXfr.addUploadDeleteGeoTrailTimeStampList(arUploadDelete);
+                                
+                                // Delete the stats items locally. 
+                                view.onDeleteRecordStats(itemsSelected); 
+                                // Update the stats metrics 
+                                recordStatsMetrics.init(view.onGetRecordStatsList()); 
+                                // Remove selected items from list displayed.
+                                DeleteSelections();
+                                that.showMonthDate(); 
+                                var sMsg = "Deleted {0} stats item(s).".format(arUploadDelete.length);
+                                view.ShowStatus(sMsg, false); 
+                                // if user is signed in, delete items at the server.
+                                const sNotSignedInMsg = sMsg + "<br>To also delete Stats at server, sign-in:"; 
+                                if (IsUserSignedIn(sNotSignedInMsg)) {  
+                                    // User is signed in so update the server to delete stats.
+                                    recordStatsXfr.doServerUpdates(function(bOk, sStatus){
+                                        // Show result for the server update only if there is an error..
+                                        if (!bOk) {
+                                            view.AppendStatusDiv(sStatus, true); // true => error
                                         }
-                                    });
-                                    if (!bStarted) {
-                                        view.ShowStatus("Failed to start deleting stats item(s) at server.");
-                                    }
+                                    }); 
                                 }
-                            }); 
-                    } else { 
-                        let sMsg = "Select one or more items for deletion by touching the Date of an item.";
-                        AlertMsg(sMsg);
-                    } 
-                }
+                            }
+                        }); 
+                } else { 
+                    let sMsg = "Select one or more items for deletion by touching the Date of an item.";
+                    AlertMsg(sMsg);
+                } 
             } else if (dataValue === 'clear_selected') {
                 // Prompt user if no item is selected.
                 let arId = Object.keys(itemsSelected);  
@@ -9885,6 +9928,18 @@ Are you sure you want to delete the maps?";
                 }
             }
         };
+        // Helper that checks if user is signed in. 
+        // Arg:
+        //  sNotSignedInMsg: string. status msg shown if user is not signed in.
+        // Returns: boolean. true if signed.
+        function IsUserSignedIn(sNotSignedInMsg) { 
+            var bSignedIn = view.getOwnerId().length > 0;
+            if (!bSignedIn) {
+                var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in > Facebook.";
+                view.ShowStatus(sMsg, false);  // false => not an error.
+            }
+            return bSignedIn;
+        }
 
         var statsSyncer = new StatsSyncer(); // Object to sync stats with server. 
 
@@ -10331,6 +10386,234 @@ Are you sure you want to delete the maps?";
         var monthDayAry = new MonthDayAry(); // MonthDay obj. Used to fill array of days 30 before most recent stats.
     }
     var recordStatsMetrics = new RecordStatsMetrics(); 
+
+    //20190622 added
+    // Object for the Walking mode, which simplifies recording a trail.
+    // Walking mode is similar to the recording for the Online Map mode.
+    // However, only recording can be done; the option to also select a
+    // trail to follow is not available.  
+    // Constructor args:
+    //  view: ref to wigo_ws_View object.
+    //  ctrlIds: object of ids for the html controls. Defauts are provided.
+    function WalkingView(view, ctrlIds) {
+        // Prepares the walking mode.
+        // Note: open() does not show the walking control bar.
+        //       The bar is shown or not by view.setModeUI().
+        this.initialize = function() {
+            recordFSM.initialize(recordCtrl);
+            map.ClearPath();
+            map.recordPath.clear(); //20190803  added, also put back map.ClearPath(); 
+            map.ClearPathMarkers();
+
+            // Check for providing an unclear option for old path. 
+            if ( map.recordPath.isEmpty()) {
+                HidebuWalkingPauseResume();   // Intially hide the PauseResume button. 
+            } else {
+                HidebuWalkingPauseResume(false);      // Ensure PauseResume button is visible.
+                buWalkingPauseResume.value = UNCLEAR; // Old path can be uncleared.
+            }
+
+            buWalkingStartStop.value = START;  
+            // Show current location on the map and then zoom the map.
+            TrackGeoLocation(-1, function(updResult, positionErr){ // -1 => no close to path check, always show.
+                if (positionErr === null) {
+                     // Success 
+                     map.recordPath.zoomToCoord(updResult.loc, M_TO_SIDE);
+                 } else {
+                    // Error getting geo location.
+                    AlertMsg("Failed to get your geo location."); // Maybe shoudl be silent on error?
+                }
+            });
+        };
+
+        // Returns from the walking mode to previous mode.
+        this.close = function() {
+
+        };
+
+        // ** private members
+        // An object that has the same interface as the DropDownControl object ddefined
+        // in the Wigo_Ws_CordovaControls object.
+        // Remarks: WalkingView uses this PsuedoDropListCtrl object in its use of
+        // the RecordFSM object. 
+        // Only the members of DropDownCtrl used by RecordFSM are provided.
+        // Construct Arg:
+        //  label: HtmlElement for a label. Required, cannot be undefined.
+        function PsuedoDropDownCtrl(label) {
+            // Empties the droplist.
+            // Arg:
+            //  iKeep: integer, optional. Keeps items before index given by iKeep in the list.
+            //          Defaults to 0, which removes all items.
+            this.empty = function(iKeep) {
+                if (typeof iKeep !== 'number') 
+                    var iKeep = 0;
+                if (iKeep < 0)
+                    iKeep = 0;
+                list.splice(iKeep);
+                // Update memuMoreWalking for animate trail.
+                menuWalkingMore.removeItem('animate_trail');
+            };
+
+            // Appends item to the droplist.
+            // Args:
+            //  sDataValue: string for data-value attribute.
+            //  sText: string for text shown for item in the droplist.
+            //  bSelected: boolean, optional. If given, sets the value div to indicate
+            //             the item is selected. Only one item can be selected.
+            //             For multiple selects, the last one is effective.
+            this.appendItem = function(sDataValue, sText, bSelected) {
+                if (typeof bSelected !== 'boolean')
+                    bSelected = false;
+                if (typeof sDataValue !== 'string')
+                    sDataValue = 'data_value';
+                if (typeof sText !== 'string')
+                    sText = 'text';
+                let item = {'sDataValue': sDataValue, 'sText': sText, 'bSelected': bSelected};
+                list.push(item); 
+                // Update menuWalkingMore for animate trail.
+                if (sDataValue === 'animate_trail') { 
+                    menuWalkingMore.appendItem(sDataValue, sText, bSelected);
+                }
+            };
+
+            // Sets text for the label.
+            // Arg:
+            //  sLabel: string. text shown for the label.
+            this.setLabel = function(sLabel) {  
+                if (label) {
+                    label.innerText = sLabel;
+                }
+            };
+        
+
+            // ** Private members.
+            const list = []; // array of {[sDatValue: string , sText: string, bSelected: boolean]}obj:
+                             //   sDataValue is a key. 
+                             //   sText is the string value to display. 
+                             //   bSelected is true for array item selected.
+        }
+
+        // Hides or shows buWalkingPauseResume.
+        // Arg:
+        //  hide: boolean, optional. For true, hides the button; for false shows the button.
+        //        Defaults to true.
+        function HidebuWalkingPauseResume(bHide) {
+            if (typeof bHide !== 'boolean')
+                bHide = true;
+            if (bHide)
+                buWalkingPauseResume.style.visibility = 'hidden';
+            else
+                buWalkingPauseResume.style.visibility = 'visible';
+        }
+
+        // ** Constructor initialization.
+        if (!ctrlIds) {
+            ctrlIds = { labelWalkingState: 'labelWalkingState',     // Label for state of recording.
+                        buWalkingStartStop: 'buWalkingStartStop',               // Start_Stop button.
+                        buWalkingPauseResume: 'buWalkingPauseResume',           // Pause_Resume button.
+                        divWalkingMoreMenu: 'divWalkingMoreMenu'  // Container div for Menu for more options.
+                      };
+        }
+        const labelWalkingState = document.getElementById(ctrlIds.labelWalkingState);   
+        const buWalkingStartStop = document.getElementById(ctrlIds.buWalkingStartStop);
+        const buWalkingPauseResume = document.getElementById(ctrlIds.buWalkingPauseResume);
+        const parentEl = document.getElementById(ctrlIds.divWalkingMoreMenu);
+        const menuWalkingMore = new ctrls.DropDownControl(parentEl, "menuWalkingMore", "More", null, "img/ws.wigo.dropdownicon.png");
+        const menuWalkingMoreValues = [['record_stats_view', 'Stats History'],
+                                       ['my_loc', 'My Location']
+                                      ];
+        menuWalkingMore.fill(menuWalkingMoreValues);
+        menuWalkingMore.onListElClicked = function(dataValue) {
+            // this.value is value of memuWalkingMore control.
+
+            // Helper function to change mode.
+            function AcceptModeChange() {
+                that.ClearStatus();
+                // Inform controller of the mode change, not needed.
+                // that.onModeChanged(nMode); // not needed.
+                var nMode = that.eMode.toNum(dataValue);  
+                that.setModeUI(nMode);
+            }
+
+            if (dataValue === 'record_stats_view') {
+                // Switch to Stats History View.
+                if (recordFSM.isRecordingActive()) {  
+                    ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
+                        if (bConfirm) {
+                            recordFSM.saveStats(); // Ensure stats for recording have been saved. 
+                            AcceptModeChange();
+                        } 
+                    } );
+                } else {
+                    AcceptModeChange(); 
+                }
+            } else if (dataValue === 'my_loc') {
+                DoGeoLocation();
+            } else if (dataValue === 'animate_trail') {
+                // Animate the trail.
+                recordFSM.nextState(recordFSM.event.animate_trail); 
+            }
+        };
+
+        const recordCtrl = new PsuedoDropDownCtrl(labelWalkingState); 
+        
+        // Attach event handlers for the controls
+        const M_TO_SIDE = 400; // Number of meters to side of initial bounding rect for walking map.
+        //   Consts for button values (text)
+        const STOP = 'End';       
+        const START = 'Start';    
+        const PAUSE = 'Pause';    
+        const RESUME = 'Resume';
+        const UNCLEAR = 'Unclear';  
+        const NONE = '';  // No text showing on button.
+        buWalkingStartStop.addEventListener('click', function(ev) {
+            HidebuWalkingPauseResume(false); // Ensure button buWalkingPauseResume is visible.
+            if (this.value === START) {  
+                // Ensure geolocation circle is removed.
+                map.ClearGeoLocationUpdate(); 
+                // Change text for buttons
+                this.value = STOP;              
+                buWalkingPauseResume.value = PAUSE;   
+                // Fire event for recordFSM.
+                recordFSM.nextState(recordFSM.event.clear);
+                recordFSM.nextState(recordFSM.event.start); 
+            } else if (this.value === STOP ) {
+                // Ending recording (STOP), so go to the StateStopped, just like PAUSE does.  
+                // START (start recording) will clear any existing walking trail.
+                // Change text for buttons
+                this.value = START; 
+                buWalkingPauseResume.value = RESUME; //Can resume after ending recording. 
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.stop); 
+                recordFSM.nextState(recordFSM.event.show_stats);
+            }
+        }, false);
+    
+        buWalkingPauseResume.addEventListener('click', function(ev) {
+            if (this.value === RESUME) {
+                // Change text for buttons
+                this.value = PAUSE;
+                buWalkingStartStop.value = STOP;  // Needed for RESUME and ending recording. 
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.resume);
+            } else if (this.value === PAUSE) {
+                // Change text for buttons
+                this.value = RESUME;
+                // Fire event for recordFSM
+                recordFSM.nextState(recordFSM.event.stop);
+                recordFSM.nextState(recordFSM.event.show_stats);
+            } else if (this.value === UNCLEAR) {  
+                // Change text for buttons
+                this.value = RESUME;  // Do not automatically resume, have user touch button to resume.
+                buWalkingStartStop.value = STOP; 
+                // Fire event for recordFSM to unclear and resuume from stopped state.
+                recordFSM.nextState(recordFSM.event.unclear);
+                recordFSM.nextState(recordFSM.event.show_stats); // Show stats but do not  resume.
+                // recordFSM.nextState(recordFSM.event.resume);  // Remain paused
+            }
+        }, false);
+    }
+    var walkingView = new WalkingView(this);  
 
     // Object for sending message to Pebble watch.
     var sDegree = String.fromCharCode(0xb0); // Degree symbol.
@@ -10828,7 +11111,6 @@ function wigo_ws_Controller() {
     };
 
     view.onAuthenticationCompleted = function (result) {
-
         // result = {userName: _userName, userID: _userID, accessToken: _accessToken, status: nStatus}
         var eStatus = view.eAuthStatus();
         if (result.status === eStatus.Ok) {
@@ -10838,18 +11120,24 @@ function wigo_ws_Controller() {
             var bOk = model.authenticate(result.accessToken, result.userID, result.userName, function (result) {
                 var recordStatsXfr = model.getRecordStatsXfr();
                 var sPreviousOwnerId = recordStatsXfr.getPreviousOwnerId();
-                var bSameUser = result.userID === sPreviousOwnerId; 
                 // Save user info to localStorage.
                 model.setOwnerId(result.userID);
                 model.setOwnerName(result.userName);
                 model.setAccessHandle(result.accessHandle);
                 view.setOwnerName(result.userName);
                 view.setOwnerId(result.userID);
+                const bSameUser = recordStatsXfr.isSameUser();  
                 if (result.status === model.eAuthStatus().Ok) {
-                    // Upload record stats residue if need be for user that signed in and download record stats.
+                    // Upload record stats residue if need be for user that signed in and download record stats for a new user.
+
+                    // Helper to show status message that server is busy, i.e. failed to start transfer with server.
+                    function ShowServerBusyStatus() {
+                        view.AppendStatusDiv("Fail to update server because it is busy.", true); // true => error.
+                    }
+
                     // Helper to complete successful athentication after download Record Stats items for new user.
                     function DoForAuthOk() { 
-                        view.AppendStatus("User successfully logged in.", false);
+                        view.AppendStatusDiv("User successfully logged in.", false);
                         var nMode = view.curMode();
                         if (nMode === view.eMode.online_view) {
                             // Check if logon is due to recording a trail, in which case 
@@ -10869,33 +11157,6 @@ function wigo_ws_Controller() {
     
                     }
 
-                    // Helper to upload residue for result.sOwnerId.
-                    // Arg:
-                    //  onDone: Async callback after upload is completed. Signature:
-                    //              Arg:
-                    //                  bOk: boolean: true for successful upload of residue.
-                    //              Return: none.
-                    //          If there is no residue to upload, callback is immediate  with bOk true.
-                    // Synchronous Return: boolean. true for ok. false for failed to start upload.
-                    function DoUploadResidue(onDone) {
-                        // Upload record stats residue if there is a residue then download record stats.
-                        var bOk = true;
-                        var arResidueRecStats = recordStatsXfr.getResideAry(result.userID);
-                        if (arResidueRecStats.length > 0) {
-                            bOk = model.uploadRecordStatsList(arResidueRecStats, function(bOk, sStatus) {
-                                if (bOk) {
-                                    recordStatsXfr.clearResidue(result.userID); 
-                                } else { 
-                                    view.AppendStatus("Failed to upload residual Record Stats items: " + sStatus);
-                                }
-                                onDone(bOk);
-                            });
-                        } else {
-                            onDone(true);
-                        }
-                        return bOk;
-                    }
-
                     // Helper to download record stats for user.
                     // Note: Only call afer a successful upload.
                     function DoDownloadRecStats() {
@@ -10908,9 +11169,6 @@ function wigo_ws_Controller() {
                                 
                                 // Set Record Stats History data in localStorage for the new user.
                                 model.setRecordStatsList(arRecStats);
-                                // Set the most recent upload timestamp for updating a new record stats item at server.
-                                var nUploadTimeStamp = arRecStats.length > 0 ? arRecStats[arRecStats.length-1].nTimeStamp : 0;
-                                recordStatsXfr.setUploadTimeStamp(nUploadTimeStamp);
                                 // Clear the RecordStatsHistory ui.
                                 view.clearRecordStatsHistory(); 
                                 // If view is Stats History, reload the view.
@@ -10918,7 +11176,7 @@ function wigo_ws_Controller() {
                                     view.setModeUI(view.eMode.record_stats_view);
                                 } 
                             } else {
-                                view.AppendStatus("Failed to download Record Stats items: " + sStatus);
+                                view.AppendStatusDiv("Failed to download Record Stats items: " + sStatus);
                                 DoXfrErrorCleanup();
                             }
                             // Complete the successful authentication.
@@ -10926,6 +11184,7 @@ function wigo_ws_Controller() {
                         });
                         // Check syncrhonous return. Expect to always be ok.
                         if (!bOk) { 
+                            ShowServerBusyStatus();
                             DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
                             DoForAuthOk(); 
                         }
@@ -10937,38 +11196,67 @@ function wigo_ws_Controller() {
                     function DoXfrErrorCleanup() { 
                         // If sPreviousOwnerId is empty, the local record stats are for no user signed in.
                         // In this case leave the them as is, otherwise reset for the new user.
-                        if (sPreviousOwnerId.length > 0 && sPreviousOwnerId !== result.userId) {
+                        if (!bSameUser) { 
                             // The local record stats are for a different user.
                             // Clear the list of record stats in memory and in localStorage.
                             model.setRecordStatsList([]); 
-                            recordStatsXfr.setUploadTimeStamp(0);
                         }
                         // Clear the RecordStatsHistory ui so it will be loaded again when Stats History View is selected.
                         view.clearRecordStatsHistory();   
                     }
 
                     view.ClearStatus();
-                    // Append existing record stats that have not been uploade (if any) to residie of new user.
-                    var arUploadRecStats = recordStatsXfr.getRecordStatsUploadNeeded();
-                    recordStatsXfr.appendResidueAry(result.userID, arUploadRecStats); 
+
+                    // If the signed in user is not the previous user, then append the edits and deletes
+                    // to the residue of the previous user.
+                    if (!bSameUser) {   
+                        recordStatsXfr.moveEditsAndDeletesIntoResidue(sPreviousOwnerId); 
+                        // clear arRecordStats because it is no longer valid for the signed in user.
+                        // Note: 20190801 Clearing RecStats was added although probably not needed 
+                        //       because residue for the user that signed will replace edits in arRecordStats.
+                        //       Seems safer to me clear arRecordStats because it is no longer valid for
+                        //       the signed in user.
+                        recordStatsXfr.clearRecordStatsAndSave();
+                    }
+
+                    // Merge the residue (if any) for the user that signed in with existing edits and updates needed at the server.
+                    recordStatsXfr.moveResidueIntoEditsAndDeletes(result.userID, bSameUser);  
+                    // Save current user id as previous user id because any edits or deletes are now for the user that is signed in.
+                    recordStatsXfr.setPreviousOwnerId(result.userID);  
                     if (bSameUser) {
-                        // Upload residue (if any) of new user.
-                        DoUploadResidue(function(bOk){
+                        // update server for edits (additions) and deletes (if any) for user that signed in. 
+                        // The user that signed in is the same as the user previously signed in.
+                        let bOk = recordStatsXfr.doServerUpdates(function(bOk, sStatus){   
                             // For an upload error, do cleanup.
                             if (!bOk) {
+                                view.AppendStatusDiv(sStatus, true); // true => error.
                                 DoXfrErrorCleanup();
+                            } else { 
+                                // Updates ok. Show status only only if not empty (empty means no updates).
+                                if (sStatus.length > 0) {
+                                    view.AppendStatusDiv(sStatus, false); // false => no error.
+                                }
                             }
                             // Complete the successful authentication regardless.
                             DoForAuthOk();
                         });
+                        // Check syncrhonous return. Expect to always be ok.
+                        if (!bOk) { 
+                            ShowServerBusyStatus();
+                            DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
+                            DoForAuthOk(); 
+                        }
                     } else {
                         // User has changed so need to get the record stats history for the new user.
-                        // For new user upload record stats residue (if any) then download record stats.
-                        var bOk = DoUploadResidue(function(bOk) {
+                        // update server for edits (additions) and deletes (if any) for new user that signed in,
+                        // then download the record stats for the useer.
+                        view.initRecordPath();  // Ensure geo record path is initialized for the different user.
+                        let bOk = recordStatsXfr.doServerUpdates(function(bOk, sStatus) {  
                             // Download stats for new user.
                             if (bOk) {
                                 DoDownloadRecStats();
                             } else {
+                                view.AppendStatusDiv(sStatus, true); // true => error.
                                 // Clean up after a residue upload error.
                                 DoXfrErrorCleanup();
                                 // Complete successful authentication regardless.
@@ -10977,6 +11265,7 @@ function wigo_ws_Controller() {
                         });
                         // Check syncrhonous return. Expect to always be ok.
                         if (!bOk) { 
+                            ShowServerBusyStatus();
                             DoXfrErrorCleanup();  // Upload could not start. Unusual conflict for exchange with server.
                             DoForAuthOk(); 
                         }
@@ -11042,7 +11331,6 @@ function wigo_ws_Controller() {
             view.ShowStatus(sError);
         }
     };
-
 
     // Reset http request that may be in progress.
     // Handler Signature:

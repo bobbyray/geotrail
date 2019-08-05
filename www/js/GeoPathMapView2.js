@@ -2666,6 +2666,18 @@ function wigo_ws_GeoPathMap(bShowMapCtrls, bTileCaching) {
         };
 
         
+        // Zoom to a geo location coord.
+        // Args:
+        //  ll: LatLng object (leaflet). The latitude and longitude of the coord.
+        //  mToSide: number. Length in meters to side of a square boundary 
+        //           around fist coordinate of record path.
+        this.zoomToCoord = function(ll, mToSide) {  
+                var ne = ll.offsetXY(mToSide, mToSide);
+                var sw = ll.offsetXY(-mToSide, -mToSide);
+                var bounds = L.latLngBounds(sw, ne);
+                map.fitBounds(bounds);
+        };
+        
         // Zoom map to first coordinate in the record path only once.
         // Arg:
         //  mToSide: number. Length in meters to side of a square boundary 

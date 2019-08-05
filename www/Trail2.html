@@ -190,6 +190,16 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <!-- div for displaying a record stats metrics report. --> 
             <div id='divRecordStatsMetrics' class='wigo_ws_NoShow'></div>
         </div>
+        <!-- div for Walking mode --> 
+        <div id='divWalkingBar' class="wigo_ws_NoShow">
+            <div class="WalkingCtrl">
+                <span>Record</span><br/>
+                <label id='labelWalkingState'>Off</label> 
+            </div>
+            <input id='buWalkingStartStop' class="WalkingCtrl" type="button" value="Record"/>
+            <input id='buWalkingPauseResume' class="WalkingCtrl" type="button" value="Pause"/>
+            <div id='divWalkingMoreMenu' class="WalkingCtrl"></div>  <!-- Container for id='menuWalkingMore', a wigo_ws dropdown control. -->
+        </div>
     </div>
     <div id="mapBar" class="wigo_ws_Bar wigo_ws_NoShow">
         <div id="mapBarBtns">
@@ -208,8 +218,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <button id='buAcceptConfirmDialogBar'>Accept</button>
         <button id='buRejectConfirmDialogBar'>Reject</button>
     </div>
-
-
 
     <!-- Settings, only shown when selected from mainMenu -->
     <div id="divSettings">
@@ -344,7 +352,6 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <button id="buSettingsCancel">Cancel</button>
         </div>
     </div>
-
     
     <!-- Help Guide, only shown when selected from mainMenu -->
     <div id="divHelpGuide" class='wigo_ws_NoShow'>
@@ -357,7 +364,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li>The Help symbol ("?") displays this Help - Guide.</li>
             <li>The View DropList on the right selects the <a href="#helpSelectMapView">Map View</a>.</li>
         </ul>    
-        <p>The app starts showing the <a href="#helpOnlineMap">Online Map</a>.</p>
+        <p>The app starts showing the <a href="#helpWalkingMap">Walking Map</a>.</p>
         <p>More details about the map views and Main Menu follow.</p>
         <h2 id="helpSelectMapView">Select Map View</h2>
         Select a view from the View droplist on the Title Bar:
@@ -370,14 +377,17 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <li><a href="#helpDrawTrail">Draw a Trail</a> lets you create a new trail and save it online.</li> 
             <li><a href="#helpEditTrail">Edit a Trail</a> lets you edit a trail that 
             you have saved online.</li> 
-            <li><a href="#helpStatsHistory">Stats History</a> lets you view a history of statistics saved when you record a trail.</li>
+            <li><a href="#helpStatsHistory">Stats History</a> lets you view a history of statistics saved when you record a walk or trail.</li>
+            <li><a href="#helpWalkingMap">Walking Map</a> lets you record a walk.</li>
         </ul>
         <h2 id="helpSignInOffBar">Sign-in/off Bar</h2>
         <p>If you do not sign in, you can only view public trails created by others.
         However, if you sign in, you can create trails and edit your trails, which can be marked
         as Private for only you to view, or Public for anyone to view.</p>
-        If you are not signed in, but need to be to complete an action such as editing, drawing, or finding
-        your trails, you are automatically shown the Sign in/off Bar.
+        <p>Also if you are signed in, your statistics for recorded trails and walks are backed up
+        to a web server when you switch to the <a hfref="#helpStatsHistory">Stats History</a> view.</p>
+        <p>If you are not signed in, but need to be to complete an action such as editing, drawing, or finding
+        your trails, you are automatically shown the Sign-in/off Bar.</p>
         <p>On the left side, the User name is shown when you are signed in. If you are not signed, the User name is blank. 
         You do not type in the User name box, it is filled in automatically when you sign in.</p>
         <p>The Sign-in DropList is shown on the right:
@@ -386,15 +396,18 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Your sign-in id is remembered so 
             you do not need to sign in again unless you log out.</li>
             <li>Select Logout to logout of Facebook.<br/>
-            Note: Facebook can be tenacious about keeping you logged in. You may need to go
-            to Facebook to force a logout.</li>
+            Note: Facebook can be tenacious about keeping you logged in. First logout from the Facebook app, 
+            then logout in GeoTrail using the Sign-in DropList .</li>
             <li>Reset Server Access<br/>
             Resets server access in case access to the web server has hung. 
-            It not likely you need to do this. However if accessing the web server seem stuck,
+            It not likely you need to do this. However if accessing the web server seems stuck,
             try resetting. 
+            <li>Hide<br/>
+            Hides the Sign-in/off bar. Typically the Sign-in/off bar is not shown and goes away
+            automatically. However, if it is shown, you can hide it.</li>
         </li> 
         </ul>
-        <h2 id="helpOnlineMap">Online Map</h2>
+        <h2 id="helpOnlineMap">Trail Maps</h2>
         You can find trails that have been saved online by you or others. The trails you find are in the Trails droplist
         from which you select a trail to view. 
         Also you can select a trail by touching a blue marker on the map that indicates where a trail is. If the markers overlap, 
@@ -591,8 +604,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </li>
         </ul>
         <h2 id="helpOfflineMap">Offline Map</h2>
-        You select a trail you have saved when you are viewing the Online Map. 
-        Offline Map works the same as <a href="#helpOnlineMap">Online Map</a>,
+        You select a trail you have saved when you are viewing Trail Maps. 
+        Offline Map works the same as <a href="#helpOnlineMap">Trail Maps</a>,
         except that the map is shown from map tiles saved on your phone instead of from the web, 
         which means that the map is limited and is blank if you pan or zoom beyond the bounds
         of the saved map.
@@ -636,7 +649,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             server by going to Edit a Trail available from the View droplist.
             </li>
         </ul>
-        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for the Online Map.</p>
+        <p>The <a href="#helpControlsAtBottom">Controls at Bottom of Map</a> work the same as for Trail Maps.</p>
         <h2 id="helpDrawTrail">Draw a Trail</h2>
         <p>Provides a way to create a trail and save it online.</p>
         <p>You must be signed into Facebook to create a trail.</p>
@@ -727,6 +740,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
            The Month and Year for the first item scrolled into view is shown in the header and changes
            as you scroll into a different month. A separator bar is included in the list to
            to show a change in month.
+        <h3>Close Button</h3>
+        On the right side of the stats list header is the Close button. 
+        Touch Close to return from Stats History to the view from which you
+        opened Stats History (Walking Map, Trail Maps, or Offline Map).
         <h3>Marking an Item for Selection</h3>
         Touch the day of month number on the left side of the item to select
         the item. The background of a selected item is set to gray to indicate selection.<br/>
@@ -798,7 +815,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 You need to select the item(s) to delete first in the Stats History list.
                 Touch the day of month number on the left side of the item to select
                 the item. Multiple items can be selected for deletion.<br/>
-                A prompt is given for confirming the deletion. Once a deletion is 
+                A prompt is given to confirm the deletion. Once a deletion is 
                 confirmed it can NOT be undone.</li>
             <li>Menu > Clear Selected<br/>
                 This clears selections that you have indicated in the Stats History list.
@@ -809,6 +826,46 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 the Stats History View is opened. However, if the stats local data is lost, synchronization
                 can restore the local stats data from the server.
             </li>
+        </ul>
+        <h2 id="helpWalkingMap">Walking Map</h2>
+        The Walking Map lets you easily record the path for your walk. 
+        The Start/End button and the Pause/Resume button control recording.
+        <ul>
+            <li>Start button<br/>
+            Touch Start to begin recording your walk. The Start button becomes the End button.</li>
+            <li>End button<br/>
+            Touch End to complete your walk, which saves on your phone the statistics for the walk.
+            The End button becomes the Start button again and the Resume button is shown.</li>
+            <li>Pause button<br/>
+            The Pause button is shown when you start or resume. Touch the Pause button to pause recording your walk.
+            The Pause button becomes the Resume button.</li>
+            <li>Resume button<br/>
+            Touch the Resume button to resume recording. The Resume button becomes the Pause button again.</li>
+            <li>Unclear button<br/>
+            The Unclear button is one of the functions of the Pause/Resume/Unclear button.
+            The Unclear button is shown when you return from the <a href="#helpStatsHistory">Stats History</a> view. Touch Unclear to
+            see the path for the recent walk that was cleared because you switched to the Stats History view.</li>
+        </ul>
+        <h3>Statistics for a Walk</h3>
+        The statistics for your walk are saved when you end a walk. 
+        <ul>
+            <li>Date and time a walk begins.</li>
+            <li>Distance walked.</li>
+            <li>Run time. The total time in minutes and seconds for the walk.</li>
+            <li>Speed. The average speed for the walk.</li>
+            <li>Calories burned. An estimate of food calories burned by the walk.</li>
+        </ul>
+        The statistics do not include times and distance when the walk is paused.
+        <h3>More Menu</h3>
+        The More menu has these options:
+        <ul>
+            <li>Stats History<br>
+            Switches to the <a href="#helpStatsHistory">Stats History</a> view that shows
+            statistics for all your walks and recorded trails.</li>
+            <li>My Location<br/>
+            Shows a green dot for your location on the map.</li>
+            <li>Animate Trail<br/>
+            Animates the walk showing the path taken from beginning to end.</li>
         </ul>
         <h2 id="helpMainMenu">Main Menu</h2>
         The Main Menu is available from the Title Bar and is the droplist on the left.  
@@ -836,7 +893,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </span>
             <span class='noAndroidHelp'><br/>
             When the app is in the background (not showing on the screen or screen is turned off), automatic tracking
-            does NOT occur. The app must must be displayed on the screen for automatic tracking to occurs.            
+            does NOT occur. The app must must be displayed on the screen for automatic tracking to occur.            
             </span>
             </li>
             <li>Geo Tracking Update<br/>
@@ -895,7 +952,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
                 The acceleration is given in meters per second squared. For reference the acceleration due to earth's gravity
                 is 9.81 m/sec^2.</li>
                 <li>Accel Velocity Thres (m/sec)<br/>
-                The threshold in meter per second for the change in velocity after which an acceleration alert is issued.
+                The threshold in meters per second for the change in velocity after which an acceleration alert is issued.
                 Also the acceleration must remain above the Accel Alert Thres. 
                 If the acceleration drops below its threshold, the change in velocity is reset to 0.
                 Also once the velocity threshold is reached, it is reset to 0 resulting in another alert
@@ -949,7 +1006,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Shows a topology layer on the map.
             Not showing the topology layer makes the snow cover layer clearer.</li>
             <li>Show Snow Cover Layer on map? Yes | No<br/>
-            Shows a snow cover layer on the the map.<br>
+            Shows a snow cover layer on the map.<br>
             A color scale indicates how much of an area is covered by snow; 
             it does NOT indicate snow depth:
             <img src='img/snowcoverscale.png'><br/>
@@ -966,10 +1023,10 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             Touching a point on the map simulates getting the geo location for the point on the map.
             This is just for testing.</li>
             <li id="helpHomeArea">Set Home Area to Screen<br>
-            Touch the Set button to set your home area to be that shown on the screen<br/>
+            Touch the Set button to set your home area to that shown on the screen<br/>
             First, pan, zoom, and pinch to display the area you want on the screen.<br/>
             The trails in the Home Area are found when the app starts.
-            Also, the Home Area can be chosen in Online Map, from the Find Trails droplist.<br/>
+            Also, the Home Area can be chosen in Trail Maps, from the Find Trails droplist.<br/>
             <li>Done Button<br/>
             Touch Done to save the changes and close the Settings dialog.
             <li>Cancel Button<br/>
@@ -999,7 +1056,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             </li>
             <li>If your Pebble watch is paired with your phone correctly, you can start Pebble GeoTrail
                 from your watch by selecting the Pebble GeoTrail app.<br/>
-                Note: This only starts the Pebble GeoTrail app on the your watch and does not 
+                Note: This only starts the Pebble GeoTrail app on your watch and does not 
                 start the GeoTrail app on your phone.
             </li>
         </ul>  
@@ -1019,6 +1076,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         Displays the open licenses for components used in this app.
         <br/><br/><br/> <!-- Blank line at bottom for fixed close dialog bar to overlay. -->  
     </div>
+
     <!-- Help Back To Trail, only shown when selected from mainMenu -->
     <div id='divHelpBackToTrail' class='wigo_ws_NoShow'>
         <h1>Help - Back To Trail</h1>
@@ -1187,19 +1245,25 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             or to record a trail as you travel. Warnings, which you control, can be shown by the app when your geolocation
             is off the trail you have selected.</p>
             <p>If you choose not to allow this app to use geolocation, the app will not be useful.</p>
-            At your option, you may save geolocation data to define a trail on a web server.
+            At your option, you may save geolocation data to define a trail. Also you may choose
+            to save statistics for a walk or recorded trail.
             <h3>Web Server Data</h3>
             <p>For trails, that you define manually or record by using geolocation, 
             data is stored on a web server. The data has latitude and longitude for points
-            defining the trail. Your Facebook public identifier and your name is associated with your trails.
-            Protection for the database is provided through access controlled by a password. 
+            defining the trail. Your Facebook public identifier is associated with your trails.</p>
+            <p>For a walk or a trail you record, statistics are saved optionally at
+            a web server. The statistics are a summary, such as start time, distance, and run time,
+            and do not include any geolocation. Your Facebook public identifier is associated with your statistics.</p>
+            <p>Your public Facebook identifier and your name associated with it are saved in the database at the web server.</p>
+            <p> Protection for the database is provided through access controlled by a password. 
             Data exchanges with the server are encrypted via the https protocol.
             The web hosting company
             provides security against malicious intrusions. However,
             be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
             <p>The app lets you delete your trails from the web server.</p>
             <h3>Data on Your Phone</h3>
-            <p>Data is saved on your phone for defining trails and caching map sections when you are offline.
+            <p>Data is saved on your phone for defining trails and caching map sections when you are offline. 
+            Also statistics for walks and trails that you record are saved on your phone.
             <p>If from this app you sign in using Facebook, your Facebook public identifier and name are saved on the phone; 
             when from this app you logout, your identifier and name are removed.</p>
             <p>The data can be deleted by you from your phone by managing the application on your phone.</p>
@@ -1210,9 +1274,11 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             a trail public.
             <h3>Your Data Is Not Shared with Any Other Party</h3>
             As mentioned above, your Facebook public identifier is associated with the 
-            geolocation data for a trail you have defined. 
+            geolocation data for a trail you have defined and for statistics for a trail that you have recorded.
             Marking a trail you save to the web server as Public allows others using this app to view the trail.
-            However, the geolocation data, the Facebook public identifier, or your name are never given to another party.
+            The statistics for a trail you record can only be seen by you. 
+            <p>Your geolocation data, your statistics for your recorded trails, 
+            your Facebook public identifier, or your name are never given to another party.
         <h2>A FURTHER CAUTION</h2>
         <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
         may not be appropriate for your abilities and that the trails could have inaccuracies.</p>
