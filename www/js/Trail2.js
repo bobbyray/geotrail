@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.037-20190803-1708"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.037-20190804-1502"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -2891,6 +2891,17 @@ function wigo_ws_View() {
         // Returns true if recording points for path is active.
         this.isRecording = function() {
             var bYes = curState === stateOn;
+            return bYes;
+        };
+
+        // Returns true if rcording is active.
+        // Note: true for recording on or uploading a recorded trail.
+        //       stateStopped is NOT considered active to aid switching 
+        //       from WalkingView to RecordStatsHistory view.
+        //       isRecordingActive() being true is used to present a warning regarding
+        //       switching views. 
+        this.isRecordingActive = function() { 
+            const bYes = curState === stateOn || curState === stateDefineTrailName;
             return bYes;
         };
 
@@ -7207,7 +7218,7 @@ function wigo_ws_View() {
                     selectMode.selectedIndex = that.curMode();
                 }
             });
-        } else if (!recordFSM.isOff()) { 
+        } else if (recordFSM.isRecordingActive()) {   
             ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                 if (bConfirm) {
                     recordFSM.saveStats(); // Ensure stats for recording have been saved. 
@@ -10390,7 +10401,8 @@ Are you sure you want to delete the maps?";
         //       The bar is shown or not by view.setModeUI().
         this.initialize = function() {
             recordFSM.initialize(recordCtrl);
-            map.recordPath.clear(); //20190803  was map.ClearPath(); 
+            map.ClearPath();
+            map.recordPath.clear(); //20190803  added, also put back map.ClearPath(); 
             map.ClearPathMarkers();
 
             // Check for providing an unclear option for old path. 
@@ -10525,7 +10537,7 @@ Are you sure you want to delete the maps?";
 
             if (dataValue === 'record_stats_view') {
                 // Switch to Stats History View.
-                if (!recordFSM.isOff()) {
+                if (recordFSM.isRecordingActive()) {  
                     ConfirmYesNo("Recording a trail is in progress. OK to continue and clear the recording?", function(bConfirm){
                         if (bConfirm) {
                             recordFSM.saveStats(); // Ensure stats for recording have been saved. 
