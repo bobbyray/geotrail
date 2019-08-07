@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.037-20190804-1502"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.038-20190806-1555"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -9507,7 +9507,7 @@ Are you sure you want to delete the maps?";
                             OnDoneForServerBusy();
                         }
                     } else {
-                        OnDoneForServerBusy();
+                        onDone(false, 0, sStatus); 
                     }
                 });
                 return bStarted;

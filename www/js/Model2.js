@@ -1004,7 +1004,7 @@ function wigo_ws_Model(deviceDetails) {
             var el; // element i for looping thru array.
             // Default to index not found and nTimeStamp < el[0].nTimeStamp.
             // The default insertion point is for el[0], which causes existing el[0] to raise. 
-            var iFound = -arRecordStats.length; 
+            var iFound = arRecordStats.length > 0 ?  -arRecordStats.length : -1; 
             // Search thru array from top (most recent timestam) to botton (least recent timestamp).
             for (var i=arRecordStats.length - 1; i >= 0; i--) {
                 el = arRecordStats[i];

@@ -168,14 +168,14 @@ android {
         }
     }
     defaultConfig {
-        versionCode 101370
+        versionCode 101380
         applicationId 'ws.wigo.geotrail'
         if (cdvMinSdkVersion != null) {
             minSdkVersion cdvMinSdkVersion
         }
-        versionName '1.1.037'
-        minSdkVersion 23
-        targetSdkVersion 28
+        versionName '1.1.038'
+        minSdkVersion 23      // was 26
+        targetSdkVersion 26  // was 28
     }
     lintOptions {
         abortOnError false;
