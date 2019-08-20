@@ -42,7 +42,6 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    ////20190819 var sVersion = "1.1.038-20190806-1555"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     var sVersion = "1.1.039NoHockeyApp-20190819-649"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
@@ -7076,8 +7075,6 @@ function wigo_ws_View() {
                           ['battery_drain', 'Help - Reducing Battery Drain'],  
                           ['about', 'About'],                                     
                           ['license', 'Licenses'],
-                          ////20190819 // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
-                          ////20190819 ['crash', 'Crash Test']
                          ];
         // iPhone. Do not show help features not available on iPhone.
         var noHelp = document.getElementsByClassName("noIosHelp");
@@ -7093,8 +7090,6 @@ function wigo_ws_View() {
                           ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses'],                                // 7
-                          ////20190819 // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      
-                          ////20190819 // ['crash', 'Crash Test']                              //20161215 Not available for Android.
                          ];
         // Android. Do not show help for info about iPhone that does apply for Android.
         var noHelp = document.getElementsByClassName("noAndroidHelp");
@@ -7138,7 +7133,6 @@ function wigo_ws_View() {
             ShowHelpTrackingVsBattery(true);
             this.selectedIndex = 0;
         } 
-        ////20190819 Removed Crash Test and Screen Test for Hockey App because MS App Center supports automatically.
         that.ClearStatus();
     };
 
@@ -11571,25 +11565,6 @@ Wigo_Ws_InitDeviceDetails(window.app.deviceDetails);
 // for hockeyapp is not used. HockeyApp has been replaced by MS App Center
 // and has no javascript setup.
 document.addEventListener("deviceready", function(e) {
-    ////20190819 Remove hockeyapp. It is replaced by ms appcenter.
-    ////20190819 //20161210 Initialize hockeyapp for distruction of app for ios.
-    ////20190819 if (typeof(hockeyapp) !== 'undefined') {
-    ////20190819     // hockeyapp.start(null, null, "296f229a3907490abd795f3a70760dea");
-    ////20190819     hockeyapp.start(function(){
-    ////20190819         // Success.
-    ////20190819         var sMsg = 'Successfully started HockeyApp.';
-    ////20190819         //debug alert(sMsg);
-    ////20190819         console.log(sMsg);
-    ////20190819     }, 
-    ////20190819     function(){
-    ////20190819         // Failure.
-    ////20190819         var sMsg = 'Failed to initialize HockeyApp!';
-    ////20190819         //debug alert(sMsg);
-    ////20190819         console.log(sMsg);
-    ////20190819     }, 
-    ////20190819     "296f229a3907490abd795f3a70760dea",
-    ////20190819     true); // true => autoSend crash report if one exists on start.
-    ////20190819 } 
     console.log('Device is ready.');
 }, 
 false);
