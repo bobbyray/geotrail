@@ -37,22 +37,6 @@
               "count": 1
             },
             {
-              "xml": "<feature name=\"Device\"><param name=\"android-package\" value=\"org.apache.cordova.device.Device\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<feature name=\"BackgroundMode\"><param name=\"android-package\" value=\"de.appplant.cordova.plugin.background.BackgroundMode\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"KeepRunning\" value=\"true\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"AndroidLaunchMode\" value=\"singleInstance\" />",
-              "count": 1
-            },
-            {
               "xml": "<feature name=\"Accelerometer\"><param name=\"android-package\" value=\"org.apache.cordova.devicemotion.AccelListener\" /></feature>",
               "count": 1
             },
@@ -91,6 +75,22 @@
             {
               "xml": "<feature name=\"WakeupPlugin\"><param name=\"android-package\" value=\"org.nypr.cordova.wakeupplugin.WakeupPlugin\" /><param name=\"onload\" value=\"true\" /></feature>",
               "count": 1
+            },
+            {
+              "xml": "<feature name=\"Device\"><param name=\"android-package\" value=\"org.apache.cordova.device.Device\" /></feature>",
+              "count": 1
+            },
+            {
+              "xml": "<feature name=\"BackgroundMode\"><param name=\"android-package\" value=\"de.appplant.cordova.plugin.background.BackgroundMode\" /></feature>",
+              "count": 1
+            },
+            {
+              "xml": "<feature name=\"BackgroundModeExt\"><param name=\"android-package\" value=\"de.appplant.cordova.plugin.background.BackgroundModeExt\" /></feature>",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"KeepRunning\" value=\"true\" />",
+              "count": 1
             }
           ]
         }
@@ -123,25 +123,25 @@
           ],
           "/manifest/application": [
             {
-              "xml": "<service android:name=\"de.appplant.cordova.plugin.background.ForegroundService\" />",
-              "count": 1
-            },
-            {
               "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupReceiver\" />",
               "count": 1
             },
             {
               "xml": "<receiver android:name=\"org.nypr.cordova.wakeupplugin.WakeupBootReceiver\"><intent-filter><action android:name=\"android.intent.action.BOOT_COMPLETED\" /></intent-filter></receiver>",
               "count": 1
+            },
+            {
+              "xml": "<service android:name=\"de.appplant.cordova.plugin.background.ForegroundService\" />",
+              "count": 1
             }
           ],
           "/manifest": [
             {
-              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
+              "xml": "<uses-permission android:name=\"android.permission.VIBRATE\" />",
               "count": 1
             },
             {
-              "xml": "<uses-permission android:name=\"android.permission.VIBRATE\" />",
+              "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
               "count": 1
             }
           ],
@@ -169,6 +169,10 @@
             {
               "xml": "<uses-permission android:name=\"android.permission.WAKE_LOCK\" />",
               "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.FOREGROUND_SERVICE\" />",
+              "count": 2
             }
           ]
         }
@@ -182,12 +186,6 @@
     "com.phonegap.plugins.facebookconnect": {
       "APP_ID": "694318660701967",
       "APP_NAME": "WigoGeoTrail",
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-device": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
-    "cordova-plugin-background-mode": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
     "cordova-plugin-device-motion": {
@@ -219,6 +217,12 @@
     },
     "org.nypr.cordova.wakeupplugin": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-device": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-background-mode": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
     }
   },
   "dependent_plugins": {},
@@ -237,23 +241,6 @@
       "pluginId": "com.phonegap.plugins.facebookconnect",
       "clobbers": [
         "facebookConnectPlugin"
-      ]
-    },
-    {
-      "id": "cordova-plugin-device.device",
-      "file": "plugins/cordova-plugin-device/www/device.js",
-      "pluginId": "cordova-plugin-device",
-      "clobbers": [
-        "device"
-      ]
-    },
-    {
-      "id": "cordova-plugin-background-mode.BackgroundMode",
-      "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
-      "pluginId": "cordova-plugin-background-mode",
-      "clobbers": [
-        "cordova.plugins.backgroundMode",
-        "plugin.backgroundMode"
       ]
     },
     {
@@ -548,13 +535,28 @@
       "clobbers": [
         "wakeuptimer"
       ]
+    },
+    {
+      "id": "cordova-plugin-device.device",
+      "file": "plugins/cordova-plugin-device/www/device.js",
+      "pluginId": "cordova-plugin-device",
+      "clobbers": [
+        "device"
+      ]
+    },
+    {
+      "id": "cordova-plugin-background-mode.BackgroundMode",
+      "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
+      "pluginId": "cordova-plugin-background-mode",
+      "clobbers": [
+        "cordova.plugins.backgroundMode",
+        "plugin.backgroundMode"
+      ]
     }
   ],
   "plugin_metadata": {
     "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6",
     "com.phonegap.plugins.facebookconnect": "0.11.0",
-    "cordova-plugin-device": "1.1.6",
-    "cordova-plugin-background-mode": "0.7.2",
     "cordova-plugin-device-motion": "1.2.5",
     "cordova-plugin-device-orientation": "1.0.3",
     "cordova-plugin-dialogs": "1.2.1",
@@ -564,6 +566,8 @@
     "cordova-plugin-network-information": "1.3.2",
     "cordova-plugin-vibration": "2.1.1",
     "cordova-plugin-whitelist": "1.2.2",
-    "org.nypr.cordova.wakeupplugin": "0.1.0"
+    "org.nypr.cordova.wakeupplugin": "0.1.0",
+    "cordova-plugin-device": "2.0.3",
+    "cordova-plugin-background-mode": "0.7.3"
   }
 }

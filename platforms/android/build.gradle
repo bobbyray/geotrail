@@ -175,7 +175,7 @@ android {
         }
         versionName '1.1.038'
         minSdkVersion 23      // was 26
-        targetSdkVersion 26  // was 28
+        targetSdkVersion 28  // was 26
     }
     lintOptions {
         abortOnError false;
@@ -219,8 +219,8 @@ android {
     }
     */
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_6
-        targetCompatibility JavaVersion.VERSION_1_6
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     if (cdvReleaseSigningPropertiesFile) {
         signingConfigs {

@@ -6339,14 +6339,17 @@ function wigo_ws_View() {
             function(){
                 console.log("Background mode event: activate");
                 cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+                //20190825 cordova.plugins.backgroundMode.disableBatteryOptimizations(); // Not needed and caused a problem for switching apps.
             });
 
             cordova.plugins.backgroundMode.on('deactivate', 
             function(){
                 console.log("Background mode event: deactivate");
             });
-
-
+            // Have the Button go to background instead of closing the app.
+            // Note: A disadvantage to this is the user can not use the Back button to end GeoTrail app.
+            //       The advanvantage is the user uses not accidentally close app when recording a trail.
+            cordova.plugins.backgroundMode.overrideBackButton();
         };
 
         // Private members

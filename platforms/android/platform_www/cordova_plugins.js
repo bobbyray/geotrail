@@ -17,23 +17,6 @@ module.exports = [
     ]
   },
   {
-    "id": "cordova-plugin-device.device",
-    "file": "plugins/cordova-plugin-device/www/device.js",
-    "pluginId": "cordova-plugin-device",
-    "clobbers": [
-      "device"
-    ]
-  },
-  {
-    "id": "cordova-plugin-background-mode.BackgroundMode",
-    "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
-    "pluginId": "cordova-plugin-background-mode",
-    "clobbers": [
-      "cordova.plugins.backgroundMode",
-      "plugin.backgroundMode"
-    ]
-  },
-  {
     "id": "cordova-plugin-device-motion.Acceleration",
     "file": "plugins/cordova-plugin-device-motion/www/Acceleration.js",
     "pluginId": "cordova-plugin-device-motion",
@@ -325,6 +308,23 @@ module.exports = [
     "clobbers": [
       "wakeuptimer"
     ]
+  },
+  {
+    "id": "cordova-plugin-device.device",
+    "file": "plugins/cordova-plugin-device/www/device.js",
+    "pluginId": "cordova-plugin-device",
+    "clobbers": [
+      "device"
+    ]
+  },
+  {
+    "id": "cordova-plugin-background-mode.BackgroundMode",
+    "file": "plugins/cordova-plugin-background-mode/www/background-mode.js",
+    "pluginId": "cordova-plugin-background-mode",
+    "clobbers": [
+      "cordova.plugins.backgroundMode",
+      "plugin.backgroundMode"
+    ]
   }
 ];
 module.exports.metadata = 
@@ -332,8 +332,6 @@ module.exports.metadata =
 {
   "com.jetboystudio.pebble.PebblePGPlugin": "0.2.6",
   "com.phonegap.plugins.facebookconnect": "0.11.0",
-  "cordova-plugin-device": "1.1.6",
-  "cordova-plugin-background-mode": "0.7.2",
   "cordova-plugin-device-motion": "1.2.5",
   "cordova-plugin-device-orientation": "1.0.3",
   "cordova-plugin-dialogs": "1.2.1",
@@ -343,7 +341,9 @@ module.exports.metadata =
   "cordova-plugin-network-information": "1.3.2",
   "cordova-plugin-vibration": "2.1.1",
   "cordova-plugin-whitelist": "1.2.2",
-  "org.nypr.cordova.wakeupplugin": "0.1.0"
+  "org.nypr.cordova.wakeupplugin": "0.1.0",
+  "cordova-plugin-device": "2.0.3",
+  "cordova-plugin-background-mode": "0.7.3"
 };
 // BOTTOM OF METADATA
 });

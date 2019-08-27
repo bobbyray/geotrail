@@ -27,5 +27,6 @@
     <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <plugin name="cordova-plugin-device-motion" spec="~1.2.5" />
     <plugin name="cordova-plugin-compat" spec="^1.2.0" />
+    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />
     <engine name="android" spec="^6.4.0" />
 </widget>

@@ -7,7 +7,8 @@ repositories {
 project.group = 'com.facebook.android'
 
 dependencies {
-    implementation 'com.android.support:support-fragment:28.0.0' //20190418Was implementation 'com.android.support:support-v4:[20,21)'
+    implementation 'com.android.support:support-fragment:28.0.0'
+    //20190418Was implementation 'com.android.support:support-v4:[20,21)'
     implementation 'com.parse.bolts:bolts-android:1.1.2'
 }
 

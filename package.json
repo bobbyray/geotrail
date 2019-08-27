@@ -9,12 +9,15 @@
     "plugins": {
       "cordova-plugin-compat": {},
       "cordova-plugin-file": {},
-      "cordova-plugin-device-motion": {}
+      "cordova-plugin-device-motion": {},
+      "cordova-plugin-background-mode": {}
     }
   },
   "dependencies": {
     "cordova-android": "^6.4.0",
+    "cordova-plugin-background-mode": "^0.7.3",
     "cordova-plugin-compat": "^1.2.0",
+    "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-device-motion": "~1.2.5",
     "cordova-plugin-file": "~2.0.0"
   }
