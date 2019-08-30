@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.039NoHockeyApp-20190819-649"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.041-20190830-1144"; // Constant string for App version. // Built with Android Studio 3.3.2. Fix for Android api 28. First production aab build.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
