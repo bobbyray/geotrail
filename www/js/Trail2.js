@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.038-20190806-1555"; // Constant string for App version. // Built with Android Studio 3.3.2. Same as 1.1.036.
+    var sVersion = "1.1.041-20190830-1144"; // Constant string for App version. // Built with Android Studio 3.3.2. Fix for Android api 28. First production aab build.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -6339,14 +6339,17 @@ function wigo_ws_View() {
             function(){
                 console.log("Background mode event: activate");
                 cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+                //20190825 cordova.plugins.backgroundMode.disableBatteryOptimizations(); // Not needed and caused a problem for switching apps.
             });
 
             cordova.plugins.backgroundMode.on('deactivate', 
             function(){
                 console.log("Background mode event: deactivate");
             });
-
-
+            // Have the Button go to background instead of closing the app.
+            // Note: A disadvantage to this is the user can not use the Back button to end GeoTrail app.
+            //       The advanvantage is the user uses not accidentally close app when recording a trail.
+            cordova.plugins.backgroundMode.overrideBackButton();
         };
 
         // Private members
@@ -7075,8 +7078,6 @@ function wigo_ws_View() {
                           ['battery_drain', 'Help - Reducing Battery Drain'],  
                           ['about', 'About'],                                     
                           ['license', 'Licenses'],
-                          // ['screenshot', 'Screen Shot Report'],  //20161215 Not working in hockepapp plugin for ios.                         
-                          ['crash', 'Crash Test']
                          ];
         // iPhone. Do not show help features not available on iPhone.
         var noHelp = document.getElementsByClassName("noIosHelp");
@@ -7092,8 +7093,6 @@ function wigo_ws_View() {
                           ['battery_drain', 'Help - Reducing Battery Drain'],     // 5 
                           ['about', 'About'],                                     // 6
                           ['license', 'Licenses'],                                // 7
-                          // ['screenshot', 'Screen Shot Report'],                //20161215 Not available for Android.      
-                          // ['crash', 'Crash Test']                              //20161215 Not available for Android.
                          ];
         // Android. Do not show help for info about iPhone that does apply for Android.
         var noHelp = document.getElementsByClassName("noAndroidHelp");
@@ -7136,44 +7135,7 @@ function wigo_ws_View() {
         } else if (dataValue === 'battery_drain') {
             ShowHelpTrackingVsBattery(true);
             this.selectedIndex = 0;
-        } else if (dataValue === 'crash') {
-            ConfirmYesNo("Is it ok to CRASH and end this app in order to test generating a crash report? ", 
-            function(bYes) {
-                if (bYes) {
-                    if (typeof(hockeyapp) !== 'undefined') {
-                        hockeyapp.addMetaData(null, null, {CrashTest: 'Testing forced crash.'});
-                        hockeyapp.forceCrash();
-                    }
-                } else {
-                    AlertMsg("OK, no crash -- continuing as usual.");
-                }
-            })
-
-        } else if (dataValue === 'screenshot') {
-            ConfirmYesNo("Is it ok to send a screen shot to report a problem?", 
-            function(bYes) {
-                if (bYes) {
-                    if (typeof(hockeyapp) !== 'undefined') {
-                        /* //20161214 Does not work currently. Maybe some day plugin will be fixed.
-                           //         Disable by removing Crash Test item for mainMenu. 
-                        hockeyapp.composeFeedback(function(){
-                            // Success.
-                            AlertMsg('A screen shot has been sent.');
-                        }, 
-                        function(){
-                            // Error.
-                            AlertMsg('Failed to send screen shot!');
-                        }, 
-                        true, 
-                        {ScreenShot: 'Screen Shot'});
-                        */
-                        // hockeyapp.feedback(); // Does not take screen shot. Kind of works, but crashes if user selects Add Image.
-                    }
-                } else {
-                    AlertMsg("No screen shot sent.");
-                }
-            });
-        }
+        } 
         that.ClearStatus();
     };
 
@@ -11603,26 +11565,9 @@ Wigo_Ws_InitDeviceDetails(window.app.deviceDetails);
 // Windows.app.OnDocReady() handler was not initializing HockeyApp for reporting.
 // Try deviceready() handler instead.
 // Note: It seems HockeyApp works for distribution even if Cordova plugin 
-// for hockeyapp is not used. 
+// for hockeyapp is not used. HockeyApp has been replaced by MS App Center
+// and has no javascript setup.
 document.addEventListener("deviceready", function(e) {
-    //20161210 Initialize hockeyapp for distruction of app for ios.
-    if (typeof(hockeyapp) !== 'undefined') {
-        // hockeyapp.start(null, null, "296f229a3907490abd795f3a70760dea");
-        hockeyapp.start(function(){
-            // Success.
-            var sMsg = 'Successfully started HockeyApp.';
-            //debug alert(sMsg);
-            console.log(sMsg);
-        }, 
-        function(){
-            // Failure.
-            var sMsg = 'Failed to initialize HockeyApp!';
-            //debug alert(sMsg);
-            console.log(sMsg);
-        }, 
-        "296f229a3907490abd795f3a70760dea",
-        true); // true => autoSend crash report if one exists on start.
-    } 
     console.log('Device is ready.');
 }, 
 false);

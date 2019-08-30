@@ -109,14 +109,6 @@
     "is_top_level": true,
     "variables": {}
   },
-  "cordova-plugin-background-mode": {
-    "source": {
-      "type": "registry",
-      "id": "cordova-plugin-background-mode@0.7.2"
-    },
-    "is_top_level": true,
-    "variables": {}
-  },
   "cordova-plugin-device-motion": {
     "source": {
       "type": "registry",
@@ -129,6 +121,14 @@
     "source": {
       "type": "registry",
       "id": "cordova-plugin-compat@1.2"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "cordova-plugin-background-mode": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-background-mode@0.7.3"
     },
     "is_top_level": true,
     "variables": {}

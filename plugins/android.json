@@ -15,9 +15,6 @@
       "APP_NAME": "WigoGeoTrail",
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
-    "cordova-plugin-background-mode": {
-      "PACKAGE_NAME": "ws.wigo.geotrail"
-    },
     "cordova-plugin-device-motion": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
@@ -44,13 +41,16 @@
     },
     "org.nypr.cordova.wakeupplugin": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
+    },
+    "cordova-plugin-background-mode": {
+      "PACKAGE_NAME": "ws.wigo.geotrail"
     }
   },
   "dependent_plugins": {
-    "cordova-plugin-device": {
+    "cordova-plugin-file": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     },
-    "cordova-plugin-file": {
+    "cordova-plugin-device": {
       "PACKAGE_NAME": "ws.wigo.geotrail"
     }
   }

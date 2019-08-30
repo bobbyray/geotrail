@@ -17,7 +17,7 @@
  * under the License.
  */
  /*
- This file has been modified in 2015 - 2017 by Robert R Schomburg.
+ This file has been modified in 2015 - 2019 by Robert R Schomburg.
  This file is licensed under the same terms as specified above 
  for the original work.  
  */
@@ -862,25 +862,26 @@ label {
     box-sizing: border-box;   
 }
 .stats_history_month {  
-    font-size: 2em;
-    padding-left: 12%;
-    padding-right: 5%;
+    font-size: 1.7em;    
+    padding-right: 3%;   
+    width: 42%;         
     float: left;
     padding-top: 0.3em;  
+    text-align: right;  
 }
 .stats_history_year { 
-    font-size: 2em;
+    font-size: 1.7em; 
     float: left;
     padding-top: 0.3em;   
+    width: 20%;  
 }
 .stats_history_close_div { 
     float: left;
-    width: 4em;
-    padding-left: 10%;
+    width: 20%; 
     padding-top: 1em;  
 }
 .stats_history_close_btn {
-    width: inherit;
+    width: 100%; 
 }
 
 .stats_history_list { 
@@ -959,7 +960,6 @@ label {
     float: left;  
     width: 8%;
     height: 100%;
-    padding-right: 2em;
 }
 
 .holderStatsHistoryMenu .wigo_ws_DropDownIcon {
