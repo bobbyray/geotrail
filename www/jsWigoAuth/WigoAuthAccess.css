@@ -1,0 +1,40 @@
+﻿/*
+Copyright (c) 2020 Robert R Schomburg
+Licensed under terms of the MIT License, which is given at
+https://github.com/bobbyray/MitLicense/releases/tag/v1.0
+*/
+.WigoAuthAccessInstr {
+    width: 100%;
+}
+.WigoAuthAccessEmailBar,
+.WigoAuthAccessPswdBar,
+.WigoAuthAccessSubmitBar {
+    width: 100%;
+}
+.WigoAuthAccessEmail { /* email addr textbox */
+    clear: both;
+    float: left;
+    width: 95%;
+    font-size: 1.2em; 
+}
+.WigoAuthAccessPswd { /* password textbox*/
+    clear: both;
+    float: left;
+    width: 85%;
+    font-size: 1.2em; 
+}
+.WigoAuthAccessShowPswdBtn {
+    margin-left: 1%;
+    float: left;
+}
+
+.WigoAuthAccessSubmitBtn {
+    margin-right: 1em;
+    clear: both;
+    float: left;
+}
+.WigoAuthAccessCancelBtn {
+    float: left;
+}
+
+

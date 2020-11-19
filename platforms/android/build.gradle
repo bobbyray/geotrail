@@ -250,8 +250,8 @@ android {
 dependencies {
     implementation fileTree(include: '*.jar', dir: 'libs')
     // SUB-PROJECT DEPENDENCIES START
-    implementation project(path: 'CordovaLib')
-    implementation project(path: 'com.phonegap.plugins.facebookconnect:FacebookLib')
+    implementation(project(path: "CordovaLib"))
+    implementation(project(path: "com.phonegap.plugins.facebookconnect:FacebookLib"))
     // SUB-PROJECT DEPENDENCIES END
     implementation 'com.android.support:support-fragment:28.0.0'
     //20190417 FacebookLib needs in Android Studio 3.3.2

@@ -479,11 +479,9 @@ function wigo_ws_GeoPathsRESTfulApi() {
     //         I think the problem is a configuration problem with IIS Express,
     //         and that https for the ajax requests may work properly 
     //         at the (GoDaddy) remote host. For now, not using https for these apis.
-    var base = new wigo_ws_Ajax("https://www.wigo.ws/geopathsx/Service.svc/"); // Remote host (Would like to try https)
-    var bDebugging = typeof (bLocalDebug) === 'boolean' && bLocalDebug;   
-    console.log("js/GeoPathsApi2.js bDebugging = " + bDebugging); 
-    if (bDebugging) // If local debugging, use local IIS Express server. 
-        base = new wigo_ws_Ajax("http://localhost:51765/Service.svc/");  
+    // Use api base uri from js/config.js, example uri: http://localhost/WalkingMap/Service.svc/
+    var base = new wigo_ws_Ajax(wigo_ws_geopaths_api_sBaseUri);
+
     // Handler in base class to handle completion of ajax request.
     base.onRequestServed = function (nState, bOk, req) {
         var sStatus = "";

@@ -7,12 +7,22 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
 <html style="height: 100%">
 <head>
     <title>GeoTrail</title>
+    <!-- for localhost debug 
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+         script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
+         connect-src 'self' http://localhost;
+         img-src 'self' data: *;
+         style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
+         frame-src 'self' gap:;">
+    -->
+    <!-- for GoDaddy -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none';
          script-src 'self' 'unsafe-eval' 'unsafe-inline' http://cdn.leafletjs.com;
          connect-src 'self' https://www.wigo.ws;
          img-src 'self' data: *;
          style-src 'self' 'unsafe-inline' http://cdn.leafletjs.com;
          frame-src 'self' gap:;">
+    
 
     <script charset="utf-8" src="cordova.js"></script>
 
@@ -29,7 +39,14 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
     <script src="leaflet-0.7.3/leaflet.js"></script>  
     <script src="js/leaflet-tilelayer-cordova.js"></script>
     <script src="js/Helper2.js"></script>
-    <script src="js/Ajax2.js"></script>
+    <!-- //20201111 added files in jsWigoAuth folder for WigoAuth instead of Facebook Auth -->
+    <link rel="stylesheet" href="jsWigoAuth/WigoAuthAccess.css"> 
+    <script src="jsWigoAuth/ajax2.js"></script>
+    <script src="jsWigoAuth/wigoauthaccess.js"></script>
+    <script src="jsWigoAuth/wigoauthapi.js"></script>
+    <script src="jsWigoAuth/WigoAuthentication.js"></script>
+    <script src="js/config.js"></script>
+
     <script src="js/GeoPathsApi2.js"></script>
     <!-- Google hosted jquery
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -66,6 +83,8 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <input id="txbxOwnerName" type="text" disabled: disabled/>
             <div id='selectSignInHolder'></div>
         </div>
+        <!-- //20201111 div for WigoAuth signin --> <!-- //20201111 copied from WalkingMap.html -->
+        <div id="divLoginHolder" style="display: none"></div> <!-- container div for login UI -->
 
         <div id="onlineOfflineEditBar" class="wigo_ws_Bar wigo_ws_NoShow">
             <div id="divTrailInfo">
@@ -392,16 +411,31 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         You do not type in the User name box, it is filled in automatically when you sign in.</p>
         <p>The Sign-in DropList is shown on the right:
         <ul>
-            <li>Select Facebook to sign in.<br/> 
+            <li>Select Login to sign in.<br/> 
             Your sign-in id is remembered so 
-            you do not need to sign in again unless you log out.</li>
-            <li>Select Logout to logout of Facebook.<br/>
-            Note: Facebook can be tenacious about keeping you logged in. First logout from the Facebook app, 
-            then logout in GeoTrail using the Sign-in DropList .</li>
+            you do not need to sign in again unless you log out.<br/>
+            Enter your eamil address and password.<br/>
+            Touch Submit to verify that you email and password are valid.
+            Touch Cancel to cancel signing in.<br/>
+            Note: If you have not registered, select Reigister/Manage first.</li>
+            <li>Select Logout to log out.<br/>
+            Note: For a different user to Login, the current user must log out first,
+            otherwise Login automatically signs in the current user without presenting the login dialog.</li>
+            <li>Select Register/Manage to register.<br/>
+            You must register once before you can login. 
+            You are directed to the Wigo Authentication page.
+            Select the Register option to register. You provide your name and email address.
+            You will receive an email in which you must must acknowledge that you want to 
+            register with Wigo Authentication. In the acknowledgement you will securely defined
+            your password. Your password is encrypted and not known by anyone else.<br/>
+            The Wigo Authentication page also provides options to change your password, 
+            reset your password in case you have forgotten it, change your email address, 
+            and change your name.
+            </li>
             <li>Reset Server Access<br/>
             Resets server access in case access to the web server has hung. 
             It not likely you need to do this. However if accessing the web server seems stuck,
-            try resetting. 
+            try resetting.</li> 
             <li>Hide<br/>
             Hides the Sign-in/off bar. Typically the Sign-in/off bar is not shown and goes away
             automatically. However, if it is shown, you can hide it.</li>
@@ -1172,7 +1206,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>OpenStreetMap.org for map database</li>
         <li>L.TileLayer.Cordova for caching map tiles</li>
         <li>com.jetboystudio.pebble.PebblePGPlugin 0.2.6 "Pebble"</li>
-        <li>com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"</li>
+        <!-- //20201117Removed <li>com.phonegap.plugins.facebookconnect 0.11.0 "Facebook Connect"</li> -->
         <li>cordova-plugin-compat 1.2.0 "Compat"</li>
         <li>cordova-plugin-device 1.1.6 "Device"</li>
         <li>cordova-plugin-device-orientation 1.0.3 "Device Orientation"</li>
@@ -1207,7 +1241,7 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
         <li>Leaflet 0.7.3 for map</li>
         <li>OpenStreetMap.org for map database</li>
         <li>L.TileLayer.Cordova for caching map tiles</li>
-        <li>cordova-plugin-facebook4 npm v1.9.1</li>
+        <!-- //20201117Removed <li>cordova-plugin-facebook4 npm v1.9.1</li> -->
         <li>cordova-plugin-dialogs npm v1.1.1</li>
         <li>cordova-plugin-file-transfer npm v1.1.0</li>
         <li>cordova-plugin-geolocation npm v2.4.0</li>
@@ -1250,35 +1284,35 @@ https://github.com/bobbyray/MitLicense/releases/tag/v1.0
             <h3>Web Server Data</h3>
             <p>For trails, that you define manually or record by using geolocation, 
             data is stored on a web server. The data has latitude and longitude for points
-            defining the trail. Your Facebook public identifier is associated with your trails.</p>
+            defining the trail. Your unique identifier is associated with your trails.</p>
             <p>For a walk or a trail you record, statistics are saved optionally at
             a web server. The statistics are a summary, such as start time, distance, and run time,
-            and do not include any geolocation. Your Facebook public identifier is associated with your statistics.</p>
-            <p>Your public Facebook identifier and your name associated with it are saved in the database at the web server.</p>
+            and do not include any geolocation. Your unique identifier is associated with your statistics.</p>
+            <p>Your unique identifier and your name associated with it are saved in the database at the web server.</p>
             <p> Protection for the database is provided through access controlled by a password. 
             Data exchanges with the server are encrypted via the https protocol.
             The web hosting company
             provides security against malicious intrusions. However,
             be aware that data could be obtained illegally by hackers or legally by an authorized governmental authority.</p>
-            <p>The app lets you delete your trails from the web server.</p>
+            <p>The app lets you delete your trails and statistics from the web server.</p>
             <h3>Data on Your Phone</h3>
             <p>Data is saved on your phone for defining trails and caching map sections when you are offline. 
             Also statistics for walks and trails that you record are saved on your phone.
-            <p>If from this app you sign in using Facebook, your Facebook public identifier and name are saved on the phone; 
+            <p>If from this app you sign in, your unique identifier and name are saved on the phone; 
             when from this app you logout, your identifier and name are removed.</p>
             <p>The data can be deleted by you from your phone by managing the application on your phone.</p>
             <h3>Making Your Trails Public or Private</h3>
             <p>When you define a trail you mark it as Public or Private. If a trail is Public, it can be seen by anyone
             using this app. If the trail is marked Private, the trail is only visible by you when using the app.
-            However, from the app you can never see the Facebook public identifier or name of another user who has made
+            However, from the app you can never see the unique identifier or name of another user who has made
             a trail public.
             <h3>Your Data Is Not Shared with Any Other Party</h3>
-            As mentioned above, your Facebook public identifier is associated with the 
+            As mentioned above, your unique identifier is associated with the 
             geolocation data for a trail you have defined and for statistics for a trail that you have recorded.
             Marking a trail you save to the web server as Public allows others using this app to view the trail.
             The statistics for a trail you record can only be seen by you. 
             <p>Your geolocation data, your statistics for your recorded trails, 
-            your Facebook public identifier, or your name are never given to another party.
+            your unique identifier, your name, or email address are never given to another party.
         <h2>A FURTHER CAUTION</h2>
         <p>Hiking depends on your own self reliance and good judgment. Realize that trails you find
         may not be appropriate for your abilities and that the trails could have inaccuracies.</p>

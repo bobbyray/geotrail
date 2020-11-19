@@ -42,7 +42,7 @@ wigo_ws_GeoPathMap.OfflineParams = function () {
 // Object for View present by page.
 function wigo_ws_View() {
     // Work on RecordingTrail2 branch. Filter spurious record points.
-    var sVersion = "1.1.041-20190830-1144"; // Constant string for App version. // Built with Android Studio 3.3.2. Fix for Android api 28. First production aab build.
+    var sVersion = "1.1.042-20201117-1637"; // Constant string for App version. // Built with Android Studio 3.3.2. Fix for Android api 28. First production aab build.
     // ** Events fired by the view for controller to handle.
     // Note: Controller needs to set the onHandler function.
 
@@ -235,8 +235,8 @@ function wigo_ws_View() {
     // Login authentication has completed.
     // Handler Signature:
     //  result: json {userName, userID, accessToken, nAuthResult}
-    //    userID: Facebook user id or empty string when authentication fails.
-    //    accessToken: access token string acquired from FaceBook, or empty string
+    //    userID: user id or empty string when authentication fails.
+    //    accessToken: access token string acquired from authentication provider, or empty string
     //      when athentication fails or is cancelled.
     //    nAuthResult: integer result of authentication, value of which is given 
     //      by EAuthStatus in Service.cs.
@@ -4248,7 +4248,7 @@ function wigo_ws_View() {
 
     // Returns About message for this app.
     function AboutMsg() {
-        var sCopyright = "2015 - 2019";
+        var sCopyright = "2015 - 2020";
         var sMsg =
         "Version {0}\nCopyright (c) {1} Robert R Schomburg\n".format(sVersion, sCopyright);
         return sMsg;
@@ -7038,8 +7038,8 @@ function wigo_ws_View() {
         return bHidden;
     }
 
-    // ** Private members for Facebook
-    // Callback after Facebook authentication has completed.
+    // ** Private members for Authentication
+    // Callback after authentication has completed.
     function cbFbAuthenticationCompleted(result) {
         if (that.onAuthenticationCompleted)
             that.onAuthenticationCompleted(result);
@@ -7200,8 +7200,9 @@ function wigo_ws_View() {
     // *** Signin dropdown ctrl
     parentEl = document.getElementById('selectSignInHolder');
     var selectSignIn = new ctrls.DropDownControl(parentEl, "signinDropDown", "Sign-In", null, "img/ws.wigo.dropdownhorizontalicon.png"); 
-    selectSignIn.fill([['facebook', 'Facebook'],
+    selectSignIn.fill([['facebook', 'Login'],   
                        ['logout', 'Logout'],
+                       ['manage', 'Register/Manage'],    
                        ['reset','Reset Server Access'], 
                        ['hide', 'Hide'],   
                       ]);
@@ -7223,9 +7224,9 @@ function wigo_ws_View() {
 
         // Quit if there is no internet access. 
         if (!networkInfo.isOnline()) {
-            var sAction = dataValue === 'facebook' ? 'sign in' :
+            var sAction = dataValue === 'facebook' ? 'log in' :      
                             dataValue === 'logout' ? 'log out' : 'action'; 
-            var sError = "Facebook {0} failed.<br/>Internet access is not available.".format(sAction);
+            var sError = "Sign-in {0} failed.<br/>Internet access is not available.".format(sAction);  
             that.ShowStatus(sError);
             that.AppendStatusDiv(networkInfo.getBackOnlineInstr(), false);  
             return;
@@ -7255,6 +7256,8 @@ function wigo_ws_View() {
                 }
                 fb.LogOut();
             }
+        } else if (dataValue === 'manage') {  
+            _windowWigoAuthRef = window.open(wigo_ws_auth_page_uri, '_blank');
         } else if (dataValue === 'set') {
             that.ClearStatus();
         } else {
@@ -7262,6 +7265,7 @@ function wigo_ws_View() {
         }
         selectSignIn.setSelected('set'); // Select Signin element.
     };
+    var _windowWigoAuthRef = null; // Ref to window opened for WigoAuth.html page. 
 
     // ** Initialize online bar.
     // Select GeoTrail control
@@ -9272,7 +9276,7 @@ Are you sure you want to delete the maps?";
                     r.v = itemData.mDistance / (itemData.msRunTime/1000); // meters / sec.
                     // w = m * a * d 
                     //  a = w / (m * d)
-                    if (that.kgBodyMass > 0 & itemData.mDistance > 0) {
+                    if (that.kgBodyMass > 0 && itemData.mDistance > 0) {  
                         let w = itemData.caloriesKinetic * kjoulesPerCalorie * 1000; // work (energy) joules.
                         r.a = w / (that.kgBodyMass * itemData.mDistance);
                     }
@@ -9897,7 +9901,7 @@ Are you sure you want to delete the maps?";
         function IsUserSignedIn(sNotSignedInMsg) { 
             var bSignedIn = view.getOwnerId().length > 0;
             if (!bSignedIn) {
-                var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in > Facebook.";
+                var sMsg = sNotSignedInMsg + "<br>View > Sign-in/off.<br>Sign-in > Login.";  
                 view.ShowStatus(sMsg, false);  // false => not an error.
             }
             return bSignedIn;
@@ -10591,8 +10595,9 @@ Are you sure you want to delete the maps?";
         that.ShowStatus(sText, false); 
     };
 
-    // Set Facebook login.
-    var fb = new wigo_ws_FaceBookAuthentication('694318660701967');
+    // Setup authentication.
+    var fb = new wigo_ws_WigoAuthentication(divLoginHolder, wigo_ws_WigoAuthAccess.apps.geoTrail, wigo_ws_auth_api_sBaseUri);   
+    
     fb.callbackAuthenticated = cbFbAuthenticationCompleted;
 
     // Object for network (internet) connection state.
@@ -11235,9 +11240,7 @@ function wigo_ws_Controller() {
                 } else {
                     // var sMsg = "Authentication failed:{0}status: {1}{0}UserID: {2}{0}User Name: {3}{0}AccessHandle: {4}{0}msg: {5}".format("<br/>", result.status, result.userID, result.userName, result.accessHandle, result.msg);
                     // Note: result has info for debug.
-                    var sMsg = "Server-side authentication failed.<br/>" +
-                               "You may need to go to Facebook and Log Out<br/>" +
-                               "so that your old authentication is reset.";
+                    var sMsg = "Server-side authentication failed.";
                     if (result.msg)                       
                         sMsg += "<br/>" + result.msg;     
                     view.ShowStatus(sMsg);
@@ -11251,7 +11254,7 @@ function wigo_ws_Controller() {
         } else if (result.status === eStatus.Logout) {
             // Note: result not meaningful on logout completed because 
             //       result.userID, result.accessToken have been set to empty.
-            // Successfully logged out of OAuth provider (Facebook).
+            // Successfully logged out of OAuth provider.
             view.ShowStatus("Successfully logged out by OAuth.", false);
             var sOwnerId = model.getOwnerId();
             var bOwnerIdValid = sOwnerId.length > 0;
